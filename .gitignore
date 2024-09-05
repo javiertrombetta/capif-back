@@ -1,0 +1,89 @@
+# Node.js dependencies
+/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+/dist
+/coverage
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Cache directories
+.cache
+.nyc_output
+build
+tmp
+temp
+
+# Output of ESLint
+eslint-report.html
+
+# Docker
+*.env
+docker-compose.override.yml
+.dockerignore
+docker-compose.yaml
+Dockerfile*
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# macOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux system files
+*.pid
+*.seed
+*.lock
+*.log
+*.bak
+
+# Optional npm cache directory
+.npm
+
+# Coverage reports
+coverage
+lcov-report
+
+# Test results
+/coverage
+/.nyc_output
+/junit.xml
+/.testresults
+
+# Redis dump
+dump.rdb
+
+# Build artifacts
+build/
+out/
+
+# Temporary directories
+/tmp/

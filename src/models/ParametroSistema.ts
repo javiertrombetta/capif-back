@@ -1,27 +1,30 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../database/config';
 
-class Parametro extends Model {}
+class ParametroSistema extends Model {}
 
-Parametro.init(
+ParametroSistema.init(
   {
     id_parametro: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    nombre_parametro: {
+    nombre: {
       type: DataTypes.STRING(100),
     },
     valor: {
       type: DataTypes.STRING(255),
     },
+    descripcion: {
+      type: DataTypes.TEXT,
+    },
   },
   {
     sequelize,
-    modelName: 'Parametro',
-    tableName: 'parametros',
+    modelName: 'ParametroSistema',
+    tableName: 'parametros_sistema',
   }
 );
 
-export default Parametro;
+export default ParametroSistema;

@@ -1,4 +1,4 @@
 import Redis from 'ioredis';
 
-const redis = new Redis(); // Usar la configuración predeterminada de Redis en localhost
+const redis = new Redis();
 export default redis;

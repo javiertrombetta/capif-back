@@ -1,5 +1,5 @@
 import Usuario from './Usuario';
-import Compania from './Compania.ts';
+import Compania from './Compania';
 import UsuariosAsignados from './UsuariosAsignados';
 import Fonograma from './Fonograma';
 import Conflicto from './Conflicto';
@@ -38,8 +38,8 @@ Fonograma.belongsTo(Repertorio, { foreignKey: 'id_repertorio' });
 Usuario.hasMany(Repertorio, { foreignKey: 'id_usuario' });
 Repertorio.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
-// Relación entre Usuario y Fonogramas (A través de Repertorios)
-Usuario.hasMany(Fonograma, { through: Repertorio, foreignKey: 'id_usuario' });
+// Relación entre Usuario y Fonogramas (Uno a Muchos)
+Usuario.hasMany(Fonograma, { foreignKey: 'id_usuario' });
 
 // Relación entre Fonogramas y Conflictos (Uno a Muchos)
 Fonograma.hasMany(Conflicto, { foreignKey: 'id_fonograma' });
@@ -85,7 +85,6 @@ ArchivoRepertorio.belongsTo(Repertorio, { foreignKey: 'id_repertorio' });
 Fonograma.hasMany(DepuracionRepertorio, { foreignKey: 'id_fonograma' });
 DepuracionRepertorio.belongsTo(Fonograma, { foreignKey: 'id_fonograma' });
 
-// Exportar todos los modelos
 export {
   Usuario,
   Compania,

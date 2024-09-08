@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import router from './routes';
 import sequelize from './database/config';
+import logger from './config/logger';
 
 const app = express();
 
@@ -13,9 +14,11 @@ app.use('/api', router);
 
 sequelize
   .authenticate()
-  // eslint-disable-next-line no-console
-  .then(() => console.log('Conectado a la base de datos'))
-  // eslint-disable-next-line no-console
-  .catch((err) => console.log('Error de conexión a la base de datos:', err));
+  .then(() => {
+    logger.info('Conectado a la base de datos');
+  })
+  .catch((err) => {
+    logger.error('Error de conexión a la base de datos:', err);
+  });
 
 export default app;

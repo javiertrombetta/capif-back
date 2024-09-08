@@ -1,6 +1,9 @@
-declare namespace Express {
-  interface Request {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    user?: any; // O especifica el tipo de `user` si lo conoces
+import { User } from '../models/User';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
   }
 }

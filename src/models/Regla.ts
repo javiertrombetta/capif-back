@@ -1,31 +1,40 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/config';
 
-class Regla extends Model {}
+class Regla extends Model {
+  public id_regla!: number;
+  public descripcion!: string;
+  public fecha_creacion!: Date;
+  public activo!: boolean;
+}
 
 Regla.init(
   {
     id_regla: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
       autoIncrement: true,
+      primaryKey: true,
     },
     descripcion: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(255),
+      allowNull: false,
     },
     fecha_creacion: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
     activo: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
       defaultValue: true,
     },
   },
   {
     sequelize,
     modelName: 'Regla',
-    tableName: 'reglas',
+    tableName: 'Regla',
+    timestamps: false,
   }
 );
 

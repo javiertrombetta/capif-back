@@ -1,19 +1,28 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/config';
+import Usuario from './Usuario';
 
-class Pago extends Model {}
+class Pago extends Model {
+  public id_pago!: number;
+  public id_usuario!: number;
+  public monto!: number;
+  public fecha_pago!: Date;
+  public metodo_pago?: string;
+  public referencia?: string;
+}
 
 Pago.init(
   {
     id_pago: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
       autoIncrement: true,
+      primaryKey: true,
     },
     id_usuario: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
-        model: 'Usuario',
+        model: Usuario,
         key: 'id_usuario',
       },
     },
@@ -23,6 +32,7 @@ Pago.init(
     },
     fecha_pago: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
     metodo_pago: {
@@ -35,7 +45,8 @@ Pago.init(
   {
     sequelize,
     modelName: 'Pago',
-    tableName: 'pagos',
+    tableName: 'Pago',
+    timestamps: false,
   }
 );
 

@@ -1,19 +1,28 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/config';
+import Usuario from './Usuario';
 
-class LogActividad extends Model {}
+class LogActividad extends Model {
+  public id_log!: number;
+  public id_usuario!: number;
+  public actividad!: string;
+  public fecha!: Date;
+  public ip_origen!: string;
+  public navegador!: string;
+}
 
 LogActividad.init(
   {
     id_log: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
       autoIncrement: true,
+      primaryKey: true,
     },
     id_usuario: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
-        model: 'Usuario',
+        model: Usuario,
         key: 'id_usuario',
       },
     },
@@ -23,13 +32,23 @@ LogActividad.init(
     },
     fecha: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
+    },
+    ip_origen: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+    },
+    navegador: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
     },
   },
   {
     sequelize,
     modelName: 'LogActividad',
-    tableName: 'log_actividades',
+    tableName: 'LogActividad',
+    timestamps: false,
   }
 );
 

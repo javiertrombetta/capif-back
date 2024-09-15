@@ -1,19 +1,32 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/config';
+import Estado from './Estado';
+import Repertorio from './Repertorio';
 
-class Fonograma extends Model {}
+class Fonograma extends Model {
+  public id_fonograma!: number;
+  public id_repertorio!: number;
+  public titulo!: string;
+  public artista!: string;
+  public isrc!: string;
+  public duracion!: string;
+  public fecha_lanzamiento?: Date;
+  public tipo?: string;
+  public estado_id?: number;
+}
 
 Fonograma.init(
   {
     id_fonograma: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
       autoIncrement: true,
+      primaryKey: true,
     },
     id_repertorio: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
-        model: 'Repertorio',
+        model: Repertorio,
         key: 'id_repertorio',
       },
       onDelete: 'CASCADE',
@@ -21,15 +34,24 @@ Fonograma.init(
     titulo: {
       type: DataTypes.STRING(150),
       allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
     },
     artista: {
       type: DataTypes.STRING(100),
       allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
     },
     isrc: {
       type: DataTypes.STRING(20),
-      unique: true,
       allowNull: false,
+      unique: true,
+      validate: {
+        is: /^[A-Z]{2}[0-9A-Z]{3}[0-9]{2}[0-9]{5}$/,
+      },
     },
     duracion: {
       type: DataTypes.TIME,
@@ -44,7 +66,7 @@ Fonograma.init(
     estado_id: {
       type: DataTypes.INTEGER,
       references: {
-        model: 'Estados',
+        model: Estado,
         key: 'id_estado',
       },
     },
@@ -52,7 +74,8 @@ Fonograma.init(
   {
     sequelize,
     modelName: 'Fonograma',
-    tableName: 'fonogramas',
+    tableName: 'Fonograma',
+    timestamps: false,
   }
 );
 

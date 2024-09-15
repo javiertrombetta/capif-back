@@ -5,20 +5,14 @@ import logger from '../config/logger';
 dotenv.config();
 
 const sequelize = new Sequelize(
-  process.env.DB_DATABASE || '',
+  process.env.DB_NAME || '',
   process.env.DB_USER || '',
   process.env.DB_PASSWORD || '',
   {
-    host: process.env.DB_SERVER || 'localhost',
-    dialect: 'mssql',
-    port: Number(process.env.DB_PORT) || 1433,
+    host: process.env.DB_HOST || 'localhost',
+    dialect: 'postgres',
+    port: Number(process.env.DB_PORT) || 5432,
     logging: (msg) => logger.info(msg),
-    dialectOptions: {
-      options: {
-        encrypt: true,
-        trustServerCertificate: true,
-      },
-    },
   }
 );
 

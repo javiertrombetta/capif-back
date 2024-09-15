@@ -1,20 +1,27 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/config';
+import Usuario from './Usuario';
+import Compania from './Compania';
 
-class UsuariosAsignados extends Model {}
+class UsuarioAsignado extends Model {
+  public id_usuario_asignado!: number;
+  public id_usuario!: number;
+  public id_compania!: number;
+  public fecha_asignacion!: Date;
+}
 
-UsuariosAsignados.init(
+UsuarioAsignado.init(
   {
     id_usuario_asignado: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
       autoIncrement: true,
+      primaryKey: true,
     },
     id_usuario: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Usuarios',
+        model: Usuario,
         key: 'id_usuario',
       },
       onDelete: 'CASCADE',
@@ -23,21 +30,23 @@ UsuariosAsignados.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Compania',
+        model: Compania,
         key: 'id_compania',
       },
       onDelete: 'CASCADE',
     },
     fecha_asignacion: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
   },
   {
     sequelize,
-    modelName: 'UsuariosAsignados',
-    tableName: 'usuarios_asignados',
+    modelName: 'UsuarioAsignado',
+    tableName: 'UsuarioAsignado',
+    timestamps: false,
   }
 );
 
-export default UsuariosAsignados;
+export default UsuarioAsignado;

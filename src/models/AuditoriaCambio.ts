@@ -2,18 +2,18 @@ import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/config';
 import Usuario from './Usuario';
 
-class Pago extends Model {
-  public id_pago!: number;
+class AuditoriaCambio extends Model {
+  public id_auditoria!: number;
   public id_usuario!: number;
-  public monto!: number;
-  public fecha_pago!: Date;
-  public metodo_pago?: string;
-  public referencia?: string;
+  public fecha!: Date;
+  public tabla_afectada!: string;
+  public operacion!: string;
+  public descripcion!: string;
 }
 
-Pago.init(
+AuditoriaCambio.init(
   {
-    id_pago: {
+    id_auditoria: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
@@ -26,28 +26,30 @@ Pago.init(
         key: 'id_usuario',
       },
     },
-    monto: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-    },
-    fecha_pago: {
+    fecha: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    metodo_pago: {
-      type: DataTypes.STRING(50),
-    },
-    referencia: {
+    tabla_afectada: {
       type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+    operacion: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+    },
+    descripcion: {
+      type: DataTypes.TEXT,
+      allowNull: false,
     },
   },
   {
     sequelize,
-    modelName: 'Pago',
-    tableName: 'Pago',
+    modelName: 'AuditoriaCambio',
+    tableName: 'AuditoriaCambio',
     timestamps: false,
   }
 );
 
-export default Pago;
+export default AuditoriaCambio;

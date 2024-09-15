@@ -1,19 +1,26 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/config';
+import Usuario from './Usuario';
 
-class CuentaCorriente extends Model {}
+class CuentaCorriente extends Model {
+  public id_cuenta_corriente!: number;
+  public id_usuario!: number;
+  public saldo!: number;
+  public fecha_actualizacion!: Date;
+}
 
 CuentaCorriente.init(
   {
     id_cuenta_corriente: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
       autoIncrement: true,
+      primaryKey: true,
     },
     id_usuario: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       references: {
-        model: 'Usuario',
+        model: Usuario,
         key: 'id_usuario',
       },
     },
@@ -23,13 +30,15 @@ CuentaCorriente.init(
     },
     fecha_actualizacion: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
   },
   {
     sequelize,
     modelName: 'CuentaCorriente',
-    tableName: 'cuentas_corrientes',
+    tableName: 'CuentaCorriente',
+    timestamps: false,
   }
 );
 

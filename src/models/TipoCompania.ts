@@ -1,24 +1,31 @@
-import { Model, DataTypes } from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/config';
 
-class TipoCompania extends Model {}
+class TipoCompania extends Model {
+  public id_tipo_compania!: number;
+  public descripcion!: string;
+}
 
 TipoCompania.init(
   {
-    id_tipo: {
+    id_tipo_compania: {
       type: DataTypes.INTEGER,
-      primaryKey: true,
       autoIncrement: true,
+      primaryKey: true,
     },
     descripcion: {
       type: DataTypes.STRING(50),
       allowNull: false,
+      validate: {
+        notEmpty: true,
+      },
     },
   },
   {
     sequelize,
     modelName: 'TipoCompania',
-    tableName: 'tipos_compania',
+    tableName: 'TipoCompania',
+    timestamps: false,
   }
 );
 

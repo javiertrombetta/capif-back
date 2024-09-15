@@ -1,14 +1,14 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../database/config';
 
-class Rol extends Model {
-  public id_rol!: number;
+class TipoEstado extends Model {
+  public id_tipo_estado!: number;
   public descripcion!: string;
 }
 
-Rol.init(
+TipoEstado.init(
   {
-    id_rol: {
+    id_tipo_estado: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
@@ -23,10 +23,10 @@ Rol.init(
   },
   {
     sequelize,
-    modelName: 'Rol',
-    tableName: 'Rol',
+    modelName: 'TipoEstado',
+    tableName: 'TipoEstado',
     timestamps: false,
   }
 );
 
-export default Rol;
+export default TipoEstado;

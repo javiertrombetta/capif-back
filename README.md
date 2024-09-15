@@ -1,3 +1,6 @@
+# Variables de entorno para desarrollo (.env)
+
+```bash
 # PostgreSQL
 DB_USER=postgres
 DB_PASSWORD=DevPass123!

@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../database/config';
+import sequelize from '../config/database/sequelize';
 
 class ErroresInsercion extends Model {
   public id_error!: number;

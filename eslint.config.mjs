@@ -54,7 +54,7 @@ export default [
       'no-undef': 'error',
     },
   },
-  {    
+  {
     rules: {
       ...js.configs.recommended.rules,
     },
@@ -66,5 +66,8 @@ export default [
     rules: {
       ...tsPlugin.configs.recommended.rules,
     },
+  },
+  {
+    ignorePatterns: ['dist/**/*', 'config/**/*'],
   },
 ];

@@ -35,11 +35,10 @@ temp
 eslint-report.html
 
 # Docker
-*.env
+*.env*
 docker-compose.override.yml
 .dockerignore
 docker-compose.yaml
-Dockerfile*
 
 # IDEs and Editors
 .vscode/

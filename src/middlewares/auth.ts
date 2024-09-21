@@ -1,9 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
 import logger from '../config/logger';
-
-dotenv.config();
 
 export const checkToken = (req: Request, res: Response, next: NextFunction) => {
   const token = req.header('Authorization')?.split(' ')[1];

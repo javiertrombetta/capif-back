@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../database/config';
+import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 
 class Repertorio extends Model {

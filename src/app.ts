@@ -1,14 +1,13 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import router from './routes';
-import sequelize from './database/config';
+import sequelize from './config/database/sequelize';
 import logger from './config/logger';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const app = express();
 
@@ -53,15 +52,18 @@ const startServer = () => {
     logger.info(`Servidor corriendo en el puerto ${port}`);
   });
 
-  process.on('SIGTERM', () => {
-    logger.info('Proceso de apagado...');
+  const gracefulShutdown = () => {
+    logger.info('Apagado del servidor en curso...');
     server.close(() => {
       sequelize.close().then(() => {
         logger.info('Conexiones cerradas correctamente');
         process.exit(0);
       });
     });
-  });
+  };
+
+  process.on('SIGTERM', gracefulShutdown);
+  process.on('SIGINT', gracefulShutdown);
 };
 
 (async () => {
@@ -70,7 +72,6 @@ const startServer = () => {
     startServer();
   } catch (_error) {
     logger.error(`Fallo crítico: No se pudo conectar a la base de datos. Detalles: ${_error}`);
-    process.exit(1);
   }
 })();
 

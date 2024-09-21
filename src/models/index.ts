@@ -1,4 +1,4 @@
-import sequelize from '../database/config';
+import sequelize from '../config/database/sequelize';
 import Rol from './Rol';
 import TipoEstado from './TipoEstado';
 import Estado from './Estado';

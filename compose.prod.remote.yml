@@ -6,9 +6,9 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}      
-      TZ: America/Argentina/Buenos_Aires
+      TZ: ${TZ}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - postgresdata:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro
@@ -19,7 +19,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
       interval: 10s
       retries: 5
-      start_period: 30s
+      start_period: 60s
     restart: always
 
   app:
@@ -27,17 +27,17 @@ services:
     container_name: capif-back
     environment:
       DB_NAME: ${DB_NAME}
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}      
-      NODE_ENV: development
+      DB_PASSWORD: ${DB_PASSWORD}
+      NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      TZ: America/Argentina/Buenos_Aires
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      TZ: ${TZ}
     ports:
-      - "3000:3000"
+      - "${APP_PORT}:${APP_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -52,8 +52,10 @@ services:
   redis:
     image: redis:latest
     container_name: redis
+    environment:
+      TZ: ${TZ}
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:${REDIS_PORT}"
     networks:
       - app-network
     restart: always

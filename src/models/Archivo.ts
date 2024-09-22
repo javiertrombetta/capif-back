@@ -2,18 +2,18 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 
-class AuditoriaCambio extends Model {
-  public id_auditoria!: number;
-  public tabla_afectada!: string;
-  public operacion!: string;
-  public descripcion!: string;
-  public fecha!: Date;
+class Archivo extends Model {
+  public id_archivo!: number;
+  public nombre_archivo!: string;
+  public ruta_archivo!: string;
+  public tipo_archivo!: string;
   public id_usuario!: number;
+  public fecha_subida!: Date;
 }
 
-AuditoriaCambio.init(
+Archivo.init(
   {
-    id_auditoria: {
+    id_archivo: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
@@ -35,58 +35,62 @@ AuditoriaCambio.init(
         },
       },
     },
-    tabla_afectada: {
-      type: DataTypes.STRING(100),
+    nombre_archivo: {
+      type: DataTypes.STRING(150),
       allowNull: false,
       validate: {
         len: {
-          args: [1, 100],
-          msg: 'El nombre de la tabla afectada debe tener entre 1 y 100 caracteres.',
+          args: [1, 150],
+          msg: 'El nombre del archivo debe tener entre 1 y 150 caracteres.',
         },
         notEmpty: {
-          msg: 'La tabla afectada no puede estar vacía.',
+          msg: 'El nombre del archivo no puede estar vacío.',
         },
       },
     },
-    operacion: {
+    tipo_archivo: {
       type: DataTypes.STRING(50),
       allowNull: false,
       validate: {
         len: {
           args: [1, 50],
-          msg: 'El tipo de operación debe tener entre 1 y 50 caracteres.',
+          msg: 'El tipo de archivo debe tener entre 1 y 50 caracteres.',
         },
         notEmpty: {
-          msg: 'La operación no puede estar vacía.',
+          msg: 'El tipo de archivo no puede estar vacío.',
         },
       },
     },
-    descripcion: {
-      type: DataTypes.TEXT,
+    ruta_archivo: {
+      type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
+        len: {
+          args: [5, 255],
+          msg: 'La ruta del archivo debe tener entre 5 y 255 caracteres.',
+        },
         notEmpty: {
-          msg: 'La descripción no puede estar vacía.',
+          msg: 'La ruta del archivo no puede estar vacía.',
         },
       },
     },
-    fecha: {
+    fecha_subida: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha debe ser una fecha válida.',
+          msg: 'La fecha de subida debe ser una fecha válida.',
         },
       },
     },
   },
   {
     sequelize,
-    modelName: 'AuditoriaCambio',
-    tableName: 'AuditoriaCambio',
+    modelName: 'Archivo',
+    tableName: 'Archivo',
     timestamps: false,
   }
 );
 
-export default AuditoriaCambio;
+export default Archivo;

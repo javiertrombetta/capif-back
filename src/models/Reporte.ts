@@ -1,19 +1,18 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
-import Estado from './Estado';
 
-class Tramite extends Model {
-  public id_tramite!: number;
-  public tipo_tramite!: string;
+class Reporte extends Model {
+  public id_reporte!: number;
+  public tipo_reporte!: string;
+  public ruta_archivo!: string;
   public id_usuario!: number;
-  public estado_id!: number;
-  public fecha_inicio!: Date;
+  public fecha_generacion!: Date;
 }
 
-Tramite.init(
+Reporte.init(
   {
-    id_tramite: {
+    id_reporte: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
@@ -35,44 +34,49 @@ Tramite.init(
         },
       },
     },
-    tipo_tramite: {
+    tipo_reporte: {
       type: DataTypes.STRING(100),
-      allowNull: true,
+      allowNull: false,
       validate: {
         len: {
           args: [3, 100],
-          msg: 'El tipo de trámite debe tener entre 3 y 100 caracteres.',
+          msg: 'El tipo de reporte debe tener entre 3 y 100 caracteres.',
         },
         notEmpty: {
-          msg: 'El tipo de trámite no puede estar vacío.',
+          msg: 'El tipo de reporte no puede estar vacío.',
         },
       },
     },
-    fecha_inicio: {
+    ruta_archivo: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      validate: {
+        len: {
+          args: [5, 255],
+          msg: 'La ruta del archivo debe tener entre 5 y 255 caracteres.',
+        },
+        notEmpty: {
+          msg: 'La ruta del archivo no puede estar vacía.',
+        },
+      },
+    },
+    fecha_generacion: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha de inicio debe ser una fecha válida.',
+          msg: 'La fecha de generación debe ser una fecha válida.',
         },
       },
-    },
-    estado_id: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Estado,
-        key: 'id_estado',
-      },
-      allowNull: true,
     },
   },
   {
     sequelize,
-    modelName: 'Tramite',
-    tableName: 'Tramite',
+    modelName: 'Reporte',
+    tableName: 'Reporte',
     timestamps: false,
   }
 );
 
-export default Tramite;
+export default Reporte;

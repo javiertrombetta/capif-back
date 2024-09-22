@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class Rol extends Model {
@@ -17,7 +17,17 @@ Rol.init(
       type: DataTypes.STRING(50),
       allowNull: false,
       validate: {
-        notEmpty: true,
+        len: {
+          args: [3, 50],
+          msg: 'La descripción debe tener al menos 3 caracteres y no más de 50.',
+        },
+        is: {   
+          args: /^[A-Za-z0-9.\-\s]+$/,
+          msg: 'La descripción solo puede contener letras, números, espacios, puntos y guiones (-).',
+        },
+        notEmpty: {
+          msg: 'La descripción no puede estar vacía.',
+        },
       },
     },
   },

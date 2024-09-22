@@ -3,31 +3,45 @@ import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 import Compania from './Compania';
 
-class UsuarioAsignado extends Model {
-  public id_usuario_asignado!: number;
+class PostulacionPremio extends Model {
+  public id_postulacion!: number;
+  public codigo_postulacion!: string;
+  public fecha_asignacion!: Date;
   public id_usuario!: number;
   public id_compania!: number;
-  public fecha_asignacion!: Date;
 }
 
-UsuarioAsignado.init(
+PostulacionPremio.init(
   {
-    id_usuario_asignado: {
+    id_postulacion: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
+    codigo_postulacion: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      validate: {
+        len: {
+          args: [1, 50],
+          msg: 'El código de postulación debe tener entre 1 y 50 caracteres.',
+        },
+        notEmpty: {
+          msg: 'El código de postulación no puede estar vacío.',
+        },
+      },
+    },
     id_usuario: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: Usuario,
         key: 'id_usuario',
       },
       onDelete: 'CASCADE',
+      allowNull: false,
       validate: {
         notNull: {
-          msg: 'El ID del usuario no puede ser nulo.',
+          msg: 'El ID del usuario es obligatorio.',
         },
         isInt: {
           msg: 'El ID del usuario debe ser un número entero.',
@@ -36,15 +50,15 @@ UsuarioAsignado.init(
     },
     id_compania: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: Compania,
         key: 'id_compania',
       },
       onDelete: 'CASCADE',
+      allowNull: false,
       validate: {
         notNull: {
-          msg: 'El ID de la compañía no puede ser nulo.',
+          msg: 'El ID de la compañía es obligatorio.',
         },
         isInt: {
           msg: 'El ID de la compañía debe ser un número entero.',
@@ -64,10 +78,10 @@ UsuarioAsignado.init(
   },
   {
     sequelize,
-    modelName: 'UsuarioAsignado',
-    tableName: 'UsuarioAsignado',
+    modelName: 'PostulacionPremio',
+    tableName: 'PostulacionPremio',
     timestamps: false,
   }
 );
 
-export default UsuarioAsignado;
+export default PostulacionPremio;

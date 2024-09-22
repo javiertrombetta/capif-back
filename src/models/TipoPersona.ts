@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class TipoPersona extends Model {
@@ -17,7 +17,20 @@ TipoPersona.init(
       type: DataTypes.STRING(50),
       allowNull: false,
       validate: {
-        notEmpty: true,
+        len: {
+          args: [3, 50],
+          msg: 'La descripción debe tener entre 3 y 50 caracteres.',
+        },
+        is: {
+          args: /^[A-Za-z\s]+$/,
+          msg: 'La descripción solo puede contener letras y espacios.',
+        },
+        notEmpty: {
+          msg: 'La descripción no puede estar vacía.',
+        },
+        notNull: {
+          msg: 'La descripción es un campo obligatorio.',
+        },
       },
     },
   },
@@ -28,5 +41,9 @@ TipoPersona.init(
     timestamps: false,
   }
 );
+
+TipoPersona.beforeSave((tipoPersona) => {
+  tipoPersona.descripcion = tipoPersona.descripcion.trim().toUpperCase();
+});
 
 export default TipoPersona;

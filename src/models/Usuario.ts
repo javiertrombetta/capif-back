@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Rol from './Rol';
 import Estado from './Estado';
@@ -19,8 +19,6 @@ class Usuario extends Model {
   public provincia!: string;
   public pais!: string;
   public telefono?: string;
-  public codigo_isrc_audio!: string;
-  public codigo_isrc_video!: string;
   public registro_pendiente!: boolean;
 }
 
@@ -35,14 +33,26 @@ Usuario.init(
       type: DataTypes.STRING(100),
       allowNull: false,
       validate: {
-        notEmpty: true,
+        len: {
+          args: [2, 100],
+          msg: 'El nombre debe tener entre 2 y 100 caracteres.',
+        },
+        isAlpha: {
+          msg: 'El nombre solo debe contener letras.',
+        },
       },
     },
     apellido: {
       type: DataTypes.STRING(100),
       allowNull: false,
       validate: {
-        notEmpty: true,
+        len: {
+          args: [2, 100],
+          msg: 'El apellido debe tener entre 2 y 100 caracteres.',
+        },
+        isAlpha: {
+          msg: 'El apellido solo debe contener letras.',
+        },
       },
     },
     email: {
@@ -50,19 +60,23 @@ Usuario.init(
       allowNull: false,
       unique: true,
       validate: {
-        isEmail: true,
+        isEmail: {
+          msg: 'El email debe ser válido.',
+        },
       },
     },
     clave: {
       type: DataTypes.STRING(256),
       allowNull: false,
       validate: {
-        len: [8, 256],
+        len: {
+          args: [8, 256],
+          msg: 'La clave debe tener al menos 8 caracteres.',
+        },
       },
     },
     rol_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: Rol,
         key: 'id_rol',
@@ -81,13 +95,12 @@ Usuario.init(
       allowNull: false,
       unique: true,
       validate: {
-        isNumeric: true,
-        len: [11, 11],
+        is: /^[0-9]{11}$/,
+        msg: 'El CUIT debe tener exactamente 11 dígitos.',
       },
     },
     tipo_persona_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: TipoPersona,
         key: 'id_tipo_persona',
@@ -100,6 +113,12 @@ Usuario.init(
     ciudad: {
       type: DataTypes.STRING(100),
       allowNull: false,
+      validate: {
+        len: {
+          args: [2, 100],
+          msg: 'La ciudad debe tener entre 2 y 100 caracteres.',
+        },
+      },
     },
     provincia: {
       type: DataTypes.STRING(100),
@@ -108,24 +127,16 @@ Usuario.init(
     pais: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
     },
     telefono: {
       type: DataTypes.STRING(50),
-    },
-    codigo_isrc_audio: {
-      type: DataTypes.STRING(10),
-      allowNull: false,
-    },
-    codigo_isrc_video: {
-      type: DataTypes.STRING(10),
-      allowNull: false,
+      validate: {
+        is: /^[0-9\-+() ]+$/,
+        msg: 'El teléfono solo puede contener números y los caracteres +, -, (, ) y espacio.',
+      },
     },
     registro_pendiente: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
       defaultValue: true,
     },
   },

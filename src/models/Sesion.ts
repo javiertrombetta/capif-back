@@ -2,18 +2,17 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 
-class LogActividad extends Model {
-  public id_log!: number;
-  public actividad!: string;
-  public fecha!: Date;
+class Sesion extends Model {
+  public id_sesion!: number;
+  public fecha_inicio!: Date;
+  public fecha_fin!: Date | null;
   public id_usuario!: number;
-  public ip_origen!: string;
-  public navegador!: string;
+  public ip!: string;
 }
 
-LogActividad.init(
+Sesion.init(
   {
-    id_log: {
+    id_sesion: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
@@ -35,30 +34,27 @@ LogActividad.init(
         },
       },
     },
-    actividad: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [1, 255],
-          msg: 'La actividad debe tener entre 1 y 255 caracteres.',
-        },
-        notEmpty: {
-          msg: 'La actividad no puede estar vacía.',
-        },
-      },
-    },
-    fecha: {
+    fecha_inicio: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha debe ser una fecha válida.',
+          msg: 'La fecha de inicio debe ser una fecha válida.',
         },
       },
     },
-    ip_origen: {
+    fecha_fin: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de fin debe ser una fecha válida.',
+        },
+      },
+    },
+    ip: {
       type: DataTypes.STRING(50),
       allowNull: false,
       validate: {
@@ -71,26 +67,13 @@ LogActividad.init(
         },
       },
     },
-    navegador: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [1, 100],
-          msg: 'El navegador debe tener entre 1 y 100 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El navegador no puede estar vacío.',
-        },
-      },
-    },
   },
   {
     sequelize,
-    modelName: 'LogActividad',
-    tableName: 'LogActividad',
+    modelName: 'Sesion',
+    tableName: 'Sesion',
     timestamps: false,
   }
 );
 
-export default LogActividad;
+export default Sesion;

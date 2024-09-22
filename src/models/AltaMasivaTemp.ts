@@ -1,73 +1,84 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
-import Compania from './Compania';
+import Repertorio from './Repertorio';
 
-class UsuarioAsignado extends Model {
-  public id_usuario_asignado!: number;
+class AltaMasivaTemp extends Model {
+  public id_temporal!: number;
   public id_usuario!: number;
-  public id_compania!: number;
-  public fecha_asignacion!: Date;
+  public id_repertorio!: number;
+  public fecha!: Date;
+  public procesado!: boolean;
 }
 
-UsuarioAsignado.init(
+AltaMasivaTemp.init(
   {
-    id_usuario_asignado: {
+    id_temporal: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
     id_usuario: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: Usuario,
         key: 'id_usuario',
       },
       onDelete: 'CASCADE',
+      allowNull: false,
       validate: {
         notNull: {
-          msg: 'El ID del usuario no puede ser nulo.',
+          msg: 'El ID del usuario es obligatorio.',
         },
         isInt: {
           msg: 'El ID del usuario debe ser un número entero.',
         },
       },
     },
-    id_compania: {
+    id_repertorio: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
-        model: Compania,
-        key: 'id_compania',
+        model: Repertorio,
+        key: 'id_repertorio',
       },
       onDelete: 'CASCADE',
+      allowNull: false,
       validate: {
         notNull: {
-          msg: 'El ID de la compañía no puede ser nulo.',
+          msg: 'El ID del repertorio es obligatorio.',
         },
         isInt: {
-          msg: 'El ID de la compañía debe ser un número entero.',
+          msg: 'El ID del repertorio debe ser un número entero.',
         },
       },
     },
-    fecha_asignacion: {
+    fecha: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha de asignación debe ser una fecha válida.',
+          msg: 'La fecha debe ser una fecha válida.',
+        },
+      },
+    },
+    procesado: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      validate: {
+        isIn: {
+          args: [[true, false]],
+          msg: 'El valor de "procesado" debe ser booleano.',
         },
       },
     },
   },
   {
     sequelize,
-    modelName: 'UsuarioAsignado',
-    tableName: 'UsuarioAsignado',
+    modelName: 'AltaMasivaTemp',
+    tableName: 'AltaMasivaTemp',
     timestamps: false,
   }
 );
 
-export default UsuarioAsignado;
+export default AltaMasivaTemp;

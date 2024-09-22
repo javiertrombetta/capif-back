@@ -10,7 +10,6 @@ if (env === 'development') {
   dotenv.config();
 }
 
-// Ejecutar una migración específica
 const runSpecificMigration = (migrationFile: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     exec(
@@ -36,7 +35,6 @@ const runSpecificMigration = (migrationFile: string): Promise<void> => {
   });
 };
 
-// Verificar si las tablas existen
 const checkIfTablesExist = (): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
     exec('npx sequelize-cli db:migrate:status', { env: process.env }, (error, stdout, stderr) => {
@@ -55,7 +53,6 @@ const checkIfTablesExist = (): Promise<boolean> => {
   });
 };
 
-// Inicializar la base de datos
 const initDatabase = async () => {
   try {
     await sequelize.authenticate();
@@ -67,18 +64,18 @@ const initDatabase = async () => {
       try {
         await runSpecificMigration('20240918120000-create-tables.js');
         logger.info('Migración de creación de tablas ejecutada correctamente.');
-        process.exit(0); // Éxito
+        process.exit(0);
       } catch (error) {
         logger.error('Error ejecutando la migración de creación de tablas:', error);
-        process.exit(1); // Error en la migración
+        process.exit(1);
       }
     } else {
       logger.info('Las tablas ya existen. No es necesario ejecutar migraciones.');
-      process.exit(0); // No se requieren migraciones
+      process.exit(0);
     }
   } catch (err) {
     logger.error('Error al inicializar la base de datos:', err);
-    process.exit(1); // Error en la conexión a la base de datos
+    process.exit(1);
   } finally {
     await sequelize.close();
   }

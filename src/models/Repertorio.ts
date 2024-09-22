@@ -1,14 +1,13 @@
-import { DataTypes, Model } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 
 class Repertorio extends Model {
   public id_repertorio!: number;
-  public id_usuario!: number;
   public titulo!: string;
-  public tipo?: string;
+  public tipo!: string | null;
+  public id_usuario!: number;
   public fecha_creacion!: Date;
-  public codigo_postulacion?: string;
 }
 
 Repertorio.init(
@@ -18,31 +17,55 @@ Repertorio.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    id_usuario: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
-    },
     titulo: {
       type: DataTypes.STRING(150),
       allowNull: false,
       validate: {
-        notEmpty: true,
+        len: {
+          args: [3, 150],
+          msg: 'El título debe tener entre 3 y 150 caracteres.',
+        },
+        notEmpty: {
+          msg: 'El título no puede estar vacío.',
+        },
       },
     },
     tipo: {
       type: DataTypes.STRING(50),
+      allowNull: true,
+      validate: {
+        isIn: {
+          args: [['Música', 'Literatura', 'Cine', 'Otro']],
+          msg: 'El tipo debe ser uno de los siguientes: Música, Literatura, Cine, Otro.',
+        },
+      },
+    },
+    id_usuario: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: Usuario,
+        key: 'id_usuario',
+      },
+      allowNull: false,
+      onDelete: 'CASCADE',
+      validate: {
+        notNull: {
+          msg: 'El ID del usuario es obligatorio.',
+        },
+        isInt: {
+          msg: 'El ID del usuario debe ser un número entero.',
+        },
+      },
     },
     fecha_creacion: {
       type: DataTypes.DATE,
-      allowNull: false,
       defaultValue: DataTypes.NOW,
-    },
-    codigo_postulacion: {
-      type: DataTypes.STRING(50),
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de creación debe ser una fecha válida.',
+        },
+      },
     },
   },
   {

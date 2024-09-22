@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class Regla extends Model {
@@ -18,16 +18,35 @@ Regla.init(
     descripcion: {
       type: DataTypes.STRING(255),
       allowNull: false,
+      validate: {
+        len: {
+          args: [1, 255],
+          msg: 'La descripción debe tener entre 1 y 255 caracteres.',
+        },
+        notEmpty: {
+          msg: 'La descripción no puede estar vacía.',
+        },
+      },
     },
     fecha_creacion: {
       type: DataTypes.DATE,
-      allowNull: false,
       defaultValue: DataTypes.NOW,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de creación debe ser una fecha válida.',
+        },
+      },
     },
     activo: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
       defaultValue: true,
+      validate: {
+        isIn: {
+          args: [[true, false]],
+          msg: 'El campo activo debe ser verdadero o falso.',
+        },
+      },
     },
   },
   {

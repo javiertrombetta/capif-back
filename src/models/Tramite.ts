@@ -1,14 +1,14 @@
-import { DataTypes, Model } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 import Estado from './Estado';
 
 class Tramite extends Model {
   public id_tramite!: number;
-  public id_usuario!: number;
   public tipo_tramite!: string;
+  public id_usuario!: number;
+  public estado_id!: number;
   public fecha_inicio!: Date;
-  public estado_id?: number;
 }
 
 Tramite.init(
@@ -20,23 +20,43 @@ Tramite.init(
     },
     id_usuario: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: Usuario,
         key: 'id_usuario',
       },
+      onDelete: 'CASCADE',
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'El ID del usuario es obligatorio.',
+        },
+        isInt: {
+          msg: 'El ID del usuario debe ser un número entero.',
+        },
+      },
     },
     tipo_tramite: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      allowNull: true,
       validate: {
-        notEmpty: true,
+        len: {
+          args: [3, 100],
+          msg: 'El tipo de trámite debe tener entre 3 y 100 caracteres.',
+        },
+        notEmpty: {
+          msg: 'El tipo de trámite no puede estar vacío.',
+        },
       },
     },
     fecha_inicio: {
       type: DataTypes.DATE,
-      allowNull: false,
       defaultValue: DataTypes.NOW,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de inicio debe ser una fecha válida.',
+        },
+      },
     },
     estado_id: {
       type: DataTypes.INTEGER,
@@ -44,6 +64,7 @@ Tramite.init(
         model: Estado,
         key: 'id_estado',
       },
+      allowNull: true,
     },
   },
   {

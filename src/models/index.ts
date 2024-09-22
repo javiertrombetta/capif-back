@@ -1,87 +1,171 @@
 import sequelize from '../config/database/sequelize';
+
 import Rol from './Rol';
 import TipoEstado from './TipoEstado';
 import Estado from './Estado';
 import TipoPersona from './TipoPersona';
-import TipoCompania from './TipoCompania';
 import Usuario from './Usuario';
+import TipoCompania from './TipoCompania';
 import Compania from './Compania';
 import UsuarioAsignado from './UsuarioAsignado';
+import Repertorio from './Repertorio';
 import Fonograma from './Fonograma';
+import ISRC from './ISRC';
 import Conflicto from './Conflicto';
+import ComentarioConflicto from './ComentarioConflicto';
 import Consulta from './Consulta';
 import Tramite from './Tramite';
 import Documento from './Documento';
-import AuditoriaCambio from './AuditoriaCambio';
-import Repertorio from './Repertorio';
+import AltaMasivaTemp from './AltaMasivaTemp';
+import Reporte from './Reporte';
 import Pago from './Pago';
 import CuentaCorriente from './CuentaCorriente';
+import Archivo from './Archivo';
+import Sesion from './Sesion';
 import LogActividad from './LogActividad';
+import AuditoriaCambio from './AuditoriaCambio';
 import ErroresInsercion from './ErroresInsercion';
 import Regla from './Regla';
+import TitularFonograma from './TitularFonograma';
+import Involucrados from './Involucrados';
+import DecisionInvolucrados from './DecisionInvolucrados';
+import PostulacionPremio from './PostulacionPremio';
 
-Usuario.belongsTo(Rol, { foreignKey: 'rol_id', onDelete: 'CASCADE' });
-Rol.hasMany(Usuario, { foreignKey: 'rol_id' });
+// Rol <-> Usuario
+Rol.hasMany(Usuario, { foreignKey: 'rol_id', onDelete: 'CASCADE' });
+Usuario.belongsTo(Rol, { foreignKey: 'rol_id' });
 
-Usuario.belongsTo(Estado, { foreignKey: 'estado_id' });
+// TipoEstado <-> Estado
+TipoEstado.hasMany(Estado, { foreignKey: 'tipo_estado_id', onDelete: 'CASCADE' });
+Estado.belongsTo(TipoEstado, { foreignKey: 'tipo_estado_id' });
+
+// Estado <-> Usuario
 Estado.hasMany(Usuario, { foreignKey: 'estado_id' });
+Usuario.belongsTo(Estado, { foreignKey: 'estado_id' });
 
-Usuario.belongsTo(TipoPersona, { foreignKey: 'tipo_persona_id', onDelete: 'CASCADE' });
-TipoPersona.hasMany(Usuario, { foreignKey: 'tipo_persona_id' });
+// TipoPersona <-> Usuario
+TipoPersona.hasMany(Usuario, { foreignKey: 'tipo_persona_id', onDelete: 'CASCADE' });
+Usuario.belongsTo(TipoPersona, { foreignKey: 'tipo_persona_id' });
 
-Compania.belongsTo(TipoCompania, { foreignKey: 'tipo_compania_id', onDelete: 'CASCADE' });
-TipoCompania.hasMany(Compania, { foreignKey: 'tipo_compania_id' });
+// TipoCompania <-> Compania
+TipoCompania.hasMany(Compania, { foreignKey: 'tipo_compania_id', onDelete: 'CASCADE' });
+Compania.belongsTo(TipoCompania, { foreignKey: 'tipo_compania_id' });
 
-Compania.belongsTo(Estado, { foreignKey: 'estado_id' });
+// Estado <-> Compania
 Estado.hasMany(Compania, { foreignKey: 'estado_id' });
+Compania.belongsTo(Estado, { foreignKey: 'estado_id' });
 
-UsuarioAsignado.belongsTo(Usuario, { foreignKey: 'id_usuario', onDelete: 'CASCADE' });
-Usuario.hasMany(UsuarioAsignado, { foreignKey: 'id_usuario' });
+// Usuario <-> UsuarioAsignado
+Usuario.hasMany(UsuarioAsignado, { foreignKey: 'id_usuario', onDelete: 'CASCADE' });
+UsuarioAsignado.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
-UsuarioAsignado.belongsTo(Compania, { foreignKey: 'id_compania', onDelete: 'CASCADE' });
-Compania.hasMany(UsuarioAsignado, { foreignKey: 'id_compania' });
+// Compania <-> UsuarioAsignado
+Compania.hasMany(UsuarioAsignado, { foreignKey: 'id_compania', onDelete: 'CASCADE' });
+UsuarioAsignado.belongsTo(Compania, { foreignKey: 'id_compania' });
 
-Fonograma.belongsTo(Estado, { foreignKey: 'estado_id' });
-Estado.hasMany(Fonograma, { foreignKey: 'estado_id' });
-
-Fonograma.belongsTo(Repertorio, { foreignKey: 'id_repertorio', onDelete: 'CASCADE' });
-Repertorio.hasMany(Fonograma, { foreignKey: 'id_repertorio' });
-
-Conflicto.belongsTo(Fonograma, { foreignKey: 'id_fonograma', onDelete: 'CASCADE' });
-Fonograma.hasMany(Conflicto, { foreignKey: 'id_fonograma' });
-
-Conflicto.belongsTo(Estado, { foreignKey: 'estado_id' });
-Estado.hasMany(Conflicto, { foreignKey: 'estado_id' });
-
-Consulta.belongsTo(Usuario, { foreignKey: 'id_usuario' });
-Usuario.hasMany(Consulta, { foreignKey: 'id_usuario' });
-
-Consulta.belongsTo(Estado, { foreignKey: 'estado_id' });
-Estado.hasMany(Consulta, { foreignKey: 'estado_id' });
-
-Tramite.belongsTo(Usuario, { foreignKey: 'id_usuario' });
-Usuario.hasMany(Tramite, { foreignKey: 'id_usuario' });
-
-Tramite.belongsTo(Estado, { foreignKey: 'estado_id' });
-Estado.hasMany(Tramite, { foreignKey: 'estado_id' });
-
-Documento.belongsTo(Tramite, { foreignKey: 'id_tramite' });
-Tramite.hasMany(Documento, { foreignKey: 'id_tramite' });
-
-AuditoriaCambio.belongsTo(Usuario, { foreignKey: 'id_usuario' });
-Usuario.hasMany(AuditoriaCambio, { foreignKey: 'id_usuario' });
-
-Repertorio.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+// Usuario <-> Repertorio
 Usuario.hasMany(Repertorio, { foreignKey: 'id_usuario' });
+Repertorio.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
-Pago.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+// Repertorio <-> Fonograma
+Repertorio.hasMany(Fonograma, { foreignKey: 'id_repertorio', onDelete: 'CASCADE' });
+Fonograma.belongsTo(Repertorio, { foreignKey: 'id_repertorio' });
+
+// Fonograma <-> ISRC
+Fonograma.hasOne(ISRC, { foreignKey: 'id_fonograma', onDelete: 'CASCADE' });
+ISRC.belongsTo(Fonograma, { foreignKey: 'id_fonograma' });
+
+// Fonograma <-> Conflicto
+Fonograma.hasMany(Conflicto, { foreignKey: 'id_fonograma', onDelete: 'CASCADE' });
+Conflicto.belongsTo(Fonograma, { foreignKey: 'id_fonograma' });
+
+// Conflicto <-> ComentarioConflicto
+Conflicto.hasMany(ComentarioConflicto, { foreignKey: 'id_conflicto', onDelete: 'CASCADE' });
+ComentarioConflicto.belongsTo(Conflicto, { foreignKey: 'id_conflicto' });
+
+// Usuario <-> Consulta
+Usuario.hasMany(Consulta, { foreignKey: 'id_usuario' });
+Consulta.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Usuario <-> Tramite
+Usuario.hasMany(Tramite, { foreignKey: 'id_usuario' });
+Tramite.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Tramite <-> Documento
+Tramite.hasMany(Documento, { foreignKey: 'id_tramite', onDelete: 'CASCADE' });
+Documento.belongsTo(Tramite, { foreignKey: 'id_tramite' });
+
+// Usuario <-> AltaMasivaTemp
+Usuario.hasMany(AltaMasivaTemp, { foreignKey: 'id_usuario' });
+AltaMasivaTemp.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Repertorio <-> AltaMasivaTemp
+Repertorio.hasMany(AltaMasivaTemp, { foreignKey: 'id_repertorio', onDelete: 'CASCADE' });
+AltaMasivaTemp.belongsTo(Repertorio, { foreignKey: 'id_repertorio' });
+
+// Usuario <-> Reporte
+Usuario.hasMany(Reporte, { foreignKey: 'id_usuario' });
+Reporte.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Usuario <-> Pago
 Usuario.hasMany(Pago, { foreignKey: 'id_usuario' });
+Pago.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
-CuentaCorriente.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+// Usuario <-> CuentaCorriente
 Usuario.hasMany(CuentaCorriente, { foreignKey: 'id_usuario' });
+CuentaCorriente.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
-LogActividad.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+// Usuario <-> Archivo
+Usuario.hasMany(Archivo, { foreignKey: 'id_usuario' });
+Archivo.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Usuario <-> Sesion
+Usuario.hasMany(Sesion, { foreignKey: 'id_usuario' });
+Sesion.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Usuario <-> LogActividad
 Usuario.hasMany(LogActividad, { foreignKey: 'id_usuario' });
+LogActividad.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Usuario <-> AuditoriaCambio
+Usuario.hasMany(AuditoriaCambio, { foreignKey: 'id_usuario' });
+AuditoriaCambio.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Usuario <-> ErroresInsercion
+Usuario.hasMany(ErroresInsercion, { foreignKey: 'id_usuario' });
+ErroresInsercion.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Fonograma <-> TitularFonograma
+Fonograma.hasMany(TitularFonograma, { foreignKey: 'id_fonograma', onDelete: 'CASCADE' });
+TitularFonograma.belongsTo(Fonograma, { foreignKey: 'id_fonograma' });
+
+// Compania <-> TitularFonograma
+Compania.hasMany(TitularFonograma, { foreignKey: 'id_titular', onDelete: 'CASCADE' });
+TitularFonograma.belongsTo(Compania, { foreignKey: 'id_titular' });
+
+// Conflicto <-> Involucrados
+Conflicto.hasMany(Involucrados, { foreignKey: 'id_conflicto', onDelete: 'CASCADE' });
+Involucrados.belongsTo(Conflicto, { foreignKey: 'id_conflicto' });
+
+// Compania <-> Involucrados
+Compania.hasMany(Involucrados, { foreignKey: 'id_titular', onDelete: 'CASCADE' });
+Involucrados.belongsTo(Compania, { foreignKey: 'id_titular' });
+
+// Involucrados <-> DecisionInvolucrados
+Involucrados.hasMany(DecisionInvolucrados, { foreignKey: 'id_involucrado', onDelete: 'CASCADE' });
+DecisionInvolucrados.belongsTo(Involucrados, { foreignKey: 'id_involucrado' });
+
+// Compania <-> PostulacionPremio
+Compania.hasMany(PostulacionPremio, { foreignKey: 'id_compania', onDelete: 'CASCADE' });
+PostulacionPremio.belongsTo(Compania, { foreignKey: 'id_compania' });
+
+// Usuario <-> PostulacionPremio
+Usuario.hasMany(PostulacionPremio, { foreignKey: 'id_usuario', onDelete: 'CASCADE' });
+PostulacionPremio.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// Estado <-> Trámite
+Estado.hasMany(Tramite, { foreignKey: 'estado_id', onDelete: 'CASCADE' });
+Tramite.belongsTo(Estado, { foreignKey: 'estado_id' });
 
 export {
   sequelize,
@@ -89,20 +173,30 @@ export {
   TipoEstado,
   Estado,
   TipoPersona,
-  TipoCompania,
   Usuario,
+  TipoCompania,
   Compania,
   UsuarioAsignado,
+  Repertorio,
   Fonograma,
+  ISRC,
   Conflicto,
+  ComentarioConflicto,
   Consulta,
   Tramite,
   Documento,
-  AuditoriaCambio,
-  Repertorio,
+  AltaMasivaTemp,
+  Reporte,
   Pago,
   CuentaCorriente,
+  Archivo,
+  Sesion,
   LogActividad,
+  AuditoriaCambio,
   ErroresInsercion,
   Regla,
+  TitularFonograma,
+  Involucrados,
+  DecisionInvolucrados,
+  PostulacionPremio,
 };

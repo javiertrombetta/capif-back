@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 import Compania from './Compania';
@@ -25,6 +25,14 @@ UsuarioAsignado.init(
         key: 'id_usuario',
       },
       onDelete: 'CASCADE',
+      validate: {
+        notNull: {
+          msg: 'El ID del usuario no puede ser nulo.',
+        },
+        isInt: {
+          msg: 'El ID del usuario debe ser un número entero.',
+        },
+      },
     },
     id_compania: {
       type: DataTypes.INTEGER,
@@ -34,11 +42,24 @@ UsuarioAsignado.init(
         key: 'id_compania',
       },
       onDelete: 'CASCADE',
+      validate: {
+        notNull: {
+          msg: 'El ID de la compañía no puede ser nulo.',
+        },
+        isInt: {
+          msg: 'El ID de la compañía debe ser un número entero.',
+        },
+      },
     },
     fecha_asignacion: {
       type: DataTypes.DATE,
-      allowNull: false,
       defaultValue: DataTypes.NOW,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de asignación debe ser una fecha válida.',
+        },
+      },
     },
   },
   {

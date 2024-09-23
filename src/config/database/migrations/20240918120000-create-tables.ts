@@ -3,24 +3,19 @@
 import { QueryInterface, Sequelize, DataTypes } from 'sequelize';
 
 module.exports = {
-  up: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {
-    try {
-      await queryInterface.createTable('Rol', {
-        id_rol: {
-          type: DataTypes.INTEGER,
-          autoIncrement: true,
-          primaryKey: true,
-        },
-        descripcion: {
-          type: DataTypes.STRING(50),
-          allowNull: false,
-        },
-      });
-      console.log('Tabla "Rol" creada correctamente.');
-    } catch (error) {
-      console.error('Error en la migración hasta Rol:', error);
-      throw error;
-    }
+  up: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {    
+    await queryInterface.createTable('Rol', {
+      id_rol: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+    });
+      
 
     await queryInterface.createTable('TipoEstado', {
       id_tipo_estado: {

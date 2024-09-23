@@ -1,10 +1,9 @@
 import Rol from '../models/Rol';
-import Estado from '../models/Estado';
 
-export const findRoleById = async (rol_id: number) => {
+export const findRolById = async (rol_id: number) => {
   return await Rol.findOne({ where: { id_rol: rol_id } });
 };
 
-export const findEstadoById = async (estado_id: number) => {
-  return await Estado.findOne({ where: { id_estado: estado_id } });
+export const findRolByDescripcion = async (descripcion: string) => {
+  return await Rol.findOne({ where: { descripcion } });
 };

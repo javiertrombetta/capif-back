@@ -1,9 +1,9 @@
 import Usuario from '../models/Usuario';
 
-export const findUserByEmail = async (email: string) => {
+export const findUsuarioByEmail = async (email: string) => {
   return await Usuario.findOne({ where: { email } });
 };
 
-export const findUserById = async (id: number) => {
+export const findUsuarioById = async (id: number) => {
   return await Usuario.findByPk(id);
 };

@@ -55,7 +55,7 @@ Involucrados.init(
     sequelize,
     modelName: 'Involucrados',
     tableName: 'Involucrados',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

@@ -94,7 +94,7 @@ TitularFonograma.init(
     sequelize,
     modelName: 'TitularFonograma',
     tableName: 'TitularFonograma',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

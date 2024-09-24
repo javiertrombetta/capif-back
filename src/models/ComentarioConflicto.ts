@@ -57,7 +57,7 @@ ComentarioConflicto.init(
     sequelize,
     modelName: 'ComentarioConflicto',
     tableName: 'ComentarioConflicto',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

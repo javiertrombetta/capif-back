@@ -72,7 +72,7 @@ Sesion.init(
     sequelize,
     modelName: 'Sesion',
     tableName: 'Sesion',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

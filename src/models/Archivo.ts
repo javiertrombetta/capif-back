@@ -89,7 +89,7 @@ Archivo.init(
     sequelize,
     modelName: 'Archivo',
     tableName: 'Archivo',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

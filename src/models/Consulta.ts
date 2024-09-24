@@ -81,7 +81,7 @@ Consulta.init(
     sequelize,
     modelName: 'Consulta',
     tableName: 'Consulta',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

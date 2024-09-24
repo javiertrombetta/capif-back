@@ -72,7 +72,7 @@ Repertorio.init(
     sequelize,
     modelName: 'Repertorio',
     tableName: 'Repertorio',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

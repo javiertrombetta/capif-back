@@ -20,6 +20,10 @@ class Usuario extends Model {
   public pais!: string;
   public telefono?: string;
   public registro_pendiente!: boolean;
+  public email_verification_token!: string | null;
+  public email_verification_token_expires!: Date | null;
+  public reset_password_token!: string | null;
+  public reset_password_token_expires!: Date | null;
 }
 
 Usuario.init(
@@ -35,10 +39,11 @@ Usuario.init(
       validate: {
         len: {
           args: [2, 100],
-          msg: 'El nombre debe tener entre 2 y 100 caracteres.',
+          msg: 'El apellido debe tener entre 2 y 100 caracteres.',
         },
-        isAlpha: {
-          msg: 'El nombre solo debe contener letras.',
+        is: {
+          args: /^[A-Za-zÀ-ÿ\s]+$/,
+          msg: 'El apellido solo debe contener letras y espacios.',
         },
       },
     },
@@ -50,8 +55,9 @@ Usuario.init(
           args: [2, 100],
           msg: 'El apellido debe tener entre 2 y 100 caracteres.',
         },
-        isAlpha: {
-          msg: 'El apellido solo debe contener letras.',
+        is: {
+          args: /^[A-Za-zÀ-ÿ\s]+$/,
+          msg: 'El apellido solo debe contener letras y espacios.',
         },
       },
     },
@@ -95,8 +101,10 @@ Usuario.init(
       allowNull: false,
       unique: true,
       validate: {
-        is: /^[0-9]{11}$/,
-        msg: 'El CUIT debe tener exactamente 11 dígitos.',
+        is: {
+          args: /^[0-9]{11}$/,
+          msg: 'El CUIT debe tener exactamente 11 dígitos.',
+        },
       },
     },
     tipo_persona_id: {
@@ -131,20 +139,38 @@ Usuario.init(
     telefono: {
       type: DataTypes.STRING(50),
       validate: {
-        is: /^[0-9\-+() ]+$/,
-        msg: 'El teléfono solo puede contener números y los caracteres +, -, (, ) y espacio.',
+        is: {
+          args: /^[0-9\-+() ]+$/,
+          msg: 'El teléfono solo puede contener números y los caracteres +, -, (, ) y espacio.',
+        },
       },
     },
     registro_pendiente: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+    email_verification_token: {
+      type: DataTypes.STRING(256),
+      allowNull: true,
+    },
+    email_verification_token_expires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    reset_password_token: {
+      type: DataTypes.STRING(256),
+      allowNull: true,
+    },
+    reset_password_token_expires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     sequelize,
     modelName: 'Usuario',
     tableName: 'Usuario',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

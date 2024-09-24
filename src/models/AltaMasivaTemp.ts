@@ -77,7 +77,7 @@ AltaMasivaTemp.init(
     sequelize,
     modelName: 'AltaMasivaTemp',
     tableName: 'AltaMasivaTemp',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

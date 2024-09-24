@@ -14,6 +14,16 @@ module.exports = {
         type: DataTypes.STRING(50),
         allowNull: false,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
       
 
@@ -26,6 +36,16 @@ module.exports = {
       descripcion: {
         type: DataTypes.STRING(50),
         allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 
@@ -47,6 +67,16 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('TipoPersona', {
@@ -59,6 +89,16 @@ module.exports = {
         type: DataTypes.STRING(50),
         allowNull: false,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('Usuario', {
@@ -70,10 +110,30 @@ module.exports = {
       nombre: {
         type: DataTypes.STRING(100),
         allowNull: false,
+        validate: {
+          len: {
+            args: [2, 100],
+            msg: 'El apellido debe tener entre 2 y 100 caracteres.',
+          },
+          is: {
+            args: /^[A-Za-zÀ-ÿ\s]+$/,
+            msg: 'El apellido solo debe contener letras y espacios.',
+          },
+        },
       },
       apellido: {
         type: DataTypes.STRING(100),
         allowNull: false,
+        validate: {
+          len: {
+            args: [2, 100],
+            msg: 'El apellido debe tener entre 2 y 100 caracteres.',
+          },
+          is: {
+            args: /^[A-Za-zÀ-ÿ\s]+$/,
+            msg: 'El apellido solo debe contener letras y espacios.',
+          },
+        },
       },
       email: {
         type: DataTypes.STRING(150),
@@ -144,6 +204,32 @@ module.exports = {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
       },
+      email_verification_token: {
+        type: DataTypes.STRING(256),
+        allowNull: true,
+      },
+      email_verification_token_expires: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      reset_password_token: {
+        type: DataTypes.STRING(256),
+        allowNull: true,
+      },
+      reset_password_token_expires: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });    
 
     await queryInterface.createTable('TipoCompania', {
@@ -155,6 +241,16 @@ module.exports = {
       descripcion: {
         type: DataTypes.STRING(50),
         allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 
@@ -200,8 +296,20 @@ module.exports = {
           model: 'Estado',
           key: 'id_estado',
         },
+      },      
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
+
+    
 
     await queryInterface.createTable('UsuarioAsignado', {
       id_usuario_asignado: {
@@ -227,6 +335,16 @@ module.exports = {
       },
       fecha_asignacion: {
         type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: DataTypes.NOW,
       },
     });
@@ -255,6 +373,16 @@ module.exports = {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });    
     
     await queryInterface.createTable('Fonograma', {
@@ -278,7 +406,7 @@ module.exports = {
       artista: {
         type: DataTypes.STRING(100),
         allowNull: false,
-      },      
+      },
       duracion: {
         type: DataTypes.TIME,
         allowNull: false,
@@ -295,6 +423,16 @@ module.exports = {
           model: 'Estado',
           key: 'id_estado',
         },
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 
@@ -322,6 +460,16 @@ module.exports = {
       tipo: {
         type: DataTypes.ENUM('audio', 'video'),
         allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 
@@ -369,6 +517,16 @@ module.exports = {
       fecha_resolucion: {
         type: DataTypes.DATE,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('ComentarioConflicto', {
@@ -391,6 +549,16 @@ module.exports = {
       },
       fecha: {
         type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: DataTypes.NOW,
       },
     });
@@ -426,6 +594,16 @@ module.exports = {
           key: 'id_estado',
         },
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('Tramite', {
@@ -454,6 +632,16 @@ module.exports = {
           model: 'Estado',
           key: 'id_estado',
         },
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 
@@ -486,6 +674,16 @@ module.exports = {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });    
 
     await queryInterface.createTable('AltaMasivaTemp', {
@@ -516,6 +714,16 @@ module.exports = {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('Reporte', {
@@ -542,6 +750,16 @@ module.exports = {
       ruta_archivo: {
         type: DataTypes.STRING(255),
         allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 
@@ -572,6 +790,16 @@ module.exports = {
       referencia: {
         type: DataTypes.STRING(100),
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('CuentaCorriente', {
@@ -593,6 +821,16 @@ module.exports = {
       },
       fecha_actualizacion: {
         type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: DataTypes.NOW,
       },
     });
@@ -626,6 +864,16 @@ module.exports = {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });    
 
     await queryInterface.createTable('Sesion', {
@@ -651,6 +899,16 @@ module.exports = {
       ip: {
         type: DataTypes.STRING(50),
         allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 
@@ -683,6 +941,16 @@ module.exports = {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('AuditoriaCambio', {
@@ -714,6 +982,16 @@ module.exports = {
         type: DataTypes.TEXT,
         allowNull: false,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('ErroresInsercion', {
@@ -732,6 +1010,16 @@ module.exports = {
       },
       fecha_error: {
         type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: DataTypes.NOW,
       },
     });
@@ -753,6 +1041,16 @@ module.exports = {
       activo: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 
@@ -792,6 +1090,16 @@ module.exports = {
         allowNull: false,
         defaultValue: 100.0,
       },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('Involucrados', {
@@ -815,7 +1123,17 @@ module.exports = {
           key: 'id_compania',
         },
         onDelete: 'CASCADE',
-      },      
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.createTable('DecisionInvolucrados', {
@@ -839,6 +1157,16 @@ module.exports = {
       fecha_decision: {
         type: DataTypes.DATE,
         allowNull: true,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 
@@ -870,6 +1198,16 @@ module.exports = {
       },
       fecha_asignacion: {
         type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
         defaultValue: DataTypes.NOW,
       },
     });

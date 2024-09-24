@@ -1,3 +1,5 @@
+
+
 import transporter from '../config/nodemailer';
 
 interface MailOptions {
@@ -8,7 +10,7 @@ interface MailOptions {
 
 export const sendEmail = async (options: MailOptions): Promise<void> => {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: process.env.EMAIL_FROM,
     to: options.to,
     subject: options.subject,
     html: options.html,

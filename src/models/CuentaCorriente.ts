@@ -64,7 +64,7 @@ CuentaCorriente.init(
     sequelize,
     modelName: 'CuentaCorriente',
     tableName: 'CuentaCorriente',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

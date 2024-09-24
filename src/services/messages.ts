@@ -1,5 +1,6 @@
 export const SUCCESS = {
-  REGISTER: 'Registro completado exitosamente. Confirmá tu cuenta ingresando a la Bandeja de Entrada del correo registrado.',
+  REGISTER:
+    'Registro completado exitosamente. Confirmá tu cuenta ingresando a la Bandeja de Entrada del correo registrado.',
   LOGIN: 'Sesión iniciada correctamente.',
   PASSWORD_RECOVERY_EMAIL_SENT: 'Correo para restablecer la contraseña enviado.',
   PASSWORD_RESET: 'Contraseña actualizada correctamente.',
@@ -8,6 +9,7 @@ export const SUCCESS = {
   USER_BLOCKED: 'Usuario bloqueado correctamente.',
   USER_UNBLOCKED: 'Usuario habilitado correctamente.',
   ROLE_UPDATED: 'Rol actualizado correctamente.',
+  PASSWORD_RESET_REQUESTED: 'Solicitud de restablecimiento de contraseña enviada.',
 };
 
 export const ERROR = {
@@ -16,6 +18,9 @@ export const ERROR = {
     ROLE_INVALID: 'El rol proporcionado no es válido.',
     STATE_INVALID: 'El estado proporcionado no es válido.',
     PASSWORD_INCORRECT: 'Credenciales incorrectas.',
+    ALREADY_LOGGED_IN: 'El usuario ya se encuentra logueado.',
+    NO_TOKEN_PROVIDED: 'No se proporcionó un token.', 
+    INVALID_TOKEN: 'Token inválido o expirado.',
   },
   USER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
@@ -60,30 +65,26 @@ export const EMAIL_BODY = {
 
 export const VALIDATION_AUTH = {
   email: {
-    'string.email': 'Por favor, proporciona un correo electrónico válido.',
-    'string.empty': 'El correo electrónico es obligatorio.',
-    'any.required': 'El correo electrónico es obligatorio.',
+    'string.email': 'El email debe ser válido.',
+    'any.required': 'El email es obligatorio.',
   },
   password: {
     'string.min': 'La contraseña debe tener al menos 8 caracteres.',
-    'string.empty': 'La contraseña es obligatoria.',
     'any.required': 'La contraseña es obligatoria.',
   },
   nombre: {
     'string.min': 'El nombre debe tener al menos 2 caracteres.',
-    'string.max': 'El nombre no puede exceder los 100 caracteres.',
-    'string.empty': 'El nombre es obligatorio.',
+    'string.max': 'El nombre no debe exceder los 100 caracteres.',
     'any.required': 'El nombre es obligatorio.',
   },
   apellido: {
     'string.min': 'El apellido debe tener al menos 2 caracteres.',
-    'string.max': 'El apellido no puede exceder los 100 caracteres.',
-    'string.empty': 'El apellido es obligatorio.',
+    'string.max': 'El apellido no debe exceder los 100 caracteres.',
+    'string.pattern.base': 'El apellido solo debe contener letras y espacios.',
     'any.required': 'El apellido es obligatorio.',
   },
   cuit: {
-    'string.pattern.base': 'El CUIT debe tener 11 dígitos.',
-    'string.empty': 'El CUIT es obligatorio.',
+    'string.pattern.base': 'El CUIT debe tener exactamente 11 dígitos.',
     'any.required': 'El CUIT es obligatorio.',
   },
   tipo_persona_id: {
@@ -91,22 +92,21 @@ export const VALIDATION_AUTH = {
     'any.required': 'El tipo de persona es obligatorio.',
   },
   domicilio: {
-    'string.max': 'El domicilio no puede exceder los 200 caracteres.',
+    'string.max': 'El domicilio no debe exceder los 200 caracteres.',
   },
   ciudad: {
-    'string.empty': 'La ciudad es obligatoria.',
     'any.required': 'La ciudad es obligatoria.',
   },
   provincia: {
-    'string.empty': 'La provincia es obligatoria.',
     'any.required': 'La provincia es obligatoria.',
   },
   pais: {
-    'string.empty': 'El país es obligatorio.',
     'any.required': 'El país es obligatorio.',
   },
   telefono: {
-    'string.max': 'El teléfono no puede exceder los 50 caracteres.',
+    'string.max': 'El teléfono no debe exceder los 50 caracteres.',
+    'string.pattern.base':
+      'El teléfono solo puede contener números y los caracteres +, -, (, ), y espacio.',
   },
   token: {
     'string.empty': 'El token es obligatorio.',
@@ -116,7 +116,7 @@ export const VALIDATION_AUTH = {
     'string.min': 'La nueva contraseña debe tener al menos 8 caracteres.',
     'string.empty': 'La nueva contraseña es obligatoria.',
     'any.required': 'La nueva contraseña es obligatoria.',
-  },  
+  },
   bloquear: {
     'boolean.base': 'El valor para bloquear debe ser verdadero o falso.',
     'any.required': 'El valor para bloquear es obligatorio.',

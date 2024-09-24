@@ -52,7 +52,7 @@ ErroresInsercion.init(
     sequelize,
     modelName: 'ErroresInsercion',
     tableName: 'ErroresInsercion',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

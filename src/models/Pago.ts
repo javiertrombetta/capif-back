@@ -86,7 +86,7 @@ Pago.init(
     sequelize,
     modelName: 'Pago',
     tableName: 'Pago',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

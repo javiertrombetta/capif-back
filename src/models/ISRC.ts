@@ -62,7 +62,7 @@ ISRC.init(
     sequelize,
     modelName: 'ISRC',
     tableName: 'ISRC',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

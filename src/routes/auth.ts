@@ -3,12 +3,13 @@ import { celebrate, Segments } from 'celebrate';
 import {
   login,
   register,
-  recoverPassword,
+  requestPasswordReset,
   resetPassword,
   validateEmail,
   authorizeProducer,
   blockOrUnblockUser,
   changeUserRole,
+  getUser, // Importa la función getUser
 } from '../controllers/authController';
 import {
   registerSchema,
@@ -26,17 +27,21 @@ const router = express.Router();
 
 router.post('/login', celebrate({ [Segments.BODY]: loginSchema }), login);
 router.post('/register', celebrate({ [Segments.BODY]: registerSchema }), register);
+
 router.post(
-  '/recover-password',
+  '/request-password-reset',
   celebrate({ [Segments.BODY]: recoverPasswordSchema }),
-  recoverPassword
+  requestPasswordReset
 );
+
 router.post('/reset-password', celebrate({ [Segments.BODY]: resetPasswordSchema }), resetPassword);
 router.get(
   '/validate-email/:token',
   celebrate({ [Segments.PARAMS]: validateEmailSchema }),
   validateEmail
 );
+
+router.get('/user', authenticate, getUser);
 
 router.post(
   '/authorize-producer',
@@ -45,13 +50,15 @@ router.post(
   celebrate({ [Segments.BODY]: authorizeProducerSchema }),
   authorizeProducer
 );
+
 router.post(
-  '/block-user',
+  '/status',
   authenticate,
   authorizeRoles(['admin']),
   celebrate({ [Segments.BODY]: blockUserSchema }),
   blockOrUnblockUser
 );
+
 router.post(
   '/change-role',
   authenticate,

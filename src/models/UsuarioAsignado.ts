@@ -66,7 +66,7 @@ UsuarioAsignado.init(
     sequelize,
     modelName: 'UsuarioAsignado',
     tableName: 'UsuarioAsignado',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

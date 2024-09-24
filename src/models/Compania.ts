@@ -87,7 +87,7 @@ Compania.init(
     sequelize,
     modelName: 'Compania',
     tableName: 'Compania',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

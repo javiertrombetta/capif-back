@@ -1,9 +1,28 @@
 import dotenv from 'dotenv';
-dotenv.config();
+
+const env = process.env.NODE_ENV || 'development';
+
+if (env === 'development') {
+  console.log('Cargando variables de entorno desde .env.dev.local...');
+  dotenv.config({ path: '.env.dev.local' });
+} else if (env === 'production.local') {
+  console.log('Cargando variables de entorno desde .env.prod.local...');
+  dotenv.config({ path: '.env.prod.local' });
+} else if (env === 'production.remote') {
+  console.log('Cargando variables de entorno desde .env.prod.remote...');
+  dotenv.config({ path: '.env.prod.remote' });
+} else {
+  console.log(
+    `El entorno ${env} no está definido. Cargando las variables de entorno por defecto...`
+  );
+  dotenv.config();
+}
+
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middlewares/errorHandler';
 import router from './routes';
@@ -12,6 +31,7 @@ import logger from './config/logger';
 import { errors as celebrateErrors } from 'celebrate';
 
 const app = express();
+app.use(cookieParser());
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -19,7 +39,12 @@ const limiter = rateLimit({
 });
 
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    // origin: 'http://tu-dominio-frontend.com',
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(limiter);
 
@@ -88,6 +113,26 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 
 app.use((req: Request, res: Response) => {
   res.status(404).send({ error: 'Recurso no encontrado' });
+});
+
+console.log('Variables de entorno cargadas:');
+console.log({
+  PORT: process.env.PORT,
+  DB_USER: process.env.DB_USER,
+  DB_PASSWORD: process.env.DB_PASSWORD,
+  DB_NAME: process.env.DB_NAME,
+  DB_HOST: process.env.DB_HOST,
+  DB_PORT: process.env.DB_PORT,
+  NODE_ENV: process.env.NODE_ENV,
+  JWT_SECRET: process.env.JWT_SECRET,
+  REDIS_HOST: process.env.REDIS_HOST,
+  REDIS_PORT: process.env.REDIS_PORT,
+  TZ: process.env.TZ,
+  FRONTEND_URL: process.env.FRONTEND_URL,
+  EMAIL_SERVICE: process.env.EMAIL_SERVICE,
+  EMAIL_FROM: process.env.EMAIL_FROM,
+  EMAIL_USER: process.env.EMAIL_USER,
+  EMAIL_PASS: process.env.EMAIL_PASS,
 });
 
 export default app;

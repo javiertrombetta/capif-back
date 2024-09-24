@@ -1,14 +1,26 @@
-import { exec } from 'child_process';
-import sequelize from './sequelize';
-import logger from '../logger';
+import dotenv from 'dotenv';
 
 const env = process.env.NODE_ENV || 'development';
 
 if (env === 'development') {
-  console.log('Cargando variables de entorno con dotenv en modo desarrollo...');
-  const dotenv = require('dotenv');
+  console.log('Cargando variables de entorno desde .env.dev.local...');
+  dotenv.config({ path: '.env.dev.local' });
+} else if (env === 'production.local') {
+  console.log('Cargando variables de entorno desde .env.prod.local...');
+  dotenv.config({ path: '.env.prod.local' });
+} else if (env === 'production.remote') {
+  console.log('Cargando variables de entorno desde .env.prod.remote...');
+  dotenv.config({ path: '.env.prod.remote' });
+} else {
+  console.log(
+    `El entorno ${env} no está definido. Cargando las variables de entorno por defecto...`
+  );
   dotenv.config();
 }
+
+import { exec } from 'child_process';
+import sequelize from './sequelize';
+import logger from '../logger';
 
 const runSpecificMigration = (migrationFile: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
@@ -62,7 +74,7 @@ const initDatabase = async () => {
     if (!tablesExist) {
       logger.info('No se encontraron migraciones, ejecutando migración para crear tablas...');
       try {
-        await runSpecificMigration('20240918120000-create-tables.js');
+        await runSpecificMigration('20240918120004-insert-usuario.js');
         logger.info('Migración de creación de tablas ejecutada correctamente.');
         process.exit(0);
       } catch (error) {

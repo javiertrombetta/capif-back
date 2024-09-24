@@ -58,7 +58,7 @@ DecisionInvolucrados.init(
     sequelize,
     modelName: 'DecisionInvolucrados',
     tableName: 'DecisionInvolucrados',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

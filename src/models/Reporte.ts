@@ -75,7 +75,7 @@ Reporte.init(
     sequelize,
     modelName: 'Reporte',
     tableName: 'Reporte',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

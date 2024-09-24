@@ -45,7 +45,7 @@ Estado.init(
     sequelize,
     modelName: 'Estado',
     tableName: 'Estado',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

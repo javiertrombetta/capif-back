@@ -120,7 +120,7 @@ Fonograma.init(
     sequelize,
     modelName: 'Fonograma',
     tableName: 'Fonograma',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

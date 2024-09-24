@@ -71,7 +71,7 @@ Tramite.init(
     sequelize,
     modelName: 'Tramite',
     tableName: 'Tramite',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

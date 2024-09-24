@@ -53,7 +53,7 @@ Regla.init(
     sequelize,
     modelName: 'Regla',
     tableName: 'Regla',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

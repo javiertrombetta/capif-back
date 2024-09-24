@@ -80,7 +80,7 @@ PostulacionPremio.init(
     sequelize,
     modelName: 'PostulacionPremio',
     tableName: 'PostulacionPremio',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

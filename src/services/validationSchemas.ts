@@ -5,7 +5,12 @@ export const registerSchema = Joi.object({
   email: Joi.string().email().required().messages(VALIDATION_AUTH.email),
   password: Joi.string().min(8).required().messages(VALIDATION_AUTH.password),
   nombre: Joi.string().min(2).max(100).required().messages(VALIDATION_AUTH.nombre),
-  apellido: Joi.string().min(2).max(100).required().messages(VALIDATION_AUTH.apellido),
+  apellido: Joi.string()
+    .min(2)
+    .max(100)
+    .regex(/^[A-Za-zÀ-ÿ\s]+$/)
+    .required()
+    .messages(VALIDATION_AUTH.apellido),
   cuit: Joi.string()
     .regex(/^[0-9]{11}$/)
     .required()
@@ -15,7 +20,11 @@ export const registerSchema = Joi.object({
   ciudad: Joi.string().required().messages(VALIDATION_AUTH.ciudad),
   provincia: Joi.string().required().messages(VALIDATION_AUTH.provincia),
   pais: Joi.string().required().messages(VALIDATION_AUTH.pais),
-  telefono: Joi.string().max(50).allow(null, '').messages(VALIDATION_AUTH.telefono),
+  telefono: Joi.string()
+    .max(50)
+    .regex(/^[0-9\-+() ]+$/)
+    .allow(null, '')
+    .messages(VALIDATION_AUTH.telefono),
 });
 
 export const loginSchema = Joi.object({

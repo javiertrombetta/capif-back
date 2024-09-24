@@ -89,7 +89,7 @@ LogActividad.init(
     sequelize,
     modelName: 'LogActividad',
     tableName: 'LogActividad',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

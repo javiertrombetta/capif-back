@@ -21,7 +21,7 @@ Rol.init(
           args: [3, 50],
           msg: 'La descripción debe tener al menos 3 caracteres y no más de 50.',
         },
-        is: {   
+        is: {
           args: /^[A-Za-z0-9.\-\s]+$/,
           msg: 'La descripción solo puede contener letras, números, espacios, puntos y guiones (-).',
         },
@@ -35,7 +35,7 @@ Rol.init(
     sequelize,
     modelName: 'Rol',
     tableName: 'Rol',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

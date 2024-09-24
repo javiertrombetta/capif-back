@@ -85,7 +85,7 @@ AuditoriaCambio.init(
     sequelize,
     modelName: 'AuditoriaCambio',
     tableName: 'AuditoriaCambio',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

@@ -14,17 +14,24 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment:
-      TZ: ${TZ}
-      NODE_ENV: production
+    environment:      
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET}
+      PORT: ${PORT}
+      RESET_TOKEN_EXPIRATION: ${RESET_TOKEN_EXPIRATION}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
+      TZ: ${TZ}
+      FRONTEND_URL: ${FRONTEND_URL}
+      EMAIL_SERVICE: ${EMAIL_SERVICE}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}    
 
   postgres:
     image: postgres:15.8-alpine3.20

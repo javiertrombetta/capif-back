@@ -89,7 +89,7 @@ Documento.init(
     sequelize,
     modelName: 'Documento',
     tableName: 'Documento',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

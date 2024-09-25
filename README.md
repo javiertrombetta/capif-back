@@ -32,8 +32,8 @@ TZ=America/Argentina/Buenos_Aires
 
 # Transport
 FRONTEND_URL=http://dominio.com
-EMAIL_USER=mail@gmail.com
-EMAIL_PASS=APIKEY
+SMTP_USER=mail@gmail.com
+SMTP_PASS=APIKEY
 ```
 ### 1) Ejecución de motor de base de datos en Docker y creación de volume local
 
@@ -75,6 +75,8 @@ DB_PORT=5432
 NODE_ENV=production
 JWT_SECRET=SistemaDeGestionDeTramites!
 PORT=3000
+RESET_TOKEN_EXPIRATION=1h
+MAX_LOGIN_ATTEMPTS=5
 
 # Redis
 REDIS_HOST=redis
@@ -85,8 +87,10 @@ TZ=America/Argentina/Buenos_Aires
 
 # Transport
 FRONTEND_URL=http://dominio.com
-EMAIL_USER=mail@gmail.com
-EMAIL_PASS=APIKEY
+SMTP_SERVICE=gmail
+SMTP_FROM=Name <mail@gmail.com>
+SMTP_USER=mail@gmail.com
+SMTP_PASS=APIKEY
 ```
 ### Ejecución de de entorno total de producción
 

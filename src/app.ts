@@ -30,6 +30,10 @@ import sequelize from './config/database/sequelize';
 import logger from './config/logger';
 
 const app = express();
+const globalPrefix = process.env.GLOBAL_PREFIX || 'api/v1'; 
+
+console.log(globalPrefix);
+
 app.use(cookieParser());
 
 const limiter = rateLimit({
@@ -57,7 +61,7 @@ app.use(
   })
 );
 
-app.use('/api', router);
+app.use(`/${globalPrefix}`, router);
 
 app.use(errorHandler);
 
@@ -113,23 +117,5 @@ app.use((req: Request, res: Response) => {
 });
 
 console.log('Variables de entorno cargadas:');
-console.log({
-  PORT: process.env.PORT,
-  DB_USER: process.env.DB_USER,
-  DB_PASSWORD: process.env.DB_PASSWORD,
-  DB_NAME: process.env.DB_NAME,
-  DB_HOST: process.env.DB_HOST,
-  DB_PORT: process.env.DB_PORT,
-  NODE_ENV: process.env.NODE_ENV,
-  JWT_SECRET: process.env.JWT_SECRET,
-  REDIS_HOST: process.env.REDIS_HOST,
-  REDIS_PORT: process.env.REDIS_PORT,
-  TZ: process.env.TZ,
-  FRONTEND_URL: process.env.FRONTEND_URL,
-  EMAIL_SERVICE: process.env.EMAIL_SERVICE,
-  EMAIL_FROM: process.env.EMAIL_FROM,
-  EMAIL_USER: process.env.EMAIL_USER,
-  EMAIL_PASS: process.env.EMAIL_PASS,
-});
 
 export default app;

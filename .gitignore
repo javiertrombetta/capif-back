@@ -86,3 +86,6 @@ out/
 
 # Temporary directories
 /tmp/
+
+# Postgres
+/postgres

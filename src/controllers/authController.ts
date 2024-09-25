@@ -12,7 +12,7 @@ import { findUsuarioByEmail, findUsuarioById } from '../services/userService';
 import { findRolByDescripcion } from '../services/roleService';
 import { findEstadoByDescripcion } from '../services/stateService';
 import { hashPassword, verifyPassword } from '../services/validationsService';
-import { UsuarioConRol } from '../interfaces/UserWithRole';
+import { UserWithRelations } from '../interfaces/UserWithRelations';
 
 import * as Err from '../services/customErrors';
 import Usuario from '../models/Usuario';
@@ -138,19 +138,20 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
     const decodedToken = verifyToken(existingToken, process.env.JWT_SECRET!);
 
     if (decodedToken) {
-      const user = (await findUsuarioByEmail(email)) as UsuarioConRol; 
+      const user = (await findUsuarioByEmail(email)) as UserWithRelations; 
       if (user && decodedToken.id === user.id_usuario) {
         logger.warn(`El usuario ${email} ya ha iniciado sesión previamente.`);
         return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
       }
     }
 
-    const user = (await findUsuarioByEmail(email)) as UsuarioConRol;
+    const user = (await findUsuarioByEmail(email)) as UserWithRelations;
     if (!user) {
       logger.warn(`Intento de inicio de sesión fallido. Usuario no encontrado: ${email}`);
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
+    console.log(user);
     const estadoBloqueado = await findEstadoByDescripcion('bloqueado');
     const rolAdministrador = await findRolByDescripcion('admin');  
     if (
@@ -200,7 +201,7 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
     }
 
     const token = jwt.sign(
-      { id: user.id_usuario, role: user.Rol?.descripcion || 'sin-rol' },
+      { id: user.id_usuario, role: user.Rol?.descripcion },
       process.env.JWT_SECRET!,
       {
         expiresIn: '1h',

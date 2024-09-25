@@ -22,6 +22,7 @@ services:
       DB_PORT: ${DB_PORT}
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET}
+      GLOBAL_PREFIX: ${GLOBAL_PREFIX}
       PORT: ${PORT}
       RESET_TOKEN_EXPIRATION: ${RESET_TOKEN_EXPIRATION}
       MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS}
@@ -29,10 +30,12 @@ services:
       REDIS_PORT: ${REDIS_PORT}
       TZ: ${TZ}
       FRONTEND_URL: ${FRONTEND_URL}
-      EMAIL_SERVICE: ${EMAIL_SERVICE}
-      EMAIL_FROM: ${EMAIL_FROM}
-      EMAIL_USER: ${EMAIL_USER}
-      EMAIL_PASS: ${EMAIL_PASS}    
+      SMTP_SERVICE: ${SMTP_SERVICE}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+    networks:
+      - capif-net
 
   postgres:
     image: postgres:15.8-alpine3.20
@@ -53,6 +56,8 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
+    networks:
+      - capif-net
 
   redis:
     image: redis:alpine3.20
@@ -67,6 +72,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - capif-net
 
 volumes:
   postgresdata:
+
+networks:
+  capif-net:
+    driver: bridge

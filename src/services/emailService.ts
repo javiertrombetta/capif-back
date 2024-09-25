@@ -10,7 +10,7 @@ interface MailOptions {
 
 export const sendEmail = async (options: MailOptions): Promise<void> => {
   const mailOptions = {
-    from: process.env.EMAIL_FROM,
+    from: process.env.SMTP_FROM,
     to: options.to,
     subject: options.subject,
     html: options.html,

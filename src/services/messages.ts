@@ -19,12 +19,15 @@ export const ERROR = {
     GENERAL: 'Error de validación en los datos proporcionados.',
     ROLE_INVALID: 'El rol proporcionado no es válido.',
     STATE_INVALID: 'El estado proporcionado no es válido.',
+    STATE_ALREADY_AUTHORIZED: 'El usuario ya se encuentra autorizado y no puede ser eliminado.',
     PASSWORD_INCORRECT: 'Credenciales incorrectas.',
     ALREADY_LOGGED_IN: 'El usuario ya se encuentra logueado.',
     NO_TOKEN_PROVIDED: 'No se proporcionó un token.',
     INVALID_TOKEN: 'Token inválido o expirado.',
-    USER_NOT_CONFIRMED: 'El mail está pendiente de verificación. Por favor, revise la Bandeja de Entrada y siga los pasos.',
-    USER_BLOCKED: 'El usuario se encuentra bloqueado. Por favor, contacte a un administrador del sistema.'
+    USER_NOT_CONFIRMED:
+      'El mail está pendiente de verificación. Por favor, revise la Bandeja de Entrada y siga los pasos.',
+    USER_BLOCKED:
+      'El usuario se encuentra bloqueado. Por favor, contacte a un administrador del sistema.',
   },
   USER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',

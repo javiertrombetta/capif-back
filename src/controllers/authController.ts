@@ -615,7 +615,7 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response, next:
       logger.warn(
         `No se puede eliminar al usuario con ID ${id_usuario} debido a su estado actual.`
       );
-      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
+      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.STATE_ALREADY_AUTHORIZED });
     }
 
     await user.destroy();

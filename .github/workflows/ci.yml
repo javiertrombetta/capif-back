@@ -59,7 +59,7 @@ jobs:
           body: ${{ steps.build_changelog.outputs.changelog }}
           draft: false
           prerelease: false
-          commit: ${{ steps.semantic_version.outputs.current_commit }}
+          commit: ${{ steps.semantic_version.outputs.current_commit }}      
 
       - name: Get Commit Author Email
         id: get_email
@@ -75,6 +75,11 @@ jobs:
         shell: bash
         continue-on-error: true
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
       - name: Ensure CHANGELOG.md exists
         run: |
           if [ ! -f CHANGELOG.md ]; then
@@ -85,9 +90,7 @@ jobs:
           fi
 
       - name: Update CHANGELOG
-        run: |
-          git config --global user.name "${{ steps.get_name.outputs.stdout || github.actor }}"
-          git config --global user.email "${{ steps.get_email.outputs.stdout || github.actor }}@users.noreply.github.com"
+        run: |          
           changelog='${{ steps.build_changelog.outputs.changelog }}'
           escaped_changelog=$(printf '%s\n' "$changelog" | sed 's/\\/&&/g;s/^[[:blank:]]/\\&/;s/$/\\/')
           sed -i "2i ${escaped_changelog%?}" CHANGELOG.md

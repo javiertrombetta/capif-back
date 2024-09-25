@@ -6,7 +6,6 @@ class CuentaCorriente extends Model {
   public id_cuenta_corriente!: number;
   public saldo!: number;
   public id_usuario!: number;
-  public fecha_actualizacion!: Date;
 }
 
 CuentaCorriente.init(
@@ -48,17 +47,7 @@ CuentaCorriente.init(
           msg: 'El saldo es obligatorio.',
         },
       },
-    },
-    fecha_actualizacion: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de actualización debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,

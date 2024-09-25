@@ -46,7 +46,7 @@ export const validateEmailSchema = Joi.object({
 });
 
 export const authorizeProducerSchema = Joi.object({
-  userId: Joi.number().integer().required().messages({
+  id_usuario: Joi.number().integer().required().messages({
     'number.base': 'El ID del usuario debe ser un número entero.',
     'any.required': 'El ID del usuario es obligatorio.',
   }),
@@ -72,4 +72,14 @@ export const changeRoleSchema = Joi.object({
     'string.base': 'El rol debe ser un texto válido.',
     'any.required': 'El nuevo rol es obligatorio.',
   }),
+});
+
+export const changePasswordSchema = Joi.object({
+  id_usuario: Joi.number().required(),
+  newPassword: Joi.string().min(8).required(),
+  confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required(),
+});
+
+export const deleteUserSchema = Joi.object({
+  id_usuario: Joi.number().required(),
 });

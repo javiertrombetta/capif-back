@@ -47,17 +47,7 @@ LogActividad.init(
           msg: 'La actividad no puede estar vacía.',
         },
       },
-    },
-    fecha: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
     ip_origen: {
       type: DataTypes.STRING(50),
       allowNull: false,

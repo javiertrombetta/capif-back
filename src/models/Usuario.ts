@@ -19,11 +19,13 @@ class Usuario extends Model {
   public provincia!: string;
   public pais!: string;
   public telefono?: string;
-  public registro_pendiente!: boolean;
+  public isRegistro_pendiente!: boolean;
   public email_verification_token!: string | null;
   public email_verification_token_expires!: Date | null;
   public reset_password_token!: string | null;
   public reset_password_token_expires!: Date | null;
+  public isHabilitado!: boolean;
+  public intentos_fallidos!: number;
 }
 
 Usuario.init(
@@ -145,7 +147,7 @@ Usuario.init(
         },
       },
     },
-    registro_pendiente: {
+    isRegistro_pendiente: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
@@ -164,6 +166,14 @@ Usuario.init(
     reset_password_token_expires: {
       type: DataTypes.DATE,
       allowNull: true,
+    },
+    isHabilitado: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    intentos_fallidos: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
     },
   },
   {

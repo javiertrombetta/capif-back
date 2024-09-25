@@ -9,7 +9,6 @@ class Conflicto extends Model {
   public descripcion!: string;
   public id_fonograma!: number;
   public estado_id!: number;
-  public fecha_creacion!: Date;
   public fecha_resolucion!: Date | null;
 }
 
@@ -60,17 +59,7 @@ Conflicto.init(
         model: Estado,
         key: 'id_estado',
       },
-    },
-    fecha_creacion: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de creación debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
     fecha_resolucion: {
       type: DataTypes.DATE,
       allowNull: true,

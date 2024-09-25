@@ -28,7 +28,6 @@ import { errorHandler } from './middlewares/errorHandler';
 import router from './routes';
 import sequelize from './config/database/sequelize';
 import logger from './config/logger';
-import { errors as celebrateErrors } from 'celebrate';
 
 const app = express();
 app.use(cookieParser());
@@ -103,8 +102,6 @@ const startServer = () => {
     logger.error(`Fallo crítico: No se pudo conectar a la base de datos. Detalles: ${_error}`);
   }
 })();
-
-app.use(celebrateErrors());
 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   logger.error(err.stack || 'Error sin stack');

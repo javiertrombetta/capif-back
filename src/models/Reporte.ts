@@ -7,7 +7,6 @@ class Reporte extends Model {
   public tipo_reporte!: string;
   public ruta_archivo!: string;
   public id_usuario!: number;
-  public fecha_generacion!: Date;
 }
 
 Reporte.init(
@@ -59,17 +58,7 @@ Reporte.init(
           msg: 'La ruta del archivo no puede estar vacía.',
         },
       },
-    },
-    fecha_generacion: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de generación debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,

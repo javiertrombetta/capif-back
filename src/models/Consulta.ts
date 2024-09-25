@@ -9,7 +9,6 @@ class Consulta extends Model {
   public mensaje!: string;
   public id_usuario!: number;
   public estado_id!: number;
-  public fecha_envio!: Date;
 }
 
 Consulta.init(
@@ -18,6 +17,23 @@ Consulta.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    id_usuario: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: Usuario,
+        key: 'id_usuario',
+      },
+      onDelete: 'CASCADE',
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'El ID del usuario es obligatorio.',
+        },
+        isInt: {
+          msg: 'El ID del usuario debe ser un número entero.',
+        },
+      },
     },
     asunto: {
       type: DataTypes.STRING(150),
@@ -41,23 +57,6 @@ Consulta.init(
         },
       },
     },
-    id_usuario: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
-      onDelete: 'CASCADE',
-      allowNull: false,
-      validate: {
-        notNull: {
-          msg: 'El ID del usuario es obligatorio.',
-        },
-        isInt: {
-          msg: 'El ID del usuario debe ser un número entero.',
-        },
-      },
-    },
     estado_id: {
       type: DataTypes.INTEGER,
       references: {
@@ -65,16 +64,6 @@ Consulta.init(
         key: 'id_estado',
       },
       allowNull: true,
-    },
-    fecha_envio: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de envío debe ser una fecha válida.',
-        },
-      },
     },
   },
   {

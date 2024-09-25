@@ -8,7 +8,6 @@ class Tramite extends Model {
   public tipo_tramite!: string;
   public id_usuario!: number;
   public estado_id!: number;
-  public fecha_inicio!: Date;
 }
 
 Tramite.init(
@@ -47,17 +46,7 @@ Tramite.init(
           msg: 'El tipo de trámite no puede estar vacío.',
         },
       },
-    },
-    fecha_inicio: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de inicio debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
     estado_id: {
       type: DataTypes.INTEGER,
       references: {

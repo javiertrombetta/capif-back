@@ -74,7 +74,7 @@ const initDatabase = async () => {
     if (!tablesExist) {
       logger.info('No se encontraron migraciones, ejecutando migración para crear tablas...');
       try {
-        await runSpecificMigration('20240918120004-insert-usuario.js');
+        await runSpecificMigration('20240924000005-insert-userAdmin.js');
         logger.info('Migración de creación de tablas ejecutada correctamente.');
         process.exit(0);
       } catch (error) {

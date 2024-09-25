@@ -8,7 +8,6 @@ class Documento extends Model {
   public tipo_documento!: string;
   public ruta_documento!: string;
   public id_tramite!: number;
-  public fecha_subida!: Date;
 }
 
 Documento.init(
@@ -73,17 +72,7 @@ Documento.init(
           msg: 'El ID del trámite debe ser un número entero.',
         },
       },
-    },
-    fecha_subida: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de subida debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,

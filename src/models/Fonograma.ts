@@ -6,13 +6,13 @@ import ISRC from './ISRC';
 
 class Fonograma extends Model {
   public id_fonograma!: number;
+  public id_repertorio!: number;
   public titulo!: string;
   public artista!: string;
   public duracion!: string;
   public fecha_lanzamiento!: Date;
   public tipo!: string | null;
   public estado_id!: number;
-  public id_repertorio!: number;
   public id_isrc!: number | null;
 }
 
@@ -22,6 +22,23 @@ Fonograma.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
+    },
+    id_repertorio: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: Repertorio,
+        key: 'id_repertorio',
+      },
+      onDelete: 'CASCADE',
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'El ID del repertorio es obligatorio.',
+        },
+        isInt: {
+          msg: 'El ID del repertorio debe ser un número entero.',
+        },
+      },
     },
     titulo: {
       type: DataTypes.STRING(150),
@@ -79,23 +96,6 @@ Fonograma.init(
         isIn: {
           args: [['Single', 'Álbum', 'EP', 'Otro']],
           msg: 'El tipo debe ser uno de los siguientes: Single, Álbum, EP, Otro.',
-        },
-      },
-    },
-    id_repertorio: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Repertorio,
-        key: 'id_repertorio',
-      },
-      onDelete: 'CASCADE',
-      allowNull: false,
-      validate: {
-        notNull: {
-          msg: 'El ID del repertorio es obligatorio.',
-        },
-        isInt: {
-          msg: 'El ID del repertorio debe ser un número entero.',
         },
       },
     },

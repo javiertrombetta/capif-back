@@ -1,5 +1,4 @@
 import express from 'express';
-import { errors as celebrateErrors } from 'celebrate';
 import authRoutes from './auth';
 import userRoutes from './users';
 import repertorioRoutes from './repertorios';
@@ -30,7 +29,5 @@ router.use('/reportes', authenticate, authorizeRoles(['admin', 'user']), reporte
 router.use('/sesiones', authenticate, authorizeRoles(['admin', 'user']), sesionRoutes);
 router.use('/tramites', authenticate, authorizeRoles(['admin']), tramiteRoutes);
 router.use('/usuarios', authenticate, authorizeRoles(['admin']), userRoutes);
-
-router.use(celebrateErrors());
 
 export default router;

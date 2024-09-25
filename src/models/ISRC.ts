@@ -16,6 +16,23 @@ ISRC.init(
       autoIncrement: true,
       primaryKey: true,
     },
+    id_fonograma: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: Fonograma,
+        key: 'id_fonograma',
+      },
+      onDelete: 'CASCADE',
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'El ID del fonograma es obligatorio.',
+        },
+        isInt: {
+          msg: 'El ID del fonograma debe ser un número entero.',
+        },
+      },
+    },
     codigo_isrc: {
       type: DataTypes.STRING(20),
       allowNull: false,
@@ -37,23 +54,6 @@ ISRC.init(
         isIn: {
           args: [['audio', 'video']],
           msg: 'El tipo debe ser "audio" o "video".',
-        },
-      },
-    },
-    id_fonograma: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Fonograma,
-        key: 'id_fonograma',
-      },
-      onDelete: 'CASCADE',
-      allowNull: false,
-      validate: {
-        notNull: {
-          msg: 'El ID del fonograma es obligatorio.',
-        },
-        isInt: {
-          msg: 'El ID del fonograma debe ser un número entero.',
         },
       },
     },

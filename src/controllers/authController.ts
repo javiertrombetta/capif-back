@@ -12,6 +12,7 @@ import { findUsuarioByEmail, findUsuarioById } from '../services/userService';
 import { findRolByDescripcion } from '../services/roleService';
 import { findEstadoByDescripcion } from '../services/stateService';
 import { hashPassword, verifyPassword } from '../services/validationsService';
+import { UsuarioConRol } from '../interfaces/UserWithRole';
 
 import * as Err from '../services/customErrors';
 import Usuario from '../models/Usuario';
@@ -137,30 +138,75 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
     const decodedToken = verifyToken(existingToken, process.env.JWT_SECRET!);
 
     if (decodedToken) {
-      const user = await findUsuarioByEmail(email);
+      const user = (await findUsuarioByEmail(email)) as UsuarioConRol; 
       if (user && decodedToken.id === user.id_usuario) {
         logger.warn(`El usuario ${email} ya ha iniciado sesión previamente.`);
         return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
       }
     }
 
-    const user = await findUsuarioByEmail(email);
+    const user = (await findUsuarioByEmail(email)) as UsuarioConRol;
     if (!user) {
       logger.warn(`Intento de inicio de sesión fallido. Usuario no encontrado: ${email}`);
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
+    const estadoBloqueado = await findEstadoByDescripcion('bloqueado');
+    const rolAdministrador = await findRolByDescripcion('admin');  
+    if (
+      user.estado_id === estadoBloqueado?.id_estado &&
+      user.Rol?.descripcion !== rolAdministrador?.descripcion
+    ) {
+      logger.warn(`El usuario ${email} está bloqueado.`);
+      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.USER_BLOCKED });
+    }
+
+    const estadoNuevo = await findEstadoByDescripcion('nuevo');
+    if (user.estado_id === estadoNuevo?.id_estado) {
+      logger.warn(`El usuario ${email} no está confirmado.`);
+      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.USER_NOT_CONFIRMED });
+    }
+
     const isPasswordValid = await verifyPassword(password, user.clave);
+    const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10);
+
     if (!isPasswordValid) {
+
+      if (user.Rol?.descripcion !== rolAdministrador?.descripcion) {
+        user.intentos_fallidos += 1;
+
+        if (user.intentos_fallidos >= MAX_LOGIN_ATTEMPTS) {
+          const estadoBloqueado = await findEstadoByDescripcion('bloqueado');
+          if (estadoBloqueado) {
+            user.estado_id = estadoBloqueado.id_estado;
+            logger.warn(
+              `El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos.`
+            );
+          }
+        }
+
+        await user.save();
+      }
+
       logger.warn(
-        `Intento de inicio de sesión fallido. Contraseña incorrecta para el usuario: ${email}`
+        `Intento de inicio de sesión fallido. Contraseña incorrecta para el usuario: ${email}. Intentos fallidos: ${user.intentos_fallidos}`
       );
       throw new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.PASSWORD_INCORRECT);
     }
 
-    const token = jwt.sign({ id: user.id_usuario, role: user.rol_id }, process.env.JWT_SECRET!, {
-      expiresIn: '1h',
-    });
+    if (user.intentos_fallidos > 0 && user.Rol?.descripcion !== rolAdministrador?.descripcion) {
+      user.intentos_fallidos = 0;
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      { id: user.id_usuario, role: user.Rol?.descripcion || 'sin-rol' },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: '1h',
+      }
+    );
+
     res.cookie('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -251,8 +297,16 @@ export const resetPassword = async (
     user.reset_password_token = null;
     user.reset_password_token_expires = null;
     await user.save();
+  
+    res.clearCookie('auth_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
 
-    logger.info(`Contraseña restablecida exitosamente para el usuario ${user.email}`);
+    logger.info(
+      `Contraseña restablecida exitosamente para el usuario ${user.email}. Sesión cerrada.`
+    );
     res.status(200).json({ message: MESSAGES.SUCCESS.PASSWORD_RESET });
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
@@ -311,7 +365,7 @@ export const validateEmail = async (
   }
 };
 
-export const authorizeProducer = async (
+export const authorizeUser = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
@@ -325,12 +379,32 @@ export const authorizeProducer = async (
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
-    const estadoAutorizado = await findEstadoByDescripcion('autorizado');
-    const rolProductor = await findRolByDescripcion('productor');
-
-    if (!estadoAutorizado || !rolProductor) {
-      logger.error('Error interno: estado "autorizado" o rol "productor" no encontrado.');
+    const estadoConfirmado = await findEstadoByDescripcion('confirmado');
+    if (!estadoConfirmado) {
+      logger.error('Error interno: estado "confirmado" no encontrado.');
       throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
+    }
+
+    if (user.estado_id !== estadoConfirmado.id_estado) {
+      logger.warn(`El usuario con ID ${id_usuario} no está confirmado y no puede ser autorizado.`);
+      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
+    }
+
+    const estadoAutorizado = await findEstadoByDescripcion('autorizado');
+    if (!estadoAutorizado) {
+      logger.error('Error interno: estado "autorizado" no encontrado.');
+      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
+    }
+
+    if (user.estado_id === estadoAutorizado.id_estado) {
+      logger.warn(`El usuario con ID ${id_usuario} ya ha sido autorizado.`);
+      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
+    }
+
+    const rolProductor = await findRolByDescripcion('productor');
+    if (!rolProductor) {
+      logger.error('Error interno: rol "productor" no encontrado.');
+      throw new Err.InternalServerError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
     }
 
     user.estado_id = estadoAutorizado.id_estado;
@@ -346,6 +420,8 @@ export const authorizeProducer = async (
     next(err);
   }
 };
+
+
 
 export const blockOrUnblockUser = async (
   req: AuthenticatedRequest,
@@ -398,13 +474,37 @@ export const changeUserRole = async (
       logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
+    
+    const estadoAutorizado = await findEstadoByDescripcion('autorizado');
+    if (!estadoAutorizado) {
+      logger.error('Error interno: estado "autorizado" no encontrado.');
+      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
+    }
 
+    if (user.estado_id !== estadoAutorizado.id_estado) {
+      logger.warn(`El usuario con ID ${id_usuario} no está autorizado y no puede cambiar de rol.`);
+      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
+    }
+   
+    const rolAdministrador = await findRolByDescripcion('administrador');
+    const rolProductor = await findRolByDescripcion('productor');
+
+    if (!rolAdministrador || !rolProductor) {
+      logger.error('Error interno: rol "administrador" o "productor" no encontrado.');
+      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
+    }
+   
+    if (user.rol_id !== rolAdministrador.id_rol && user.rol_id !== rolProductor.id_rol) {
+      logger.warn(`El usuario con ID ${id_usuario} no tiene rol asignado.`);
+      return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_ROLE });
+    }
+ 
     const rol = await findRolByDescripcion(nuevo_rol);
     if (!rol) {
       logger.warn(`Rol inválido: ${nuevo_rol} para el usuario con ID: ${id_usuario}`);
       throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
     }
-
+    
     user.rol_id = rol.id_rol;
     await user.save();
 
@@ -419,3 +519,112 @@ export const changeUserRole = async (
     next(err);
   }
 };
+
+export const logout = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {  
+    res.clearCookie('auth_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    const user = req.user as JwtPayload;
+    const email = user?.email || 'desconocido';
+
+    logger.info(`Logout exitoso para el usuario: ${email}`);
+    res.status(200).json({ message: MESSAGES.SUCCESS.LOGOUT });
+  } catch (err) {
+    logger.error('Error durante el proceso de logout', err);
+    next(err);
+  }
+};
+
+export const changeUserPassword = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id_usuario, newPassword, confirmPassword } = req.body;
+
+    if (newPassword !== confirmPassword) {
+      logger.warn('Las contraseñas no coinciden.');
+      return res.status(400).json({ message: MESSAGES.ERROR.PASSWORD.CONFIRMATION_MISMATCH });
+    }
+
+    const user = await findUsuarioById(id_usuario);
+    if (!user) {
+      logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
+      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+    }
+    
+    const estadoConfirmado = await findEstadoByDescripcion('confirmado');
+    const rolAdministrador = await findRolByDescripcion('administrador');
+    const rolProductor = await findRolByDescripcion('productor');
+
+    if (!estadoConfirmado || !rolAdministrador || !rolProductor) {
+      logger.error('Error interno: rol o estado no encontrado.');
+      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
+    }
+
+    if (
+      user.estado_id !== estadoConfirmado.id_estado &&
+      user.rol_id !== rolAdministrador.id_rol &&
+      user.rol_id !== rolProductor.id_rol
+    ) {
+      logger.warn(`El usuario con ID ${id_usuario} no está autorizado para cambiar la clave.`);
+      return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_ROLE });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    user.clave = hashedPassword;
+    await user.save();
+
+    logger.info(`Clave actualizada correctamente para el usuario con ID ${id_usuario}.`);
+    res.status(200).json({ message: MESSAGES.SUCCESS.PASSWORD_RESET });
+  } catch (err) {
+    logger.error(
+      `Error al cambiar la clave del usuario: ${
+        err instanceof Error ? err.message : 'Error desconocido'
+      }`
+    );
+    next(err);
+  }
+};
+
+export const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id_usuario } = req.body;
+
+    const user = await findUsuarioById(id_usuario);
+    if (!user) {
+      logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
+      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+    }
+
+    const estadoNuevo = await findEstadoByDescripcion('nuevo');
+    const estadoConfirmado = await findEstadoByDescripcion('confirmado');
+
+    if (!estadoNuevo || !estadoConfirmado) {
+      logger.error('Error interno: estado "nuevo" o "confirmado" no encontrado.');
+      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
+    }
+
+    if (user.estado_id !== estadoNuevo.id_estado && user.estado_id !== estadoConfirmado.id_estado) {
+      logger.warn(
+        `No se puede eliminar al usuario con ID ${id_usuario} debido a su estado actual.`
+      );
+      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
+    }
+
+    await user.destroy();
+    logger.info(`Usuario con ID ${id_usuario} eliminado correctamente.`);
+    res.status(200).json({ message: MESSAGES.SUCCESS.USER_DELETED });
+  } catch (err) {
+    logger.error(
+      `Error al eliminar usuario: ${err instanceof Error ? err.message : 'Error desconocido'}`
+    );
+    next(err);
+  }
+};
+

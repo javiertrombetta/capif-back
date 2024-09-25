@@ -5,10 +5,10 @@ import Compania from './Compania';
 
 class PostulacionPremio extends Model {
   public id_postulacion!: number;
+  public id_compania!: number;
+  public id_usuario!: number;
   public codigo_postulacion!: string;
   public fecha_asignacion!: Date;
-  public id_usuario!: number;
-  public id_compania!: number;
 }
 
 PostulacionPremio.init(
@@ -18,16 +18,20 @@ PostulacionPremio.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    codigo_postulacion: {
-      type: DataTypes.STRING(50),
+    id_compania: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: Compania,
+        key: 'id_compania',
+      },
+      onDelete: 'CASCADE',
       allowNull: false,
       validate: {
-        len: {
-          args: [1, 50],
-          msg: 'El código de postulación debe tener entre 1 y 50 caracteres.',
+        notNull: {
+          msg: 'El ID de la compañía es obligatorio.',
         },
-        notEmpty: {
-          msg: 'El código de postulación no puede estar vacío.',
+        isInt: {
+          msg: 'El ID de la compañía debe ser un número entero.',
         },
       },
     },
@@ -48,20 +52,16 @@ PostulacionPremio.init(
         },
       },
     },
-    id_compania: {
-      type: DataTypes.INTEGER,
-      references: {
-        model: Compania,
-        key: 'id_compania',
-      },
-      onDelete: 'CASCADE',
+    codigo_postulacion: {
+      type: DataTypes.STRING(50),
       allowNull: false,
       validate: {
-        notNull: {
-          msg: 'El ID de la compañía es obligatorio.',
+        len: {
+          args: [1, 50],
+          msg: 'El código de postulación debe tener entre 1 y 50 caracteres.',
         },
-        isInt: {
-          msg: 'El ID de la compañía debe ser un número entero.',
+        notEmpty: {
+          msg: 'El código de postulación no puede estar vacío.',
         },
       },
     },

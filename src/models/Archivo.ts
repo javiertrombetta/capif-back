@@ -8,7 +8,6 @@ class Archivo extends Model {
   public ruta_archivo!: string;
   public tipo_archivo!: string;
   public id_usuario!: number;
-  public fecha_subida!: Date;
 }
 
 Archivo.init(
@@ -73,17 +72,7 @@ Archivo.init(
           msg: 'La ruta del archivo no puede estar vacía.',
         },
       },
-    },
-    fecha_subida: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de subida debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,

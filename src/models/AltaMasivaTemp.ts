@@ -7,7 +7,6 @@ class AltaMasivaTemp extends Model {
   public id_temporal!: number;
   public id_usuario!: number;
   public id_repertorio!: number;
-  public fecha!: Date;
   public procesado!: boolean;
 }
 
@@ -51,17 +50,7 @@ AltaMasivaTemp.init(
           msg: 'El ID del repertorio debe ser un número entero.',
         },
       },
-    },
-    fecha: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
     procesado: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

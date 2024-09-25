@@ -5,7 +5,6 @@ class ErroresInsercion extends Model {
   public id_error!: number;
   public tabla_afectada!: string;
   public descripcion_error!: string;
-  public fecha_error!: Date;
 }
 
 ErroresInsercion.init(
@@ -36,17 +35,7 @@ ErroresInsercion.init(
           msg: 'La descripción del error no puede estar vacía.',
         },
       },
-    },
-    fecha_error: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha del error debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,

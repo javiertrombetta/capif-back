@@ -6,8 +6,7 @@ import Compania from './Compania';
 class UsuarioAsignado extends Model {
   public id_usuario_asignado!: number;
   public id_usuario!: number;
-  public id_compania!: number;
-  public fecha_asignacion!: Date;
+  public id_compania!: number;  
 }
 
 UsuarioAsignado.init(
@@ -50,17 +49,7 @@ UsuarioAsignado.init(
           msg: 'El ID de la compañía debe ser un número entero.',
         },
       },
-    },
-    fecha_asignacion: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de asignación debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,

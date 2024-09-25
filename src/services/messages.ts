@@ -10,6 +10,8 @@ export const SUCCESS = {
   USER_UNBLOCKED: 'Usuario habilitado correctamente.',
   ROLE_UPDATED: 'Rol actualizado correctamente.',
   PASSWORD_RESET_REQUESTED: 'Solicitud de restablecimiento de contraseña enviada.',
+  LOGOUT: 'La sesión se cerró exitosamente',
+  USER_DELETED: 'Usuario eliminado correctamente.',
 };
 
 export const ERROR = {
@@ -19,12 +21,15 @@ export const ERROR = {
     STATE_INVALID: 'El estado proporcionado no es válido.',
     PASSWORD_INCORRECT: 'Credenciales incorrectas.',
     ALREADY_LOGGED_IN: 'El usuario ya se encuentra logueado.',
-    NO_TOKEN_PROVIDED: 'No se proporcionó un token.', 
+    NO_TOKEN_PROVIDED: 'No se proporcionó un token.',
     INVALID_TOKEN: 'Token inválido o expirado.',
+    USER_NOT_CONFIRMED: 'El mail está pendiente de verificación. Por favor, revise la Bandeja de Entrada y siga los pasos.',
+    USER_BLOCKED: 'El usuario se encuentra bloqueado. Por favor, contacte a un administrador del sistema.'
   },
   USER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
     NOT_FOUND: 'Usuario no encontrado.',
+    NOT_AUTHORIZED_TO_CHANGE_ROLE: 'No estás autorizado para cambiar el rol.',
   },
   DATABASE: {
     CONNECTION: 'Error de conexión con la base de datos.',
@@ -42,6 +47,7 @@ export const ERROR = {
   },
   PASSWORD: {
     RESET_FAILED: 'No se pudo restablecer la contraseña. Por favor, intente nuevamente más tarde.',
+    CONFIRMATION_MISMATCH: 'La nueva contraseña y la confirmación no coinciden.',
   },
   GENERAL: {
     UNKNOWN: 'Ocurrió un error inesperado, por favor intente nuevamente más tarde.',

@@ -4,8 +4,7 @@ import sequelize from '../config/database/sequelize';
 class Regla extends Model {
   public id_regla!: number;
   public descripcion!: string;
-  public fecha_creacion!: Date;
-  public activo!: boolean;
+  public isActivo!: boolean;
 }
 
 Regla.init(
@@ -27,18 +26,8 @@ Regla.init(
           msg: 'La descripción no puede estar vacía.',
         },
       },
-    },
-    fecha_creacion: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de creación debe ser una fecha válida.',
-        },
-      },
-    },
-    activo: {
+    },   
+    isActivo: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
       validate: {

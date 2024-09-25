@@ -7,7 +7,6 @@ class Repertorio extends Model {
   public titulo!: string;
   public tipo!: string | null;
   public id_usuario!: number;
-  public fecha_creacion!: Date;
 }
 
 Repertorio.init(
@@ -56,17 +55,7 @@ Repertorio.init(
           msg: 'El ID del usuario debe ser un número entero.',
         },
       },
-    },
-    fecha_creacion: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de creación debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,

@@ -6,10 +6,13 @@ import {
   requestPasswordReset,
   resetPassword,
   validateEmail,
-  authorizeProducer,
+  authorizeUser,
   blockOrUnblockUser,
   changeUserRole,
-  getUser, // Importa la función getUser
+  getUser,
+  logout,
+  changeUserPassword,
+  deleteUser,
 } from '../controllers/authController';
 import {
   registerSchema,
@@ -20,6 +23,8 @@ import {
   authorizeProducerSchema,
   blockUserSchema,
   changeRoleSchema,
+  changePasswordSchema,
+  deleteUserSchema,
 } from '../services/validationSchemas';
 import { authenticate, authorizeRoles } from '../middlewares/auth';
 
@@ -41,14 +46,12 @@ router.get(
   validateEmail
 );
 
-router.get('/user', authenticate, getUser);
-
 router.post(
-  '/authorize-producer',
+  '/authorize-user',
   authenticate,
   authorizeRoles(['admin']),
   celebrate({ [Segments.BODY]: authorizeProducerSchema }),
-  authorizeProducer
+  authorizeUser
 );
 
 router.post(
@@ -66,5 +69,25 @@ router.post(
   celebrate({ [Segments.BODY]: changeRoleSchema }),
   changeUserRole
 );
+
+router.post(
+  '/change-password',
+  authenticate,
+  authorizeRoles(['admin']),
+  celebrate({ [Segments.BODY]: changePasswordSchema }),
+  changeUserPassword
+);
+
+router.post(
+  '/delete-user',
+  authenticate,
+  authorizeRoles(['admin']),
+  celebrate({ [Segments.BODY]: deleteUserSchema }),
+  deleteUser
+);
+
+router.post('/logout', authenticate, logout);
+
+router.get('/user', authenticate, getUser);
 
 export default router;

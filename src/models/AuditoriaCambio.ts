@@ -69,17 +69,7 @@ AuditoriaCambio.init(
           msg: 'La descripción no puede estar vacía.',
         },
       },
-    },
-    fecha: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,

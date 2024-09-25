@@ -75,6 +75,15 @@ jobs:
         shell: bash
         continue-on-error: true
 
+      - name: Ensure CHANGELOG.md exists
+        run: |
+          if [ ! -f CHANGELOG.md ]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            git add CHANGELOG.md
+            git commit -m "chore(docs): create initial CHANGELOG.md"
+          fi
+
       - name: Update CHANGELOG
         run: |
           git config --global user.name "${{ steps.get_name.outputs.stdout || github.actor }}"

@@ -1,21 +1,57 @@
-import express from 'express';
+import { Router } from 'express';
 import {
   getUsers,
+  getRegistrosPendientes,
   createUser,
   getUserById,
   updateUser,
   deleteUser,
-  getUsuariosAsignados,
-} from '../controllers/usersController';
+} from '../controllers/usuariosController';
 import { authenticate, authorizeRoles } from '../middlewares/auth';
+import { celebrate, Segments } from 'celebrate';
+import { userCreateSchema, userUpdateSchema, userIdSchema } from '../services/validationSchemas';
 
-const router = express.Router();
+const router = Router();
 
-router.put('/:id', authenticate, authorizeRoles(['admin']), updateUser);
-router.get('/:id', authenticate, authorizeRoles(['admin']), getUserById);
-router.delete('/:id', authenticate, authorizeRoles(['admin']), deleteUser);
-router.get('/asignados', authenticate, authorizeRoles(['admin']), getUsuariosAsignados);
-router.post('/', authenticate, authorizeRoles(['admin']), createUser);
+router.post(
+  '/',
+  authenticate,
+  authorizeRoles(['admin']),
+  celebrate({ [Segments.BODY]: userCreateSchema }),
+  createUser
+);
+
+router.get(
+  '/:id',
+  authenticate,
+  authorizeRoles(['admin']),
+  celebrate({ [Segments.PARAMS]: userIdSchema }),
+  getUserById
+);
+
+router.get(
+  '/pending',
+  authenticate,
+  authorizeRoles(['admin']),
+  getRegistrosPendientes
+);
+
 router.get('/', authenticate, authorizeRoles(['admin']), getUsers);
+
+router.put(
+  '/:id',
+  authenticate,
+  authorizeRoles(['admin']),
+  celebrate({ [Segments.PARAMS]: userIdSchema, [Segments.BODY]: userUpdateSchema }),
+  updateUser
+);
+
+router.delete(
+  '/:id',
+  authenticate,
+  authorizeRoles(['admin']),
+  celebrate({ [Segments.PARAMS]: userIdSchema }),
+  deleteUser
+);
 
 export default router;

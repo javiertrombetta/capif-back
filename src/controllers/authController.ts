@@ -628,4 +628,3 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response, next:
     next(err);
   }
 };
-

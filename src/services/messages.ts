@@ -12,6 +12,13 @@ export const SUCCESS = {
   PASSWORD_RESET_REQUESTED: 'Solicitud de restablecimiento de contraseña enviada.',
   LOGOUT: 'La sesión se cerró exitosamente',
   USER_DELETED: 'Usuario eliminado correctamente.',
+  CONSULTA_DELETED: 'Consulta eliminada correctamente.',
+  CONFLICTO_CREATED: 'Conflicto creado exitosamente.',
+  CONFLICTO_RESOLVED: 'Conflicto resuelto exitosamente.',
+  COMENTARIO_ADDED: 'Comentario agregado exitosamente.',
+  INVOLUCRADO_ADDED: 'Involucrado agregado exitosamente.',
+  DECISION_ADDED: 'Decisión agregada exitosamente.',
+  CONFLICTO_DELETED: 'Conflicto eliminado exitosamente.',
 };
 
 export const ERROR = {
@@ -54,6 +61,24 @@ export const ERROR = {
   },
   GENERAL: {
     UNKNOWN: 'Ocurrió un error inesperado, por favor intente nuevamente más tarde.',
+    NOT_FOUND: 'Recurso no encontrado.',
+    NOT_AUTHORIZED: 'No tienes autorización para realizar esta acción.',
+  },
+  CONSULTA: {
+    NOT_FOUND: 'Consulta no encontrada.',
+  },
+  FONOGRAMA: {
+    NOT_FOUND: 'El fonograma no fue encontrado.',
+  },
+  CONFLICTO: {
+    NOT_FOUND: 'El conflicto no fue encontrado.',
+  },
+  ESTADO: {
+    NOT_FOUND: 'El estado no fue encontrado.',
+  },
+  INVOLUCRADO: {
+    NOT_FOUND: 'El involucrado no fue encontrado.',
+    ALREADY_EXISTS: 'El involucrado ya está registrado en el conflicto.',
   },
 };
 

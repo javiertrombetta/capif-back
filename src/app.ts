@@ -30,9 +30,7 @@ import sequelize from './config/database/sequelize';
 import logger from './config/logger';
 
 const app = express();
-const globalPrefix = process.env.GLOBAL_PREFIX || 'api/v1'; 
-
-console.log(globalPrefix);
+const globalPrefix = process.env.GLOBAL_PREFIX || 'api/v1';
 
 app.use(cookieParser());
 
@@ -115,7 +113,5 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
 app.use((req: Request, res: Response) => {
   res.status(404).send({ error: 'Recurso no encontrado' });
 });
-
-console.log('Variables de entorno cargadas:');
 
 export default app;

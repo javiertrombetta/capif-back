@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "dist/app.js",
   "scripts": {
+    "prepare": "husky install",
     "build": "tsc",
     "clean:dist": "rimraf dist",
     "clean:postgres": "rimraf postgres",
@@ -14,7 +15,7 @@
     "prod.local:down": "docker compose --env-file .env.prod.local -f compose.prod.local.yml down -v && docker rmi javiertrombetta/capif-back:latest",
     "prod.local": "npm run prod.local:down && npm run prod.local:up",
     "dev": "NODE_ENV=development npm run dev.compose:down && npm run clean:dist && npm run clean:postgres && npm run dev.compose:up && npm run build && npm run init && nodemon --watch src --exec ts-node src/app.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests defined yet\""
   },
   "keywords": [],
   "author": "",
@@ -41,6 +42,8 @@
     "winston": "^3.14.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.9.1",
     "@types/bcrypt": "^5.0.2",
@@ -63,6 +66,7 @@
     "dotenv-cli": "^7.4.2",
     "eslint": "^9.9.1",
     "globals": "^15.9.0",
+    "husky": "^8.0.0",
     "nodemon": "^3.1.4",
     "rimraf": "^6.0.1",
     "sequelize-cli": "^6.6.2",

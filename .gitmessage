@@ -1,0 +1,12 @@
+<tipo>(<scope opcional>): <descripción corta>
+
+# Tipos:
+# feat: Nueva funcionalidad
+# fix: Corrección de bugs
+# docs: Cambios en la documentación
+# style: Cambios que no afectan el código (formateo, espaciado, etc.)
+# refactor: Cambios de código sin cambios en la funcionalidad
+# test: Agregar o modificar pruebas
+# chore: Actualización de herramientas o tareas auxiliares
+
+# No olvides incluir (MAJOR) o (MINOR) en el cuerpo del commit si corresponde.

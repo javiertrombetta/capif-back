@@ -89,6 +89,7 @@ jobs:
                   "labels": ["chore"]
                 }
               ],
+              "mode": "COMMIT",
               "template": "# Changelog\n\n#{{CHANGELOG}}\n\n<details>\n<summary>Uncategorized</summary>\n\n#{{UNCATEGORIZED}}\n</details>",
               "pr_template": "- PR [#{{NUMBER}}]({{URL}}): {{TITLE}} by @{{AUTHOR}}",
               "empty_template": "- No changes"

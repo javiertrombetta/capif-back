@@ -167,6 +167,10 @@ PostulacionPremio.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 Estado.hasMany(Tramite, { foreignKey: 'estado_id', onDelete: 'CASCADE' });
 Tramite.belongsTo(Estado, { foreignKey: 'estado_id' });
 
+// Estado <-> Repertorio
+Estado.hasMany(Repertorio, { foreignKey: 'estado_id', onDelete: 'CASCADE' });
+Repertorio.belongsTo(Estado, { foreignKey: 'estado_id', });
+
 export {
   sequelize,
   Rol,

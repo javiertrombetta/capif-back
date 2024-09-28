@@ -119,7 +119,7 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
     });
 
     logger.info(`Correo de validación enviado a ${email}`);
-    res.status(201).json({ message: MESSAGES.SUCCESS.REGISTER });
+    res.status(201).json({ message: MESSAGES.SUCCESS.AUTH.REGISTER });
   } catch (err) {
     if (err instanceof Error) {
       logger.error(`Error en el registro de usuario: ${err.message}`);
@@ -216,7 +216,7 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
     });
 
     logger.info(`Inicio de sesión exitoso para el usuario: ${email}`);
-    return res.status(200).json({ message: MESSAGES.SUCCESS.LOGIN });
+    return res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGIN });
   } catch (err) {
     if (err instanceof Error) {
       logger.error(`Error en el inicio de sesión: ${err.message}`);
@@ -261,7 +261,7 @@ export const requestPasswordReset = async (
     });
 
     logger.info(`Correo de restablecimiento de contraseña enviado a: ${email}`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.PASSWORD_RESET_REQUESTED });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET_REQUESTED });
   } catch (err) {
     if (err instanceof Error) {
       logger.error(`Error en la solicitud de restablecimiento de contraseña: ${err.message}`);
@@ -308,7 +308,7 @@ export const resetPassword = async (
     logger.info(
       `Contraseña restablecida exitosamente para el usuario ${user.email}. Sesión cerrada.`
     );
-    res.status(200).json({ message: MESSAGES.SUCCESS.PASSWORD_RESET });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
       logger.warn('El token de restablecimiento de contraseña ha expirado.');
@@ -355,7 +355,7 @@ export const validateEmail = async (
     await user.save();
 
     logger.info(`Email validado correctamente para el usuario ${user.email}`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.EMAIL_CONFIRMED });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.EMAIL_CONFIRMED });
   } catch (err) {
     logger.error(
       `Error en la validación del email: ${
@@ -413,7 +413,7 @@ export const authorizeUser = async (
     await user.save();
 
     logger.info(`Usuario con ID ${id_usuario} autorizado correctamente como productor.`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTHORIZED });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.AUTHORIZED });
   } catch (err) {
     logger.error(
       `Error al autorizar productor: ${err instanceof Error ? err.message : 'Error desconocido'}`
@@ -447,7 +447,7 @@ export const blockOrUnblockUser = async (
     user.estado_id = estado.id_estado;
     await user.save();
 
-    const message = bloquear ? MESSAGES.SUCCESS.USER_BLOCKED : MESSAGES.SUCCESS.USER_UNBLOCKED;
+    const message = bloquear ? MESSAGES.SUCCESS.AUTH.USER_BLOCKED : MESSAGES.SUCCESS.AUTH.USER_UNBLOCKED;
     logger.info(
       `Usuario con ID ${id_usuario} ${bloquear ? 'bloqueado' : 'desbloqueado'} correctamente.`
     );
@@ -510,7 +510,7 @@ export const changeUserRole = async (
     await user.save();
 
     logger.info(`Rol del usuario con ID ${id_usuario} actualizado correctamente a ${nuevo_rol}.`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.ROLE_UPDATED });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED });
   } catch (err) {
     logger.error(
       `Error al cambiar el rol de usuario: ${
@@ -533,7 +533,7 @@ export const logout = (req: AuthenticatedRequest, res: Response, next: NextFunct
     const email = user?.email || 'desconocido';
 
     logger.info(`Logout exitoso para el usuario: ${email}`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.LOGOUT });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGOUT });
   } catch (err) {
     logger.error('Error durante el proceso de logout', err);
     next(err);
@@ -582,7 +582,7 @@ export const changeUserPassword = async (
     await user.save();
 
     logger.info(`Clave actualizada correctamente para el usuario con ID ${id_usuario}.`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.PASSWORD_RESET });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });
   } catch (err) {
     logger.error(
       `Error al cambiar la clave del usuario: ${
@@ -620,7 +620,7 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response, next:
 
     await user.destroy();
     logger.info(`Usuario con ID ${id_usuario} eliminado correctamente.`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.USER_DELETED });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.USER_DELETED });
   } catch (err) {
     logger.error(
       `Error al eliminar usuario: ${err instanceof Error ? err.message : 'Error desconocido'}`
@@ -628,4 +628,3 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response, next:
     next(err);
   }
 };
-

@@ -40,11 +40,6 @@ router.post(
 );
 
 router.post('/reset-password', celebrate({ [Segments.BODY]: resetPasswordSchema }), resetPassword);
-router.get(
-  '/validate-email/:token',
-  celebrate({ [Segments.PARAMS]: validateEmailSchema }),
-  validateEmail
-);
 
 router.post(
   '/authorize-user',
@@ -78,16 +73,22 @@ router.post(
   changeUserPassword
 );
 
-router.post(
+router.post('/logout', authenticate, logout);
+
+router.get('/user', authenticate, getUser);
+
+router.get(
+  '/validate-email/:token',
+  celebrate({ [Segments.PARAMS]: validateEmailSchema }),
+  validateEmail
+);
+
+router.delete(
   '/delete-user',
   authenticate,
   authorizeRoles(['admin']),
   celebrate({ [Segments.BODY]: deleteUserSchema }),
   deleteUser
 );
-
-router.post('/logout', authenticate, logout);
-
-router.get('/user', authenticate, getUser);
 
 export default router;

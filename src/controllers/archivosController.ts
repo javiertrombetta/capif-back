@@ -22,7 +22,7 @@ export const getArchivosByRole = async (
 
     const usuario = await findUsuarioById(userId);
     if (!usuario) {
-      next(new NotFoundError(MESSAGES.ERROR.GENERAL.NOT_FOUND));
+      next(new NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
       return;
     }
 
@@ -37,7 +37,7 @@ export const getArchivosByRole = async (
         where: { id_usuario: usuario.id_usuario },
       });
     } else {
-      res.status(403).json({ message: MESSAGES.ERROR.GENERAL.NOT_AUTHORIZED });
+      res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
       return;
     }
 
@@ -66,7 +66,7 @@ export const createArchivo = async (
       tipo_archivo,
     });
     logger.info(`POST /archivos - Successfully created archivo with ID: ${newArchivo.id_archivo}`);
-    res.status(201).json({ message: MESSAGES.SUCCESS.REGISTER, newArchivo });
+    res.status(201).json({ message: MESSAGES.SUCCESS.ARCHIVO.ARCHIVO_CREATED, newArchivo });
   } catch (error) {
     logger.error(
       `POST /archivos - Error: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -90,12 +90,12 @@ export const updateArchivo = async (
     );
     if (!updatedArchivo[1].length) {
       logger.warn(`PUT /archivos/${id} - Archivo not found`);
-      throw new NotFoundError(MESSAGES.ERROR.GENERAL.NOT_FOUND);
+      throw new NotFoundError(MESSAGES.ERROR.ARCHIVO.NOT_FOUND);
     }
     logger.info(`PUT /archivos/${id} - Successfully updated archivo`);
     res
       .status(200)
-      .json({ message: MESSAGES.SUCCESS.ROLE_UPDATED, updatedArchivo: updatedArchivo[1][0] });
+      .json({ message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED, updatedArchivo: updatedArchivo[1][0] });
   } catch (error) {
     const { id } = req.params;
     logger.error(
@@ -116,10 +116,10 @@ export const deleteArchivo = async (
     const result = await Archivo.destroy({ where: { id_archivo: Number(id) } });
     if (!result) {
       logger.warn(`DELETE /archivos/${id} - Archivo not found`);
-      throw new NotFoundError(MESSAGES.ERROR.GENERAL.NOT_FOUND);
+      throw new NotFoundError(MESSAGES.ERROR.ARCHIVO.NOT_FOUND);
     }
     logger.info(`DELETE /archivos/${id} - Successfully deleted archivo`);
-    res.status(204).json({ message: MESSAGES.SUCCESS.USER_DELETED });
+    res.status(204).json({ message: MESSAGES.SUCCESS.AUTH.USER_DELETED });
   } catch (error) {
     const { id } = req.params;
     logger.error(

@@ -79,7 +79,7 @@ export const createUser = async (
     const newUser = await createUsuario(req.body);
 
     logger.info(`POST /users - Successfully created user with ID: ${newUser.id_usuario}`);
-    res.status(201).json({ message: MESSAGES.SUCCESS.REGISTER, newUser });
+    res.status(201).json({ message: MESSAGES.SUCCESS.AUTH.REGISTER, newUser });
   } catch (error) {
     logger.error(
       `POST /users - Error: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -130,7 +130,7 @@ export const updateUser = async (
     }
 
     logger.info(`PUT /users/${id} - Successfully updated user`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.ROLE_UPDATED, updatedUser });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED, updatedUser });
   } catch (error) {
     const { id } = req.params;
     logger.error(
@@ -156,7 +156,7 @@ export const deleteUser = async (
     }
 
     logger.info(`DELETE /users/${id} - Successfully deleted user`);
-    res.status(204).json({ message: MESSAGES.SUCCESS.USER_DELETED });
+    res.status(204).json({ message: MESSAGES.SUCCESS.AUTH.USER_DELETED });
   } catch (error) {
     const { id } = req.params;
     logger.error(

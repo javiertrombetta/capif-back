@@ -370,6 +370,15 @@ module.exports = {
       tipo: {
         type: DataTypes.STRING(50),
       },
+      estado_id: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'Estado',
+          key: 'id_estado',
+        },
+        allowNull: false,
+        onDelete: 'CASCADE',
+      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,

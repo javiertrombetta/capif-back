@@ -36,7 +36,7 @@ export const createConflicto = async (
     });
 
     logger.info(`Conflicto creado exitosamente con ID: ${nuevoConflicto.id_conflicto}`);
-    res.status(201).json({ message: MESSAGES.SUCCESS.CONFLICTO_CREATED, nuevoConflicto });
+    res.status(201).json({ message: MESSAGES.SUCCESS.CONFLICTO.CONFLICTO_CREATED, nuevoConflicto });
   } catch (error) {
     logger.error(
       `POST /conflictos - Error: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -179,7 +179,7 @@ export const resolveConflicto = async (
 
     logger.info(`Conflicto con ID ${id} resuelto y comentario de resolución agregado`);
     res.status(200).json({
-      message: MESSAGES.SUCCESS.CONFLICTO_RESOLVED,
+      message: MESSAGES.SUCCESS.CONFLICTO.CONFLICTO_RESOLVED,
       conflicto,
       comentario: nuevoComentario,
     });
@@ -214,7 +214,7 @@ export const addComentarioConflicto = async (
     });
 
     logger.info(`Comentario agregado al conflicto con ID ${id}`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.COMENTARIO_ADDED, nuevoComentario });
+    res.status(200).json({ message: MESSAGES.SUCCESS.CONFLICTO.COMENTARIO_ADDED, nuevoComentario });
   } catch (error) {
     const { id } = req.params;
     logger.error(
@@ -249,7 +249,7 @@ export const addDecisionInvolucrado = async (
     });
 
     logger.info(`Decisión agregada para el involucrado con ID ${id_involucrado}`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.DECISION_ADDED, nuevaDecision });
+    res.status(200).json({ message: MESSAGES.SUCCESS.CONFLICTO.DECISION_ADDED, nuevaDecision });
   } catch (error) {
     const { id_involucrado } = req.params;
     logger.error(
@@ -294,7 +294,7 @@ export const deleteConflicto = async (
     await conflicto.destroy();
 
     logger.info(`Conflicto con ID ${id} eliminado exitosamente`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.CONFLICTO_DELETED });
+    res.status(200).json({ message: MESSAGES.SUCCESS.CONFLICTO.CONFLICTO_DELETED });
   } catch (error) {
     const { id } = req.params;
     logger.error(

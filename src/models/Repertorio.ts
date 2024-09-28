@@ -1,12 +1,14 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
+import Estado from './Estado';
 
 class Repertorio extends Model {
   public id_repertorio!: number;
   public titulo!: string;
   public tipo!: string | null;
   public id_usuario!: number;
+  public estado_id!: number;
 }
 
 Repertorio.init(
@@ -55,7 +57,16 @@ Repertorio.init(
           msg: 'El ID del usuario debe ser un número entero.',
         },
       },
-    },    
+    },
+    estado_id: { 
+      type: DataTypes.INTEGER,
+      references: {
+        model: Estado,
+        key: 'id_estado',
+      },
+      allowNull: false,
+      onDelete: 'CASCADE',
+    },
   },
   {
     sequelize,

@@ -72,7 +72,7 @@ export const createConsulta = async (
     logger.info(
       `POST /consultas - Successfully created consulta with ID: ${newConsulta.id_consulta}`
     );
-    res.status(201).json({ message: MESSAGES.SUCCESS.REGISTER, newConsulta });
+    res.status(201).json({ message: MESSAGES.SUCCESS.CONSULTA.CONSULTA_ADDED, newConsulta });
   } catch (error) {
     logger.error(
       `POST /consultas - Error: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -100,7 +100,7 @@ export const updateConsulta = async (
     logger.info(`PUT /consultas/${id} - Successfully updated consulta`);
     res
       .status(200)
-      .json({ message: MESSAGES.SUCCESS.ROLE_UPDATED, updatedConsulta: updatedConsulta[1][0] });
+      .json({ message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED, updatedConsulta: updatedConsulta[1][0] });
   } catch (error) {
     const { id } = req.params;
     logger.error(
@@ -126,7 +126,7 @@ export const deleteConsulta = async (
       return next(new NotFoundError(MESSAGES.ERROR.CONSULTA.NOT_FOUND));
     }
     logger.info(`DELETE /consultas/${id} - Successfully deleted consulta`);
-    res.status(204).json({ message: MESSAGES.SUCCESS.CONSULTA_DELETED });
+    res.status(204).json({ message: MESSAGES.SUCCESS.CONSULTA.CONSULTA_DELETED });
   } catch (error) {
     const { id } = req.params;
     logger.error(

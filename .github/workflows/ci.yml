@@ -23,6 +23,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get Commit Author Email
+        id: get_email
+        run: |
+          git log -1 --pretty=format:'%ae'
+        shell: bash
+        continue-on-error: true
+
+      - name: Get Commit Author Name
+        id: get_name
+        run: |
+          git log -1 --pretty=format:'%an'
+        shell: bash
+        continue-on-error: true
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
       - name: Verify repository and list commits
         run: |
           echo "Verifying repository details..."
@@ -145,26 +164,7 @@ jobs:
           
       - name: Show release details
         run: |
-          echo "Release created: ${{ steps.release.outputs.html_url }}"
-
-      - name: Get Commit Author Email
-        id: get_email
-        run: |
-          git log -1 --pretty=format:'%ae'
-        shell: bash
-        continue-on-error: true
-
-      - name: Get Commit Author Name
-        id: get_name
-        run: |
-          git log -1 --pretty=format:'%an'
-        shell: bash
-        continue-on-error: true
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "${{ github.actor }}"
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          echo "Release created: ${{ steps.release.outputs.html_url }}"      
 
       - name: Ensure CHANGELOG.md exists
         run: |

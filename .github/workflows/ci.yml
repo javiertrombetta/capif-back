@@ -17,18 +17,19 @@ jobs:
       pull-requests: write
     outputs:
       version_tag: ${{ steps.tag_version.outputs.new_tag }}
-      changelog: ${{ steps.build_changelog.outputs.changelog }}
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get previous tag
-        id: prev_tag
+      - name: Verify repository and list commits
         run: |
-          git fetch --tags
-          echo "tag=$(git describe --tags --abbrev=0 || echo 'v0.0.0')" >> $GITHUB_OUTPUT
+          echo "Verifying repository details..."
+          git config --get remote.origin.url  # Verifica la URL del repositorio remoto
+          git branch -a  # Lista las ramas disponibles
+          git log --oneline -5  # Lista los últimos 5 commits
+          git tag  # Lista todas las etiquetas disponibles
 
       - name: Perform semantic version
         id: semantic_version
@@ -42,6 +43,14 @@ jobs:
           bump_each_commit: true
           search_commit_body: false
 
+      - name: Show semantic version info
+        run: |
+          echo "Generated version: ${{ steps.semantic_version.outputs.version }}"
+          echo "Version type: ${{ steps.semantic_version.outputs.version_type }}"
+          echo "Current commit: ${{ steps.semantic_version.outputs.current_commit }}"
+          echo "Previous version: ${{ steps.semantic_version.outputs.previous_version }}"
+          echo "Previous commit: ${{ steps.semantic_version.outputs.previous_commit }}"
+
       - name: Bump version and push tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
@@ -50,50 +59,42 @@ jobs:
           tag_prefix: ""
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Changelog
+      - name: Show tag version info
+        run: |
+          echo "Custom Tag: ${{ steps.tag_version.outputs.new_tag }}"
+          echo "Version: ${{ steps.semantic_version.outputs.version_tag }}"
+
+      - name: "Build Changelog with Configuration"
         id: build_changelog
         uses: mikepenz/release-changelog-builder-action@v5
         with:
-          fromTag: ${{ steps.prev_tag.outputs.tag }}
-          toTag: ${{ steps.tag_version.outputs.new_tag }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          configurationJson: |
-            {
+          fromTag: ${{ steps.semantic_version.outputs.previous_version }}
+          toTag: ${{ steps.tag_version.outputs.new_tag }}
+          mode: "COMMIT"
+          configurationJson: '{
               "categories": [
                 {
                   "title": "## 🚀 Features",
-                  "labels": ["feature", "feat"]
+                  "labels": ["feature","feat"],
+                  "empty_content": "- No new features"
                 },
                 {
                   "title": "## 🐛 Fixes",
-                  "labels": ["fix"]
+                  "labels": ["fix"],
+                  "empty_content": "- No bug fixes"
                 },
                 {
-                  "title": "## 📄 Docs",
-                  "labels": ["docs"]
-                },
-                {
-                  "title": "## 🎨 Style",
-                  "labels": ["style"]
-                },
-                {
-                  "title": "## 🔨 Refactor",
-                  "labels": ["refactor"]
-                },
-                {
-                  "title": "## 🧪 Test",
-                  "labels": ["test"]
-                },
-                {
-                  "title": "## 🛠️ Chores",
-                  "labels": ["chore"]
+                  "title": "## 🧪 Tests",
+                  "labels": ["test"],
+                  "empty_content": "- No new tests"
                 }
-              ],
-              "mode": "COMMIT",
-              "template": "# Changelog\n\n#{{CHANGELOG}}\n\n<details>\n<summary>Uncategorized</summary>\n\n#{{UNCATEGORIZED}}\n</details>",
-              "pr_template": "- PR [#{{NUMBER}}]({{URL}}): {{TITLE}} by @{{AUTHOR}}",
-              "empty_template": "- No changes"
-            }
+              ]
+            }'
+
+      - name: Show Changelog
+        run: |
+          echo "Changelog generated: ${{ steps.build_changelog.outputs.changelog }}"
 
       - name: Create production release
         uses: ncipollo/release-action@v1
@@ -104,7 +105,12 @@ jobs:
           body: ${{ steps.build_changelog.outputs.changelog }}
           draft: false
           prerelease: false
+          allowUpdates: true
           commit: ${{ steps.semantic_version.outputs.current_commit }}
+          
+      - name: Show release details
+        run: |
+          echo "Release created: ${{ steps.release.outputs.html_url }}"
 
       - name: Get Commit Author Email
         id: get_email
@@ -149,7 +155,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Docker Login
@@ -160,9 +166,18 @@ jobs:
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
+      - name: Set up QEMU (Optional for multi-platform builds)
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         id: docker_buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          install: true
+          use: true
+
+      - name: Inspect Buildx builder
+        run: docker buildx inspect --bootstrap
 
       - name: Cache Docker layers
         uses: actions/cache@v4
@@ -177,5 +192,14 @@ jobs:
         env:
           NEW_VERSION: ${{ needs.semantic_version.outputs.version_tag }}
         run: |
-          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8,windows/amd64 -t javiertrombetta/capif-back:$NEW_VERSION --push .
-          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8,windows/amd64 -t javiertrombetta/capif-back:latest --push .
+          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8,windows/amd64 \
+          -t javiertrombetta/capif-back:$NEW_VERSION \
+          --push \
+          --cache-from=type=local,src=/tmp/.buildx-cache \
+          --cache-to=type=local,dest=/tmp/.buildx-cache .
+
+          docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v8,windows/amd64 \
+          -t javiertrombetta/capif-back:$latest \
+          --push \
+          --cache-from=type=local,src=/tmp/.buildx-cache \
+          --cache-to=type=local,dest=/tmp/.buildx-cache .

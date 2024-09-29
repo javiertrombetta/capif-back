@@ -6,7 +6,6 @@ COPY package*.json ./
 
 RUN apk add --no-cache postgresql-client
 
-
 RUN npm install --frozen-lockfile && npm cache clean --force
 
 FROM build-deps AS builder
@@ -28,7 +27,8 @@ COPY --from=builder /app/.sequelizerc ./
 
 RUN chmod +x /usr/src/app/entrypoint.sh
 
-RUN jq 'del(.scripts.prepare)' package.json > package.tmp.json && mv package.tmp.json package.json
+RUN sed -i '/"prepare": "husky install",/d' package.json
+
 RUN npm install --omit=dev --frozen-lockfile && npm cache clean --force
 
 RUN addgroup -S appgroup && adduser --disabled-password -S appuser -G appgroup

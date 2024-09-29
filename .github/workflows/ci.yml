@@ -64,6 +64,14 @@ jobs:
           echo "Custom Tag: ${{ steps.tag_version.outputs.new_tag }}"
           echo "Version: ${{ steps.semantic_version.outputs.version_tag }}"
 
+      - name: Update version in package.json
+        run: |
+          version="${{ steps.semantic_version.outputs.version_tag }}"
+          jq --arg new_version "$version" '.version = $new_version' package.json > package.tmp.json && mv package.tmp.json package.json
+          git add package.json
+          git commit -m "chore(release): bump version to $version"
+          git push origin ${{ github.ref_name }}
+
       - name: "Build Changelog with Configuration"
         id: build_changelog
         uses: mikepenz/release-changelog-builder-action@v5

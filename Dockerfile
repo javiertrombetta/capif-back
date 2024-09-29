@@ -6,6 +6,7 @@ COPY package*.json ./
 
 RUN apk add --no-cache postgresql-client
 
+
 RUN npm install --frozen-lockfile && npm cache clean --force
 
 FROM build-deps AS builder
@@ -27,7 +28,7 @@ COPY --from=builder /app/.sequelizerc ./
 
 RUN chmod +x /usr/src/app/entrypoint.sh
 
-RUN npm install --omit=dev --frozen-lockfile && npm cache clean --force
+RUN npm set-script prepare "" && npm install --omit=dev --frozen-lockfile && npm cache clean --force
 
 RUN addgroup -S appgroup && adduser --disabled-password -S appuser -G appgroup
 RUN chown -R appuser:appgroup /app

@@ -76,18 +76,45 @@ jobs:
               "categories": [
                 {
                   "title": "## 🚀 Features",
-                  "labels": ["feature","feat"],
-                  "empty_content": "- No new features"
+                  "labels": ["feat"]
                 },
                 {
                   "title": "## 🐛 Fixes",
-                  "labels": ["fix"],
-                  "empty_content": "- No bug fixes"
+                  "labels": ["fix"]
+                },
+                {
+                  "title": "## 📚 Documentation",
+                  "labels": ["docs"]
+                },
+                {
+                  "title": "## 🎨 Code Style",
+                  "labels": ["style"]
+                },
+                {
+                  "title": "## 🔨 Refactor",
+                  "labels": ["refactor"]
                 },
                 {
                   "title": "## 🧪 Tests",
-                  "labels": ["test"],
-                  "empty_content": "- No new tests"
+                  "labels": ["test"]
+                },
+                {
+                  "title": "## 🛠️ Maintenance",
+                  "labels": ["chore"]
+                },
+                {
+                  "title": "## 📝 Merge Commits",
+                  "labels": [],
+                  "rules": [
+                    {
+                      "pattern": "Merge branch",
+                      "on_property": "title"
+                    }
+                  ]
+                },
+                {
+                  "title": "## 🔄 Uncategorized Commits",
+                  "labels": []
                 }
               ]
             }'

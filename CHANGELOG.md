@@ -1,4 +1,14 @@
 # Changelog
+## v0.1.18 - 29-09-2024
+## 🐛 Fixes
+
+- fix: ci
+
+## 🛠️ Maintenance
+
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.16 - 29-09-2024
 ## 🐛 Fixes
 

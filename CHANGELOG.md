@@ -1,4 +1,18 @@
 # Changelog
+## v0.1.10 - 29-09-2024
+## 🚀 Features
+
+- No new features
+
+## 🐛 Fixes
+
+- fix: ci
+
+## 🧪 Tests
+
+- No new tests
+
+
 ## v0.1.7 - 29-09-2024
 - no changes
 ## v0.1.5 - 28-09-2024

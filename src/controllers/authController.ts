@@ -24,32 +24,34 @@ export const getUser = async (req: AuthenticatedRequest, res: Response, next: Ne
     const token = req.cookies['auth_token'];
 
     if (!token) {
-      logger.warn('Token no proporcionado en la cookie.');
+      logger.warn(`${req.method} ${req.originalUrl} - Token no proporcionado en la cookie.`);
       return res.status(401).json({ message: MESSAGES.ERROR.VALIDATION.NO_TOKEN_PROVIDED });
     }
 
     const decodedToken = verifyToken(token, process.env.JWT_SECRET!);
     if (!decodedToken) {
-      logger.warn('Token inválido o expirado.');
+      logger.warn(`${req.method} ${req.originalUrl} - Token inválido o expirado.`);
       return res.status(401).json({ message: MESSAGES.ERROR.VALIDATION.INVALID_TOKEN });
     }
 
     const user = await findUsuarioById(decodedToken.id);
     if (!user) {
-      logger.warn(`No se encontró un usuario con el ID: ${decodedToken.id}`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - No se encontró un usuario con el ID: ${decodedToken.id}`
+      );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
-    logger.info(
-      `Datos del usuario obtenidos correctamente para el usuario con ID: ${user.id_usuario}`
-    );
+     logger.info(
+       `${req.method} ${req.originalUrl} - Datos del usuario obtenidos correctamente para el usuario con ID: ${user.id_usuario}`
+     );
     res.status(200).json({ user });
   } catch (err) {
-    if (err instanceof Error) {
-      logger.error(`Error al obtener los datos del usuario: ${err.message}`);
-    } else {
-      logger.error('Error al obtener los datos del usuario: error desconocido');
-    }
+    logger.error(
+      `${req.method} ${req.originalUrl} - Error al obtener los datos del usuario: ${
+        err instanceof Error ? err.message : 'Error desconocido'
+      }`
+    );
     next(err);
   }
 };
@@ -72,13 +74,17 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
 
     const existingUser = await findUsuarioByEmail(email);
     if (existingUser) {
-      logger.warn(`Intento de registro fallido. Usuario ya registrado: ${email}`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Intento de registro fallido. Usuario ya registrado: ${email}`
+      );
       throw new Err.ConflictError(MESSAGES.ERROR.USER.ALREADY_REGISTERED);
     }
 
     const estadoNuevo = await findEstadoByDescripcion('nuevo');
     if (!estadoNuevo) {
-      logger.error('Error interno: estado "nuevo" no encontrado.');
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error interno: estado "nuevo" no encontrado.`
+      );
       throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
     }
 
@@ -96,10 +102,9 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
       pais,
       telefono,
       estado_id: estadoNuevo.id_estado,
-      registro_pendiente: true,
     });
 
-    logger.info(`Usuario registrado exitosamente: ${email}`);
+    logger.info(`${req.method} ${req.originalUrl} - Usuario registrado exitosamente: ${email}`);
 
     const emailToken = jwt.sign({ id_usuario: newUser.id_usuario }, process.env.JWT_SECRET!, {
       expiresIn: '1d',
@@ -108,7 +113,9 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
     newUser.email_verification_token_expires = new Date(Date.now() + 60 * 60 * 1000);
     await newUser.save();
 
-    logger.debug(`Token de verificación generado para el usuario ${email}`);
+    logger.debug(
+      `${req.method} ${req.originalUrl} - Token de verificación generado para el usuario ${email}`
+    );
 
     const validationLink = `${emailToken}`;
     const emailBody = MESSAGES.EMAIL_BODY.VALIDATE_ACCOUNT(validationLink);
@@ -118,14 +125,14 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
       html: emailBody,
     });
 
-    logger.info(`Correo de validación enviado a ${email}`);
+    logger.info(`${req.method} ${req.originalUrl} - Correo de validación enviado a ${email}`);
     res.status(201).json({ message: MESSAGES.SUCCESS.AUTH.REGISTER });
   } catch (err) {
-    if (err instanceof Error) {
-      logger.error(`Error en el registro de usuario: ${err.message}`);
-    } else {
-      logger.error('Error en el registro de usuario: error desconocido');
-    }
+    logger.error(
+      `${req.method} ${req.originalUrl} - Error en el registro de usuario: ${
+        err instanceof Error ? err.message : 'Error desconocido'
+      }`
+    );
     next(err);
   }
 };
@@ -140,57 +147,53 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
     if (decodedToken) {
       const user = (await findUsuarioByEmail(email)) as UserWithRelations; 
       if (user && decodedToken.id === user.id_usuario) {
-        logger.warn(`El usuario ${email} ya ha iniciado sesión previamente.`);
+        logger.warn(
+          `${req.method} ${req.originalUrl} - El usuario ${email} ya ha iniciado sesión previamente.`
+        );
         return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
       }
     }
 
     const user = (await findUsuarioByEmail(email)) as UserWithRelations;
     if (!user) {
-      logger.warn(`Intento de inicio de sesión fallido. Usuario no encontrado: ${email}`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Usuario no encontrado: ${email}`
+      );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
-
-    console.log(user);
-    const estadoBloqueado = await findEstadoByDescripcion('bloqueado');
+    
     const rolAdministrador = await findRolByDescripcion('admin');  
-    if (
-      user.estado_id === estadoBloqueado?.id_estado &&
-      user.Rol?.descripcion !== rolAdministrador?.descripcion
-    ) {
-      logger.warn(`El usuario ${email} está bloqueado.`);
+    if (!user.isHabilitado && user.Rol?.descripcion !== rolAdministrador?.descripcion) {
+      logger.warn(`${req.method} ${req.originalUrl} - El usuario ${email} está bloqueado.`);
       return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.USER_BLOCKED });
     }
 
     const estadoNuevo = await findEstadoByDescripcion('nuevo');
     if (user.estado_id === estadoNuevo?.id_estado) {
-      logger.warn(`El usuario ${email} no está confirmado.`);
+      logger.warn(`${req.method} ${req.originalUrl} - El usuario ${email} no está confirmado.`);
       return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.USER_NOT_CONFIRMED });
     }
 
     const isPasswordValid = await verifyPassword(password, user.clave);
     const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10);
 
-    if (!isPasswordValid) {
+    if (!isPasswordValid) {   
 
-      if (user.Rol?.descripcion !== rolAdministrador?.descripcion) {
+      if (user.Rol?.descripcion !== rolAdministrador?.descripcion) {        
         user.intentos_fallidos += 1;
-
+        
         if (user.intentos_fallidos >= MAX_LOGIN_ATTEMPTS) {
-          const estadoBloqueado = await findEstadoByDescripcion('bloqueado');
-          if (estadoBloqueado) {
-            user.estado_id = estadoBloqueado.id_estado;
-            logger.warn(
-              `El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos.`
-            );
-          }
+          user.isHabilitado = false;
+          logger.warn(
+            `${req.method} ${req.originalUrl} - El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos`
+          );
         }
 
         await user.save();
       }
 
       logger.warn(
-        `Intento de inicio de sesión fallido. Contraseña incorrecta para el usuario: ${email}. Intentos fallidos: ${user.intentos_fallidos}`
+        `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Contraseña incorrecta para el usuario: ${email}. Intentos fallidos: ${user.intentos_fallidos}`
       );
       throw new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.PASSWORD_INCORRECT);
     }
@@ -215,14 +218,16 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
       maxAge: 3600000,
     });
 
-    logger.info(`Inicio de sesión exitoso para el usuario: ${email}`);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Inicio de sesión exitoso para el usuario: ${email}`
+    );
     return res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGIN });
   } catch (err) {
-    if (err instanceof Error) {
-      logger.error(`Error en el inicio de sesión: ${err.message}`);
-    } else {
-      logger.error('Error en el inicio de sesión: error desconocido');
-    }
+    logger.error(
+      `${req.method} ${req.originalUrl} - Error en el inicio de sesión: ${
+        err instanceof Error ? err.message : 'Error desconocido'
+      }`
+    );
     next(err);
   }
 };
@@ -238,7 +243,7 @@ export const requestPasswordReset = async (
     const user = await findUsuarioByEmail(email);
     if (!user) {
       logger.warn(
-        `Solicitud de restablecimiento de contraseña fallida. Usuario no encontrado: ${email}`
+        `${req.method} ${req.originalUrl} - Solicitud de restablecimiento de contraseña fallida. Usuario no encontrado: ${email}`
       );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
@@ -250,7 +255,9 @@ export const requestPasswordReset = async (
     user.reset_password_token_expires = new Date(Date.now() + 60 * 60 * 1000);
     await user.save();
 
-    logger.debug(`Token de restablecimiento de contraseña generado para el usuario: ${email}`);
+    logger.debug(
+      `${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña generado para el usuario: ${email}`
+    );
 
     const resetLink = `${resetToken}`;
     const emailBody = MESSAGES.EMAIL_BODY.PASSWORD_RECOVERY(resetLink);
@@ -260,14 +267,18 @@ export const requestPasswordReset = async (
       html: emailBody,
     });
 
-    logger.info(`Correo de restablecimiento de contraseña enviado a: ${email}`);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Correo de restablecimiento de contraseña enviado a: ${email}`
+    );
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET_REQUESTED });
   } catch (err) {
-    if (err instanceof Error) {
-      logger.error(`Error en la solicitud de restablecimiento de contraseña: ${err.message}`);
-    } else {
-      logger.error('Error en la solicitud de restablecimiento de contraseña: error desconocido');
-    }
+    logger.error(
+      `${req.method} ${
+        req.originalUrl
+      } - Error en la solicitud de restablecimiento de contraseña: ${
+        err instanceof Error ? err.message : 'Error desconocido'
+      }`
+    );
     next(err);
   }
 };
@@ -288,7 +299,9 @@ export const resetPassword = async (
     });
 
     if (!user) {
-      logger.warn('Token de restablecimiento de contraseña inválido o expirado.');
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña inválido o expirado.`
+      );
       throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
     }
 
@@ -306,7 +319,7 @@ export const resetPassword = async (
     });
 
     logger.info(
-      `Contraseña restablecida exitosamente para el usuario ${user.email}. Sesión cerrada.`
+      `${req.method} ${req.originalUrl} - Contraseña restablecida exitosamente para el usuario ${user.email}. Sesión cerrada.`
     );
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });
   } catch (err) {
@@ -315,7 +328,7 @@ export const resetPassword = async (
       return next(new Err.BadRequestError(MESSAGES.ERROR.JWT.EXPIRED));
     }
     logger.error(
-      `Error en el restablecimiento de contraseña: ${
+      `${req.method} ${req.originalUrl} - Error en el restablecimiento de contraseña: ${
         err instanceof Error ? err.message : 'Error desconocido'
       }`
     );
@@ -437,17 +450,14 @@ export const blockOrUnblockUser = async (
       logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
-
-    const estado = await findEstadoByDescripcion(bloquear ? 'bloqueado' : 'habilitado');
-    if (!estado) {
-      logger.error('Error interno: estado de bloqueo o habilitación no encontrado.');
-      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
-    }
-
-    user.estado_id = estado.id_estado;
+  
+    user.isHabilitado = !bloquear;
     await user.save();
 
-    const message = bloquear ? MESSAGES.SUCCESS.AUTH.USER_BLOCKED : MESSAGES.SUCCESS.AUTH.USER_UNBLOCKED;
+    const message = bloquear
+      ? MESSAGES.SUCCESS.AUTH.USER_BLOCKED
+      : MESSAGES.SUCCESS.AUTH.USER_UNBLOCKED;
+ 
     logger.info(
       `Usuario con ID ${id_usuario} ${bloquear ? 'bloqueado' : 'desbloqueado'} correctamente.`
     );
@@ -461,6 +471,7 @@ export const blockOrUnblockUser = async (
     next(err);
   }
 };
+
 
 export const changeUserRole = async (
   req: AuthenticatedRequest,
@@ -547,6 +558,7 @@ export const changeUserPassword = async (
 ) => {
   try {
     const { id_usuario, newPassword, confirmPassword } = req.body;
+    const userIdFromToken = (req.user as JwtPayload)?.id;
 
     if (newPassword !== confirmPassword) {
       logger.warn('Las contraseñas no coinciden.');
@@ -558,22 +570,25 @@ export const changeUserPassword = async (
       logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
-    
-    const estadoConfirmado = await findEstadoByDescripcion('confirmado');
-    const rolAdministrador = await findRolByDescripcion('administrador');
-    const rolProductor = await findRolByDescripcion('productor');
 
-    if (!estadoConfirmado || !rolAdministrador || !rolProductor) {
-      logger.error('Error interno: rol o estado no encontrado.');
-      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
+    const authenticatedUser = await findUsuarioById(userIdFromToken);
+    if (!authenticatedUser) {
+      logger.warn(`No se encontró al usuario autenticado con ID: ${userIdFromToken}`);
+      return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
     }
 
-    if (
-      user.estado_id !== estadoConfirmado.id_estado &&
-      user.rol_id !== rolAdministrador.id_rol &&
-      user.rol_id !== rolProductor.id_rol
-    ) {
-      logger.warn(`El usuario con ID ${id_usuario} no está autorizado para cambiar la clave.`);
+    const rolAdministrador = await findRolByDescripcion('administrador');
+    if (!rolAdministrador) {
+      logger.error('El rol administrador no fue encontrado.');
+      throw new Err.InternalServerError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
+    }
+
+    const isAdmin = authenticatedUser.rol_id === rolAdministrador.id_rol;
+
+    if (!isAdmin && userIdFromToken !== id_usuario) {
+      logger.warn(
+        `Usuario con ID ${userIdFromToken} no está autorizado para cambiar la clave de otro usuario.`
+      );
       return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_ROLE });
     }
 

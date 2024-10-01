@@ -3,6 +3,7 @@ import sequelize from '../config/database/sequelize';
 import Repertorio from './Repertorio';
 import Estado from './Estado';
 import ISRC from './ISRC';
+import TitularFonograma from './TitularFonograma'; 
 
 class Fonograma extends Model {
   public id_fonograma!: number;
@@ -14,6 +15,7 @@ class Fonograma extends Model {
   public tipo!: string | null;
   public estado_id!: number;
   public id_isrc!: number | null;
+  public TitularFonogramas?: TitularFonograma[];
 }
 
 Fonograma.init(

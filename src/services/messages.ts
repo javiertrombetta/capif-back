@@ -121,6 +121,7 @@ export const ERROR = {
   },
   GENERAL: {
     UNKNOWN: 'Ocurrió un error inesperado, por favor intente nuevamente más tarde.',
+    INVALID_FILE_TYPE: 'Tipo de archivo no permitido. Solo se permiten archivos %s.',
   },
   CONSULTA: {
     NOT_FOUND: 'Consulta no encontrada.',

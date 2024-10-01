@@ -25,20 +25,25 @@ const router = express.Router();
 router.post(
   '/involucrados/:id_involucrado/decision',
   authenticate,
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: involucradoIdSchema, [Segments.BODY]: decisionSchema }),
   addDecisionInvolucrado
 );
 
+
 router.post(
   '/:id/comentario',
   authenticate,
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: conflictoIdSchema, [Segments.BODY]: comentarioSchema }),
   addComentarioConflicto
 );
 
+
 router.post(
   '/',
   authenticate,
+  authorizeRoles(['productor']),
   celebrate({ [Segments.BODY]: createConflictoSchema }),
   createConflicto
 );
@@ -46,6 +51,7 @@ router.post(
 router.get(
   '/estado/:estado',
   authenticate,
+  authorizeRoles(['admin']),
   celebrate({ [Segments.PARAMS]: estadoConflictoSchema }),
   getConflictosByEstado
 );
@@ -53,15 +59,22 @@ router.get(
 router.get(
   '/:id',
   authenticate,
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: conflictoIdSchema }),
   getConflictoById
 );
 
-router.get('/', authenticate, getConflictosByUser);
+router.get(
+  '/',
+  authenticate,
+  authorizeRoles(['productor']),
+  getConflictosByUser
+);
 
 router.put(
   '/:id/resolver',
   authenticate,
+  authorizeRoles(['admin']),
   celebrate({ [Segments.PARAMS]: conflictoIdSchema, [Segments.BODY]: comentarioSchema }),
   resolveConflicto
 );

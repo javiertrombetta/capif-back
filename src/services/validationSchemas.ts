@@ -206,7 +206,8 @@ export const archivoCreateSchema = Joi.object({
     'string.max': 'La ruta del archivo no debe exceder los 255 caracteres.',
     'any.required': 'La ruta del archivo es obligatoria.',
   }),
-  tipo_archivo: Joi.string().max(50).required().messages({
+  tipo_archivo: Joi.string().valid('jpg', 'png', 'pdf', 'xls', 'xlsx').required().messages({
+    'any.only': 'El tipo de archivo debe ser uno de los siguientes: jpg, png, pdf, xls, xlsx.',
     'string.max': 'El tipo de archivo no debe exceder los 50 caracteres.',
     'any.required': 'El tipo de archivo es obligatorio.',
   }),

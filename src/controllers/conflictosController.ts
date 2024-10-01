@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+import { ConflictoWithRelations } from '../interfaces/ConflictoWithRelations';
 import * as MESSAGES from '../services/messages';
 import { NotFoundError, InternalServerError } from '../services/customErrors';
 import {
@@ -10,6 +11,8 @@ import {
   ComentarioConflicto,
   Involucrados,
   DecisionInvolucrados,
+  Repertorio,
+  TitularFonograma
 } from '../models';
 import { JwtPayload } from 'jsonwebtoken';
 
@@ -17,15 +20,25 @@ export const createConflicto = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<Response | void> => {
   try {
     const { id_fonograma, tipo_conflicto, descripcion } = req.body;
+    const userId = (req.user as JwtPayload)?.id;
     logger.info('POST /conflictos - Request received to create conflicto');
 
     const fonograma = await Fonograma.findByPk(id_fonograma);
+
     if (!fonograma) {
       logger.warn(`Fonograma con ID ${id_fonograma} no encontrado`);
       throw new NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
+    }
+    
+    const repertorio = await Repertorio.findByPk(fonograma.id_repertorio);
+    if (!repertorio || repertorio.id_usuario !== userId) {
+      logger.warn(
+        `Usuario con ID ${userId} no tiene derechos sobre el fonograma con ID ${id_fonograma}`
+      );
+      return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
     }
 
     const nuevoConflicto = await Conflicto.create({
@@ -52,26 +65,60 @@ export const getConflictoById = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const userId = (req.user as JwtPayload)?.id;
     logger.info(`GET /conflictos/${id} - Request received to fetch conflicto`);
 
-    const conflicto = await Conflicto.findByPk(id, {
+    const conflicto = (await Conflicto.findByPk(id, {
       include: [
-        { model: Fonograma, attributes: ['titulo', 'artista'] },
-        { model: Estado, attributes: ['descripcion'] },
-        { model: ComentarioConflicto, attributes: ['comentario', 'fecha'] },
+        {
+          model: Fonograma,
+          attributes: ['titulo', 'artista'],
+          include: [
+            {
+              model: TitularFonograma,
+              attributes: ['id_titular'],
+            },
+          ],
+        },
+        {
+          model: Estado,
+          attributes: ['descripcion'],
+        },
+        {
+          model: ComentarioConflicto,
+          attributes: ['comentario', 'fecha'],
+        },
         {
           model: Involucrados,
           attributes: ['id_titular'],
-          include: [{ model: DecisionInvolucrados }],
+          include: [
+            {
+              model: DecisionInvolucrados,
+              attributes: ['decision', 'fecha_decision'],
+            },
+          ],
         },
       ],
-    });
+    })) as ConflictoWithRelations | null;
+
     if (!conflicto) {
       logger.warn(`Conflicto con ID ${id} no encontrado`);
       throw new NotFoundError(MESSAGES.ERROR.CONFLICTO.NOT_FOUND);
     }
+   
+    const isOwnerOrInvolved =
+      conflicto.Fonograma?.TitularFonogramas?.some((titular: TitularFonograma) => titular.id_titular === userId) || 
+      conflicto.Involucrados?.some((involucrado) => involucrado.id_titular === userId);
+   
+    if (!isOwnerOrInvolved) {
+      logger.info(`Usuario con ID ${userId} no está autorizado para ver comentarios o decisiones`);
+      conflicto.ComentarioConflicto = [];
+      conflicto.Involucrados.forEach((involucrado) => {
+        involucrado.DecisionInvolucrados = [];
+      });
+    }
 
-    logger.info(`Conflicto con ID ${id} encontrado`);
+    logger.info(`Conflicto con ID ${id} encontrado y procesado`);
     res.status(200).json(conflicto);
   } catch (error) {
     const { id } = req.params;

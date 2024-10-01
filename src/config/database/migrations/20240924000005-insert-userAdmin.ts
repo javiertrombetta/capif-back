@@ -6,10 +6,16 @@ import bcrypt from 'bcrypt';
 module.exports = {
   up: async (queryInterface: QueryInterface) => {
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash('admin1234', saltRounds);
+
+    const hashedAdminPassword = await bcrypt.hash('admin1234', saltRounds);
+    const hashedProductorPassword = await bcrypt.hash('productor1234', saltRounds);
 
     const adminRole = (await queryInterface.sequelize.query(
       `SELECT id_rol FROM "Rol" WHERE descripcion = 'admin';`
+    )) as [{ id_rol: number }[], unknown];
+
+    const productorRole = (await queryInterface.sequelize.query(
+      `SELECT id_rol FROM "Rol" WHERE descripcion = 'productor';`
     )) as [{ id_rol: number }[], unknown];
 
     const authorizedState = (await queryInterface.sequelize.query(
@@ -24,8 +30,8 @@ module.exports = {
       {
         nombre: 'Admin',
         apellido: 'User',
-        email: 'a@c.com',
-        clave: hashedPassword,
+        email: 'admin@c.com',
+        clave: hashedAdminPassword,
         rol_id: adminRole[0][0].id_rol,
         fecha_registro: new Date(),
         estado_id: authorizedState[0][0].id_estado,
@@ -41,9 +47,32 @@ module.exports = {
         updatedAt: new Date(),
       },
     ]);
+
+    await queryInterface.bulkInsert('Usuario', [
+      {
+        nombre: 'Productor',
+        apellido: 'User',
+        email: 'productor@c.com',
+        clave: hashedProductorPassword,
+        rol_id: productorRole[0][0].id_rol,
+        fecha_registro: new Date(),
+        estado_id: authorizedState[0][0].id_estado,
+        cuit: '20304050608',
+        tipo_persona_id: personaFisicaType[0][0].id_tipo_persona,
+        domicilio: 'Productor Address',
+        ciudad: 'Buenos Aires',
+        provincia: 'Buenos Aires',
+        pais: 'Argentina',
+        telefono: '987654321',
+        isRegistro_pendiente: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
   },
 
   down: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkDelete('Usuario', { email: 'a@.com' }, {});
+    await queryInterface.bulkDelete('Usuario', { email: 'admin@c.com' }, {});
+    await queryInterface.bulkDelete('Usuario', { email: 'productor@c.com' }, {});
   },
 };

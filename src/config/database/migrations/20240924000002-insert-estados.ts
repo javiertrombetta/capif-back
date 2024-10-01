@@ -35,7 +35,13 @@ module.exports = {
         tipo_estado_id: tipoEstadoRegistro[0][0].id_tipo_estado,
         createdAt: new Date(),
         updatedAt: new Date(),
-      },      
+      },
+      {
+        descripcion: 'bloqueado',
+        tipo_estado_id: tipoEstadoRegistro[0][0].id_tipo_estado,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]);
   },
 

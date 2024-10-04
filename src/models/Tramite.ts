@@ -2,10 +2,11 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 import Estado from './Estado';
+import TipoTramite from './TipoTramite';
 
 class Tramite extends Model {
   public id_tramite!: number;
-  public tipo_tramite!: string;
+  public id_tipo_tramite!: number;
   public id_usuario!: number;
   public estado_id!: number;
 }
@@ -34,19 +35,15 @@ Tramite.init(
         },
       },
     },
-    tipo_tramite: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      validate: {
-        len: {
-          args: [3, 100],
-          msg: 'El tipo de trámite debe tener entre 3 y 100 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El tipo de trámite no puede estar vacío.',
-        },
+    id_tipo_tramite: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoTramite,
+        key: 'id_tipo_tramite',
       },
-    },    
+      allowNull: false,
+      onDelete: 'CASCADE',
+    },
     estado_id: {
       type: DataTypes.INTEGER,
       references: {

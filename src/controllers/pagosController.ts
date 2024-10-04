@@ -1,9 +1,12 @@
 import { Response, NextFunction } from 'express';
 import logger from '../config/logger';
-import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+
 import * as MESSAGES from '../services/messages';
 import { NotFoundError, InternalServerError } from '../services/customErrors';
-import { Pago, Usuario } from '../models';
+
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+
+import { Pago, Usuario, TipoMetodoPago } from '../models';
 
 export const getAllPagos = async (
   req: AuthenticatedRequest,
@@ -13,7 +16,9 @@ export const getAllPagos = async (
   try {
     logger.info('GET /pagos - Request received to fetch all payments');
 
-    const pagos = await Pago.findAll();
+    const pagos = await Pago.findAll({
+      include: [{ model: TipoMetodoPago, attributes: ['descripcion'] }],
+    });
 
     if (!pagos.length) {
       logger.warn('No se encontraron pagos');
@@ -36,7 +41,10 @@ export const getPagosByUser = async (
     const { id } = req.params;
     logger.info(`GET /pagos/${id} - Request received to fetch payments for user ID: ${id}`);
 
-    const pagos = await Pago.findAll({ where: { id_usuario: id } });
+    const pagos = await Pago.findAll({
+      where: { id_usuario: id },
+      include: [{ model: TipoMetodoPago, attributes: ['descripcion'] }],
+    });
 
     if (!pagos.length) {
       logger.warn(`No se encontraron pagos para el usuario con ID ${id}`);
@@ -59,7 +67,7 @@ export const createPago = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { monto, fecha_pago, id_usuario, metodo_pago, referencia } = req.body;
+    const { monto, fecha_pago, id_usuario, id_tipo_metodo_pago, referencia } = req.body;
     logger.info('POST /pagos - Request received to create a new payment');
 
     const usuario = await Usuario.findByPk(id_usuario);
@@ -68,11 +76,17 @@ export const createPago = async (
       throw new NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
+    const tipoMetodoPago = await TipoMetodoPago.findByPk(id_tipo_metodo_pago);
+    if (!tipoMetodoPago) {
+      logger.warn(`Método de pago con ID ${id_tipo_metodo_pago} no encontrado`);
+      throw new NotFoundError(MESSAGES.ERROR.PAGO.INVALID_PAYMENT_METHOD);
+    }
+
     const nuevoPago = await Pago.create({
       monto,
       fecha_pago,
       id_usuario,
-      metodo_pago,
+      id_tipo_metodo_pago,
       referencia,
     });
 
@@ -93,7 +107,7 @@ export const updatePago = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { monto, fecha_pago, metodo_pago, referencia } = req.body;
+    const { monto, fecha_pago, id_tipo_metodo_pago, referencia } = req.body;
     logger.info(`PUT /pagos/${id} - Request received to update payment ID: ${id}`);
 
     const pago = await Pago.findByPk(id);
@@ -103,9 +117,15 @@ export const updatePago = async (
       throw new NotFoundError(MESSAGES.ERROR.PAGO.NOT_FOUND);
     }
 
+    const tipoMetodoPago = await TipoMetodoPago.findByPk(id_tipo_metodo_pago);
+    if (!tipoMetodoPago) {
+      logger.warn(`Método de pago con ID ${id_tipo_metodo_pago} no encontrado`);
+      throw new NotFoundError(MESSAGES.ERROR.PAGO.INVALID_PAYMENT_METHOD);
+    }
+
     pago.monto = monto;
     pago.fecha_pago = fecha_pago;
-    pago.metodo_pago = metodo_pago;
+    pago.id_tipo_metodo_pago = id_tipo_metodo_pago;
     pago.referencia = referencia;
 
     await pago.save();

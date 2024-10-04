@@ -2,10 +2,11 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Fonograma from './Fonograma';
 import Estado from './Estado';
+import TipoConflicto from './TipoConflicto';
 
 class Conflicto extends Model {
   public id_conflicto!: number;
-  public tipo_conflicto!: string;
+  public id_tipo_conflicto!: number;
   public descripcion!: string;
   public id_fonograma!: number;
   public estado_id!: number;
@@ -36,18 +37,14 @@ Conflicto.init(
         },
       },
     },
-    tipo_conflicto: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [3, 100],
-          msg: 'El tipo de conflicto debe tener entre 3 y 100 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El tipo de conflicto no puede estar vacío.',
-        },
+    id_tipo_conflicto: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoConflicto,
+        key: 'id_tipo_conflicto',
       },
+      allowNull: false,
+      onDelete: 'CASCADE',
     },
     descripcion: {
       type: DataTypes.TEXT,
@@ -59,7 +56,7 @@ Conflicto.init(
         model: Estado,
         key: 'id_estado',
       },
-    },    
+    },
     fecha_resolucion: {
       type: DataTypes.DATE,
       allowNull: true,

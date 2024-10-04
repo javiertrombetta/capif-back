@@ -1,11 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
+
 import * as MESSAGES from '../services/messages';
 import { NotFoundError, BadRequestError, InternalServerError } from '../services/customErrors';
-import { Archivo } from '../models';
-import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { findUsuarioById } from '../services/userService';
 import { findRolByDescripcion } from '../services/roleService';
+
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+
+import { Archivo, TipoArchivo } from '../models';
 
 export const getArchivosByRole = async (
   req: AuthenticatedRequest,
@@ -67,10 +70,14 @@ export const createArchivo = async (
 
     logger.info(`${req.method} ${req.originalUrl} - Se hizo una solicitud para crear un archivo.`);
 
-    const allowedTypes = process.env.ALLOWED_FILE_TYPES?.split(',') || [];
-    if (!allowedTypes.includes(tipo_archivo)) {
+    const tipoArchivoExists = await TipoArchivo.findOne({ where: { descripcion: tipo_archivo } });
+    if (!tipoArchivoExists) {
+      throw new BadRequestError(MESSAGES.ERROR.GENERAL.INVALID_FILE_TYPE);
+    }
+
+    if (!nombre_archivo.endsWith(tipoArchivoExists.descripcion)) {
       throw new BadRequestError(
-        MESSAGES.ERROR.GENERAL.INVALID_FILE_TYPE.replace('%s', allowedTypes.join(', '))
+        MESSAGES.ERROR.ARCHIVO.INVALID_FILE_EXTENSION.replace('%s', tipoArchivoExists.descripcion)
       );
     }
 
@@ -78,8 +85,9 @@ export const createArchivo = async (
       id_usuario,
       nombre_archivo,
       ruta_archivo,
-      tipo_archivo,
+      tipo_archivo: tipoArchivoExists.descripcion,
     });
+
     logger.info(
       `${req.method} ${req.originalUrl} - Archivo creado exitosamente con ID: ${newArchivo.id_archivo}`
     );
@@ -135,8 +143,19 @@ export const updateArchivo = async (
       return;
     }
 
+    const tipoArchivoExists = await TipoArchivo.findOne({ where: { descripcion: tipo_archivo } });
+    if (!tipoArchivoExists) {
+      throw new BadRequestError(MESSAGES.ERROR.GENERAL.INVALID_FILE_TYPE);
+    }
+ 
+    if (!nombre_archivo.endsWith(tipoArchivoExists.descripcion)) {
+      throw new BadRequestError(
+        MESSAGES.ERROR.ARCHIVO.INVALID_FILE_EXTENSION.replace('%s', tipoArchivoExists.descripcion)
+      );
+    }
+
     const updatedArchivo = await Archivo.update(
-      { nombre_archivo, ruta_archivo, tipo_archivo },
+      { nombre_archivo, ruta_archivo, tipo_archivo: tipoArchivoExists.descripcion },
       { where: { id_archivo: Number(id) }, returning: true }
     );
 
@@ -164,6 +183,7 @@ export const updateArchivo = async (
     next(new InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
   }
 };
+
 
 export const deleteArchivo = async (
   req: AuthenticatedRequest,

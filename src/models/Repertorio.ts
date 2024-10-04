@@ -2,11 +2,12 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 import Estado from './Estado';
+import TipoRepertorio from './TipoRepertorio';
 
 class Repertorio extends Model {
   public id_repertorio!: number;
   public titulo!: string;
-  public tipo!: string | null;
+  public id_tipo_repertorio!: number;
   public id_usuario!: number;
   public estado_id!: number;
 }
@@ -31,15 +32,14 @@ Repertorio.init(
         },
       },
     },
-    tipo: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
-      validate: {
-        isIn: {
-          args: [['Música', 'Literatura', 'Cine', 'Otro']],
-          msg: 'El tipo debe ser uno de los siguientes: Música, Literatura, Cine, Otro.',
-        },
+    id_tipo_repertorio: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoRepertorio,
+        key: 'id_tipo_repertorio',
       },
+      allowNull: false,
+      onDelete: 'CASCADE',
     },
     id_usuario: {
       type: DataTypes.INTEGER,
@@ -58,7 +58,7 @@ Repertorio.init(
         },
       },
     },
-    estado_id: { 
+    estado_id: {
       type: DataTypes.INTEGER,
       references: {
         model: Estado,

@@ -4,6 +4,7 @@ import Repertorio from './Repertorio';
 import Estado from './Estado';
 import ISRC from './ISRC';
 import TitularFonograma from './TitularFonograma'; 
+import TipoFonograma from './TipoFonograma';
 
 class Fonograma extends Model {
   public id_fonograma!: number;
@@ -12,7 +13,7 @@ class Fonograma extends Model {
   public artista!: string;
   public duracion!: string;
   public fecha_lanzamiento!: Date;
-  public tipo!: string | null;
+  public id_tipo_fonograma!: number;
   public estado_id!: number;
   public id_isrc!: number | null;
   public TitularFonogramas?: TitularFonograma[];
@@ -91,15 +92,14 @@ Fonograma.init(
         },
       },
     },
-    tipo: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
-      validate: {
-        isIn: {
-          args: [['Single', 'Álbum', 'EP', 'Otro']],
-          msg: 'El tipo debe ser uno de los siguientes: Single, Álbum, EP, Otro.',
-        },
+    id_tipo_fonograma: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoFonograma,
+        key: 'id_tipo_fonograma',
       },
+      allowNull: false,
+      onDelete: 'CASCADE',
     },
     estado_id: {
       type: DataTypes.INTEGER,

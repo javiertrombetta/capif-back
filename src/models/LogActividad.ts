@@ -1,14 +1,16 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
+import TipoActividad from './TipoActividad';
+import TipoNavegador from './TipoNavegador';
 
 class LogActividad extends Model {
   public id_log!: number;
-  public actividad!: string;
+  public id_tipo_actividad!: number;
   public fecha!: Date;
   public id_usuario!: number;
   public ip_origen!: string;
-  public navegador!: string;
+  public id_tipo_navegador!: number;
 }
 
 LogActividad.init(
@@ -35,19 +37,15 @@ LogActividad.init(
         },
       },
     },
-    actividad: {
-      type: DataTypes.STRING(255),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [1, 255],
-          msg: 'La actividad debe tener entre 1 y 255 caracteres.',
-        },
-        notEmpty: {
-          msg: 'La actividad no puede estar vacía.',
-        },
+    id_tipo_actividad: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoActividad,
+        key: 'id_tipo_actividad',
       },
-    },    
+      allowNull: false,
+      onDelete: 'CASCADE',
+    },
     ip_origen: {
       type: DataTypes.STRING(50),
       allowNull: false,
@@ -61,18 +59,14 @@ LogActividad.init(
         },
       },
     },
-    navegador: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [1, 100],
-          msg: 'El navegador debe tener entre 1 y 100 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El navegador no puede estar vacío.',
-        },
+    id_tipo_navegador: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoNavegador,
+        key: 'id_tipo_navegador',
       },
+      allowNull: false,
+      onDelete: 'CASCADE',
     },
   },
   {

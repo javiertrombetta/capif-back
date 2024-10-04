@@ -1,11 +1,12 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Fonograma from './Fonograma';
+import TipoISRC from './TipoISRC';
 
 class ISRC extends Model {
   public id_isrc!: number;
   public codigo_isrc!: string;
-  public tipo!: 'audio' | 'video';
+  public id_tipo_isrc!: number;
   public id_fonograma!: number;
 }
 
@@ -47,15 +48,14 @@ ISRC.init(
         },
       },
     },
-    tipo: {
-      type: DataTypes.ENUM('audio', 'video'),
-      allowNull: false,
-      validate: {
-        isIn: {
-          args: [['audio', 'video']],
-          msg: 'El tipo debe ser "audio" o "video".',
-        },
+    id_tipo_isrc: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoISRC,
+        key: 'id_tipo_isrc',
       },
+      allowNull: false,
+      onDelete: 'CASCADE',
     },
   },
   {

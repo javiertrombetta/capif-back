@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
-import Consulta from '../models/Consulta';
-import { NotFoundError, BadRequestError, InternalServerError } from '../services/customErrors';
 import logger from '../config/logger';
+
+import { NotFoundError, BadRequestError, InternalServerError } from '../services/customErrors';
 import * as MESSAGES from '../services/messages';
 import { ParamsWithId } from '../interfaces/ParamsInRoutes';
+
+import { Estado, Consulta } from '../models';
 
 export const getConsultas = async (
   req: Request,
@@ -56,10 +58,16 @@ export const createConsulta = async (
     const { asunto, mensaje, id_usuario, estado_id } = req.body;
 
     logger.info('POST /consultas - Request received to create consulta', { asunto, id_usuario });
-
-    if (!asunto || !id_usuario) {
+ 
+    if (!asunto || !id_usuario || !estado_id) {
       logger.warn('POST /consultas - Bad request, missing required fields');
       return next(new BadRequestError(MESSAGES.ERROR.VALIDATION.GENERAL));
+    }
+
+    const estado = await Estado.findByPk(estado_id);
+    if (!estado) {
+      logger.warn(`POST /consultas - Estado ID ${estado_id} not found`);
+      return next(new BadRequestError(MESSAGES.ERROR.VALIDATION.STATE_INVALID));
     }
 
     const newConsulta = await Consulta.create({
@@ -88,7 +96,18 @@ export const updateConsulta = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const { estado_id } = req.body;
+
     logger.info(`PUT /consultas/${id} - Request received to update consulta`);
+
+     if (estado_id) {
+       const estado = await Estado.findByPk(estado_id);
+       if (!estado) {
+         logger.warn(`PUT /consultas/${id} - Estado ID ${estado_id} not found`);
+         return next(new BadRequestError(MESSAGES.ERROR.VALIDATION.STATE_INVALID));
+       }
+     }
+
     const updatedConsulta = await Consulta.update(req.body, {
       where: { id_consulta: id },
       returning: true,
@@ -126,7 +145,7 @@ export const deleteConsulta = async (
       return next(new NotFoundError(MESSAGES.ERROR.CONSULTA.NOT_FOUND));
     }
     logger.info(`DELETE /consultas/${id} - Successfully deleted consulta`);
-    res.status(204).json({ message: MESSAGES.SUCCESS.CONSULTA.CONSULTA_DELETED });
+    res.status(200).json({ message: MESSAGES.SUCCESS.CONSULTA.CONSULTA_DELETED });
   } catch (error) {
     const { id } = req.params;
     logger.error(

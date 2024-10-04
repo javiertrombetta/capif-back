@@ -131,6 +131,7 @@ export const ERROR = {
   },
   CONFLICTO: {
     NOT_FOUND: 'El conflicto no fue encontrado.',
+    INVALID_TYPE: 'El tipo de conflicto es inválido.',
   },
   ESTADO: {
     NOT_FOUND: 'El estado no fue encontrado.',
@@ -141,9 +142,11 @@ export const ERROR = {
   },
   CUENTA_CORRIENTE: {
     NOT_FOUND: 'La cuenta corriente no fue encontrada.',
+    INVALID_SALDO: 'El saldo proporcionado es inválido.',
   },
   PAGO: {
     NOT_FOUND: 'No se encontraron pagos asociados a la cuenta.',
+    INVALID_PAYMENT_METHOD: 'El tipo de forma de pago es inválido.',
   },
   AUTH: {
     NOT_AUTHORIZED: 'No estás autorizado para realizar esta acción.',
@@ -153,11 +156,14 @@ export const ERROR = {
   },
   ARCHIVO: {
     NOT_FOUND: 'No se encontró el archivo.',
+    INVALID_FILE_EXTENSION: 'Extensión de archivo inválida.',
   },
   PRODUCTOR: {
     NOT_FOUND: 'Productor no encontrado.',
     INVALID_ROLE: 'El rol del usuario no corresponde a productor.',
     ROLE_NOT_FOUND: 'Rol de productor no encontrado en el sistema.',
+    INVALID_TIPO_COMPANIA: 'El tipo de compañía proporcionado no es válido.',
+    INVALID_ESTADO: 'El estado proporcionado no es válido.',
   },
   REGLA: {
     NOT_FOUND: 'Regla no encontrada.',

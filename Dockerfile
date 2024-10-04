@@ -11,6 +11,7 @@ RUN npm install --frozen-lockfile && npm cache clean --force
 FROM build-deps AS builder
 
 COPY src ./src
+COPY public ./public 
 COPY tsconfig.json ./
 COPY entrypoint.sh /usr/src/app/entrypoint.sh
 
@@ -23,6 +24,7 @@ COPY --from=builder /usr/src/app/entrypoint.sh /usr/src/app/entrypoint.sh
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/.sequelizerc ./
 
 RUN chmod +x /usr/src/app/entrypoint.sh

@@ -8,20 +8,31 @@ import Usuario from './Usuario';
 import TipoCompania from './TipoCompania';
 import Compania from './Compania';
 import UsuarioAsignado from './UsuarioAsignado';
+import TipoRepertorio from './TipoRepertorio';
 import Repertorio from './Repertorio';
+import TipoFonograma from './TipoFonograma';
 import Fonograma from './Fonograma';
+import TipoISRC from './TipoISRC';
 import ISRC from './ISRC';
+import TipoConflicto from './TipoConflicto';
 import Conflicto from './Conflicto';
 import ComentarioConflicto from './ComentarioConflicto';
 import Consulta from './Consulta';
+import TipoTramite from './TipoTramite';
 import Tramite from './Tramite';
+import TipoDocumento from './TipoDocumento';
 import Documento from './Documento';
 import AltaMasivaTemp from './AltaMasivaTemp';
+import TipoReporte from './TipoReporte';
 import Reporte from './Reporte';
+import TipoMetodoPago from './TipoMetodoPago';
 import Pago from './Pago';
 import CuentaCorriente from './CuentaCorriente';
+import TipoArchivo from './TipoArchivo';
 import Archivo from './Archivo';
 import Sesion from './Sesion';
+import TipoActividad from './TipoActividad';
+import TipoNavegador from './TipoNavegador';
 import LogActividad from './LogActividad';
 import AuditoriaCambio from './AuditoriaCambio';
 import ErroresInsercion from './ErroresInsercion';
@@ -67,6 +78,10 @@ UsuarioAsignado.belongsTo(Compania, { foreignKey: 'id_compania' });
 Usuario.hasMany(Repertorio, { foreignKey: 'id_usuario' });
 Repertorio.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
+// TipoRepertorio <-> Repertorio
+TipoRepertorio.hasMany(Repertorio, { foreignKey: 'id_tipo_repertorio', onDelete: 'CASCADE' });
+Repertorio.belongsTo(TipoRepertorio, { foreignKey: 'id_tipo_repertorio' });
+
 // Repertorio <-> Fonograma
 Repertorio.hasMany(Fonograma, { foreignKey: 'id_repertorio', onDelete: 'CASCADE' });
 Fonograma.belongsTo(Repertorio, { foreignKey: 'id_repertorio' });
@@ -75,9 +90,21 @@ Fonograma.belongsTo(Repertorio, { foreignKey: 'id_repertorio' });
 Fonograma.hasOne(ISRC, { foreignKey: 'id_fonograma', onDelete: 'CASCADE' });
 ISRC.belongsTo(Fonograma, { foreignKey: 'id_fonograma' });
 
+// TipoFonograma <-> Fonograma
+TipoFonograma.hasMany(Fonograma, { foreignKey: 'id_tipo_fonograma', onDelete: 'CASCADE' });
+Fonograma.belongsTo(TipoFonograma, { foreignKey: 'id_tipo_fonograma' });
+
+// TipoISRC <-> ISRC
+TipoISRC.hasMany(ISRC, { foreignKey: 'id_tipo_isrc', onDelete: 'CASCADE' });
+ISRC.belongsTo(TipoISRC, { foreignKey: 'id_tipo_isrc' });
+
 // Fonograma <-> Conflicto
 Fonograma.hasMany(Conflicto, { foreignKey: 'id_fonograma', onDelete: 'CASCADE' });
 Conflicto.belongsTo(Fonograma, { foreignKey: 'id_fonograma' });
+
+// TipoConflicto <-> Conflicto
+TipoConflicto.hasMany(Conflicto, { foreignKey: 'id_tipo_conflicto', onDelete: 'CASCADE' });
+Conflicto.belongsTo(TipoConflicto, { foreignKey: 'id_tipo_conflicto' });
 
 // Conflicto <-> ComentarioConflicto
 Conflicto.hasMany(ComentarioConflicto, { foreignKey: 'id_conflicto', onDelete: 'CASCADE' });
@@ -91,9 +118,17 @@ Consulta.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 Usuario.hasMany(Tramite, { foreignKey: 'id_usuario' });
 Tramite.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
+// TipoTramite <-> Tramite
+TipoTramite.hasMany(Tramite, { foreignKey: 'id_tipo_tramite', onDelete: 'CASCADE' });
+Tramite.belongsTo(TipoTramite, { foreignKey: 'id_tipo_tramite' });
+
 // Tramite <-> Documento
 Tramite.hasMany(Documento, { foreignKey: 'id_tramite', onDelete: 'CASCADE' });
 Documento.belongsTo(Tramite, { foreignKey: 'id_tramite' });
+
+// TipoDocumento <-> Documento
+TipoDocumento.hasMany(Documento, { foreignKey: 'id_tipo_documento', onDelete: 'CASCADE' });
+Documento.belongsTo(TipoDocumento, { foreignKey: 'id_tipo_documento' });
 
 // Usuario <-> AltaMasivaTemp
 Usuario.hasMany(AltaMasivaTemp, { foreignKey: 'id_usuario' });
@@ -107,9 +142,17 @@ AltaMasivaTemp.belongsTo(Repertorio, { foreignKey: 'id_repertorio' });
 Usuario.hasMany(Reporte, { foreignKey: 'id_usuario' });
 Reporte.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
+// TipoReporte <-> Reporte
+TipoReporte.hasMany(Reporte, { foreignKey: 'id_tipo_reporte', onDelete: 'CASCADE' });
+Reporte.belongsTo(TipoReporte, { foreignKey: 'id_tipo_reporte' });
+
 // Usuario <-> Pago
 Usuario.hasMany(Pago, { foreignKey: 'id_usuario' });
 Pago.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// TipoMetodoPago <-> Pago
+TipoMetodoPago.hasMany(Pago, { foreignKey: 'id_tipo_metodo_pago', onDelete: 'CASCADE' });
+Pago.belongsTo(TipoMetodoPago, { foreignKey: 'id_tipo_metodo_pago' });
 
 // Usuario <-> CuentaCorriente
 Usuario.hasMany(CuentaCorriente, { foreignKey: 'id_usuario' });
@@ -119,6 +162,10 @@ CuentaCorriente.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 Usuario.hasMany(Archivo, { foreignKey: 'id_usuario' });
 Archivo.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 
+// TipoArchivo <-> Archivo
+TipoArchivo.hasMany(Archivo, { foreignKey: 'id_tipo_archivo', onDelete: 'CASCADE' });
+Archivo.belongsTo(TipoArchivo, { foreignKey: 'id_tipo_archivo' });
+
 // Usuario <-> Sesion
 Usuario.hasMany(Sesion, { foreignKey: 'id_usuario' });
 Sesion.belongsTo(Usuario, { foreignKey: 'id_usuario' });
@@ -126,6 +173,14 @@ Sesion.belongsTo(Usuario, { foreignKey: 'id_usuario' });
 // Usuario <-> LogActividad
 Usuario.hasMany(LogActividad, { foreignKey: 'id_usuario' });
 LogActividad.belongsTo(Usuario, { foreignKey: 'id_usuario' });
+
+// TipoActividad <-> LogActividad
+TipoActividad.hasMany(LogActividad, { foreignKey: 'id_tipo_actividad', onDelete: 'CASCADE' });
+LogActividad.belongsTo(TipoActividad, { foreignKey: 'id_tipo_actividad' });
+
+// TipoNavegador <-> LogActividad
+TipoNavegador.hasMany(LogActividad, { foreignKey: 'id_tipo_navegador', onDelete: 'CASCADE' });
+LogActividad.belongsTo(TipoNavegador, { foreignKey: 'id_tipo_navegador' });
 
 // Usuario <-> AuditoriaCambio
 Usuario.hasMany(AuditoriaCambio, { foreignKey: 'id_usuario' });
@@ -181,20 +236,31 @@ export {
   TipoCompania,
   Compania,
   UsuarioAsignado,
+  TipoRepertorio,
   Repertorio,
+  TipoFonograma,
   Fonograma,
+  TipoISRC,
   ISRC,
+  TipoConflicto,
   Conflicto,
   ComentarioConflicto,
   Consulta,
+  TipoTramite,
   Tramite,
+  TipoDocumento,
   Documento,
   AltaMasivaTemp,
+  TipoReporte,
   Reporte,
+  TipoMetodoPago,
   Pago,
   CuentaCorriente,
+  TipoArchivo,
   Archivo,
   Sesion,
+  TipoActividad,
+  TipoNavegador,
   LogActividad,
   AuditoriaCambio,
   ErroresInsercion,

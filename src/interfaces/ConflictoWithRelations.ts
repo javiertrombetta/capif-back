@@ -5,14 +5,17 @@ import {
   ComentarioConflicto,
   Involucrados,
   DecisionInvolucrados,
+  TipoConflicto,
 } from '../models';
 
+export interface InvolucradosWithDecision extends Involucrados {
+  DecisionInvolucrados: DecisionInvolucrados[];
+}
+
 export interface ConflictoWithRelations extends Conflicto {
-  Fonograma: Fonograma; // Aquí asumimos que siempre tendrás un fonograma, si no es así, puedes hacerlo opcional
+  Fonograma: Fonograma;
   Estado: Estado;
-  ComentarioConflicto: ComentarioConflicto[]; // Array de comentarios
-  Involucrados: Array<{
-    id_titular: number;
-    DecisionInvolucrados: DecisionInvolucrados[];
-  }>;
+  TipoConflicto: TipoConflicto;
+  ComentarioConflicto: ComentarioConflicto[];
+  Involucrados: InvolucradosWithDecision[]; 
 }

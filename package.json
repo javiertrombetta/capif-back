@@ -39,6 +39,9 @@
     "pg": "^8.11.0",
     "redis": "^4.7.0",
     "sequelize": "^6.37.3",
+    "serve-favicon": "^2.5.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "winston": "^3.14.2"
   },
   "devDependencies": {
@@ -61,6 +64,9 @@
     "@types/pg": "^8.11.10",
     "@types/redis": "^4.0.10",
     "@types/sequelize": "^4.28.20",
+    "@types/serve-favicon": "^2.5.7",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.6",
     "@typescript-eslint/eslint-plugin": "^8.4.0",
     "@typescript-eslint/parser": "^8.4.0",
     "dotenv-cli": "^7.4.2",

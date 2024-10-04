@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
 import logger from '../config/logger';
-import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+
 import * as MESSAGES from '../services/messages';
 import { NotFoundError, InternalServerError, UnauthorizedError } from '../services/customErrors';
-import { CuentaCorriente, Pago } from '../models';
-import { JwtPayload } from 'jsonwebtoken';
+
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+import { PagosWithRelations } from '../interfaces/PagosWithRelations';
+
+import { CuentaCorriente, Pago, TipoMetodoPago } from '../models';
 
 export const getEstadoCuentaCorriente = async (
   req: AuthenticatedRequest,
@@ -40,14 +44,32 @@ export const getDetallePagos = async (
     const { id } = req.params;
     logger.info(`GET /cuentas-corrientes/${id}/pagos - Request to fetch account payments`);
 
-    const pagos = await Pago.findAll({ where: { id_usuario: id } });
+     const pagos = await Pago.findAll({
+       where: { id_usuario: id },
+       include: [TipoMetodoPago],
+     });
 
     if (!pagos.length) {
       logger.warn(`No se encontraron pagos para la cuenta con ID ${id}`);
       return res.status(404).json({ message: MESSAGES.ERROR.PAGO.NOT_FOUND });
     }
 
-    return res.status(200).json(pagos);
+     const response: PagosWithRelations[] = pagos.map((pago) => ({
+       id_pago: pago.id_pago,
+       id_usuario: pago.id_usuario,
+       monto: pago.monto,
+       fecha_pago: pago.fecha_pago,
+       id_tipo_metodo_pago: pago.id_tipo_metodo_pago,
+       referencia: pago.referencia,
+       tipoMetodoPago: pago.TipoMetodoPago
+         ? {
+             id_tipo_metodo_pago: pago.TipoMetodoPago.id_tipo_metodo_pago,
+             descripcion: pago.TipoMetodoPago.descripcion,
+           }
+         : undefined,
+     }));
+
+    return res.status(200).json(response);
   } catch (error) {
     const { id } = req.params;
     logger.error(
@@ -105,10 +127,16 @@ export const updateSaldoCuentaCorriente = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<Response | void> => {
   try {
     const { id } = req.params;
     const { nuevoSaldo } = req.body;
+
+    if (typeof nuevoSaldo !== 'number' || nuevoSaldo < 0) {
+      logger.warn(`Saldo inválido proporcionado para la cuenta con ID ${id}`);
+      return res.status(400).json({ message: MESSAGES.ERROR.CUENTA_CORRIENTE.INVALID_SALDO });
+    }
+
     logger.info(`PUT /cuentas-corrientes/${id}/saldo - Request to update account balance`);
 
     const cuenta = await CuentaCorriente.findByPk(id);
@@ -122,6 +150,7 @@ export const updateSaldoCuentaCorriente = async (
     await cuenta.save();
 
     logger.info(`Saldo de la Cuenta Corriente con ID ${id} actualizado`);
+
     res.status(200).json({ message: MESSAGES.SUCCESS.CUENTA_CORRIENTE.SALDO_UPDATED, cuenta });
   } catch (error) {
     const { id } = req.params;

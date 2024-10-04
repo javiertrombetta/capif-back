@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
+
 import * as MESSAGES from '../services/messages';
 import { NotFoundError, InternalServerError } from '../services/customErrors';
-import Regla from '../models/Regla';
+
+import { Regla } from '../models';
 
 export const getAllReglas = async (
   req: Request,

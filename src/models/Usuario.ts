@@ -18,6 +18,7 @@ class Usuario extends Model {
   public ciudad!: string;
   public provincia!: string;
   public pais!: string;
+  public codigo_postal!: string;
   public telefono?: string;
   public isRegistro_pendiente!: boolean;
   public email_verification_token!: string | null;
@@ -128,15 +129,49 @@ Usuario.init(
           args: [2, 100],
           msg: 'La ciudad debe tener entre 2 y 100 caracteres.',
         },
+        notEmpty: {
+          msg: 'El campo ciudad no puede estar vacío.',
+        },
       },
     },
     provincia: {
       type: DataTypes.STRING(100),
       allowNull: false,
+      validate: {
+        len: {
+          args: [2, 100],
+          msg: 'La provincia debe tener entre 2 y 100 caracteres.',
+        },
+        notEmpty: {
+          msg: 'El campo provincia no puede estar vacío.',
+        },
+      },
     },
     pais: {
       type: DataTypes.STRING(100),
       allowNull: false,
+      validate: {
+        len: {
+          args: [2, 100],
+          msg: 'El país debe tener entre 2 y 100 caracteres.',
+        },
+        notEmpty: {
+          msg: 'El campo país no puede estar vacío.',
+        },
+      },
+    },
+    codigo_postal: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        len: {
+          args: [2, 20],
+          msg: 'El código postal debe tener entre 2 y 20 caracteres.',
+        },
+        notEmpty: {
+          msg: 'El código postal no puede estar vacío.',
+        },
+      },
     },
     telefono: {
       type: DataTypes.STRING(50),

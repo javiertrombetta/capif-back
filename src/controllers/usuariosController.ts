@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
+
 import {
   findUsuariosByFilters,
   createUsuario,
@@ -9,6 +10,7 @@ import {
 } from '../services/userService';
 import { NotFoundError, BadRequestError, InternalServerError } from '../services/customErrors';
 import * as MESSAGES from '../services/messages';
+
 import { ParamsWithId } from '../interfaces/ParamsInRoutes';
 
 export const getUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

@@ -1,10 +1,11 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
+import TipoReporte from './TipoReporte';
 
 class Reporte extends Model {
   public id_reporte!: number;
-  public tipo_reporte!: string;
+  public id_tipo_reporte!: number;
   public ruta_archivo!: string;
   public id_usuario!: number;
 }
@@ -33,18 +34,14 @@ Reporte.init(
         },
       },
     },
-    tipo_reporte: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [3, 100],
-          msg: 'El tipo de reporte debe tener entre 3 y 100 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El tipo de reporte no puede estar vacío.',
-        },
+    id_tipo_reporte: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoReporte,
+        key: 'id_tipo_reporte',
       },
+      allowNull: false,
+      onDelete: 'CASCADE',
     },
     ruta_archivo: {
       type: DataTypes.STRING(255),
@@ -58,7 +55,7 @@ Reporte.init(
           msg: 'La ruta del archivo no puede estar vacía.',
         },
       },
-    },    
+    },
   },
   {
     sequelize,

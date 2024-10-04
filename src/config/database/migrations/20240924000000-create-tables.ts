@@ -350,6 +350,28 @@ module.exports = {
       },
     });
 
+    await queryInterface.createTable('TipoRepertorio', {
+      id_tipo_repertorio: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
     await queryInterface.createTable('Repertorio', {
       id_repertorio: {
         type: DataTypes.INTEGER,
@@ -367,8 +389,14 @@ module.exports = {
         type: DataTypes.STRING(150),
         allowNull: false,
       },
-      tipo: {
-        type: DataTypes.STRING(50),
+      id_tipo_repertorio: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoRepertorio',
+          key: 'id_tipo_repertorio',
+        },
+        onDelete: 'CASCADE',
+        allowNull: false,
       },
       estado_id: {
         type: DataTypes.INTEGER,
@@ -378,6 +406,28 @@ module.exports = {
         },
         allowNull: false,
         onDelete: 'CASCADE',
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
+    await queryInterface.createTable('TipoFonograma', {
+      id_tipo_fonograma: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -420,8 +470,14 @@ module.exports = {
       fecha_lanzamiento: {
         type: DataTypes.DATE,
       },
-      tipo: {
-        type: DataTypes.STRING(50),
+      id_tipo_fonograma: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoFonograma',
+          key: 'id_tipo_fonograma',
+        },
+        allowNull: false,
+        onDelete: 'CASCADE',
       },
       estado_id: {
         type: DataTypes.INTEGER,
@@ -441,6 +497,29 @@ module.exports = {
         defaultValue: DataTypes.NOW,
       },
     });
+
+    await queryInterface.createTable('TipoISRC', {
+      id_tipo_isrc: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
 
     await queryInterface.createTable('ISRC', {
       id_isrc: {
@@ -463,9 +542,14 @@ module.exports = {
           is: /^[A-Z]{2}[0-9A-Z]{3}[0-9]{2}[0-9]{5}$/,
         },
       },
-      tipo: {
-        type: DataTypes.ENUM('audio', 'video'),
+      id_tipo_isrc: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoISRC',
+          key: 'id_tipo_isrc',
+        },
         allowNull: false,
+        onDelete: 'CASCADE',
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -488,6 +572,28 @@ module.exports = {
       onDelete: 'SET NULL',
     });
 
+    await queryInterface.createTable('TipoConflicto', {
+      id_tipo_conflicto: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
     await queryInterface.createTable('Conflicto', {
       id_conflicto: {
         type: DataTypes.INTEGER,
@@ -502,9 +608,14 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
-      tipo_conflicto: {
-        type: DataTypes.STRING(100),
+      id_tipo_conflicto: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoConflicto',
+          key: 'id_tipo_conflicto',
+        },
         allowNull: false,
+        onDelete: 'CASCADE',
       },
       descripcion: {
         type: DataTypes.TEXT,
@@ -604,6 +715,28 @@ module.exports = {
       },
     });
 
+    await queryInterface.createTable('TipoTramite', {
+      id_tipo_tramite: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
     await queryInterface.createTable('Tramite', {
       id_tramite: {
         type: DataTypes.INTEGER,
@@ -617,8 +750,14 @@ module.exports = {
           key: 'id_usuario',
         },
       },
-      tipo_tramite: {
-        type: DataTypes.STRING(100),
+      id_tipo_tramite: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoTramite',
+          key: 'id_tipo_tramite',
+        },
+        onDelete: 'CASCADE',
+        allowNull: false,
       },
       fecha_inicio: {
         type: DataTypes.DATE,
@@ -643,6 +782,29 @@ module.exports = {
       },
     });
 
+    await queryInterface.createTable('TipoDocumento', {
+      id_tipo_documento: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
+
     await queryInterface.createTable('Documento', {
       id_documento: {
         type: DataTypes.INTEGER,
@@ -660,9 +822,14 @@ module.exports = {
         type: DataTypes.STRING(150),
         allowNull: false,
       },
-      tipo_documento: {
-        type: DataTypes.STRING(50),
+      id_tipo_documento: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoDocumento',
+          key: 'id_tipo_documento',
+        },
         allowNull: false,
+        onDelete: 'CASCADE',
       },
       ruta_documento: {
         type: DataTypes.STRING(255),
@@ -716,6 +883,28 @@ module.exports = {
       },
     });
 
+    await queryInterface.createTable('TipoReporte', {
+      id_tipo_reporte: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
     await queryInterface.createTable('Reporte', {
       id_reporte: {
         type: DataTypes.INTEGER,
@@ -729,12 +918,39 @@ module.exports = {
           key: 'id_usuario',
         },
       },
-      tipo_reporte: {
-        type: DataTypes.STRING(100),
+      id_tipo_reporte: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoReporte',
+          key: 'id_tipo_reporte',
+        },
+        onDelete: 'CASCADE',
         allowNull: false,
       },
       ruta_archivo: {
         type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
+    await queryInterface.createTable('TipoMetodoPago', {
+      id_tipo_metodo_pago: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(50),
         allowNull: false,
       },
       createdAt: {
@@ -770,8 +986,14 @@ module.exports = {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
-      metodo_pago: {
-        type: DataTypes.STRING(50),
+      id_tipo_metodo_pago: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoMetodoPago',
+          key: 'id_tipo_metodo_pago',
+        },
+        allowNull: false,
+        onDelete: 'CASCADE',
       },
       referencia: {
         type: DataTypes.STRING(100),
@@ -817,6 +1039,28 @@ module.exports = {
       },
     });
 
+    await queryInterface.createTable('TipoArchivo', {
+      id_tipo_archivo: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
     await queryInterface.createTable('Archivo', {
       id_archivo: {
         type: DataTypes.INTEGER,
@@ -834,9 +1078,14 @@ module.exports = {
         type: DataTypes.STRING(150),
         allowNull: false,
       },
-      tipo_archivo: {
-        type: DataTypes.STRING(50),
+      id_tipo_archivo: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoArchivo',
+          key: 'id_tipo_archivo',
+        },
         allowNull: false,
+        onDelete: 'CASCADE',
       },
       ruta_archivo: {
         type: DataTypes.STRING(255),
@@ -890,6 +1139,51 @@ module.exports = {
       },
     });
 
+    await queryInterface.createTable('TipoActividad', {
+      id_tipo_actividad: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
+    await queryInterface.createTable('TipoNavegador', {
+      id_tipo_navegador: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      descripcion: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
+
     await queryInterface.createTable('LogActividad', {
       id_log: {
         type: DataTypes.INTEGER,
@@ -903,16 +1197,26 @@ module.exports = {
           key: 'id_usuario',
         },
       },
-      actividad: {
-        type: DataTypes.STRING(255),
+      id_tipo_actividad: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoActividad',
+          key: 'id_tipo_actividad',
+        },
+        onDelete: 'CASCADE',
         allowNull: false,
       },
       ip_origen: {
         type: DataTypes.STRING(50),
         allowNull: false,
       },
-      navegador: {
-        type: DataTypes.STRING(100),
+      id_tipo_navegador: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: 'TipoNavegador',
+          key: 'id_tipo_navegador',
+        },
+        onDelete: 'CASCADE',
         allowNull: false,
       },
       createdAt: {

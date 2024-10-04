@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
+
 import * as MESSAGES from '../services/messages';
 import { NotFoundError, InternalServerError } from '../services/customErrors';
+
 import { Tramite, Usuario } from '../models';
 
 export const getTramites = async (

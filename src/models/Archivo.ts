@@ -1,12 +1,13 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
+import TipoArchivo from './TipoArchivo';
 
 class Archivo extends Model {
   public id_archivo!: number;
   public nombre_archivo!: string;
   public ruta_archivo!: string;
-  public tipo_archivo!: string;
+  public id_tipo_archivo!: number;
   public id_usuario!: number;
 }
 
@@ -47,16 +48,19 @@ Archivo.init(
         },
       },
     },
-    tipo_archivo: {
-      type: DataTypes.STRING(50),
+    id_tipo_archivo: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoArchivo,
+        key: 'id_tipo_archivo',
+      },
       allowNull: false,
       validate: {
-        len: {
-          args: [1, 50],
-          msg: 'El tipo de archivo debe tener entre 1 y 50 caracteres.',
+        notNull: {
+          msg: 'El tipo de archivo es obligatorio.',
         },
-        notEmpty: {
-          msg: 'El tipo de archivo no puede estar vacío.',
+        isInt: {
+          msg: 'El tipo de archivo debe ser un número entero.',
         },
       },
     },
@@ -72,7 +76,7 @@ Archivo.init(
           msg: 'La ruta del archivo no puede estar vacía.',
         },
       },
-    },    
+    },
   },
   {
     sequelize,

@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
+
 import * as MESSAGES from '../services/messages';
-import { NotFoundError, InternalServerError } from '../services/customErrors';
-import Compania from '../models/Compania';
+import { NotFoundError, InternalServerError, BadRequestError } from '../services/customErrors';
+
+import { Compania, Estado, TipoCompania } from '../models';
 
 export const getAllProductores = async (
   req: Request,
@@ -69,6 +71,18 @@ export const createProductor = async (
 
     logger.info('POST /productores - Request received to create a new producer');
 
+    const tipoCompania = await TipoCompania.findByPk(tipo_compania_id);
+    if (!tipoCompania) {
+      logger.warn('Tipo de compañía no válido');
+      throw new BadRequestError(MESSAGES.ERROR.PRODUCTOR.INVALID_TIPO_COMPANIA);
+    }
+
+    const estado = await Estado.findByPk(estado_id);
+    if (!estado) {
+      logger.warn('Estado no válido');
+      throw new BadRequestError(MESSAGES.ERROR.PRODUCTOR.INVALID_ESTADO);
+    }
+
     const nuevaCompania = await Compania.create({
       nombre_compania,
       direccion,
@@ -108,6 +122,21 @@ export const updateProductor = async (
     }
 
     Object.assign(compania, req.body);
+
+    if (req.body.tipo_compania_id) {
+      const tipoCompania = await TipoCompania.findByPk(req.body.tipo_compania_id);
+      if (!tipoCompania) {
+        throw new BadRequestError(MESSAGES.ERROR.PRODUCTOR.INVALID_TIPO_COMPANIA);
+      }
+    }
+
+    if (req.body.estado_id) {
+      const estado = await Estado.findByPk(req.body.estado_id);
+      if (!estado) {
+        throw new BadRequestError(MESSAGES.ERROR.PRODUCTOR.INVALID_ESTADO);
+      }
+    }
+
     await compania.save();
 
     logger.info(`PUT /productores/${id} - Successfully updated producer`);

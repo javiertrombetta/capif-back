@@ -3,8 +3,11 @@ import bcrypt from 'bcrypt';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Op } from 'sequelize';
 import logger from '../config/logger';
+
+import { verifyToken } from '../middlewares/auth';
+
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
-import { verifyToken } from '../middlewares/auth'
+import { UserWithRelations } from '../interfaces/UserWithRelations';
 
 import * as MESSAGES from '../services/messages';
 import { sendEmail } from '../services/emailService';
@@ -12,15 +15,19 @@ import { findUsuarioByEmail, findUsuarioById } from '../services/userService';
 import { findRolByDescripcion } from '../services/roleService';
 import { findEstadoByDescripcion } from '../services/stateService';
 import { hashPassword, verifyPassword } from '../services/validationsService';
-import { UserWithRelations } from '../interfaces/UserWithRelations';
-
 import * as Err from '../services/customErrors';
+
 import Usuario from '../models/Usuario';
 
 //const validationLink = `${process.env.FRONTEND_URL}/validate-email/${emailToken}`
 
 export const getUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud recibida para obtener los datos del usuario`
+    );
+
     const token = req.cookies['auth_token'];
 
     if (!token) {
@@ -58,6 +65,11 @@ export const getUser = async (req: AuthenticatedRequest, res: Response, next: Ne
 
 export const register = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud recibida para registrar un nuevo usuario`
+    );
+
     const {
       email,
       password,
@@ -69,6 +81,7 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
       ciudad,
       provincia,
       pais,
+      codigo_postal,
       telefono,
     } = req.body;
 
@@ -101,6 +114,7 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
       provincia,
       pais,
       telefono,
+      codigo_postal,
       estado_id: estadoNuevo.id_estado,
     });
 
@@ -139,6 +153,9 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
 
 export const login = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
+    
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para iniciar sesión`);
+
     const { email, password } = req.body;
 
     const existingToken = req.cookies['auth_token'];
@@ -238,6 +255,11 @@ export const requestPasswordReset = async (
   next: NextFunction
 ) => {
   try {
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud recibida para restablecer la contraseña`
+    );
+
     const { email } = req.body;
 
     const user = await findUsuarioByEmail(email);
@@ -289,6 +311,11 @@ export const resetPassword = async (
   next: NextFunction
 ) => {
   try {
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud recibida para restablecer la contraseña del usuario`
+    );
+
     const { token, newPassword } = req.body;
 
     const user = await Usuario.findOne({
@@ -342,6 +369,9 @@ export const validateEmail = async (
   next: NextFunction
 ) => {
   try {
+
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para validar el email`);
+
     const { token } = req.params;
 
     const user = await Usuario.findOne({
@@ -352,13 +382,17 @@ export const validateEmail = async (
     });
 
     if (!user) {
-      logger.warn('Token de verificación de email inválido o expirado.');
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Token de verificación de email inválido o expirado.`
+      );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
     const estadoConfirmado = await findEstadoByDescripcion('confirmado');
     if (!estadoConfirmado) {
-      logger.error('Error interno: estado "confirmado" no encontrado.');
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error interno: estado "confirmado" no encontrado.`
+      );
       throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
     }
 
@@ -367,11 +401,13 @@ export const validateEmail = async (
     user.email_verification_token_expires = null;
     await user.save();
 
-    logger.info(`Email validado correctamente para el usuario ${user.email}`);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Email validado correctamente para el usuario ${user.email}`
+    );
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.EMAIL_CONFIRMED });
   } catch (err) {
     logger.error(
-      `Error en la validación del email: ${
+      `${req.method} ${req.originalUrl} - Error en la validación del email: ${
         err instanceof Error ? err.message : 'Error desconocido'
       }`
     );
@@ -385,39 +421,54 @@ export const authorizeUser = async (
   next: NextFunction
 ) => {
   try {
+
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para autorizar al usuario`);
+
     const { id_usuario } = req.body;
 
     const user = await Usuario.findByPk(id_usuario);
     if (!user) {
-      logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
+      );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
     const estadoConfirmado = await findEstadoByDescripcion('confirmado');
     if (!estadoConfirmado) {
-      logger.error('Error interno: estado "confirmado" no encontrado.');
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error interno: estado "confirmado" no encontrado.`
+      );
       throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
     }
 
     if (user.estado_id !== estadoConfirmado.id_estado) {
-      logger.warn(`El usuario con ID ${id_usuario} no está confirmado y no puede ser autorizado.`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario con ID ${id_usuario} no está confirmado y no puede ser autorizado.`
+      );
       return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
     }
 
     const estadoAutorizado = await findEstadoByDescripcion('autorizado');
-    if (!estadoAutorizado) {
-      logger.error('Error interno: estado "autorizado" no encontrado.');
-      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
-    }
+   if (!estadoAutorizado) {
+     logger.error(
+       `${req.method} ${req.originalUrl} - Error interno: estado "autorizado" no encontrado.`
+     );
+     throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
+   }
 
     if (user.estado_id === estadoAutorizado.id_estado) {
-      logger.warn(`El usuario con ID ${id_usuario} ya ha sido autorizado.`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario con ID ${id_usuario} ya ha sido autorizado.`
+      );
       return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
     }
 
     const rolProductor = await findRolByDescripcion('productor');
     if (!rolProductor) {
-      logger.error('Error interno: rol "productor" no encontrado.');
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error interno: rol "productor" no encontrado.`
+      );
       throw new Err.InternalServerError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
     }
 
@@ -425,11 +476,15 @@ export const authorizeUser = async (
     user.rol_id = rolProductor.id_rol;
     await user.save();
 
-    logger.info(`Usuario con ID ${id_usuario} autorizado correctamente como productor.`);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Usuario con ID ${id_usuario} autorizado correctamente como productor.`
+    );
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.AUTHORIZED });
   } catch (err) {
     logger.error(
-      `Error al autorizar productor: ${err instanceof Error ? err.message : 'Error desconocido'}`
+      `${req.method} ${req.originalUrl} - Error al autorizar productor: ${
+        err instanceof Error ? err.message : 'Error desconocido'
+      }`
     );
     next(err);
   }
@@ -443,11 +498,20 @@ export const blockOrUnblockUser = async (
   next: NextFunction
 ) => {
   try {
+
     const { id_usuario, bloquear } = req.body;
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud recibida para ${
+        bloquear ? 'bloquear' : 'desbloquear'
+      } al usuario`
+    );
 
     const user = await findUsuarioById(id_usuario);
     if (!user) {
-      logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
+      );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
   
@@ -459,12 +523,15 @@ export const blockOrUnblockUser = async (
       : MESSAGES.SUCCESS.AUTH.USER_UNBLOCKED;
  
     logger.info(
-      `Usuario con ID ${id_usuario} ${bloquear ? 'bloqueado' : 'desbloqueado'} correctamente.`
+      `${req.method} ${req.originalUrl} - Usuario con ID ${id_usuario} ${
+        bloquear ? 'bloqueado' : 'desbloqueado'
+      } correctamente.`
     );
     res.status(200).json({ message });
+
   } catch (err) {
     logger.error(
-      `Error al bloquear/desbloquear usuario: ${
+      `${req.method} ${req.originalUrl} - Error al bloquear/desbloquear usuario: ${
         err instanceof Error ? err.message : 'Error desconocido'
       }`
     );
@@ -482,19 +549,25 @@ export const changeUserRole = async (
     const { id_usuario, nuevo_rol } = req.body;
 
     const user = await findUsuarioById(id_usuario);
-    if (!user) {
-      logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
+   if (!user) {
+     logger.warn(
+       `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
+     );
+     throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+   }
     
     const estadoAutorizado = await findEstadoByDescripcion('autorizado');
     if (!estadoAutorizado) {
-      logger.error('Error interno: estado "autorizado" no encontrado.');
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error interno: estado "autorizado" no encontrado.`
+      );
       throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
     }
 
     if (user.estado_id !== estadoAutorizado.id_estado) {
-      logger.warn(`El usuario con ID ${id_usuario} no está autorizado y no puede cambiar de rol.`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario con ID ${id_usuario} no está autorizado y no puede cambiar de rol.`
+      );
       return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
     }
    
@@ -502,29 +575,37 @@ export const changeUserRole = async (
     const rolProductor = await findRolByDescripcion('productor');
 
     if (!rolAdministrador || !rolProductor) {
-      logger.error('Error interno: rol "administrador" o "productor" no encontrado.');
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error interno: rol "administrador" o "productor" no encontrado.`
+      );
       throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
     }
    
     if (user.rol_id !== rolAdministrador.id_rol && user.rol_id !== rolProductor.id_rol) {
-      logger.warn(`El usuario con ID ${id_usuario} no tiene rol asignado.`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario con ID ${id_usuario} no tiene rol asignado.`
+      );
       return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_ROLE });
     }
  
     const rol = await findRolByDescripcion(nuevo_rol);
     if (!rol) {
-      logger.warn(`Rol inválido: ${nuevo_rol} para el usuario con ID: ${id_usuario}`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Rol inválido: ${nuevo_rol} para el usuario con ID: ${id_usuario}`
+      );
       throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
     }
     
     user.rol_id = rol.id_rol;
     await user.save();
 
-    logger.info(`Rol del usuario con ID ${id_usuario} actualizado correctamente a ${nuevo_rol}.`);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Rol del usuario con ID ${id_usuario} actualizado correctamente a ${nuevo_rol}.`
+    );
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED });
   } catch (err) {
     logger.error(
-      `Error al cambiar el rol de usuario: ${
+      `${req.method} ${req.originalUrl} - Error al cambiar el rol de usuario: ${
         err instanceof Error ? err.message : 'Error desconocido'
       }`
     );
@@ -543,7 +624,7 @@ export const logout = (req: AuthenticatedRequest, res: Response, next: NextFunct
     const user = req.user as JwtPayload;
     const email = user?.email || 'desconocido';
 
-    logger.info(`Logout exitoso para el usuario: ${email}`);
+    logger.info(`${req.method} ${req.originalUrl} - Logout exitoso para el usuario: ${email}`);
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGOUT });
   } catch (err) {
     logger.error('Error durante el proceso de logout', err);
@@ -561,25 +642,29 @@ export const changeUserPassword = async (
     const userIdFromToken = (req.user as JwtPayload)?.id;
 
     if (newPassword !== confirmPassword) {
-      logger.warn('Las contraseñas no coinciden.');
+      logger.warn('${req.method} ${req.originalUrl} - Las contraseñas no coinciden.');
       return res.status(400).json({ message: MESSAGES.ERROR.PASSWORD.CONFIRMATION_MISMATCH });
     }
 
     const user = await findUsuarioById(id_usuario);
     if (!user) {
-      logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
+      );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
     const authenticatedUser = await findUsuarioById(userIdFromToken);
     if (!authenticatedUser) {
-      logger.warn(`No se encontró al usuario autenticado con ID: ${userIdFromToken}`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - No se encontró al usuario autenticado con ID: ${userIdFromToken}`
+      );
       return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
     }
 
     const rolAdministrador = await findRolByDescripcion('administrador');
     if (!rolAdministrador) {
-      logger.error('El rol administrador no fue encontrado.');
+      logger.error('${req.method} ${req.originalUrl} - El rol administrador no fue encontrado.');
       throw new Err.InternalServerError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
     }
 
@@ -587,7 +672,7 @@ export const changeUserPassword = async (
 
     if (!isAdmin && userIdFromToken !== id_usuario) {
       logger.warn(
-        `Usuario con ID ${userIdFromToken} no está autorizado para cambiar la clave de otro usuario.`
+        `${req.method} ${req.originalUrl} - Usuario con ID ${userIdFromToken} no está autorizado para cambiar la clave de otro usuario.`
       );
       return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_ROLE });
     }
@@ -596,11 +681,13 @@ export const changeUserPassword = async (
     user.clave = hashedPassword;
     await user.save();
 
-    logger.info(`Clave actualizada correctamente para el usuario con ID ${id_usuario}.`);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Clave actualizada correctamente para el usuario con ID ${id_usuario}.`
+    );
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });
   } catch (err) {
     logger.error(
-      `Error al cambiar la clave del usuario: ${
+      `${req.method} ${req.originalUrl} - Error al cambiar la clave del usuario: ${
         err instanceof Error ? err.message : 'Error desconocido'
       }`
     );
@@ -614,7 +701,9 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response, next:
 
     const user = await findUsuarioById(id_usuario);
     if (!user) {
-      logger.warn(`No se encontró al usuario con ID: ${id_usuario}`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
+      );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
@@ -622,23 +711,29 @@ export const deleteUser = async (req: AuthenticatedRequest, res: Response, next:
     const estadoConfirmado = await findEstadoByDescripcion('confirmado');
 
     if (!estadoNuevo || !estadoConfirmado) {
-      logger.error('Error interno: estado "nuevo" o "confirmado" no encontrado.');
+      logger.error(
+        '${req.method} ${req.originalUrl} - Error interno: estado "nuevo" o "confirmado" no encontrado.'
+      );
       throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
     }
 
     if (user.estado_id !== estadoNuevo.id_estado && user.estado_id !== estadoConfirmado.id_estado) {
       logger.warn(
-        `No se puede eliminar al usuario con ID ${id_usuario} debido a su estado actual.`
+        `${req.method} ${req.originalUrl} - No se puede eliminar al usuario con ID ${id_usuario} debido a su estado actual.`
       );
       return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.STATE_ALREADY_AUTHORIZED });
     }
 
     await user.destroy();
-    logger.info(`Usuario con ID ${id_usuario} eliminado correctamente.`);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Usuario con ID ${id_usuario} eliminado correctamente.`
+    );
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.USER_DELETED });
   } catch (err) {
     logger.error(
-      `Error al eliminar usuario: ${err instanceof Error ? err.message : 'Error desconocido'}`
+      `${req.method} ${req.originalUrl} - Error al eliminar usuario: ${
+        err instanceof Error ? err.message : 'Error desconocido'
+      }`
     );
     next(err);
   }

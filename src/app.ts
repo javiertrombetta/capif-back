@@ -28,6 +28,9 @@ import { errorHandler } from './middlewares/errorHandler';
 import router from './routes';
 import sequelize from './config/database/sequelize';
 import logger from './config/logger';
+import { setupSwagger } from './config/swagger';
+import favicon from 'serve-favicon'; 
+import path from 'path';
 
 const app = express();
 const globalPrefix = process.env.GLOBAL_PREFIX || 'api/v1';
@@ -58,6 +61,15 @@ app.use(
     skip: skipSuccessLogs,
   })
 );
+
+app.use(express.static(path.join(__dirname, '../public')));
+app.use(favicon(path.join(__dirname, '../public', 'favicon.ico')));
+
+// if (env === 'development') {
+//   setupSwagger(app); // Swagger solo disponible en entorno de desarrollo
+// }
+
+setupSwagger(app);
 
 app.use(`/${globalPrefix}`, router);
 

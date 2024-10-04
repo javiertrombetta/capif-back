@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
 import logger from '../config/logger';
-import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+
 import * as MESSAGES from '../services/messages';
 import { NotFoundError, InternalServerError, BadRequestError } from '../services/customErrors';
-import PostulacionPremio from '../models/PostulacionPremio';
-import Usuario from '../models/Usuario';
-import Compania from '../models/Compania';
-import { JwtPayload } from 'jsonwebtoken';
+
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+
+import { Usuario, Compania, PostulacionPremio } from '../models';
 
 export const getAllPostulaciones = async (
   req: Request,

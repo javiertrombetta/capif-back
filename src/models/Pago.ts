@@ -1,14 +1,16 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
+import TipoMetodoPago from './TipoMetodoPago';
 
 class Pago extends Model {
   public id_pago!: number;
   public monto!: number;
   public fecha_pago!: Date;
   public id_usuario!: number;
-  public metodo_pago!: string;
+  public id_tipo_metodo_pago!: number;
   public referencia!: string;
+  public TipoMetodoPago?: TipoMetodoPago;
 }
 
 Pago.init(
@@ -61,15 +63,14 @@ Pago.init(
         },
       },
     },
-    metodo_pago: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
-      validate: {
-        len: {
-          args: [0, 50],
-          msg: 'El método de pago no puede exceder los 50 caracteres.',
-        },
+    id_tipo_metodo_pago: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoMetodoPago,
+        key: 'id_tipo_metodo_pago',
       },
+      allowNull: false,
+      onDelete: 'CASCADE',
     },
     referencia: {
       type: DataTypes.STRING(100),

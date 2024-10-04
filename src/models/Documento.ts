@@ -1,6 +1,7 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Tramite from './Tramite';
+import TipoDocumento from './TipoDocumento';
 
 class Documento extends Model {
   public id_documento!: number;
@@ -30,18 +31,14 @@ Documento.init(
         },
       },
     },
-    tipo_documento: {
-      type: DataTypes.STRING(50),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [3, 50],
-          msg: 'El tipo de documento debe tener entre 3 y 50 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El tipo de documento no puede estar vacío.',
-        },
+    id_tipo_documento: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: TipoDocumento,
+        key: 'id_tipo_documento',
       },
+      allowNull: false,
+      onDelete: 'CASCADE',
     },
     ruta_documento: {
       type: DataTypes.STRING(255),
@@ -72,7 +69,7 @@ Documento.init(
           msg: 'El ID del trámite debe ser un número entero.',
         },
       },
-    },    
+    },
   },
   {
     sequelize,

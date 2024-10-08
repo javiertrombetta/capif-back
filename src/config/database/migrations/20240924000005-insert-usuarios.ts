@@ -2,6 +2,7 @@
 
 import { QueryInterface } from 'sequelize';
 import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 
 module.exports = {
   up: async (queryInterface: QueryInterface) => {
@@ -10,33 +11,34 @@ module.exports = {
     const hashedAdminPassword = await bcrypt.hash('admin1234', saltRounds);
     const hashedProductorPassword = await bcrypt.hash('productor1234', saltRounds);
 
-    const adminRole = (await queryInterface.sequelize.query(
+    const [adminRole]: any = await queryInterface.sequelize.query(
       `SELECT id_rol FROM "Rol" WHERE descripcion = 'admin';`
-    )) as [{ id_rol: number }[], unknown];
+    );
 
-    const productorRole = (await queryInterface.sequelize.query(
+    const [productorRole]: any = await queryInterface.sequelize.query(
       `SELECT id_rol FROM "Rol" WHERE descripcion = 'productor';`
-    )) as [{ id_rol: number }[], unknown];
+    );
 
-    const authorizedState = (await queryInterface.sequelize.query(
+    const [authorizedState]: any = await queryInterface.sequelize.query(
       `SELECT id_estado FROM "Estado" WHERE descripcion = 'autorizado';`
-    )) as [{ id_estado: number }[], unknown];
+    );
 
-    const personaFisicaType = (await queryInterface.sequelize.query(
+    const [personaFisicaType]: any = await queryInterface.sequelize.query(
       `SELECT id_tipo_persona FROM "TipoPersona" WHERE descripcion = 'Persona Física';`
-    )) as [{ id_tipo_persona: number }[], unknown];
+    );
 
-    await queryInterface.bulkInsert('Usuario', [
+     await queryInterface.bulkInsert('Usuario', [
       {
+        id_usuario: uuidv4(),
         nombre: 'Admin',
         apellido: 'User',
         email: 'admin@c.com',
         clave: hashedAdminPassword,
-        rol_id: adminRole[0][0].id_rol,
+        rol_id: adminRole[0].id_rol,
         fecha_registro: new Date(),
-        estado_id: authorizedState[0][0].id_estado,
+        estado_id: authorizedState[0].id_estado,
         cuit: '20304050607',
-        tipo_persona_id: personaFisicaType[0][0].id_tipo_persona,
+        tipo_persona_id: personaFisicaType[0].id_tipo_persona,
         domicilio: 'Admin Address',
         ciudad: 'Buenos Aires',
         provincia: 'Buenos Aires',
@@ -50,15 +52,16 @@ module.exports = {
 
     await queryInterface.bulkInsert('Usuario', [
       {
+        id_usuario: uuidv4(),
         nombre: 'Productor',
         apellido: 'User',
         email: 'productor@c.com',
         clave: hashedProductorPassword,
-        rol_id: productorRole[0][0].id_rol,
+        rol_id: productorRole[0].id_rol,
         fecha_registro: new Date(),
-        estado_id: authorizedState[0][0].id_estado,
+        estado_id: authorizedState[0].id_estado,
         cuit: '20304050608',
-        tipo_persona_id: personaFisicaType[0][0].id_tipo_persona,
+        tipo_persona_id: personaFisicaType[0].id_tipo_persona,
         domicilio: 'Productor Address',
         ciudad: 'Buenos Aires',
         provincia: 'Buenos Aires',
@@ -71,8 +74,8 @@ module.exports = {
     ]);
   },
 
-  down: async (queryInterface: QueryInterface) => {
-    await queryInterface.bulkDelete('Usuario', { email: 'admin@c.com' }, {});
-    await queryInterface.bulkDelete('Usuario', { email: 'productor@c.com' }, {});
+  down: async (queryInterface: QueryInterface) => {  
+    await queryInterface.bulkDelete('Usuario', { email: 'admin@c.com' });
+    await queryInterface.bulkDelete('Usuario', { email: 'productor@c.com' });
   },
 };

@@ -122,12 +122,15 @@ export const ERROR = {
   GENERAL: {
     UNKNOWN: 'Ocurrió un error inesperado, por favor intente nuevamente más tarde.',
     INVALID_FILE_TYPE: 'Tipo de archivo no permitido. Solo se permiten archivos %s.',
+    RECORD_NOT_FOUND: 'El registro solicitado no fue encontrado.',
+    MODEL_NOT_FOUND: 'El modelo solicitado no fue encontrado.',
   },
   CONSULTA: {
     NOT_FOUND: 'Consulta no encontrada.',
   },
   FONOGRAMA: {
     NOT_FOUND: 'El fonograma no fue encontrado.',
+    TYPE_NOT_FOUND: 'El tipo de fonograma no fue encontrado.',
   },
   CONFLICTO: {
     NOT_FOUND: 'El conflicto no fue encontrado.',
@@ -175,12 +178,14 @@ export const ERROR = {
   REPORTE: {
     NOT_FOUND: 'No se encontró el reporte solicitado.',
     GENERATION_FAILED: 'Error al generar el reporte.',
+    TYPE_NOT_FOUND: 'El tipo de reporte no fue encontrado.',
   },
   SESION: {
     NOT_FOUND: 'No se encontró la sesión solicitada.',
   },
   TRAMITE: {
     NOT_FOUND: 'No se encontró el trámite solicitado.',
+    INVALID_TYPE: 'El tipo de trámite es inválido.',
   },
 };
 

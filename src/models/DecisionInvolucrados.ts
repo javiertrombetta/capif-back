@@ -1,10 +1,11 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Involucrados from './Involucrados';
+import TipoDecision from './TipoDecision';
 
 class DecisionInvolucrados extends Model {
   public id_decision!: number;
-  public decision!: string;
+  public id_tipo_decision!: number;
   public fecha_decision!: Date | null;
   public id_involucrado!: number;
 }
@@ -12,12 +13,12 @@ class DecisionInvolucrados extends Model {
 DecisionInvolucrados.init(
   {
     id_decision: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_involucrado: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Involucrados,
         key: 'id_involucrado',
@@ -33,13 +34,16 @@ DecisionInvolucrados.init(
         },
       },
     },
-    decision: {
-      type: DataTypes.ENUM('aceptado', 'rechazado'),
-      allowNull: true,
+    id_tipo_decision: {
+      type: DataTypes.UUID,
+      references: {
+        model: TipoDecision,
+        key: 'id_tipo_decision',
+      },
+      allowNull: false,
       validate: {
-        isIn: {
-          args: [['aceptado', 'rechazado']],
-          msg: 'La decisión debe ser "aceptado" o "rechazado".',
+        notNull: {
+          msg: 'El tipo de decisión es obligatorio.',
         },
       },
     },

@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
 
 import * as MESSAGES from '../services/messages';
-import { NotFoundError, InternalServerError } from '../services/customErrors';
+import { NotFoundError, InternalServerError, BadRequestError } from '../services/customErrors';
 
-import { Tramite, Usuario } from '../models';
+import { Tramite, Usuario, TipoTramite } from '../models';
 
 export const getTramites = async (
   req: Request,
@@ -14,7 +14,12 @@ export const getTramites = async (
   try {
     logger.info('GET /tramites - Request received to fetch all tramites');
 
-    const tramites = await Tramite.findAll({ include: Usuario });
+    const tramites = await Tramite.findAll({
+      include: [
+        { model: Usuario },
+        { model: TipoTramite },
+      ],
+    });
 
     if (!tramites.length) {
       logger.warn('No se encontraron trámites');
@@ -39,7 +44,12 @@ export const getTramiteById = async (
     const { id } = req.params;
     logger.info(`GET /tramites/${id} - Request received to fetch tramite ID: ${id}`);
 
-    const tramite = await Tramite.findByPk(id, { include: Usuario });
+    const tramite = await Tramite.findByPk(id, {
+      include: [
+        { model: Usuario },
+        { model: TipoTramite },
+      ],
+    });
 
     if (!tramite) {
       logger.warn(`Tramite con ID ${id} no encontrado`);
@@ -62,7 +72,15 @@ export const createTramite = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const tramite = await Tramite.create(req.body);
+    const { tipo_tramite_id, ...data } = req.body;
+    
+    const tipoTramite = await TipoTramite.findByPk(tipo_tramite_id);
+    if (!tipoTramite) {
+      logger.warn('Tipo de trámite no válido');
+      throw new BadRequestError(MESSAGES.ERROR.TRAMITE.INVALID_TYPE);
+    }
+
+    const tramite = await Tramite.create({ ...data, tipo_tramite_id });
     logger.info('POST /tramites - Tramite creado con éxito');
 
     res.status(201).json({ message: MESSAGES.SUCCESS.TRAMITE.CREATED, tramite });
@@ -81,15 +99,23 @@ export const updateTramite = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const { tipo_tramite_id, ...data } = req.body;
 
     const tramite = await Tramite.findByPk(id);
-
     if (!tramite) {
       logger.warn(`Tramite con ID ${id} no encontrado`);
       throw new NotFoundError(MESSAGES.ERROR.TRAMITE.NOT_FOUND);
     }
 
-    await tramite.update(req.body);
+    if (tipo_tramite_id) {
+      const tipoTramite = await TipoTramite.findByPk(tipo_tramite_id);
+      if (!tipoTramite) {
+        logger.warn('Tipo de trámite no válido');
+        throw new BadRequestError(MESSAGES.ERROR.TRAMITE.INVALID_TYPE);
+      }
+    }
+
+    await tramite.update({ ...data, tipo_tramite_id });
     logger.info(`PUT /tramites/${id} - Tramite actualizado con éxito`);
 
     res.status(200).json({ message: MESSAGES.SUCCESS.TRAMITE.UPDATED, tramite });

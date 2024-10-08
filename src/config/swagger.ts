@@ -1,6 +1,8 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
+
+import { archivoSchemas } from './schemas';
 import packageJson from '../../package.json';
 
 const DOMAIN = process.env.FRONTEND_URL;
@@ -22,6 +24,9 @@ const swaggerOptions = {
         name: process.env.EMAIL_FROM,
         email: process.env.EMAIL_USER,
       },
+    },
+    components: {
+      schemas: archivoSchemas,
     },
     servers: [
       {

@@ -9,8 +9,8 @@ class TipoReporte extends Model {
 TipoReporte.init(
   {
     id_tipo_reporte: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

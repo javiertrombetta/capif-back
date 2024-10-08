@@ -11,8 +11,8 @@ class Estado extends Model {
 Estado.init(
   {
     id_estado: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {
@@ -33,7 +33,7 @@ Estado.init(
       },
     },
     tipo_estado_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoEstado,
         key: 'id_tipo_estado',

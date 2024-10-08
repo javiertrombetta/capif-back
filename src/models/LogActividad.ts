@@ -16,12 +16,12 @@ class LogActividad extends Model {
 LogActividad.init(
   {
     id_log: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Usuario,
         key: 'id_usuario',
@@ -38,7 +38,7 @@ LogActividad.init(
       },
     },
     id_tipo_actividad: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoActividad,
         key: 'id_tipo_actividad',
@@ -60,7 +60,7 @@ LogActividad.init(
       },
     },
     id_tipo_navegador: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoNavegador,
         key: 'id_tipo_navegador',

@@ -13,12 +13,12 @@ class AltaMasivaTemp extends Model {
 AltaMasivaTemp.init(
   {
     id_temporal: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Usuario,
         key: 'id_usuario',
@@ -35,7 +35,7 @@ AltaMasivaTemp.init(
       },
     },
     id_repertorio: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Repertorio,
         key: 'id_repertorio',
@@ -50,7 +50,7 @@ AltaMasivaTemp.init(
           msg: 'El ID del repertorio debe ser un número entero.',
         },
       },
-    },    
+    },
     procesado: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

@@ -9,8 +9,8 @@ class TipoCompania extends Model {
 TipoCompania.init(
   {
     id_tipo_compania: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

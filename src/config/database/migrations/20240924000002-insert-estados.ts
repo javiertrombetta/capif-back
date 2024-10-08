@@ -1,62 +1,75 @@
 'use strict';
 
-import { QueryInterface, DataTypes } from 'sequelize';
+import { QueryInterface } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
 
 module.exports = {
   up: async (queryInterface: QueryInterface) => {
+    const tipoEstadoRegistroUUID = uuidv4();
+    const tipoEstadoConflictoUUID = uuidv4();
+
     await queryInterface.bulkInsert('TipoEstado', [
-      { descripcion: 'registro', createdAt: new Date(), updatedAt: new Date() },
-      { descripcion: 'conflicto', createdAt: new Date(), updatedAt: new Date() },
+      {
+        id_tipo_estado: tipoEstadoRegistroUUID,
+        descripcion: 'registro',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id_tipo_estado: tipoEstadoConflictoUUID,
+        descripcion: 'conflicto',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ]);
-
-    const tipoEstadoRegistro = (await queryInterface.sequelize.query(
-      `SELECT id_tipo_estado FROM "TipoEstado" WHERE descripcion = 'registro';`
-    )) as [{ id_tipo_estado: number }[], unknown];
-
-    const tipoEstadoConflicto = (await queryInterface.sequelize.query(
-      `SELECT id_tipo_estado FROM "TipoEstado" WHERE descripcion = 'conflicto';`
-    )) as [{ id_tipo_estado: number }[], unknown];
 
     await queryInterface.bulkInsert('Estado', [
       {
+        id_estado: uuidv4(),
         descripcion: 'nuevo',
-        tipo_estado_id: tipoEstadoRegistro[0][0].id_tipo_estado,
+        tipo_estado_id: tipoEstadoRegistroUUID,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
+        id_estado: uuidv4(),
         descripcion: 'confirmado',
-        tipo_estado_id: tipoEstadoRegistro[0][0].id_tipo_estado,
+        tipo_estado_id: tipoEstadoRegistroUUID,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
+        id_estado: uuidv4(),
         descripcion: 'autorizado',
-        tipo_estado_id: tipoEstadoRegistro[0][0].id_tipo_estado,
+        tipo_estado_id: tipoEstadoRegistroUUID,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
+        id_estado: uuidv4(),
         descripcion: 'pendiente',
-        tipo_estado_id: tipoEstadoConflicto[0][0].id_tipo_estado,
+        tipo_estado_id: tipoEstadoConflictoUUID,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
+        id_estado: uuidv4(),
         descripcion: 'resuelto',
-        tipo_estado_id: tipoEstadoConflicto[0][0].id_tipo_estado,
+        tipo_estado_id: tipoEstadoConflictoUUID,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
+        id_estado: uuidv4(),
         descripcion: 'en proceso',
-        tipo_estado_id: tipoEstadoConflicto[0][0].id_tipo_estado,
+        tipo_estado_id: tipoEstadoConflictoUUID,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
+        id_estado: uuidv4(),
         descripcion: 'rechazado',
-        tipo_estado_id: tipoEstadoConflicto[0][0].id_tipo_estado,
+        tipo_estado_id: tipoEstadoConflictoUUID,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -66,8 +79,5 @@ module.exports = {
   down: async (queryInterface: QueryInterface) => {
     await queryInterface.bulkDelete('Estado', {}, {});
     await queryInterface.bulkDelete('TipoEstado', {}, {});
-
-    await queryInterface.dropTable('Estado');
-    await queryInterface.dropTable('TipoEstado');
   },
 };

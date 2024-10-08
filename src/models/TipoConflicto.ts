@@ -9,8 +9,8 @@ class TipoConflicto extends Model {
 TipoConflicto.init(
   {
     id_tipo_conflicto: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

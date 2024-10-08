@@ -16,12 +16,12 @@ class Pago extends Model {
 Pago.init(
   {
     id_pago: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Usuario,
         key: 'id_usuario',
@@ -64,7 +64,7 @@ Pago.init(
       },
     },
     id_tipo_metodo_pago: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoMetodoPago,
         key: 'id_tipo_metodo_pago',

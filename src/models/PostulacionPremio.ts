@@ -14,12 +14,12 @@ class PostulacionPremio extends Model {
 PostulacionPremio.init(
   {
     id_postulacion: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_compania: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Compania,
         key: 'id_compania',
@@ -36,7 +36,7 @@ PostulacionPremio.init(
       },
     },
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Usuario,
         key: 'id_usuario',

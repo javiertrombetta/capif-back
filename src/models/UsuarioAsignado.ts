@@ -6,14 +6,14 @@ import Compania from './Compania';
 class UsuarioAsignado extends Model {
   public id_usuario_asignado!: number;
   public id_usuario!: number;
-  public id_compania!: number;  
+  public id_compania!: number;
 }
 
 UsuarioAsignado.init(
   {
     id_usuario_asignado: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_usuario: {
@@ -49,7 +49,7 @@ UsuarioAsignado.init(
           msg: 'El ID de la compañía debe ser un número entero.',
         },
       },
-    },    
+    },
   },
   {
     sequelize,

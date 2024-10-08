@@ -13,12 +13,12 @@ class Reporte extends Model {
 Reporte.init(
   {
     id_reporte: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Usuario,
         key: 'id_usuario',
@@ -35,7 +35,7 @@ Reporte.init(
       },
     },
     id_tipo_reporte: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoReporte,
         key: 'id_tipo_reporte',

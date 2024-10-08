@@ -4,10 +4,12 @@ import logger from '../config/logger';
 import * as MESSAGES from '../services/messages';
 import { NotFoundError, InternalServerError } from '../services/customErrors';
 
-import { Sesion } from '../models';
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest'
+
+import { Sesion, TipoActividad, LogActividad } from '../models';
 
 export const getSesiones = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -21,6 +23,23 @@ export const getSesiones = async (
       throw new NotFoundError(MESSAGES.ERROR.SESION.NOT_FOUND);
     }
 
+    const userId = typeof req.user === 'string' ? req.user : req.user?.id;
+    if (!userId) {
+      throw new InternalServerError('No se pudo identificar al usuario.');
+    }
+   
+    const tipoActividad = await TipoActividad.findOne({
+      where: { descripcion: 'Acceso al sistema' },
+    });
+
+    if (tipoActividad) {
+      await LogActividad.create({
+        id_usuario: userId,
+        actividad: 'Consulta de sesiones activas',
+        id_tipo_actividad: tipoActividad.id_tipo_actividad,
+      });
+    }
+
     res.status(200).json(sesiones);
   } catch (error) {
     logger.error(
@@ -31,7 +50,7 @@ export const getSesiones = async (
 };
 
 export const deleteSesion = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -49,6 +68,23 @@ export const deleteSesion = async (
     await sesion.destroy();
     logger.info(`DELETE /sesiones/${id} - Sesion eliminada correctamente`);
 
+    const userId = typeof req.user === 'string' ? req.user : req.user?.id;
+    if (!userId) {
+      throw new InternalServerError('No se pudo identificar al usuario.');
+    }
+
+    const tipoActividad = await TipoActividad.findOne({
+      where: { descripcion: 'Eliminación de usuario' },
+    });
+
+    if (tipoActividad) {
+      await LogActividad.create({
+        id_usuario: userId,
+        actividad: 'Eliminación de sesión',
+        id_tipo_actividad: tipoActividad.id_tipo_actividad,
+      });
+    }
+
     res.status(200).json({ message: MESSAGES.SUCCESS.SESION.DELETED });
   } catch (error) {
     const { id } = req.params;
@@ -60,7 +96,7 @@ export const deleteSesion = async (
 };
 
 export const closeUserSessions = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -81,6 +117,24 @@ export const closeUserSessions = async (
     logger.info(
       `DELETE /sesiones/usuario/${id_usuario} - Todas las sesiones del usuario han sido cerradas`
     );
+
+    const userId = typeof req.user === 'string' ? req.user : req.user?.id;
+    if (!userId) {
+      throw new InternalServerError('No se pudo identificar al usuario.');
+    }
+
+    const tipoActividad = await TipoActividad.findOne({
+      where: { descripcion: 'Cierre de sesión de usuario' },
+    });
+
+    if (tipoActividad) {
+      await LogActividad.create({
+        id_usuario: userId,
+        actividad: 'Cierre de sesiones de usuario',
+        id_tipo_actividad: tipoActividad.id_tipo_actividad,
+      });
+    }
+
 
     res.status(200).json({ message: MESSAGES.SUCCESS.SESION.USER_SESSIONS_CLOSED });
   } catch (error) {

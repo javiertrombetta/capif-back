@@ -9,8 +9,8 @@ class TipoMetodoPago extends Model {
 TipoMetodoPago.init(
   {
     id_tipo_metodo_pago: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

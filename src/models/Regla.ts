@@ -10,8 +10,8 @@ class Regla extends Model {
 Regla.init(
   {
     id_regla: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {
@@ -26,7 +26,7 @@ Regla.init(
           msg: 'La descripción no puede estar vacía.',
         },
       },
-    },   
+    },
     isActivo: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,

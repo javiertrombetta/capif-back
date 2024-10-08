@@ -11,6 +11,7 @@ import sesionRoutes from './sesiones';
 import consultaRoutes from './consultas';
 import pagosRoutes from './pagos';
 import productorasRoutes from './productoras'
+import dbRoutes from './db'; //
 
 import premiosRoutes from './premios';
 import { authenticate, authorizeRoles } from '../middlewares/auth';
@@ -22,6 +23,7 @@ router.use('/auth', authRoutes);
 router.use('/conflictos', authenticate, authorizeRoles(['admin', 'user']), conflictoRoutes);
 router.use('/consultas', authenticate, authorizeRoles(['admin', 'user']), consultaRoutes);
 router.use('/cuentas-corrientes', authenticate, authorizeRoles(['admin', 'user']), cuentaCorrienteRoutes);
+router.use('/db', authenticate, authorizeRoles(['admin']), dbRoutes);
 router.use('/pagos', authenticate, authorizeRoles(['admin']), pagosRoutes);
 router.use('/premios', authenticate, authorizeRoles(['user']), premiosRoutes);
 router.use('/productoras', authenticate, authorizeRoles(['admin', 'user']), productorasRoutes);

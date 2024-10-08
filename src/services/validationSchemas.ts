@@ -496,50 +496,6 @@ export const repertorioIdSchema = Joi.object({
   }),
 });
 
-export const createRepertorioByTemaSchema = Joi.object({
-  titulo: Joi.string().min(3).max(150).required().messages({
-    'string.min': 'El título debe tener al menos 3 caracteres.',
-    'string.max': 'El título no debe exceder los 150 caracteres.',
-    'any.required': 'El título es obligatorio.',
-  }),
-  artista: Joi.string().min(3).max(100).required().messages({
-    'string.min': 'El nombre del artista debe tener al menos 3 caracteres.',
-    'string.max': 'El nombre del artista no debe exceder los 100 caracteres.',
-    'any.required': 'El nombre del artista es obligatorio.',
-  }),
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
-  estado: Joi.string().min(3).max(50).required().messages({
-    'string.min': 'El estado debe tener al menos 3 caracteres.',
-    'string.max': 'El estado no debe exceder los 50 caracteres.',
-    'any.required': 'El estado es obligatorio.',
-  }),
-});
-
-export const createRepertorioByAlbumSchema = Joi.object({
-  titulo: Joi.string().min(3).max(150).required().messages({
-    'string.min': 'El título debe tener al menos 3 caracteres.',
-    'string.max': 'El título no debe exceder los 150 caracteres.',
-    'any.required': 'El título es obligatorio.',
-  }),
-  artista: Joi.string().min(3).max(100).required().messages({
-    'string.min': 'El nombre del artista debe tener al menos 3 caracteres.',
-    'string.max': 'El nombre del artista no debe exceder los 100 caracteres.',
-    'any.required': 'El nombre del artista es obligatorio.',
-  }),
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
-  estado: Joi.string().min(3).max(50).required().messages({
-    'string.min': 'El estado debe tener al menos 3 caracteres.',
-    'string.max': 'El estado no debe exceder los 50 caracteres.',
-    'any.required': 'El estado es obligatorio.',
-  }),
-});
-
 export const updateDepuracionSchema = Joi.object({
   titulo: Joi.string().min(3).max(150).messages({
     'string.min': 'El título debe tener al menos 3 caracteres.',
@@ -623,4 +579,21 @@ export const updateTramiteSchema = Joi.object({
   id_usuario: Joi.number().integer().messages({
     'number.base': 'El ID del usuario debe ser un número entero.',
   }),
+});
+
+export const createSchema = Joi.object({
+  id_usuario: Joi.number().integer().required(),
+  nombre_archivo: Joi.string().max(150).required(),
+  ruta_archivo: Joi.string().max(255).required(),
+  tipo_archivo: Joi.string().max(50).required(),
+});
+
+export const updateSchema = Joi.object({
+  nombre_archivo: Joi.string().max(150),
+  ruta_archivo: Joi.string().max(255),
+  tipo_archivo: Joi.string().max(50),
+});
+
+export const idSchema = Joi.object({
+  id: Joi.number().integer().required(),
 });

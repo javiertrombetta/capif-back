@@ -15,8 +15,8 @@ class Repertorio extends Model {
 Repertorio.init(
   {
     id_repertorio: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     titulo: {
@@ -33,7 +33,7 @@ Repertorio.init(
       },
     },
     id_tipo_repertorio: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoRepertorio,
         key: 'id_tipo_repertorio',
@@ -42,7 +42,7 @@ Repertorio.init(
       onDelete: 'CASCADE',
     },
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Usuario,
         key: 'id_usuario',
@@ -59,7 +59,7 @@ Repertorio.init(
       },
     },
     estado_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Estado,
         key: 'id_estado',

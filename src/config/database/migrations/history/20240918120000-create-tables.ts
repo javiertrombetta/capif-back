@@ -3,7 +3,7 @@
 import { QueryInterface, Sequelize, DataTypes } from 'sequelize';
 
 module.exports = {
-  up: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {    
+  up: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {
     await queryInterface.createTable('Rol', {
       id_rol: {
         type: DataTypes.INTEGER,
@@ -25,7 +25,6 @@ module.exports = {
         defaultValue: DataTypes.NOW,
       },
     });
-      
 
     await queryInterface.createTable('TipoEstado', {
       id_tipo_estado: {
@@ -153,7 +152,7 @@ module.exports = {
           model: 'Rol',
           key: 'id_rol',
         },
-        onDelete: 'CASCADE',        
+        onDelete: 'CASCADE',
       },
       fecha_registro: {
         type: DataTypes.DATE,
@@ -234,7 +233,7 @@ module.exports = {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
-    });    
+    });
 
     await queryInterface.createTable('TipoCompania', {
       id_tipo_compania: {
@@ -300,7 +299,7 @@ module.exports = {
           model: 'Estado',
           key: 'id_estado',
         },
-      },      
+      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -312,8 +311,6 @@ module.exports = {
         defaultValue: DataTypes.NOW,
       },
     });
-
-    
 
     await queryInterface.createTable('UsuarioAsignado', {
       id_usuario_asignado: {
@@ -336,7 +333,7 @@ module.exports = {
           key: 'id_compania',
         },
         onDelete: 'CASCADE',
-      },      
+      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -368,7 +365,7 @@ module.exports = {
       },
       tipo: {
         type: DataTypes.STRING(50),
-      },      
+      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -379,8 +376,8 @@ module.exports = {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
-    });    
-    
+    });
+
     await queryInterface.createTable('Fonograma', {
       id_fonograma: {
         type: DataTypes.INTEGER,
@@ -470,7 +467,7 @@ module.exports = {
     });
 
     await queryInterface.addColumn('Fonograma', 'id_isrc', {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: 'ISRC',
         key: 'id_isrc',
@@ -505,7 +502,7 @@ module.exports = {
           model: 'Estado',
           key: 'id_estado',
         },
-      },      
+      },
       fecha_resolucion: {
         type: DataTypes.DATE,
       },
@@ -574,7 +571,7 @@ module.exports = {
       },
       mensaje: {
         type: DataTypes.TEXT,
-      },      
+      },
       estado_id: {
         type: DataTypes.INTEGER,
         references: {
@@ -657,7 +654,7 @@ module.exports = {
       ruta_documento: {
         type: DataTypes.STRING(255),
         allowNull: false,
-      },      
+      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -668,7 +665,7 @@ module.exports = {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
-    });    
+    });
 
     await queryInterface.createTable('AltaMasivaTemp', {
       id_temporal: {
@@ -689,7 +686,7 @@ module.exports = {
           model: 'Repertorio',
           key: 'id_repertorio',
         },
-      },      
+      },
       procesado: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
@@ -722,7 +719,7 @@ module.exports = {
       tipo_reporte: {
         type: DataTypes.STRING(100),
         allowNull: false,
-      },      
+      },
       ruta_archivo: {
         type: DataTypes.STRING(255),
         allowNull: false,
@@ -794,7 +791,7 @@ module.exports = {
       saldo: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
-      },      
+      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -831,7 +828,7 @@ module.exports = {
       ruta_archivo: {
         type: DataTypes.STRING(255),
         allowNull: false,
-      },      
+      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -842,7 +839,7 @@ module.exports = {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
-    });    
+    });
 
     await queryInterface.createTable('Sesion', {
       id_sesion: {
@@ -896,7 +893,7 @@ module.exports = {
       actividad: {
         type: DataTypes.STRING(255),
         allowNull: false,
-      },      
+      },
       ip_origen: {
         type: DataTypes.STRING(50),
         allowNull: false,
@@ -929,7 +926,7 @@ module.exports = {
           model: 'Usuario',
           key: 'id_usuario',
         },
-      },      
+      },
       tabla_afectada: {
         type: DataTypes.STRING(100),
         allowNull: false,
@@ -967,7 +964,7 @@ module.exports = {
       descripcion_error: {
         type: DataTypes.TEXT,
         allowNull: false,
-      },      
+      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -989,7 +986,7 @@ module.exports = {
       descripcion: {
         type: DataTypes.STRING(255),
         allowNull: false,
-      },      
+      },
       isActivo: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
@@ -1174,12 +1171,12 @@ module.exports = {
     await queryInterface.dropTable('ErroresInsercion');
     await queryInterface.dropTable('AuditoriaCambio');
     await queryInterface.dropTable('LogActividad');
-    await queryInterface.dropTable('Sesion'); 
+    await queryInterface.dropTable('Sesion');
     await queryInterface.dropTable('Archivo');
     await queryInterface.dropTable('CuentaCorriente');
     await queryInterface.dropTable('Pago');
     await queryInterface.dropTable('Reporte');
-    await queryInterface.dropTable('AltaMasivaTemp');     
+    await queryInterface.dropTable('AltaMasivaTemp');
     await queryInterface.dropTable('Documento');
     await queryInterface.dropTable('Tramite');
     await queryInterface.dropTable('Consulta');
@@ -1188,9 +1185,9 @@ module.exports = {
     await queryInterface.removeColumn('Fonograma', 'id_isrc');
     await queryInterface.dropTable('ISRC');
     await queryInterface.dropTable('Fonograma');
-    await queryInterface.dropTable('Repertorio'); 
+    await queryInterface.dropTable('Repertorio');
     await queryInterface.dropTable('UsuarioAsignado');
-    await queryInterface.dropTable('Compania');  
+    await queryInterface.dropTable('Compania');
     await queryInterface.dropTable('TipoCompania');
     await queryInterface.dropTable('Usuario');
     await queryInterface.dropTable('TipoPersona');

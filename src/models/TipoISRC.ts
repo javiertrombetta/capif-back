@@ -9,8 +9,8 @@ class TipoISRC extends Model {
 TipoISRC.init(
   {
     id_tipo_isrc: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

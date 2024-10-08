@@ -6,8 +6,8 @@ module.exports = {
   up: async (queryInterface: QueryInterface, Sequelize: Sequelize) => {
     await queryInterface.createTable('Rol', {
       id_rol: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -28,8 +28,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoEstado', {
       id_tipo_estado: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -50,8 +50,8 @@ module.exports = {
 
     await queryInterface.createTable('Estado', {
       id_estado: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -59,7 +59,7 @@ module.exports = {
         allowNull: false,
       },
       tipo_estado_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoEstado',
           key: 'id_tipo_estado',
@@ -80,8 +80,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoPersona', {
       id_tipo_persona: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -102,8 +102,8 @@ module.exports = {
 
     await queryInterface.createTable('Usuario', {
       id_usuario: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       nombre: {
@@ -147,7 +147,7 @@ module.exports = {
         allowNull: false,
       },
       rol_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Rol',
           key: 'id_rol',
@@ -159,7 +159,7 @@ module.exports = {
         defaultValue: DataTypes.NOW,
       },
       estado_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Estado',
           key: 'id_estado',
@@ -174,7 +174,7 @@ module.exports = {
         },
       },
       tipo_persona_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoPersona',
           key: 'id_tipo_persona',
@@ -241,8 +241,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoCompania', {
       id_tipo_compania: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -263,8 +263,8 @@ module.exports = {
 
     await queryInterface.createTable('Compania', {
       id_compania: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       nombre_compania: {
@@ -290,7 +290,7 @@ module.exports = {
         unique: true,
       },
       tipo_compania_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoCompania',
           key: 'id_tipo_compania',
@@ -298,7 +298,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       estado_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Estado',
           key: 'id_estado',
@@ -318,12 +318,12 @@ module.exports = {
 
     await queryInterface.createTable('UsuarioAsignado', {
       id_usuario_asignado: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
@@ -331,7 +331,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       id_compania: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Compania',
           key: 'id_compania',
@@ -352,8 +352,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoRepertorio', {
       id_tipo_repertorio: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -374,12 +374,12 @@ module.exports = {
 
     await queryInterface.createTable('Repertorio', {
       id_repertorio: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
@@ -390,7 +390,7 @@ module.exports = {
         allowNull: false,
       },
       id_tipo_repertorio: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoRepertorio',
           key: 'id_tipo_repertorio',
@@ -399,7 +399,7 @@ module.exports = {
         allowNull: false,
       },
       estado_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Estado',
           key: 'id_estado',
@@ -421,8 +421,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoFonograma', {
       id_tipo_fonograma: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -443,12 +443,12 @@ module.exports = {
 
     await queryInterface.createTable('Fonograma', {
       id_fonograma: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_repertorio: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Repertorio',
           key: 'id_repertorio',
@@ -471,7 +471,7 @@ module.exports = {
         type: DataTypes.DATE,
       },
       id_tipo_fonograma: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoFonograma',
           key: 'id_tipo_fonograma',
@@ -480,7 +480,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       estado_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Estado',
           key: 'id_estado',
@@ -500,8 +500,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoISRC', {
       id_tipo_isrc: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -523,12 +523,12 @@ module.exports = {
 
     await queryInterface.createTable('ISRC', {
       id_isrc: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_fonograma: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Fonograma',
           key: 'id_fonograma',
@@ -543,7 +543,7 @@ module.exports = {
         },
       },
       id_tipo_isrc: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoISRC',
           key: 'id_tipo_isrc',
@@ -564,7 +564,7 @@ module.exports = {
     });
 
     await queryInterface.addColumn('Fonograma', 'id_isrc', {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: 'ISRC',
         key: 'id_isrc',
@@ -574,8 +574,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoConflicto', {
       id_tipo_conflicto: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -596,12 +596,12 @@ module.exports = {
 
     await queryInterface.createTable('Conflicto', {
       id_conflicto: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_fonograma: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Fonograma',
           key: 'id_fonograma',
@@ -609,7 +609,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       id_tipo_conflicto: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoConflicto',
           key: 'id_tipo_conflicto',
@@ -621,7 +621,7 @@ module.exports = {
         type: DataTypes.TEXT,
       },
       estado_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Estado',
           key: 'id_estado',
@@ -644,12 +644,12 @@ module.exports = {
 
     await queryInterface.createTable('ComentarioConflicto', {
       id_comentario: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_conflicto: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Conflicto',
           key: 'id_conflicto',
@@ -678,12 +678,12 @@ module.exports = {
 
     await queryInterface.createTable('Consulta', {
       id_consulta: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
@@ -697,7 +697,7 @@ module.exports = {
         type: DataTypes.TEXT,
       },
       estado_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Estado',
           key: 'id_estado',
@@ -717,8 +717,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoTramite', {
       id_tipo_tramite: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -739,19 +739,19 @@ module.exports = {
 
     await queryInterface.createTable('Tramite', {
       id_tramite: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
         },
       },
       id_tipo_tramite: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoTramite',
           key: 'id_tipo_tramite',
@@ -764,7 +764,7 @@ module.exports = {
         defaultValue: DataTypes.NOW,
       },
       estado_id: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Estado',
           key: 'id_estado',
@@ -784,8 +784,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoDocumento', {
       id_tipo_documento: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -807,12 +807,12 @@ module.exports = {
 
     await queryInterface.createTable('Documento', {
       id_documento: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_tramite: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Tramite',
           key: 'id_tramite',
@@ -823,7 +823,7 @@ module.exports = {
         allowNull: false,
       },
       id_tipo_documento: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoDocumento',
           key: 'id_tipo_documento',
@@ -849,19 +849,19 @@ module.exports = {
 
     await queryInterface.createTable('AltaMasivaTemp', {
       id_temporal: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
         },
       },
       id_repertorio: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Repertorio',
           key: 'id_repertorio',
@@ -885,8 +885,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoReporte', {
       id_tipo_reporte: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -907,19 +907,19 @@ module.exports = {
 
     await queryInterface.createTable('Reporte', {
       id_reporte: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
         },
       },
       id_tipo_reporte: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoReporte',
           key: 'id_tipo_reporte',
@@ -945,8 +945,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoMetodoPago', {
       id_tipo_metodo_pago: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -967,12 +967,12 @@ module.exports = {
 
     await queryInterface.createTable('Pago', {
       id_pago: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
@@ -987,7 +987,7 @@ module.exports = {
         defaultValue: DataTypes.NOW,
       },
       id_tipo_metodo_pago: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoMetodoPago',
           key: 'id_tipo_metodo_pago',
@@ -1012,12 +1012,12 @@ module.exports = {
 
     await queryInterface.createTable('CuentaCorriente', {
       id_cuenta_corriente: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
@@ -1041,8 +1041,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoArchivo', {
       id_tipo_archivo: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -1063,12 +1063,12 @@ module.exports = {
 
     await queryInterface.createTable('Archivo', {
       id_archivo: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
@@ -1079,7 +1079,7 @@ module.exports = {
         allowNull: false,
       },
       id_tipo_archivo: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoArchivo',
           key: 'id_tipo_archivo',
@@ -1105,12 +1105,12 @@ module.exports = {
 
     await queryInterface.createTable('Sesion', {
       id_sesion: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
@@ -1141,8 +1141,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoActividad', {
       id_tipo_actividad: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -1163,8 +1163,8 @@ module.exports = {
 
     await queryInterface.createTable('TipoNavegador', {
       id_tipo_navegador: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -1186,19 +1186,19 @@ module.exports = {
 
     await queryInterface.createTable('LogActividad', {
       id_log: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
         },
       },
       id_tipo_actividad: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoActividad',
           key: 'id_tipo_actividad',
@@ -1211,7 +1211,7 @@ module.exports = {
         allowNull: false,
       },
       id_tipo_navegador: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'TipoNavegador',
           key: 'id_tipo_navegador',
@@ -1233,12 +1233,12 @@ module.exports = {
 
     await queryInterface.createTable('AuditoriaCambio', {
       id_auditoria: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
@@ -1270,8 +1270,8 @@ module.exports = {
 
     await queryInterface.createTable('ErroresInsercion', {
       id_error: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       tabla_afectada: {
@@ -1296,8 +1296,8 @@ module.exports = {
 
     await queryInterface.createTable('Regla', {
       id_regla: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       descripcion: {
@@ -1322,12 +1322,12 @@ module.exports = {
 
     await queryInterface.createTable('TitularFonograma', {
       id_titular_fonograma: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_fonograma: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Fonograma',
           key: 'id_fonograma',
@@ -1335,7 +1335,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       id_titular: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Compania',
           key: 'id_compania',
@@ -1370,12 +1370,12 @@ module.exports = {
 
     await queryInterface.createTable('Involucrados', {
       id_involucrado: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_conflicto: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Conflicto',
           key: 'id_conflicto',
@@ -1383,7 +1383,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       id_titular: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Compania',
           key: 'id_compania',
@@ -1402,14 +1402,37 @@ module.exports = {
       },
     });
 
+    await queryInterface.createTable('TipoDecision', {
+      id_tipo_decision: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+        allowNull: false,
+      },
+      descripcion: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+    });
+
     await queryInterface.createTable('DecisionInvolucrados', {
       id_decision: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_involucrado: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Involucrados',
           key: 'id_involucrado',
@@ -1438,12 +1461,12 @@ module.exports = {
 
     await queryInterface.createTable('PostulacionPremio', {
       id_postulacion: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
       id_compania: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Compania',
           key: 'id_compania',
@@ -1451,7 +1474,7 @@ module.exports = {
         onDelete: 'CASCADE',
       },
       id_usuario: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
         references: {
           model: 'Usuario',
           key: 'id_usuario',
@@ -1482,27 +1505,39 @@ module.exports = {
   down: async (queryInterface: QueryInterface, _sequelize: Sequelize) => {
     await queryInterface.dropTable('PostulacionPremio');
     await queryInterface.dropTable('DecisionInvolucrados');
+    await queryInterface.dropTable('TipoDecision');
     await queryInterface.dropTable('Involucrados');
     await queryInterface.dropTable('TitularFonograma');
     await queryInterface.dropTable('Regla');
     await queryInterface.dropTable('ErroresInsercion');
     await queryInterface.dropTable('AuditoriaCambio');
     await queryInterface.dropTable('LogActividad');
+    await queryInterface.dropTable('TipoNavegador');
+    await queryInterface.dropTable('TipoActividad');
     await queryInterface.dropTable('Sesion');
     await queryInterface.dropTable('Archivo');
+    await queryInterface.dropTable('TipoArchivo');
     await queryInterface.dropTable('CuentaCorriente');
     await queryInterface.dropTable('Pago');
+    await queryInterface.dropTable('TipoMetodoPago');
     await queryInterface.dropTable('Reporte');
+    await queryInterface.dropTable('TipoReporte');
     await queryInterface.dropTable('AltaMasivaTemp');
     await queryInterface.dropTable('Documento');
+    await queryInterface.dropTable('TipoDocumento');
     await queryInterface.dropTable('Tramite');
+    await queryInterface.dropTable('TipoTramite');
     await queryInterface.dropTable('Consulta');
     await queryInterface.dropTable('ComentarioConflicto');
     await queryInterface.dropTable('Conflicto');
+    await queryInterface.dropTable('TipoConflicto');
     await queryInterface.removeColumn('Fonograma', 'id_isrc');
     await queryInterface.dropTable('ISRC');
+    await queryInterface.dropTable('TipoISRC');
     await queryInterface.dropTable('Fonograma');
+    await queryInterface.dropTable('TipoFonograma');
     await queryInterface.dropTable('Repertorio');
+    await queryInterface.dropTable('TipoRepertorio');
     await queryInterface.dropTable('UsuarioAsignado');
     await queryInterface.dropTable('Compania');
     await queryInterface.dropTable('TipoCompania');

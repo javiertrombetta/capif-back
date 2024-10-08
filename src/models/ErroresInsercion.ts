@@ -10,8 +10,8 @@ class ErroresInsercion extends Model {
 ErroresInsercion.init(
   {
     id_error: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     tabla_afectada: {
@@ -35,7 +35,7 @@ ErroresInsercion.init(
           msg: 'La descripción del error no puede estar vacía.',
         },
       },
-    },    
+    },
   },
   {
     sequelize,

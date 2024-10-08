@@ -9,8 +9,8 @@ class TipoFonograma extends Model {
 TipoFonograma.init(
   {
     id_tipo_fonograma: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

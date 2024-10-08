@@ -1,25 +1,25 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
-class TipoReporte extends Model {
-  public id_tipo_reporte!: number;
+class TipoDecision extends Model {
+  public id_tipo_decision!: number;
   public descripcion!: string;
 }
 
-TipoReporte.init(
+TipoDecision.init(
   {
-    id_tipo_reporte: {
+    id_tipo_decision: {
       type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      autoIncrement: true,
       primaryKey: true,
     },
     descripcion: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(50),
       allowNull: false,
       validate: {
         len: {
-          args: [3, 100],
-          msg: 'La descripción debe tener entre 3 y 100 caracteres.',
+          args: [1, 50],
+          msg: 'La descripción debe tener entre 1 y 50 caracteres.',
         },
         notEmpty: {
           msg: 'La descripción no puede estar vacía.',
@@ -29,10 +29,10 @@ TipoReporte.init(
   },
   {
     sequelize,
-    modelName: 'TipoReporte',
-    tableName: 'TipoReporte',
-    timestamps: true,
+    modelName: 'TipoDecision',
+    tableName: 'TipoDecision',
+    timestamps: false,
   }
 );
 
-export default TipoReporte;
+export default TipoDecision;

@@ -3,7 +3,7 @@ import sequelize from '../config/database/sequelize';
 import Repertorio from './Repertorio';
 import Estado from './Estado';
 import ISRC from './ISRC';
-import TitularFonograma from './TitularFonograma'; 
+import TitularFonograma from './TitularFonograma';
 import TipoFonograma from './TipoFonograma';
 
 class Fonograma extends Model {
@@ -22,12 +22,12 @@ class Fonograma extends Model {
 Fonograma.init(
   {
     id_fonograma: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_repertorio: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Repertorio,
         key: 'id_repertorio',
@@ -93,7 +93,7 @@ Fonograma.init(
       },
     },
     id_tipo_fonograma: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoFonograma,
         key: 'id_tipo_fonograma',
@@ -102,14 +102,14 @@ Fonograma.init(
       onDelete: 'CASCADE',
     },
     estado_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Estado,
         key: 'id_estado',
       },
     },
     id_isrc: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: ISRC,
         key: 'id_isrc',

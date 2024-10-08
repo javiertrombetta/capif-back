@@ -9,8 +9,8 @@ class TipoArchivo extends Model {
 TipoArchivo.init(
   {
     id_tipo_archivo: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

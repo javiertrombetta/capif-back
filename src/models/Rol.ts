@@ -9,8 +9,8 @@ class Rol extends Model {
 Rol.init(
   {
     id_rol: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

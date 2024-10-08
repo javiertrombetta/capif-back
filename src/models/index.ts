@@ -41,6 +41,7 @@ import TitularFonograma from './TitularFonograma';
 import Involucrados from './Involucrados';
 import DecisionInvolucrados from './DecisionInvolucrados';
 import PostulacionPremio from './PostulacionPremio';
+import TipoDecision from './TipoDecision';
 
 // Rol <-> Usuario
 Rol.hasMany(Usuario, { foreignKey: 'rol_id', onDelete: 'CASCADE' });
@@ -210,6 +211,10 @@ Involucrados.belongsTo(Compania, { foreignKey: 'id_titular' });
 Involucrados.hasMany(DecisionInvolucrados, { foreignKey: 'id_involucrado', onDelete: 'CASCADE' });
 DecisionInvolucrados.belongsTo(Involucrados, { foreignKey: 'id_involucrado' });
 
+// TipoDecision <-> DecisionInvolucrados
+TipoDecision.hasMany(DecisionInvolucrados, { foreignKey: 'id_tipo_decision', onDelete: 'CASCADE' });
+DecisionInvolucrados.belongsTo(TipoDecision, { foreignKey: 'id_tipo_decision' });
+
 // Compania <-> PostulacionPremio
 Compania.hasMany(PostulacionPremio, { foreignKey: 'id_compania', onDelete: 'CASCADE' });
 PostulacionPremio.belongsTo(Compania, { foreignKey: 'id_compania' });
@@ -267,6 +272,7 @@ export {
   Regla,
   TitularFonograma,
   Involucrados,
+  TipoDecision,
   DecisionInvolucrados,
   PostulacionPremio,
 };

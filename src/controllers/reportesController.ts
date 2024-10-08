@@ -5,7 +5,8 @@ import * as MESSAGES from '../services/messages';
 import { NotFoundError, InternalServerError } from '../services/customErrors';
 import { generateISRCReportFile, generateOtherReport } from '../services/reportesService';
 
-import { ISRC, Fonograma } from '../models';
+import { ISRC, Fonograma, TipoISRC, TipoReporte } from '../models';
+import { Op } from 'sequelize';
 
 export const getISRCReportes = async (
   req: Request,
@@ -68,11 +69,17 @@ export const generateISRCReport = async (
     const { tipo, fechaInicio, fechaFin } = req.body;
     logger.info('POST /reportes/isrc - Request received to generate ISRC report');
 
+    const tipoISRC = await TipoISRC.findOne({ where: { descripcion: tipo } });
+    if (!tipoISRC) {
+      logger.warn(`Tipo de ISRC ${tipo} no válido`);
+      throw new NotFoundError(MESSAGES.ERROR.REPORTE.TYPE_NOT_FOUND);
+    }
+
     const isrcReports = await ISRC.findAll({
       where: {
-        tipo,
+        tipo: tipoISRC.descripcion,
         createdAt: {
-          $between: [new Date(fechaInicio), new Date(fechaFin)],
+          [Op.between]: [new Date(fechaInicio), new Date(fechaFin)],
         },
       },
       include: Fonograma,
@@ -139,7 +146,13 @@ export const generateOtherReports = async (
       `POST /reportes/${tipoReporte} - Request received to generate ${tipoReporte} report`
     );
 
-    const reporteGenerado = await generateOtherReport(tipoReporte, parametros);
+    const tipoValido = await TipoReporte.findOne({ where: { descripcion: tipoReporte } });
+    if (!tipoValido) {
+      logger.warn(`Tipo de reporte ${tipoReporte} no válido`);
+      throw new NotFoundError(MESSAGES.ERROR.REPORTE.TYPE_NOT_FOUND);
+    }
+
+    const reporteGenerado = await generateOtherReport(tipoValido.descripcion, parametros);
 
     if (!reporteGenerado) {
       logger.warn(`No se pudo generar el reporte de tipo ${tipoReporte}`);

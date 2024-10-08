@@ -12,12 +12,12 @@ class Involucrados extends Model {
 Involucrados.init(
   {
     id_involucrado: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_conflicto: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Conflicto,
         key: 'id_conflicto',
@@ -34,7 +34,7 @@ Involucrados.init(
       },
     },
     id_titular: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Compania,
         key: 'id_compania',

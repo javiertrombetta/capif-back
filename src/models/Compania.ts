@@ -17,8 +17,8 @@ class Compania extends Model {
 Compania.init(
   {
     id_compania: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     nombre_compania: {
@@ -68,7 +68,7 @@ Compania.init(
       },
     },
     tipo_compania_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoCompania,
         key: 'id_tipo_compania',
@@ -76,7 +76,7 @@ Compania.init(
       onDelete: 'CASCADE',
     },
     estado_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Estado,
         key: 'id_estado',

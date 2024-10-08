@@ -14,12 +14,12 @@ class Tramite extends Model {
 Tramite.init(
   {
     id_tramite: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Usuario,
         key: 'id_usuario',
@@ -36,7 +36,7 @@ Tramite.init(
       },
     },
     id_tipo_tramite: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoTramite,
         key: 'id_tipo_tramite',
@@ -45,7 +45,7 @@ Tramite.init(
       onDelete: 'CASCADE',
     },
     estado_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Estado,
         key: 'id_estado',

@@ -13,12 +13,12 @@ class ISRC extends Model {
 ISRC.init(
   {
     id_isrc: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_fonograma: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Fonograma,
         key: 'id_fonograma',
@@ -49,7 +49,7 @@ ISRC.init(
       },
     },
     id_tipo_isrc: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoISRC,
         key: 'id_tipo_isrc',

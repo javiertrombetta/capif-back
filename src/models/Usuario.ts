@@ -32,8 +32,8 @@ class Usuario extends Model {
 Usuario.init(
   {
     id_usuario: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     nombre: {
@@ -85,7 +85,7 @@ Usuario.init(
       },
     },
     rol_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Rol,
         key: 'id_rol',
@@ -93,7 +93,7 @@ Usuario.init(
       onDelete: 'CASCADE',
     },
     estado_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Estado,
         key: 'id_estado',
@@ -111,7 +111,7 @@ Usuario.init(
       },
     },
     tipo_persona_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoPersona,
         key: 'id_tipo_persona',

@@ -9,8 +9,8 @@ class TipoActividad extends Model {
 TipoActividad.init(
   {
     id_tipo_actividad: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

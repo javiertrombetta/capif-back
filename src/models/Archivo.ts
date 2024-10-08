@@ -14,12 +14,12 @@ class Archivo extends Model {
 Archivo.init(
   {
     id_archivo: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_usuario: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Usuario,
         key: 'id_usuario',
@@ -49,7 +49,7 @@ Archivo.init(
       },
     },
     id_tipo_archivo: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoArchivo,
         key: 'id_tipo_archivo',

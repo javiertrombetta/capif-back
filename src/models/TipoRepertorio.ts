@@ -9,8 +9,8 @@ class TipoRepertorio extends Model {
 TipoRepertorio.init(
   {
     id_tipo_repertorio: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

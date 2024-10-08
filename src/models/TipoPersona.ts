@@ -9,8 +9,8 @@ class TipoPersona extends Model {
 TipoPersona.init(
   {
     id_tipo_persona: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

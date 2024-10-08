@@ -16,12 +16,12 @@ class Conflicto extends Model {
 Conflicto.init(
   {
     id_conflicto: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     id_fonograma: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Fonograma,
         key: 'id_fonograma',
@@ -38,7 +38,7 @@ Conflicto.init(
       },
     },
     id_tipo_conflicto: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoConflicto,
         key: 'id_tipo_conflicto',
@@ -51,7 +51,7 @@ Conflicto.init(
       allowNull: true,
     },
     estado_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Estado,
         key: 'id_estado',

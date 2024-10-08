@@ -9,8 +9,8 @@ class TipoEstado extends Model {
 TipoEstado.init(
   {
     id_tipo_estado: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     descripcion: {

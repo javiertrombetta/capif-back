@@ -4,7 +4,7 @@ import logger from '../config/logger';
 import * as MESSAGES from '../services/messages';
 import { NotFoundError, InternalServerError } from '../services/customErrors';
 
-import { Repertorio, Estado } from '../models';
+import { Repertorio, Estado, TipoFonograma } from '../models';
 
 export const getRepertorios = async (
   req: Request,
@@ -65,9 +65,13 @@ export const createRepertorio = async (
     const { titulo, tipo, id_usuario, estado } = req.body;
     logger.info('POST /repertorios - Request received to create a new repertorio');
 
-    // Buscar el estado en la base de datos
-    const estadoEncontrado = await Estado.findOne({ where: { descripcion: estado } });
+    const tipoEncontrado = await TipoFonograma.findOne({ where: { descripcion: tipo } });
+    if (!tipoEncontrado) {
+      logger.warn(`Tipo de repertorio con descripción ${tipo} no encontrado`);
+      throw new NotFoundError(MESSAGES.ERROR.FONOGRAMA.TYPE_NOT_FOUND);    }
 
+    
+    const estadoEncontrado = await Estado.findOne({ where: { descripcion: estado } });
     if (!estadoEncontrado) {
       logger.warn(`Estado con descripción ${estado} no encontrado`);
       throw new NotFoundError(MESSAGES.ERROR.ESTADO.NOT_FOUND);
@@ -75,7 +79,7 @@ export const createRepertorio = async (
 
     const nuevoRepertorio = await Repertorio.create({
       titulo,
-      tipo,
+      tipo: tipoEncontrado.descripcion,
       id_usuario,
       estado_id: estadoEncontrado.id_estado,
     });
@@ -92,78 +96,6 @@ export const createRepertorio = async (
   }
 };
 
-export const createRepertorioByTema = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { titulo, artista, id_usuario, estado } = req.body;
-    logger.info('POST /repertorios/tema - Request received to create repertorio by tema');
-
-    const estadoEncontrado = await Estado.findOne({ where: { descripcion: estado } });
-
-    if (!estadoEncontrado) {
-      logger.warn(`Estado con descripción ${estado} no encontrado`);
-      throw new NotFoundError(MESSAGES.ERROR.ESTADO.NOT_FOUND);
-    }
-
-    const nuevoRepertorio = await Repertorio.create({
-      titulo,
-      tipo: 'tema',
-      id_usuario,
-      estado_id: estadoEncontrado.id_estado,
-    });
-
-    logger.info(
-      `POST /repertorios/tema - Successfully created repertorio by tema with ID: ${nuevoRepertorio.id_repertorio}`
-    );
-    res.status(201).json({ message: MESSAGES.SUCCESS.REPERTORIO.CREATED_BY_TEMA, nuevoRepertorio });
-  } catch (error) {
-    logger.error(
-      `POST /repertorios/tema - Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-    next(new InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
-  }
-};
-
-export const createRepertorioByAlbum = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    const { titulo, artista, id_usuario, estado } = req.body;
-    logger.info('POST /repertorios/album - Request received to create repertorio by album');
-
-    const estadoEncontrado = await Estado.findOne({ where: { descripcion: estado } });
-
-    if (!estadoEncontrado) {
-      logger.warn(`Estado con descripción ${estado} no encontrado`);
-      throw new NotFoundError(MESSAGES.ERROR.ESTADO.NOT_FOUND);
-    }
-
-    const nuevoRepertorio = await Repertorio.create({
-      titulo,
-      tipo: 'album',
-      id_usuario,
-      estado_id: estadoEncontrado.id_estado,
-    });
-
-    logger.info(
-      `POST /repertorios/album - Successfully created repertorio by album with ID: ${nuevoRepertorio.id_repertorio}`
-    );
-    res
-      .status(201)
-      .json({ message: MESSAGES.SUCCESS.REPERTORIO.CREATED_BY_ALBUM, nuevoRepertorio });
-  } catch (error) {
-    logger.error(
-      `POST /repertorios/album - Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
-    next(new InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
-  }
-};
-
 export const updateRepertorio = async (
   req: Request,
   res: Response,
@@ -171,7 +103,7 @@ export const updateRepertorio = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const { estado } = req.body;
+    const { estado, tipo } = req.body;
     logger.info(`PUT /repertorios/${id} - Request received to update repertorio ID: ${id}`);
 
     const repertorio = await Repertorio.findByPk(id);
@@ -188,6 +120,15 @@ export const updateRepertorio = async (
         throw new NotFoundError(MESSAGES.ERROR.ESTADO.NOT_FOUND);
       }
       req.body.estado_id = estadoEncontrado.id_estado;
+    }
+
+    if (tipo) {
+      const tipoEncontrado = await TipoFonograma.findOne({ where: { descripcion: tipo } });
+      if (!tipoEncontrado) {
+        logger.warn(`Tipo de repertorio con descripción ${tipo} no encontrado`);
+        throw new NotFoundError(MESSAGES.ERROR.FONOGRAMA.TYPE_NOT_FOUND);
+      }
+      req.body.tipo = tipoEncontrado.descripcion;
     }
 
     Object.assign(repertorio, req.body);

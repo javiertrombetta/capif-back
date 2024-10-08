@@ -12,8 +12,8 @@ class ComentarioConflicto extends Model {
 ComentarioConflicto.init(
   {
     id_comentario: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     comentario: {
@@ -26,7 +26,7 @@ ComentarioConflicto.init(
       },
     },
     id_conflicto: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Conflicto,
         key: 'id_conflicto',

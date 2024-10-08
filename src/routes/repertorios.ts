@@ -4,8 +4,6 @@ import {
   getRepertorios,
   getRepertorioById,
   createRepertorio,
-  createRepertorioByTema,
-  createRepertorioByAlbum,
   updateRepertorio,
   deleteRepertorio,
   downloadRepertorio,
@@ -16,9 +14,7 @@ import {
 import {
   repertorioCreateSchema,
   repertorioUpdateSchema,
-  repertorioIdSchema,
-  createRepertorioByTemaSchema,
-  createRepertorioByAlbumSchema,
+  repertorioIdSchema,  
   updateDepuracionSchema,
 } from '../services/validationSchemas';
 import { authenticate, authorizeRoles } from '../middlewares/auth';
@@ -41,22 +37,6 @@ router.post(
   authorizeRoles(['admin']),
   celebrate({ [Segments.BODY]: repertorioCreateSchema }),
   createRepertorio
-);
-
-router.post(
-  '/tema',
-  authenticate,
-  authorizeRoles(['usuario']),
-  celebrate({ [Segments.BODY]: createRepertorioByTemaSchema }),
-  createRepertorioByTema
-);
-
-router.post(
-  '/album',
-  authenticate,
-  authorizeRoles(['usuario']),
-  celebrate({ [Segments.BODY]: createRepertorioByAlbumSchema }),
-  createRepertorioByAlbum
 );
 
 router.put(

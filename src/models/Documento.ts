@@ -14,8 +14,8 @@ class Documento extends Model {
 Documento.init(
   {
     id_documento: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     nombre_documento: {
@@ -32,7 +32,7 @@ Documento.init(
       },
     },
     id_tipo_documento: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: TipoDocumento,
         key: 'id_tipo_documento',
@@ -54,7 +54,7 @@ Documento.init(
       },
     },
     id_tramite: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       references: {
         model: Tramite,
         key: 'id_tramite',

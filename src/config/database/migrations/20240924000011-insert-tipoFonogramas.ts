@@ -1,7 +1,7 @@
 'use strict';
 
 import { QueryInterface } from 'sequelize';
-import { v4 as uuidv4 } from 'uuid'; // Importar la función para generar UUID
+import { v4 as uuidv4 } from 'uuid';
 
 module.exports = {
   up: async (queryInterface: QueryInterface) => {

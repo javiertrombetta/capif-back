@@ -4,7 +4,7 @@ import { authenticate, authorizeRoles } from '../middlewares/auth';
 
 const router = express.Router();
 
-router.delete('/:id', authenticate, authorizeRoles(['admin', 'user']), deleteSesion);
-router.get('/', authenticate, authorizeRoles(['admin', 'user']), getSesiones);
+router.delete('/:id', authenticate, authorizeRoles(['admin']), deleteSesion);
+router.get('/', authenticate, authorizeRoles(['admin']), getSesiones);
 
 export default router;

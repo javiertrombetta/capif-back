@@ -6,7 +6,6 @@ import { createSchema, updateSchema, idSchema } from '../services/validationSche
 
 const router = express.Router();
 
-// Create a record
 router.post(
   '/:tipo',
   authenticate,
@@ -15,7 +14,6 @@ router.post(
   DBController.create
 );
 
-// Get all records
 router.get(
   '/:tipo',
   authenticate,
@@ -23,7 +21,6 @@ router.get(
   DBController.getAll
 );
 
-// Get a record by ID
 router.get(
   '/:tipo/:id',
   authenticate,
@@ -32,7 +29,6 @@ router.get(
   DBController.getById
 );
 
-// Update a record
 router.put(
   '/:tipo/:id',
   authenticate,
@@ -41,7 +37,6 @@ router.put(
   DBController.update
 );
 
-// Delete a record
 router.delete(
   '/:tipo/:id',
   authenticate,

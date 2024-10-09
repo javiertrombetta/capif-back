@@ -26,7 +26,7 @@ router.get('/', authenticate, authorizeRoles(['admin']), getRepertorios);
 router.get(
   '/:id',
   authenticate,
-  authorizeRoles(['admin']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: repertorioIdSchema }),
   getRepertorioById
 );
@@ -34,7 +34,7 @@ router.get(
 router.post(
   '/',
   authenticate,
-  authorizeRoles(['admin']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.BODY]: repertorioCreateSchema }),
   createRepertorio
 );
@@ -58,7 +58,7 @@ router.delete(
 router.get(
   '/:id/descargar',
   authenticate,
-  authorizeRoles(['admin']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: repertorioIdSchema }),
   downloadRepertorio
 );
@@ -73,6 +73,6 @@ router.put(
   updateRepertorioDepuracion
 );
 
-router.post('/lote-envio', authenticate, authorizeRoles(['admin']), generarLoteEnvio);
+router.post('/lote-envio', authenticate, authorizeRoles(['admin', 'productor']), generarLoteEnvio);
 
 export default router;

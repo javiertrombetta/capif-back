@@ -24,7 +24,7 @@ router.post(
 router.get(
   '/:id',
   authenticate,
-  authorizeRoles(['admin']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: userIdSchema }),
   getUserById
 );

@@ -43,7 +43,7 @@ router.post(
 router.post(
   '/',
   authenticate,
-  authorizeRoles(['productor']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.BODY]: createConflictoSchema }),
   createConflicto
 );
@@ -51,7 +51,7 @@ router.post(
 router.get(
   '/estado/:estado',
   authenticate,
-  authorizeRoles(['admin']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: estadoConflictoSchema }),
   getConflictosByEstado
 );
@@ -59,17 +59,12 @@ router.get(
 router.get(
   '/:id',
   authenticate,
-  authorizeRoles(['admin', 'productor']),
+  authorizeRoles(['admin']),
   celebrate({ [Segments.PARAMS]: conflictoIdSchema }),
   getConflictoById
 );
 
-router.get(
-  '/',
-  authenticate,
-  authorizeRoles(['productor']),
-  getConflictosByUser
-);
+router.get('/', authenticate, authorizeRoles(['admin', 'productor']), getConflictosByUser);
 
 router.put(
   '/:id/resolver',

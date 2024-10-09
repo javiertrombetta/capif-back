@@ -17,12 +17,12 @@ import {
 
 const router = express.Router();
 
-router.get('/consultas', authenticate, authorizeRoles(['admin', 'usuario']), getConsultas);
+router.get('/consultas', authenticate, authorizeRoles(['admin', 'productor']), getConsultas);
 
 router.get(
   '/consultas/:id',
   authenticate,
-  authorizeRoles(['admin', 'usuario']),
+  authorizeRoles(['admin']),
   celebrate({ [Segments.PARAMS]: getConsultaSchema }),
   getConsultaById
 );
@@ -30,7 +30,7 @@ router.get(
 router.post(
   '/consultas',
   authenticate,
-  authorizeRoles(['usuario']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.BODY]: createConsultaSchema }),
   createConsulta
 );
@@ -38,7 +38,7 @@ router.post(
 router.put(
   '/consultas/:id',
   authenticate,
-  authorizeRoles(['admin', 'usuario']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: getConsultaSchema, [Segments.BODY]: updateConsultaSchema }),
   updateConsulta
 );

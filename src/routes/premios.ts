@@ -8,17 +8,23 @@ import {
   deletePostulacion,
 } from '../controllers/premiosController';
 import { createPremioSchema, updatePremioSchema } from '../services/validationSchemas';
-import { authenticate } from '../middlewares/auth';
+import { authenticate, authorizeRoles } from '../middlewares/auth';
 
 const router = express.Router();
 
-router.get('/premios', authenticate, getAllPostulaciones);
+router.get('/premios', authenticate, authorizeRoles(['admin']), getAllPostulaciones);
 
-router.get('/premios/:id', authenticate, getPostulacionById);
+router.get(
+  '/premios/:id',
+  authorizeRoles(['admin', 'productor']),
+  authenticate,
+  getPostulacionById
+);
 
 router.post(
   '/premios',
   authenticate,
+  authorizeRoles(['admin']),
   celebrate({ [Segments.BODY]: createPremioSchema }),
   createPostulacion
 );
@@ -26,10 +32,16 @@ router.post(
 router.put(
   '/premios/:id',
   authenticate,
+  authorizeRoles(['admin']),
   celebrate({ [Segments.BODY]: updatePremioSchema }),
   updatePostulacion
 );
 
-router.delete('/premios/:id', authenticate, deletePostulacion);
+router.delete(
+  '/premios/:id',
+  authenticate,
+  authorizeRoles(['admin']),
+  deletePostulacion
+);
 
 export default router;

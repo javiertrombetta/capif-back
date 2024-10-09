@@ -14,11 +14,17 @@ import {
 
 const router = express.Router();
 
-router.get('/estado', authenticate, getEstadoCuentaCorriente);
+router.get(
+  '/estado',
+  authenticate,
+  authorizeRoles(['admin', 'productor']),
+  getEstadoCuentaCorriente
+);
 
 router.get(
   '/:id/pagos',
   authenticate,
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: userIdSchema }),
   getDetallePagos
 );

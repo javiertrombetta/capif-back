@@ -22,7 +22,7 @@ router.get('/reglas', authenticate, authorizeRoles(['admin']), getAllReglas);
 router.get(
   '/reglas/:id',
   authenticate,
-  authorizeRoles(['admin']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: companiaIdSchema }),
   getReglaById
 );

@@ -17,12 +17,12 @@ import { authenticate, authorizeRoles } from '../middlewares/auth';
 const router = express.Router();
 
 
-router.get('/', authenticate, authorizeRoles(['admin', 'user']), getAllProductores);
+router.get('/', authenticate, authorizeRoles(['admin']), getAllProductores);
 
 router.get(
   '/:id',
   authenticate,
-  authorizeRoles(['admin', 'user']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: companiaIdSchema }),
   getProductorById
 );

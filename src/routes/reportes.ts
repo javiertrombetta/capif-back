@@ -16,48 +16,41 @@ import {
 
 const router = express.Router();
 
-// Rutas para los reportes de ISRC
-
-// Obtener todos los reportes de ISRC (acceso restringido a roles específicos)
 router.get(
   '/reportes/isrc',
   authenticate,
-  authorizeRoles(['admin', 'usuario_productor']),
+  authorizeRoles(['admin', 'productor']),
   getISRCReportes
 );
 
-// Obtener un reporte específico de ISRC por su ID
 router.get(
   '/reportes/isrc/:id',
   authenticate,
-  authorizeRoles(['admin', 'usuario_productor']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: idReportSchema }),
   getISRCReporteById
 );
 
-// Generar un reporte de ISRC basado en el tipo y rango de fechas
 router.post(
   '/reportes/isrc',
   authenticate,
-  authorizeRoles(['admin']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.BODY]: createISRCReportSchema }),
   generateISRCReport
 );
 
-// Descargar un reporte de ISRC específico en formato CSV
 router.get(
   '/reportes/isrc/:id/descargar',
   authenticate,
-  authorizeRoles(['admin', 'usuario_productor']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.PARAMS]: idReportSchema }),
   downloadISRCReporte
 );
 
-// Rutas para otros reportes genéricos
 router.post(
   '/reportes/:tipoReporte',
   authenticate,
-  authorizeRoles(['admin']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.BODY]: generateReportByTypeSchema }),
   generateOtherReports
 );

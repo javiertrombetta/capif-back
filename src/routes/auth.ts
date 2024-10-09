@@ -68,7 +68,7 @@ router.post(
 router.post(
   '/change-password',
   authenticate,
-  authorizeRoles(['admin']),
+  authorizeRoles(['admin', 'productor']),
   celebrate({ [Segments.BODY]: changePasswordSchema }),
   changeUserPassword
 );

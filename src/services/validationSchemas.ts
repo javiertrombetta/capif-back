@@ -1,6 +1,14 @@
 import Joi from 'joi';
 import { VALIDATION_AUTH } from './messages';
 
+export const uuidSchema = Joi.string()
+  .guid({ version: ['uuidv4'] })
+  .required()
+  .messages({
+    'string.guid': '{#label} debe ser un UUID válido.',
+    'any.required': '{#label} es obligatorio.',
+  });
+
 export const registerSchema = Joi.object({
   email: Joi.string().email().required().messages(VALIDATION_AUTH.email),
   password: Joi.string().min(8).required().messages(VALIDATION_AUTH.password),
@@ -15,11 +23,19 @@ export const registerSchema = Joi.object({
     .regex(/^[0-9]{11}$/)
     .required()
     .messages(VALIDATION_AUTH.cuit),
-  tipo_persona_id: Joi.number().integer().required().messages(VALIDATION_AUTH.tipo_persona_id),
+  tipo_persona_descripcion: Joi.string().required().messages({
+    'any.required': 'La descripción del tipo de persona es obligatoria.',
+  }),
   domicilio: Joi.string().max(200).allow(null, '').messages(VALIDATION_AUTH.domicilio),
-  ciudad: Joi.string().required().messages(VALIDATION_AUTH.ciudad),
-  provincia: Joi.string().required().messages(VALIDATION_AUTH.provincia),
-  pais: Joi.string().required().messages(VALIDATION_AUTH.pais),
+  ciudad: Joi.string().min(2).max(100).required().messages(VALIDATION_AUTH.ciudad),
+  provincia: Joi.string().min(2).max(100).required().messages(VALIDATION_AUTH.provincia),
+  pais: Joi.string().min(2).max(100).required().messages(VALIDATION_AUTH.pais),
+  codigo_postal: Joi.string()
+    .min(4)
+    .max(10)
+    .regex(/^[0-9A-Za-z\s-]+$/)
+    .required()
+    .messages(VALIDATION_AUTH.codigo_postal),
   telefono: Joi.string()
     .max(50)
     .regex(/^[0-9\-+() ]+$/)
@@ -46,17 +62,11 @@ export const validateEmailSchema = Joi.object({
 });
 
 export const authorizeProducerSchema = Joi.object({
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
+  id_usuario: uuidSchema,
 });
 
 export const blockUserSchema = Joi.object({
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
+  id_usuario: uuidSchema,
   bloquear: Joi.boolean().required().messages({
     'boolean.base': 'El valor para bloquear debe ser verdadero o falso.',
     'any.required': 'El valor para bloquear es obligatorio.',
@@ -64,10 +74,7 @@ export const blockUserSchema = Joi.object({
 });
 
 export const changeRoleSchema = Joi.object({
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
+  id_usuario: uuidSchema,
   nuevo_rol: Joi.string().required().messages({
     'string.base': 'El rol debe ser un texto válido.',
     'any.required': 'El nuevo rol es obligatorio.',
@@ -75,13 +82,13 @@ export const changeRoleSchema = Joi.object({
 });
 
 export const changePasswordSchema = Joi.object({
-  id_usuario: Joi.number().required(),
+  id_usuario: uuidSchema,
   newPassword: Joi.string().min(8).required(),
   confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required(),
 });
 
 export const deleteUserSchema = Joi.object({
-  id_usuario: Joi.number().required(),
+  id_usuario: uuidSchema,
 });
 
 export const userCreateSchema = Joi.object({
@@ -94,13 +101,13 @@ export const userCreateSchema = Joi.object({
     .messages(VALIDATION_AUTH.apellido),
   email: Joi.string().email().required().messages(VALIDATION_AUTH.email),
   clave: Joi.string().min(8).required().messages(VALIDATION_AUTH.password),
-  rol_id: Joi.number().integer().required(),
-  estado_id: Joi.number().integer().required(),
+  rol_id: uuidSchema,
+  estado_id: uuidSchema,
   cuit: Joi.string()
     .regex(/^[0-9]{11}$/)
     .required()
     .messages(VALIDATION_AUTH.cuit),
-  tipo_persona_id: Joi.number().integer().required().messages(VALIDATION_AUTH.tipo_persona_id),
+  tipo_persona_id: uuidSchema.messages(VALIDATION_AUTH.tipo_persona_id),
   domicilio: Joi.string().max(200).allow(null, '').messages(VALIDATION_AUTH.domicilio),
   ciudad: Joi.string().required().messages(VALIDATION_AUTH.ciudad),
   provincia: Joi.string().required().messages(VALIDATION_AUTH.provincia),
@@ -121,12 +128,12 @@ export const userUpdateSchema = Joi.object({
     .messages(VALIDATION_AUTH.apellido),
   email: Joi.string().email().messages(VALIDATION_AUTH.email),
   clave: Joi.string().min(8).messages(VALIDATION_AUTH.password),
-  rol_id: Joi.number().integer(),
-  estado_id: Joi.number().integer(),
+  rol_id: uuidSchema,
+  estado_id: uuidSchema,
   cuit: Joi.string()
     .regex(/^[0-9]{11}$/)
     .messages(VALIDATION_AUTH.cuit),
-  tipo_persona_id: Joi.number().integer().messages(VALIDATION_AUTH.tipo_persona_id),
+  tipo_persona_id: uuidSchema.messages(VALIDATION_AUTH.tipo_persona_id),
   domicilio: Joi.string().max(200).allow(null, '').messages(VALIDATION_AUTH.domicilio),
   ciudad: Joi.string().messages(VALIDATION_AUTH.ciudad),
   provincia: Joi.string().messages(VALIDATION_AUTH.provincia),
@@ -139,10 +146,7 @@ export const userUpdateSchema = Joi.object({
 });
 
 export const userIdSchema = Joi.object({
-  id: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
+  id: uuidSchema,
 });
 
 export const createConsultaSchema = Joi.object({
@@ -154,13 +158,8 @@ export const createConsultaSchema = Joi.object({
   mensaje: Joi.string().required().messages({
     'any.required': 'El mensaje es obligatorio.',
   }),
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
-  estado_id: Joi.number().integer().optional().messages({
-    'number.base': 'El estado debe ser un número entero.',
-  }),
+  id_usuario: uuidSchema,
+  estado_id: uuidSchema,
 });
 
 export const updateConsultaSchema = Joi.object({
@@ -171,33 +170,20 @@ export const updateConsultaSchema = Joi.object({
   mensaje: Joi.string().optional().messages({
     'string.empty': 'El mensaje no puede estar vacío.',
   }),
-  id_usuario: Joi.number().integer().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-  }),
-  estado_id: Joi.number().integer().optional().messages({
-    'number.base': 'El estado debe ser un número entero.',
-  }),
+  id_usuario: uuidSchema,
+  estado_id: uuidSchema,
 });
 
 export const getConsultaSchema = Joi.object({
-  id: Joi.number().integer().required().messages({
-    'number.base': 'El ID de la consulta debe ser un número entero.',
-    'any.required': 'El ID de la consulta es obligatorio.',
-  }),
+  id: uuidSchema,
 });
 
 export const deleteConsultaSchema = Joi.object({
-  id: Joi.number().integer().required().messages({
-    'number.base': 'El ID de la consulta debe ser un número entero.',
-    'any.required': 'El ID de la consulta es obligatorio.',
-  }),
+  id: uuidSchema,
 });
 
 export const archivoCreateSchema = Joi.object({
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
+  id_usuario: uuidSchema,
   nombre_archivo: Joi.string().max(150).required().messages({
     'string.max': 'El nombre del archivo no debe exceder los 150 caracteres.',
     'any.required': 'El nombre del archivo es obligatorio.',
@@ -226,17 +212,11 @@ export const archivoUpdateSchema = Joi.object({
 });
 
 export const archivoIdSchema = Joi.object({
-  id: Joi.number().integer().required().messages({
-    'number.base': 'El ID del archivo debe ser un número entero.',
-    'any.required': 'El ID del archivo es obligatorio.',
-  }),
+  id: uuidSchema,
 });
 
 export const createConflictoSchema = Joi.object({
-  id_fonograma: Joi.number().integer().required().messages({
-    'number.base': 'El ID del fonograma debe ser un número entero.',
-    'any.required': 'El ID del fonograma es obligatorio.',
-  }),
+  id_fonograma: uuidSchema,
   tipo_conflicto: Joi.string().min(3).max(100).required().messages({
     'string.min': 'El tipo de conflicto debe tener al menos 3 caracteres.',
     'string.max': 'El tipo de conflicto no debe exceder los 100 caracteres.',
@@ -246,10 +226,7 @@ export const createConflictoSchema = Joi.object({
 });
 
 export const conflictoIdSchema = Joi.object({
-  id: Joi.number().integer().required().messages({
-    'number.base': 'El ID del conflicto debe ser un número entero.',
-    'any.required': 'El ID del conflicto es obligatorio.',
-  }),
+  id: uuidSchema,
 });
 
 export const estadoConflictoSchema = Joi.object({
@@ -277,10 +254,7 @@ export const decisionSchema = Joi.object({
 });
 
 export const involucradoIdSchema = Joi.object({
-  id_involucrado: Joi.number().integer().required().messages({
-    'number.base': 'El ID del involucrado debe ser un número entero.',
-    'any.required': 'El ID del involucrado es obligatorio.',
-  }),
+  id_involucrado: uuidSchema,
 });
 
 export const updateSaldoSchema = Joi.object({
@@ -301,10 +275,7 @@ export const createPagoSchema = Joi.object({
     'date.base': 'La fecha de pago debe ser una fecha válida.',
     'any.required': 'La fecha de pago es obligatoria.',
   }),
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
+  id_usuario: uuidSchema,
   metodo_pago: Joi.string().max(50).optional().messages({
     'string.max': 'El método de pago no debe exceder los 50 caracteres.',
   }),
@@ -330,10 +301,7 @@ export const updatePagoSchema = Joi.object({
 });
 
 export const createPremioSchema = Joi.object({
-  id_compania: Joi.number().integer().required().messages({
-    'number.base': 'El ID de la compañía debe ser un número entero.',
-    'any.required': 'El ID de la compañía es obligatorio.',
-  }),
+  id_compania: uuidSchema,
   codigo_postulacion: Joi.string().max(50).required().messages({
     'string.max': 'El código de postulación no debe exceder los 50 caracteres.',
     'any.required': 'El código de postulación es obligatorio.',
@@ -380,14 +348,8 @@ export const companiaCreateSchema = Joi.object({
       'string.pattern.base': 'El CUIT debe contener exactamente 11 dígitos numéricos.',
       'any.required': 'El CUIT es obligatorio.',
     }),
-  tipo_compania_id: Joi.number().integer().required().messages({
-    'number.base': 'El tipo de compañía debe ser un número entero.',
-    'any.required': 'El tipo de compañía es obligatorio.',
-  }),
-  estado_id: Joi.number().integer().required().messages({
-    'number.base': 'El estado debe ser un número entero.',
-    'any.required': 'El estado es obligatorio.',
-  }),
+  tipo_compania_id: uuidSchema,
+  estado_id: uuidSchema,
 });
 
 export const companiaUpdateSchema = Joi.object({
@@ -415,19 +377,12 @@ export const companiaUpdateSchema = Joi.object({
     .messages({
       'string.pattern.base': 'El CUIT debe contener exactamente 11 dígitos numéricos.',
     }),
-  tipo_compania_id: Joi.number().integer().messages({
-    'number.base': 'El tipo de compañía debe ser un número entero.',
-  }),
-  estado_id: Joi.number().integer().messages({
-    'number.base': 'El estado debe ser un número entero.',
-  }),
+  tipo_compania_id: uuidSchema,
+  estado_id: uuidSchema,
 });
 
 export const companiaIdSchema = Joi.object({
-  id: Joi.number().integer().required().messages({
-    'number.base': 'El ID de la compañía debe ser un número entero.',
-    'any.required': 'El ID de la compañía es obligatorio.',
-  }),
+  id: uuidSchema,
 });
 
 export const reglaCreateSchema = Joi.object({
@@ -461,10 +416,7 @@ export const repertorioCreateSchema = Joi.object({
     'any.only': 'El tipo debe ser uno de los siguientes: Música, Literatura, Cine, Otro.',
     'any.required': 'El tipo es obligatorio.',
   }),
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
+  id_usuario: uuidSchema,
   estado: Joi.string().min(3).max(50).required().messages({
     'string.min': 'El estado debe tener al menos 3 caracteres.',
     'string.max': 'El estado no debe exceder los 50 caracteres.',
@@ -480,9 +432,7 @@ export const repertorioUpdateSchema = Joi.object({
   tipo: Joi.string().valid('Música', 'Literatura', 'Cine', 'Otro').messages({
     'any.only': 'El tipo debe ser uno de los siguientes: Música, Literatura, Cine, Otro.',
   }),
-  id_usuario: Joi.number().integer().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-  }),
+  id_usuario: uuidSchema,
   estado: Joi.string().min(3).max(50).messages({
     'string.min': 'El estado debe tener al menos 3 caracteres.',
     'string.max': 'El estado no debe exceder los 50 caracteres.',
@@ -490,10 +440,7 @@ export const repertorioUpdateSchema = Joi.object({
 });
 
 export const repertorioIdSchema = Joi.object({
-  id: Joi.number().integer().required().messages({
-    'number.base': 'El ID del repertorio debe ser un número entero.',
-    'any.required': 'El ID del repertorio es obligatorio.',
-  }),
+  id: uuidSchema,
 });
 
 export const updateDepuracionSchema = Joi.object({
@@ -527,10 +474,7 @@ export const createISRCReportSchema = Joi.object({
 });
 
 export const idReportSchema = Joi.object({
-  id: Joi.number().integer().required().messages({
-    'number.base': 'El ID del reporte debe ser un número entero.',
-    'any.required': 'El ID del reporte es obligatorio.',
-  }),
+  id: uuidSchema,
 });
 
 export const generateReportByTypeSchema = Joi.object({
@@ -558,10 +502,7 @@ export const createTramiteSchema = Joi.object({
     'any.only': 'El estado debe ser "pendiente", "en proceso" o "completado".',
     'any.required': 'El estado es obligatorio.',
   }),
-  id_usuario: Joi.number().integer().required().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-    'any.required': 'El ID del usuario es obligatorio.',
-  }),
+  id_usuario: uuidSchema,
 });
 
 export const updateTramiteSchema = Joi.object({
@@ -576,13 +517,11 @@ export const updateTramiteSchema = Joi.object({
   estado: Joi.string().valid('pendiente', 'en proceso', 'completado').messages({
     'any.only': 'El estado debe ser "pendiente", "en proceso" o "completado".',
   }),
-  id_usuario: Joi.number().integer().messages({
-    'number.base': 'El ID del usuario debe ser un número entero.',
-  }),
+  id_usuario: uuidSchema,
 });
 
 export const createSchema = Joi.object({
-  id_usuario: Joi.number().integer().required(),
+  id_usuario: uuidSchema,
   nombre_archivo: Joi.string().max(150).required(),
   ruta_archivo: Joi.string().max(255).required(),
   tipo_archivo: Joi.string().max(50).required(),
@@ -595,5 +534,5 @@ export const updateSchema = Joi.object({
 });
 
 export const idSchema = Joi.object({
-  id: Joi.number().integer().required(),
+  id: uuidSchema,
 });

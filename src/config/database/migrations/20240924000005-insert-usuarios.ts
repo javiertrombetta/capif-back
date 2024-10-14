@@ -28,27 +28,28 @@ module.exports = {
     );
 
      await queryInterface.bulkInsert('Usuario', [
-      {
-        id_usuario: uuidv4(),
-        nombre: 'Admin',
-        apellido: 'User',
-        email: 'admin@c.com',
-        clave: hashedAdminPassword,
-        rol_id: adminRole[0].id_rol,
-        fecha_registro: new Date(),
-        estado_id: authorizedState[0].id_estado,
-        cuit: '20304050607',
-        tipo_persona_id: personaFisicaType[0].id_tipo_persona,
-        domicilio: 'Admin Address',
-        ciudad: 'Buenos Aires',
-        provincia: 'Buenos Aires',
-        pais: 'Argentina',
-        telefono: '123456789',
-        isRegistro_pendiente: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ]);
+       {
+         id_usuario: uuidv4(),
+         nombre: 'Admin',
+         apellido: 'User',
+         email: 'admin@c.com',
+         clave: hashedAdminPassword,
+         rol_id: adminRole[0].id_rol,
+         fecha_registro: new Date(),
+         estado_id: authorizedState[0].id_estado,
+         cuit: '20304050607',
+         tipo_persona_id: personaFisicaType[0].id_tipo_persona,
+         domicilio: 'Admin Address',
+         ciudad: 'Buenos Aires',
+         provincia: 'Buenos Aires',
+         pais: 'Argentina',
+         codigo_postal: '1414',
+         telefono: '123456789',
+         isRegistro_pendiente: false,
+         createdAt: new Date(),
+         updatedAt: new Date(),
+       },
+     ]);
 
     await queryInterface.bulkInsert('Usuario', [
       {
@@ -66,6 +67,7 @@ module.exports = {
         ciudad: 'Buenos Aires',
         provincia: 'Buenos Aires',
         pais: 'Argentina',
+        codigo_postal: '1414',
         telefono: '987654321',
         isRegistro_pendiente: false,
         createdAt: new Date(),

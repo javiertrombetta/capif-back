@@ -14,6 +14,7 @@ import { sendEmail } from '../services/emailService';
 import { findUsuarioByEmail, findUsuarioById } from '../services/userService';
 import { findRolByDescripcion } from '../services/roleService';
 import { findEstadoByDescripcion } from '../services/stateService';
+import { findTipoPersonaByDescripcion } from '../services/tipoPersonaService'; 
 import { hashPassword, verifyPassword } from '../services/validationsService';
 import * as Err from '../services/customErrors';
 
@@ -76,7 +77,7 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
       nombre,
       apellido,
       cuit,
-      tipo_persona_id,
+      tipo_persona_descripcion,
       domicilio,
       ciudad,
       provincia,
@@ -101,6 +102,11 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
       throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
     }
 
+    const tipoPersona = await findTipoPersonaByDescripcion(tipo_persona_descripcion);
+    if (!tipoPersona) {
+      return res.status(404).json({ message: 'Tipo de persona no encontrado.' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await Usuario.create({
       email,
@@ -108,7 +114,7 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
       nombre,
       apellido,
       cuit,
-      tipo_persona_id,
+      tipo_persona_id: tipoPersona.id_tipo_persona,
       domicilio,
       ciudad,
       provincia,

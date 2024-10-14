@@ -97,27 +97,85 @@ export const authSchemas = {
     required: ['email', 'password'],
   },
   Register: {
-    title: 'Autenticación - Registro',
+    title: 'Autenticación - Registro de Usuario',
     type: 'object',
     properties: {
       email: {
         type: 'string',
         format: 'email',
         description: 'Correo electrónico del nuevo usuario',
-        example: 'nuevo.usuario@example.com',
+        example: 'usuario@example.com',
       },
       password: {
         type: 'string',
         description: 'Contraseña del nuevo usuario',
-        example: 'securePassword!',
+        example: 'ClaveSegura123!',
       },
-      role: {
+      nombre: {
         type: 'string',
-        description: 'Rol asignado al usuario',
-        example: 'productor',
+        description: 'Nombre del usuario',
+        example: 'Juan',
+      },
+      apellido: {
+        type: 'string',
+        description: 'Apellido del usuario',
+        example: 'Pérez',
+      },
+      cuit: {
+        type: 'string',
+        description: 'CUIT del usuario',
+        example: '20123456789',
+      },
+      tipo_persona_descripcion: {
+        type: 'string',
+        description: 'Tipo de Entidad',
+        example: 'Persona Física',
+      },
+      domicilio: {
+        type: 'string',
+        description: 'Domicilio del usuario',
+        example: 'Calle Falsa 123',
+      },
+      ciudad: {
+        type: 'string',
+        description: 'Ciudad del usuario',
+        example: 'Buenos Aires',
+      },
+      provincia: {
+        type: 'string',
+        description: 'Provincia del usuario',
+        example: 'Buenos Aires',
+      },
+      pais: {
+        type: 'string',
+        description: 'País del usuario',
+        example: 'Argentina',
+      },
+      codigo_postal: {
+        type: 'string',
+        description: 'Código postal del usuario',
+        example: '1414',
+      },
+      telefono: {
+        type: 'string',
+        description: 'Teléfono del usuario',
+        example: '+54 9 11 1234-5678',
       },
     },
-    required: ['email', 'password', 'role'],
+    required: [
+      'email',
+      'password',
+      'nombre',
+      'apellido',
+      'cuit',
+      'tipo_persona_id',
+      'domicilio',
+      'ciudad',
+      'provincia',
+      'pais',
+      'codigo_postal',
+      'telefono',
+    ],
   },
   RecoverPassword: {
     title: 'Autenticación - Mail de recuperación de clave (envío)',

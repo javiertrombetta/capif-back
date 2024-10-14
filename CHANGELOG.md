@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.10 - 14-10-2024
+## 🐛 Fixes
+
+- fix: compose
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.7
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.7 - 09-10-2024
 ## 🚀 Features
 

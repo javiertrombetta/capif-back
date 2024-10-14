@@ -2,7 +2,14 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
 
-import { archivoSchemas } from './schemas';
+import {
+  archivoSchemas,
+  authSchemas,
+  conflictoSchemas,
+  consultaSchemas,
+  cuentaCorrienteSchemas,
+  dbSchemas,
+} from './schemas';
 import packageJson from '../../package.json';
 
 const DOMAIN = process.env.FRONTEND_URL;
@@ -26,7 +33,21 @@ const swaggerOptions = {
       },
     },
     components: {
-      schemas: archivoSchemas,
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+      schemas: {
+        ...archivoSchemas,
+        ...authSchemas,
+        ...conflictoSchemas,
+        ...consultaSchemas,
+        ...cuentaCorrienteSchemas,
+        ...dbSchemas,
+      },
     },
     servers: [
       {
@@ -39,13 +60,32 @@ const swaggerOptions = {
 
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 
-export const setupSwagger = (app: Express) => {   
-    app.use(
-        '/docs',
-        swaggerUi.serve,
-        swaggerUi.setup(swaggerDocs, {
-        customSiteTitle: 'CAPIF RestAPI',
-        customCss: '.swagger-ui .topbar { display: none }',
-        })
-    );
+export const setupSwagger = (app: Express) => {
+  app.use(
+    '/docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocs, {
+      customSiteTitle: 'CAPIF RestAPI',
+      customCss: '.swagger-ui .topbar { display: none }',
+      swaggerOptions: {
+        docExpansion: 'none',
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha',
+        requestInterceptor: (request: any) => {
+          const token = localStorage.getItem('jwtToken');
+          if (token) {
+            request.headers['Authorization'] = `Bearer ${token}`;
+          }
+          return request;
+        },
+        responseInterceptor: (response: any) => {
+          if (response.config?.url?.includes('/auth/login') && response.status === 200) {
+            const token = response.data.token;
+            localStorage.setItem('jwtToken', token);
+          }
+          return response;
+        },
+      },
+    })
+  );
 };

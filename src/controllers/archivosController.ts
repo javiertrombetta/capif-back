@@ -19,6 +19,9 @@ export const getArchivosByRole = async (
     const userId =
       req.user && typeof req.user === 'object' && 'id' in req.user ? req.user.id : null;
     if (!userId) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - ID de usuario no encontrado en la solicitud.`
+      );
       next(new BadRequestError(MESSAGES.ERROR.USER.NOT_FOUND));
       return;
     }
@@ -27,6 +30,7 @@ export const getArchivosByRole = async (
 
     const usuario = await findUsuarioById(userId);
     if (!usuario) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
       next(new NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
       return;
     }
@@ -42,6 +46,9 @@ export const getArchivosByRole = async (
         where: { id_usuario: usuario.id_usuario },
       });
     } else {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Usuario no autorizado para acceder a los archivos.`
+      );
       res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
       return;
     }
@@ -72,6 +79,7 @@ export const createArchivo = async (
 
     const tipoArchivoExists = await TipoArchivo.findOne({ where: { descripcion: tipo_archivo } });
     if (!tipoArchivoExists) {
+      logger.warn(`${req.method} ${req.originalUrl} - Tipo de archivo inválido.`);
       throw new BadRequestError(MESSAGES.ERROR.GENERAL.INVALID_FILE_TYPE);
     }
 

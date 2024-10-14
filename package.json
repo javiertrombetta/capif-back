@@ -14,7 +14,7 @@
     "prod.local:up": "docker compose --env-file .env.prod.local -f compose.prod.local.yml up --build -d",
     "prod.local:down": "docker compose --env-file .env.prod.local -f compose.prod.local.yml down -v && docker rmi javiertrombetta/capif-back:latest",
     "prod.local": "npm run prod.local:down && npm run prod.local:up",
-    "dev": "NODE_ENV=development npm run dev.compose:down && npm run clean:dist && npm run clean:postgres && npm run dev.compose:up && npm run build && npm run init && nodemon --watch src --exec ts-node src/app.ts",
+    "dev": "NODE_ENV=development npm run dev.compose:down && npm run clean:dist && npm run dev.compose:up && npm run build && npm run init && nodemon --watch src --exec ts-node src/app.ts",
     "test": "echo \"No tests defined yet\""
   },
   "keywords": [],

@@ -196,6 +196,10 @@ module.exports = {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
+      codigo_postal: {
+        type: DataTypes.STRING(20),
+        allowNull: false,        
+      },
       telefono: {
         type: DataTypes.STRING(50),
       },

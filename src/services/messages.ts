@@ -244,6 +244,10 @@ export const VALIDATION_AUTH = {
   pais: {
     'any.required': 'El país es obligatorio.',
   },
+  codigo_postal: {
+    'string.pattern.base': 'El código postal tiene un formato inválido.',
+    'any.required': 'El código postal es obligatorio.',
+  },
   telefono: {
     'string.max': 'El teléfono no debe exceder los 50 caracteres.',
     'string.pattern.base':

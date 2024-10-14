@@ -17,6 +17,13 @@ const router = express.Router();
 
 /**
  * @swagger
+ * tags:
+ *   name: Archivos
+ *   description: Gestión de archivos cargados por los usuarios
+ */
+
+/**
+ * @swagger
  * /archivos:
  *   post:
  *     summary: Crear un nuevo archivo

@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.16 - 17-10-2024
+## 🐛 Fixes
+
+- fix: mailing service
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.13
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.13 - 14-10-2024
 ## 🐛 Fixes
 

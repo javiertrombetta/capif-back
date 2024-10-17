@@ -11,11 +11,11 @@ module.exports = {
 
     const tipoEstadoRegistro = (await queryInterface.sequelize.query(
       `SELECT id_tipo_estado FROM "TipoEstado" WHERE descripcion = 'registro';`
-    )) as [{ id_tipo_estado: number }[], unknown];
+    )) as [{ id_tipo_estado: string }[], unknown];
 
     const tipoEstadoAcceso = (await queryInterface.sequelize.query(
       `SELECT id_tipo_estado FROM "TipoEstado" WHERE descripcion = 'acceso';`
-    )) as [{ id_tipo_estado: number }[], unknown];
+    )) as [{ id_tipo_estado: string }[], unknown];
 
     await queryInterface.bulkInsert('Estado', [
       {

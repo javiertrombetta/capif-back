@@ -1,12 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcrypt';
 import logger from '../config/logger';
 
 import {
   findUsuariosByFilters,
   createUsuario,
   findUsuarioById,
+  findUsuarioByEmail,
   updateUsuarioById,
   deleteUsuarioById,
+  findRolByDescripcion,
+  findEstadoByDescripcion,
+  findTipoPersonaByDescripcion,
 } from '../services/userService';
 import { NotFoundError, BadRequestError, InternalServerError } from '../services/customErrors';
 import * as MESSAGES from '../services/messages';
@@ -60,25 +65,88 @@ export const createUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { nombre, apellido, email, clave, rol_id, estado_id, cuit, tipo_persona_id } = req.body;
+    const {
+      nombre,
+      apellido,
+      email,
+      password,
+      rol,
+      estado,
+      cuit,
+      tipo_persona,
+      domicilio,
+      ciudad,
+      provincia,
+      pais,
+      codigo_postal,
+      telefono,
+    } = req.body;
 
-    logger.info('POST /users - Request received to create user', { nombre, email, rol_id });
+    logger.info('POST /users - Request received to create user', { nombre, email, rol });
 
     if (
       !nombre ||
       !apellido ||
       !email ||
-      !clave ||
-      !rol_id ||
-      !estado_id ||
+      !password ||
+      !rol ||
+      !estado ||
       !cuit ||
-      !tipo_persona_id
+      !tipo_persona ||
+      !ciudad ||
+      !provincia ||
+      !pais ||
+      !codigo_postal
     ) {
       logger.warn('POST /users - Bad request, missing required fields');
       return next(new BadRequestError(MESSAGES.ERROR.VALIDATION.GENERAL));
     }
 
-    const newUser = await createUsuario(req.body);
+    const existingUser = await findUsuarioByEmail(email);
+    if (existingUser) {
+      logger.warn('POST /users - Email already registered');
+      return next(new BadRequestError(MESSAGES.ERROR.USER.ALREADY_REGISTERED));
+    }
+
+    const [rolObj, estadoObj, tipoPersonaObj] = await Promise.all([
+      findRolByDescripcion(rol),
+      findEstadoByDescripcion(estado),
+      findTipoPersonaByDescripcion(tipo_persona),
+    ]);
+
+    if (!rolObj) {
+      logger.warn('POST /users - Invalid role');
+      return next(new BadRequestError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID));
+    }
+    if (!estadoObj) {
+      logger.warn('POST /users - Invalid state');
+      return next(new BadRequestError(MESSAGES.ERROR.VALIDATION.STATE_INVALID));
+    }
+    if (!tipoPersonaObj) {
+      logger.warn('POST /users - Invalid person type');
+      return next(new BadRequestError(MESSAGES.ERROR.VALIDATION.INVALID_USER_TYPE));
+    }
+
+    const hashedClave = await bcrypt.hash(password, 10);
+
+    const newUserData = {
+      nombre,
+      apellido,
+      email,
+      clave: hashedClave,
+      rol_id: rolObj.id_rol,
+      estado_id: estadoObj.id_estado,
+      cuit,
+      tipo_persona_id: tipoPersonaObj.id_tipo_persona,
+      domicilio,
+      ciudad,
+      provincia,
+      pais,
+      codigo_postal,
+      telefono,
+    };
+
+    const newUser = await createUsuario(newUserData);
 
     logger.info(`POST /users - Successfully created user with ID: ${newUser.id_usuario}`);
     res.status(201).json({ message: MESSAGES.SUCCESS.AUTH.REGISTER, newUser });
@@ -99,7 +167,7 @@ export const getUserById = async (
     const { id } = req.params;
     logger.info(`GET /users/${id} - Request received`);
 
-    const user = await findUsuarioById(Number(id));
+    const user = await findUsuarioById(id);
     if (!user) {
       logger.warn(`GET /users/${id} - User not found`);
       return next(new NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
@@ -122,21 +190,23 @@ export const updateUser = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    logger.info(`PUT /users/${id} - Request received to update user`);
+    const { id_usuario } = req.params;
+    logger.info(`PUT /users/${id_usuario} - Request received to update user`);
 
-    const updatedUser = await updateUsuarioById(Number(id), req.body);
+    const updatedUser = await updateUsuarioById(id_usuario, req.body);
     if (!updatedUser) {
-      logger.warn(`PUT /users/${id} - User not found`);
+      logger.warn(`PUT /users/${id_usuario} - User not found`);
       return next(new NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
 
-    logger.info(`PUT /users/${id} - Successfully updated user`);
+    logger.info(`PUT /users/${id_usuario} - Successfully updated user`);
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED, updatedUser });
   } catch (error) {
-    const { id } = req.params;
+    const { id_usuario } = req.params;
     logger.error(
-      `PUT /users/${id} - Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `PUT /users/${id_usuario} - Error: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`
     );
     next(new InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
   }
@@ -151,7 +221,7 @@ export const deleteUser = async (
     const { id } = req.params;
     logger.info(`DELETE /users/${id} - Request received to delete user`);
 
-    const result = await deleteUsuarioById(Number(id));
+    const result = await deleteUsuarioById(id);
     if (!result) {
       logger.warn(`DELETE /users/${id} - User not found`);
       return next(new NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));

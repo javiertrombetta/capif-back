@@ -5,12 +5,12 @@ import TipoActividad from './TipoActividad';
 import TipoNavegador from './TipoNavegador';
 
 class LogActividad extends Model {
-  public id_log!: number;
-  public id_tipo_actividad!: number;
+  public id_log!: string;
+  public id_tipo_actividad!: string;
   public fecha!: Date;
-  public id_usuario!: number;
+  public id_usuario!: string;
   public ip_origen!: string;
-  public id_tipo_navegador!: number;
+  public id_tipo_navegador!: string;
 }
 
 LogActividad.init(

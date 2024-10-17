@@ -5,15 +5,15 @@ import Estado from './Estado';
 import TipoPersona from './TipoPersona';
 
 class Usuario extends Model {
-  public id_usuario!: number;
+  public id_usuario!: string;
   public nombre!: string;
   public apellido!: string;
   public email!: string;
   public clave!: string;
-  public rol_id!: number;
-  public estado_id!: number;
+  public rol_id!: string;
+  public estado_id!: string;
   public cuit!: string;
-  public tipo_persona_id!: number;
+  public tipo_persona_id!: string;
   public domicilio?: string;
   public ciudad!: string;
   public provincia!: string;

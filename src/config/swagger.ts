@@ -9,6 +9,7 @@ import {
   consultaSchemas,
   cuentaCorrienteSchemas,
   dbSchemas,
+  userSchemas,
 } from './schemas';
 import packageJson from '../../package.json';
 
@@ -47,6 +48,7 @@ const swaggerOptions = {
         ...consultaSchemas,
         ...cuentaCorrienteSchemas,
         ...dbSchemas,
+        ...userSchemas,
       },
     },
     servers: [

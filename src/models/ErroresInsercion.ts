@@ -2,7 +2,7 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class ErroresInsercion extends Model {
-  public id_error!: number;
+  public id_error!: string;
   public tabla_afectada!: string;
   public descripcion_error!: string;
 }

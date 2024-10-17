@@ -4,14 +4,14 @@ import TipoCompania from './TipoCompania';
 import Estado from './Estado';
 
 class Compania extends Model {
-  public id_compania!: number;
+  public id_compania!: string;
   public nombre_compania!: string;
   public direccion!: string | null;
   public telefono!: string | null;
   public email!: string | null;
   public cuit!: string;
-  public estado_id!: number;
-  public tipo_compania_id!: number;
+  public estado_id!: string;
+  public tipo_compania_id!: string;
 }
 
 Compania.init(

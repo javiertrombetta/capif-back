@@ -7,15 +7,15 @@ import TitularFonograma from './TitularFonograma';
 import TipoFonograma from './TipoFonograma';
 
 class Fonograma extends Model {
-  public id_fonograma!: number;
-  public id_repertorio!: number;
+  public id_fonograma!: string;
+  public id_repertorio!: string;
   public titulo!: string;
   public artista!: string;
   public duracion!: string;
   public fecha_lanzamiento!: Date;
-  public id_tipo_fonograma!: number;
-  public estado_id!: number;
-  public id_isrc!: number | null;
+  public id_tipo_fonograma!: string;
+  public estado_id!: string;
+  public id_isrc!: string | null;
   public TitularFonogramas?: TitularFonograma[];
 }
 

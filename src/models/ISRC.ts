@@ -4,10 +4,10 @@ import Fonograma from './Fonograma';
 import TipoISRC from './TipoISRC';
 
 class ISRC extends Model {
-  public id_isrc!: number;
+  public id_isrc!: string;
   public codigo_isrc!: string;
-  public id_tipo_isrc!: number;
-  public id_fonograma!: number;
+  public id_tipo_isrc!: string;
+  public id_fonograma!: string;
 }
 
 ISRC.init(

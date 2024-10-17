@@ -6,7 +6,7 @@ export interface UserWithRelations extends Usuario {
   };
   Estado: {
     descripcion: string;
-    tipo_estado_id: number;
+    tipo_estado_id: string;
   };
   TipoPersona: {
     descripcion: string;

@@ -3,10 +3,10 @@ import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 
 class Sesion extends Model {
-  public id_sesion!: number;
+  public id_sesion!: string;
   public fecha_inicio!: Date;
   public fecha_fin!: Date | null;
-  public id_usuario!: number;
+  public id_usuario!: string;
   public ip!: string;
 }
 

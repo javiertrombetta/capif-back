@@ -2,7 +2,7 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class TipoISRC extends Model {
-  public id_tipo_isrc!: number;
+  public id_tipo_isrc!: string;
   public descripcion!: string;
 }
 

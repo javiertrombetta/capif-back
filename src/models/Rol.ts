@@ -2,7 +2,7 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class Rol extends Model {
-  public id_rol!: number;
+  public id_rol!: string;
   public descripcion!: string;
 }
 

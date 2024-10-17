@@ -4,9 +4,9 @@ import Fonograma from './Fonograma';
 import Compania from './Compania';
 
 class TitularFonograma extends Model {
-  public id_titular_fonograma!: number;
-  public id_fonograma!: number;
-  public id_titular!: number;
+  public id_titular_fonograma!: string;
+  public id_fonograma!: string;
+  public id_titular!: string;
   public fecha_inicio!: Date;
   public fecha_hasta!: Date | null;
   public porcentaje_titularidad!: number;

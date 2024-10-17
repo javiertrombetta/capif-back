@@ -2,7 +2,7 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class Regla extends Model {
-  public id_regla!: number;
+  public id_regla!: string;
   public descripcion!: string;
   public isActivo!: boolean;
 }

@@ -4,11 +4,11 @@ import Usuario from './Usuario';
 import TipoMetodoPago from './TipoMetodoPago';
 
 class Pago extends Model {
-  public id_pago!: number;
+  public id_pago!: string;
   public monto!: number;
   public fecha_pago!: Date;
-  public id_usuario!: number;
-  public id_tipo_metodo_pago!: number;
+  public id_usuario!: string;
+  public id_tipo_metodo_pago!: string;
   public referencia!: string;
   public TipoMetodoPago?: TipoMetodoPago;
 }

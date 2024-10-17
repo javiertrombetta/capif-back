@@ -26,7 +26,7 @@ export const findUsuarioByEmail = async (email: string) => {
   });
 };
 
-export const findUsuarioById = async (id: number) => {
+export const findUsuarioById = async (id: string) => {
   return await Usuario.findByPk(id, {
     include: [
       { model: Rol, as: 'Rol' },
@@ -36,16 +36,27 @@ export const findUsuarioById = async (id: number) => {
   });
 };
 
-export const updateUsuarioById = async (id: number, updatedData: any) => {
+export const updateUsuarioById = async (id: string, updatedData: any) => {
   const usuario = await Usuario.findByPk(id);
   if (!usuario) return null;
   return await usuario.update(updatedData);
 };
 
-export const deleteUsuarioById = async (id: number) => {
+export const deleteUsuarioById = async (id: string) => {
   const usuario = await Usuario.findByPk(id);
   if (!usuario) return null;
   await usuario.destroy();
   return true;
 };
 
+export const findRolByDescripcion = async (descripcion: string) => {
+  return await Rol.findOne({ where: { descripcion } });
+};
+
+export const findEstadoByDescripcion = async (descripcion: string) => {
+  return await Estado.findOne({ where: { descripcion } });
+};
+
+export const findTipoPersonaByDescripcion = async (descripcion: string) => {
+  return await TipoPersona.findOne({ where: { descripcion } });
+};

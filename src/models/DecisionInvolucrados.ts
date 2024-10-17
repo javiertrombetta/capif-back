@@ -4,10 +4,10 @@ import Involucrados from './Involucrados';
 import TipoDecision from './TipoDecision';
 
 class DecisionInvolucrados extends Model {
-  public id_decision!: number;
-  public id_tipo_decision!: number;
+  public id_decision!: string;
+  public id_tipo_decision!: string;
   public fecha_decision!: Date | null;
-  public id_involucrado!: number;
+  public id_involucrado!: string;
 }
 
 DecisionInvolucrados.init(

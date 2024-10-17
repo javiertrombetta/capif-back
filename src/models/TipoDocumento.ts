@@ -2,7 +2,7 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class TipoDocumento extends Model {
-  public id_tipo_documento!: number;
+  public id_tipo_documento!: string;
   public descripcion!: string;
 }
 

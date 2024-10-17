@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.19 - 17-10-2024
+## 🐛 Fixes
+
+- fix: number to string for uuid
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.16
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.16 - 17-10-2024
 ## 🐛 Fixes
 

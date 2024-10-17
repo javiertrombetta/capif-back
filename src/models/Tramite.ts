@@ -5,10 +5,10 @@ import Estado from './Estado';
 import TipoTramite from './TipoTramite';
 
 class Tramite extends Model {
-  public id_tramite!: number;
-  public id_tipo_tramite!: number;
-  public id_usuario!: number;
-  public estado_id!: number;
+  public id_tramite!: string;
+  public id_tipo_tramite!: string;
+  public id_usuario!: string;
+  public estado_id!: string;
 }
 
 Tramite.init(

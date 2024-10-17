@@ -2,7 +2,7 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class TipoMetodoPago extends Model {
-  public id_tipo_metodo_pago!: number;
+  public id_tipo_metodo_pago!: string;
   public descripcion!: string;
 }
 

@@ -3,9 +3,9 @@ import sequelize from '../config/database/sequelize';
 import TipoEstado from './TipoEstado';
 
 class Estado extends Model {
-  public id_estado!: number;
+  public id_estado!: string;
   public descripcion!: string;
-  public tipo_estado_id!: number;
+  public tipo_estado_id!: string;
 }
 
 Estado.init(

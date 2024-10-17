@@ -4,9 +4,9 @@ import Usuario from './Usuario';
 import Repertorio from './Repertorio';
 
 class AltaMasivaTemp extends Model {
-  public id_temporal!: number;
-  public id_usuario!: number;
-  public id_repertorio!: number;
+  public id_temporal!: string;
+  public id_usuario!: string;
+  public id_repertorio!: string;
   public procesado!: boolean;
 }
 

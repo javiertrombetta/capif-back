@@ -3,12 +3,12 @@ import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 
 class AuditoriaCambio extends Model {
-  public id_auditoria!: number;
+  public id_auditoria!: string;
   public tabla_afectada!: string;
   public operacion!: string;
   public descripcion!: string;
   public fecha!: Date;
-  public id_usuario!: number;
+  public id_usuario!: string;
 }
 
 AuditoriaCambio.init(

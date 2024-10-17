@@ -4,11 +4,11 @@ import Tramite from './Tramite';
 import TipoDocumento from './TipoDocumento';
 
 class Documento extends Model {
-  public id_documento!: number;
+  public id_documento!: string;
   public nombre_documento!: string;
   public tipo_documento!: string;
   public ruta_documento!: string;
-  public id_tramite!: number;
+  public id_tramite!: string;
 }
 
 Documento.init(

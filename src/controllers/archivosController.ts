@@ -131,7 +131,7 @@ export const updateArchivo = async (
       return;
     }
 
-    const archivo = await Archivo.findByPk(Number(id));
+    const archivo = await Archivo.findByPk(id);
     if (!archivo) {
       logger.warn(`${req.method} ${req.originalUrl} - Archivo no encontrado`);
       throw new NotFoundError(MESSAGES.ERROR.ARCHIVO.NOT_FOUND);
@@ -164,7 +164,7 @@ export const updateArchivo = async (
 
     const updatedArchivo = await Archivo.update(
       { nombre_archivo, ruta_archivo, tipo_archivo: tipoArchivoExists.descripcion },
-      { where: { id_archivo: Number(id) }, returning: true }
+      { where: { id_archivo: id }, returning: true }
     );
 
     if (!updatedArchivo[1].length) {
@@ -204,7 +204,7 @@ export const deleteArchivo = async (
       `${req.method} ${req.originalUrl} - Se hizo una solicitud para eliminar el archivo con ID: ${id}.`
     );
 
-    const archivo = await Archivo.findByPk(Number(id));
+    const archivo = await Archivo.findByPk(id);
 
     if (!archivo) {
       logger.warn(`${req.method} ${req.originalUrl} - ${MESSAGES.ERROR.ARCHIVO.NOT_FOUND}`);
@@ -213,7 +213,7 @@ export const deleteArchivo = async (
 
     const { nombre_archivo, id_usuario } = archivo;
 
-    const result = await Archivo.destroy({ where: { id_archivo: Number(id) } });
+    const result = await Archivo.destroy({ where: { id_archivo: id } });
 
     if (!result) {
       logger.warn(`${req.method} ${req.originalUrl} - ${MESSAGES.ERROR.ARCHIVO.NOT_FOUND}`);

@@ -86,6 +86,7 @@ export const ERROR = {
     ROLE_INVALID: 'El rol proporcionado no es válido.',
     STATE_INVALID: 'El estado proporcionado no es válido.',
     STATE_ALREADY_AUTHORIZED: 'El usuario ya se encuentra autorizado y no puede ser eliminado.',
+    INVALID_USER_TYPE: 'El tipo de persona no es válido',
     PASSWORD_INCORRECT: 'Credenciales incorrectas.',
     ALREADY_LOGGED_IN: 'El usuario ya se encuentra logueado.',
     NO_TOKEN_PROVIDED: 'No se proporcionó un token.',
@@ -228,8 +229,7 @@ export const VALIDATION_AUTH = {
     'string.pattern.base': 'El CUIT debe tener exactamente 11 dígitos.',
     'any.required': 'El CUIT es obligatorio.',
   },
-  tipo_persona_id: {
-    'number.base': 'El tipo de persona debe ser un número.',
+  tipo_persona_id: {    
     'any.required': 'El tipo de persona es obligatorio.',
   },
   domicilio: {

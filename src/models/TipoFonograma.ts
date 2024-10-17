@@ -2,7 +2,7 @@ import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class TipoFonograma extends Model {
-  public id_tipo_fonograma!: number;
+  public id_tipo_fonograma!: string;
   public descripcion!: string;
 }
 

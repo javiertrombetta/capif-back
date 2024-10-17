@@ -1,6 +1,6 @@
 import Estado from '../models/Estado';
 
-export const findEstadoById = async (estado_id: number) => {
+export const findEstadoById = async (estado_id: string) => {
   return await Estado.findOne({ where: { id_estado: estado_id } });
 };
 

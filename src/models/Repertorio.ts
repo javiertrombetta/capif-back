@@ -5,11 +5,11 @@ import Estado from './Estado';
 import TipoRepertorio from './TipoRepertorio';
 
 class Repertorio extends Model {
-  public id_repertorio!: number;
+  public id_repertorio!: string;
   public titulo!: string;
-  public id_tipo_repertorio!: number;
-  public id_usuario!: number;
-  public estado_id!: number;
+  public id_tipo_repertorio!: string;
+  public id_usuario!: string;
+  public estado_id!: string;
 }
 
 Repertorio.init(

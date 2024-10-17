@@ -4,9 +4,9 @@ import Usuario from './Usuario';
 import Compania from './Compania';
 
 class PostulacionPremio extends Model {
-  public id_postulacion!: number;
-  public id_compania!: number;
-  public id_usuario!: number;
+  public id_postulacion!: string;
+  public id_compania!: string;
+  public id_usuario!: string;
   public codigo_postulacion!: string;
   public fecha_asignacion!: Date;
 }

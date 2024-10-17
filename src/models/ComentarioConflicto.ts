@@ -3,9 +3,9 @@ import sequelize from '../config/database/sequelize';
 import Conflicto from './Conflicto';
 
 class ComentarioConflicto extends Model {
-  public id_comentario!: number;
+  public id_comentario!: string;
   public comentario!: string;
-  public id_conflicto!: number;
+  public id_conflicto!: string;
   public fecha!: Date;
 }
 

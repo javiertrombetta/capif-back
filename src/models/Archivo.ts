@@ -4,11 +4,11 @@ import Usuario from './Usuario';
 import TipoArchivo from './TipoArchivo';
 
 class Archivo extends Model {
-  public id_archivo!: number;
+  public id_archivo!: string;
   public nombre_archivo!: string;
   public ruta_archivo!: string;
-  public id_tipo_archivo!: number;
-  public id_usuario!: number;
+  public id_tipo_archivo!: string;
+  public id_usuario!: string;
 }
 
 Archivo.init(

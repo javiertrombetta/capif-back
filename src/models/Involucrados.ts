@@ -4,9 +4,9 @@ import Conflicto from './Conflicto';
 import Compania from './Compania';
 
 class Involucrados extends Model {
-  public id_involucrado!: number;
-  public id_conflicto!: number;
-  public id_titular!: number;
+  public id_involucrado!: string;
+  public id_conflicto!: string;
+  public id_titular!: string;
 }
 
 Involucrados.init(

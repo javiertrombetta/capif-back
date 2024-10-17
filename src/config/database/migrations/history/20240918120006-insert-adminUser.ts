@@ -10,15 +10,15 @@ module.exports = {
 
     const adminRole = (await queryInterface.sequelize.query(
       `SELECT id_rol FROM "Rol" WHERE descripcion = 'admin';`
-    )) as [{ id_rol: number }[], unknown];
+    )) as [{ id_rol: string }[], unknown];
 
     const authorizedState = (await queryInterface.sequelize.query(
       `SELECT id_estado FROM "Estado" WHERE descripcion = 'autorizado';`
-    )) as [{ id_estado: number }[], unknown];
+    )) as [{ id_estado: string }[], unknown];
 
     const personaFisicaType = (await queryInterface.sequelize.query(
       `SELECT id_tipo_persona FROM "TipoPersona" WHERE descripcion = 'Persona Física';`
-    )) as [{ id_tipo_persona: number }[], unknown];
+    )) as [{ id_tipo_persona: string }[], unknown];
  
     await queryInterface.bulkInsert('Usuario', [
       {

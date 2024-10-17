@@ -5,11 +5,11 @@ import Estado from './Estado';
 import TipoConflicto from './TipoConflicto';
 
 class Conflicto extends Model {
-  public id_conflicto!: number;
-  public id_tipo_conflicto!: number;
+  public id_conflicto!: string;
+  public id_tipo_conflicto!: string;
   public descripcion!: string;
-  public id_fonograma!: number;
-  public estado_id!: number;
+  public id_fonograma!: string;
+  public estado_id!: string;
   public fecha_resolucion!: Date | null;
 }
 

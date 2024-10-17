@@ -4,10 +4,10 @@ import Usuario from './Usuario';
 import TipoReporte from './TipoReporte';
 
 class Reporte extends Model {
-  public id_reporte!: number;
-  public id_tipo_reporte!: number;
+  public id_reporte!: string;
+  public id_tipo_reporte!: string;
   public ruta_archivo!: string;
-  public id_usuario!: number;
+  public id_usuario!: string;
 }
 
 Reporte.init(

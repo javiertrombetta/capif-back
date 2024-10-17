@@ -4,11 +4,11 @@ import Usuario from './Usuario';
 import Estado from './Estado';
 
 class Consulta extends Model {
-  public id_consulta!: number;
+  public id_consulta!: string;
   public asunto!: string;
   public mensaje!: string;
-  public id_usuario!: number;
-  public estado_id!: number;
+  public id_usuario!: string;
+  public estado_id!: string;
 }
 
 Consulta.init(

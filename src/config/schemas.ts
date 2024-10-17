@@ -86,7 +86,7 @@ export const authSchemas = {
         type: 'string',
         format: 'email',
         description: 'Correo electrónico del usuario',
-        example: 'usuario@example.com',
+        example: 'usuario@dominio.com',
       },
       password: {
         type: 'string',
@@ -104,7 +104,7 @@ export const authSchemas = {
         type: 'string',
         format: 'email',
         description: 'Correo electrónico del nuevo usuario',
-        example: 'usuario@example.com',
+        example: 'usuario@dominio.com',
       },
       password: {
         type: 'string',
@@ -168,7 +168,7 @@ export const authSchemas = {
       'nombre',
       'apellido',
       'cuit',
-      'tipo_persona_id',
+      'tipo_persona_descripcion',
       'domicilio',
       'ciudad',
       'provincia',
@@ -185,7 +185,7 @@ export const authSchemas = {
         type: 'string',
         format: 'email',
         description: 'Correo electrónico para recuperar la contraseña',
-        example: 'usuario@example.com',
+        example: 'usuario@dominio.com',
       },
     },
     required: ['email'],
@@ -202,7 +202,7 @@ export const authSchemas = {
       newPassword: {
         type: 'string',
         description: 'Nueva contraseña',
-        example: 'newPassword123!',
+        example: 'NuevaClave123!',
       },
     },
     required: ['token', 'newPassword'],
@@ -211,81 +211,81 @@ export const authSchemas = {
     title: 'Autenticación - Autorizar a un usuario nuevo',
     type: 'object',
     properties: {
-      userId: {
+      id_usuario: {
         type: 'string',
         description: 'ID del usuario a autorizar',
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
-      role: {
-        type: 'string',
-        description: 'Nuevo rol del usuario',
-        example: 'admin',
-      },
     },
-    required: ['userId', 'role'],
+    required: ['id_usuario'],
   },
   BlockUser: {
     title: 'Autenticación - Bloquear a un usuario existente',
     type: 'object',
     properties: {
-      userId: {
+      id_usuario: {
         type: 'string',
         description: 'ID del usuario a bloquear o desbloquear',
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
-      status: {
+      bloquear: {
         type: 'boolean',
         description: 'Estado del usuario (bloqueado o desbloqueado)',
         example: true,
       },
     },
-    required: ['userId', 'status'],
+    required: ['id_usuario', 'bloquear'],
   },
   ChangeRole: {
     title: 'Autenticación - Cambiarle el rol a un usuario',
     type: 'object',
     properties: {
-      userId: {
+      id_usuario: {
         type: 'string',
         description: 'ID del usuario cuyo rol será cambiado',
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
-      newRole: {
+      nuevo_rol: {
         type: 'string',
         description: 'Nuevo rol del usuario',
         example: 'admin',
       },
     },
-    required: ['userId', 'newRole'],
+    required: ['id_usuario', 'nuevo_rol'],
   },
   ChangePassword: {
     title: 'Autenticación - Cambio de clave',
     type: 'object',
     properties: {
-      oldPassword: {
+      id_usuario: {
         type: 'string',
-        description: 'Contraseña actual del usuario',
-        example: 'oldPassword123',
+        description: 'ID del usuario a cambiar clave',
+        example: '123e4567-e89b-12d3-a456-426614174000',
       },
       newPassword: {
         type: 'string',
-        description: 'Nueva contraseña del usuario',
-        example: 'newSecurePassword!',
+        description: 'Nueva clave para este usuario',
+        example: 'CambioDeClave123!',
+      },
+      confirmPassword: {
+        type: 'string',
+        description: 'Confirmar nueva clave ingresada',
+        example: 'CambioDeClave123!',
       },
     },
-    required: ['oldPassword', 'newPassword'],
+    required: ['id_usuario', 'newPassword', 'confirmPassword'],
   },
   DeleteUser: {
     title: 'Autenticación - Borrar un usuario',
     type: 'object',
     properties: {
-      userId: {
+      id_usuario: {
         type: 'string',
         description: 'ID del usuario a eliminar',
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
     },
-    required: ['userId'],
+    required: ['id_usuario'],
   },
 };
 
@@ -502,7 +502,7 @@ export const cuentaCorrienteSchemas = {
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
       saldo: {
-        type: 'number',
+        type: '',
         description: 'Saldo inicial de la cuenta corriente',
         example: 1000.5,
       },
@@ -682,6 +682,57 @@ export const dbSchemas = {
         example: '2024-10-15T14:00:00Z',
       },
     },
+  },
+};
+
+const userProperties = {
+  nombre: { type: 'string', example: 'Juan' },
+  apellido: { type: 'string', example: 'Pérez' },
+  email: { type: 'string', example: 'juan.perez@dominio.com' },
+  password: { type: 'string', example: 'ClaveSegura123.', description: 'Clave del usuario' },
+  rol: { type: 'string', example: 'productor', description: 'Descripción del rol del usuario' },
+  estado: { type: 'string', example: 'nuevo', description: 'Estado actual del usuario' },
+  cuit: { type: 'string', example: '20304050607', description: 'CUIT del usuario' },
+  tipo_persona: {
+    type: 'string',
+    example: 'Persona Física',
+    description: 'Tipo de persona (Persona Física o Persona Jurídica)',
+  },
+  domicilio: { type: 'string', example: 'Calle Falsa 123' },
+  ciudad: { type: 'string', example: 'Buenos Aires' },
+  provincia: { type: 'string', example: 'Buenos Aires' },
+  pais: { type: 'string', example: 'Argentina' },
+  codigo_postal: { type: 'string', example: '1000' },
+  telefono: { type: 'string', example: '+54 9 11 1234 5678' },
+};
+
+export const userSchemas = {
+  UsuarioCreate: {
+    title: 'Usuario - Crear',
+    type: 'object',
+    properties: userProperties,
+    required: [
+      'nombre',
+      'apellido',
+      'email',
+      'password',
+      'rol',
+      'estado',
+      'cuit',
+      'tipo_persona',
+      'ciudad',
+      'provincia',
+      'pais',
+      'codigo_postal',
+      'telefono',
+    ],
+  },
+
+  UsuarioUpdate: {
+    title: 'Usuario - Actualizar',
+    type: 'object',
+    properties: userProperties,
+    required: [],
   },
 };
 

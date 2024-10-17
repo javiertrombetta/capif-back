@@ -4,9 +4,9 @@ import Usuario from './Usuario';
 import Compania from './Compania';
 
 class UsuarioAsignado extends Model {
-  public id_usuario_asignado!: number;
-  public id_usuario!: number;
-  public id_compania!: number;
+  public id_usuario_asignado!: string;
+  public id_usuario!: string;
+  public id_compania!: string;
 }
 
 UsuarioAsignado.init(

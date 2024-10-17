@@ -1,4 +1,4 @@
 export interface GenericModel {
-  id?: number;
+  id?: string;
   [key: string]: any;
 }

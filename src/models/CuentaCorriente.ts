@@ -3,9 +3,9 @@ import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 
 class CuentaCorriente extends Model {
-  public id_cuenta_corriente!: number;
+  public id_cuenta_corriente!: string;
   public saldo!: number;
-  public id_usuario!: number;
+  public id_usuario!: string;
 }
 
 CuentaCorriente.init(

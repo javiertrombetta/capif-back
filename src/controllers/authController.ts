@@ -235,7 +235,7 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
     );
 
     res.cookie('auth_token', token, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 3600000,

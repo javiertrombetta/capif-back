@@ -45,7 +45,7 @@ const limiter = rateLimit({
 app.use(helmet());
 app.use(
   cors({
-    // origin: 'http://tu-dominio-frontend.com',
+    origin: 'http://localhost:3001',
     credentials: true,
   })
 );

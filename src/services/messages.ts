@@ -194,13 +194,13 @@ export const EMAIL_BODY = {
   PASSWORD_RECOVERY: (resetLink: string) => `
     <h1>Recuperación de contraseña</h1>
     <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-    <a href="${resetLink}">${resetLink}</a>
+    <a href="http://localhost:3001/password-recovery/${resetLink}">http://localhost:3001/password-recovery/${resetLink}</a>
     <p>Este enlace expirará en 1 hora.</p>
   `,
   VALIDATE_ACCOUNT: (validationLink: string) => `
     <h1>Confirma tu cuenta</h1>
     <p>Haz clic en el siguiente enlace para validar tu correo electrónico:</p>
-    <a href="${validationLink}">${validationLink}</a>
+    <a href="http://localhost:3001/confirm-account/${validationLink}">http://localhost:3001/confirm-account/${validationLink}</a>    
     <p>Este enlace expirará en 24 horas.</p>
   `,
 };

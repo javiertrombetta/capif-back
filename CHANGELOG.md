@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.22 - 18-10-2024
+## 🐛 Fixes
+
+- fix: change messages for forntend
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.19
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.19 - 17-10-2024
 ## 🐛 Fixes
 

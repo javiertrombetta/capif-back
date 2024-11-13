@@ -1,7 +1,9 @@
 export const SUCCESS = {
   AUTH: {
-    REGISTER:
+    REGISTER_PRIMARY:
       'Registro completado exitosamente. Confirmá tu cuenta ingresando a la Bandeja de Entrada del correo registrado.',
+    REGISTER_SECONDARY:
+      'Registro completado exitosamente. El usuario debe verificar la Bandeja de Entrada del correo registrado y seguir los pasos indicados.',
     LOGIN: 'Sesión iniciada correctamente.',
     PASSWORD_RECOVERY_EMAIL_SENT: 'Correo para restablecer la contraseña enviado.',
     PASSWORD_RESET: 'Contraseña actualizada correctamente.',
@@ -13,6 +15,12 @@ export const SUCCESS = {
     PASSWORD_RESET_REQUESTED: 'Solicitud de restablecimiento de contraseña enviada.',
     LOGOUT: 'La sesión se cerró exitosamente',
     USER_DELETED: 'Usuario eliminado correctamente.',
+  },
+  PERSONAL_DATA: {
+    SAVED:
+      'Datos cargados y pendientes de evaluación, para la autorización definitiva del usuario.',
+    REJECTED:
+      'Datos rechazados correctamente y se ha enviado el correo con los comentarios al usuario.',
   },
   CONSULTA: {
     CONSULTA_DELETED: 'Consulta eliminada correctamente.',
@@ -83,24 +91,36 @@ export const SUCCESS = {
 export const ERROR = {
   VALIDATION: {
     GENERAL: 'Error de validación en los datos proporcionados.',
-    ROLE_INVALID: 'El rol proporcionado no es válido.',
-    STATE_INVALID: 'El estado proporcionado no es válido.',
+    USER_INVALID: 'El id de usuario no fue proporcionado o es inválido.',
+    EMAIL_INVALID: 'El email no fue proporcionado o no es válido.',
+    PASSWORD_INVALID: 'La clave no fue proporcionada o no es válida.',
+    ROLE_INVALID: 'El rol no fue proporcionado o no es válido.',
+    STATE_INVALID: 'El estado no fue proporcionado o no es válido.',
+    FISICA_ALREADY_EXISTS: 'La Persona Física ya existe en la base de datos.',
+    JURIDICA_ALREADY_EXISTS: 'La Persona Jurídica ya existe en la base de datos.',
     STATE_ALREADY_AUTHORIZED: 'El usuario ya se encuentra autorizado y no puede ser eliminado.',
-    INVALID_USER_TYPE: 'El tipo de persona no es válido',
     PASSWORD_INCORRECT: 'Credenciales incorrectas.',
     ALREADY_LOGGED_IN: 'El usuario ya se encuentra logueado.',
     NO_TOKEN_PROVIDED: 'No se proporcionó un token.',
     INVALID_TOKEN: 'Token inválido o expirado.',
+    NO_COOKIE_FOUND: 'No se encontró una sesión activa.',
+  },
+  REGISTER: {
+    ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
+    NO_PENDING_USERS: 'No hay registros pendientes de autorización',
     USER_NOT_CONFIRMED:
       'El mail está pendiente de verificación. Por favor, revise la Bandeja de Entrada y siga los pasos.',
-    USER_BLOCKED:
-      'El usuario se encuentra bloqueado. Por favor, contacte a un administrador del sistema.',
   },
   USER: {
-    ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
     NOT_FOUND: 'Usuario no encontrado.',
+    NO_MAESTRO_RECORD: 'Usuario sin registro en la tabla maestro.',
     NOT_AUTHORIZED: 'No tienes autorización para realizar esta acción.',
+    NOT_AUTHORIZED_TO_CHANGE_PASSWORD: 'No estás autorizado para cambiar la clave.',
     NOT_AUTHORIZED_TO_CHANGE_ROLE: 'No estás autorizado para cambiar el rol.',
+    USER_BLOCKED:
+      'El usuario se encuentra bloqueado. Por favor, contacte a un administrador del sistema.',
+    UPDATE_FAILED: 'Hubo un error al buscar al usuario e intentar actualizarlo.',
+    DELETE_FAILED: 'Hubo un error al buscar al usuario e intentar eliminarlo.',
   },
   DATABASE: {
     CONNECTION: 'Error de conexión con la base de datos.',
@@ -114,7 +134,10 @@ export const ERROR = {
   },
   EMAIL: {
     RECOVERY_FAILED:
-      'No se pudo enviar el correo de recuperación. Por favor, intente nuevamente más tarde.',
+      'No se pudo enviar el correo de recuperación. Por favor, verificar en los logs.',
+    TEMP_FAILED:
+      'No se pudo enviar el correo con la clave temporal. Por favor, verificar en los logs',
+    REJECTION_FAILED: 'No se pudo enviar el correo de rechazo. Por favor, verificar en los logs',
   },
   PASSWORD: {
     RESET_FAILED: 'No se pudo restablecer la contraseña. Por favor, intente nuevamente más tarde.',
@@ -202,6 +225,30 @@ export const EMAIL_BODY = {
     <p>Haz clic en el siguiente enlace para validar tu correo electrónico:</p>
     <a href="http://localhost:3001/confirm-account/${validationLink}">http://localhost:3001/confirm-account/${validationLink}</a>    
     <p>Este enlace expirará en 24 horas.</p>
+  `,
+  REJECTION_NOTIFICATION: (email: string, comentario: string) => `
+    <p>Estimado/a ${email},</p>
+    <p>Lamentamos informarle que la carga de sus datos ha sido rechazada por el siguiente motivo:</p>
+    <blockquote>${comentario}</blockquote>
+    <p>Por favor, ingrese nuevamente al sistema para corregir los datos.</p>
+    <p>Gracias por su atención.</p>
+  `,
+  TEMP_PASSWORD: (tempPassword: string) => `
+    <h1>Registro exitoso</h1>
+    <p>Su cuenta ha sido creada exitosamente. Use la siguiente contraseña temporal para iniciar sesión:</p>
+    <p><strong>${tempPassword}</strong></p>
+    <p>Por motivos de seguridad, se le pedirá que cambie esta contraseña en su primer ingreso.</p>
+    <p>Gracias por registrarse.</p>
+  `,
+  VALIDATE_ACCOUNT_WITH_TEMP_PASSWORD: (validationLink: string, tempPassword: string) => `
+    <h1>Confirma tu cuenta</h1>
+    <p>Su cuenta ha sido creada exitosamente como usuario secundario. Para activar su cuenta, haga clic en el siguiente enlace:</p>
+    <a href="http://localhost:3001/confirm-account/${validationLink}">http://localhost:3001/confirm-account/${validationLink}</a>    
+    <p>Este enlace expirará en 24 horas.</p>
+    <p>Use la siguiente contraseña temporal para su primer acceso:</p>
+    <p><strong>${tempPassword}</strong></p>
+    <p>Por motivos de seguridad, deberá cambiar esta contraseña en su primer ingreso.</p>
+    <p>Gracias por registrarse.</p>
   `,
 };
 

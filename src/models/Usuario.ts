@@ -1,32 +1,34 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import Rol from './Rol';
-import Estado from './Estado';
-import TipoPersona from './TipoPersona';
+
+const OPERACIONES_PERMITIDAS = [
+  'DEPURAR',
+  'INCOMPLETO',
+  'RECHAZADO',
+  'NUEVO',
+  'CONFIRMADO',
+  'PENDIENTE',
+  'PRINCIPAL',
+  'SECUNDARIO',
+] as const;
 
 class Usuario extends Model {
   public id_usuario!: string;
-  public nombre!: string;
-  public apellido!: string;
+  public tipo_registro!: (typeof OPERACIONES_PERMITIDAS)[number];
+  public nombres_y_apellidos!: string;
+  public telefono!: string;
   public email!: string;
   public clave!: string;
-  public rol_id!: string;
-  public estado_id!: string;
-  public cuit!: string;
-  public tipo_persona_id!: string;
-  public domicilio?: string;
-  public ciudad!: string;
-  public provincia!: string;
-  public pais!: string;
-  public codigo_postal!: string;
-  public telefono?: string;
-  public isRegistro_pendiente!: boolean;
+  public is_registro_pendiente!: boolean;
   public email_verification_token!: string | null;
   public email_verification_token_expires!: Date | null;
   public reset_password_token!: string | null;
   public reset_password_token_expires!: Date | null;
-  public isHabilitado!: boolean;
+  public fecha_ultimo_cambio_registro!: Date;
+  public is_habilitado!: boolean;
   public intentos_fallidos!: number;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
 }
 
 Usuario.init(
@@ -35,180 +37,126 @@ Usuario.init(
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+      allowNull: false,
+      validate: {
+        isUUID: {
+          args: 4,
+          msg: 'El ID de usuario debe ser un UUID válido.',
+        },
+      },
     },
-    nombre: {
-      type: DataTypes.STRING(100),
+    tipo_registro: {
+      type: DataTypes.ENUM(...OPERACIONES_PERMITIDAS),
+      allowNull: false,
+      validate: {
+        isIn: {
+          args: [OPERACIONES_PERMITIDAS],
+          msg: 'El tipo de registro debe ser una operación permitida.',
+        },
+      },
+    },
+    nombres_y_apellidos: {
+      type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
         len: {
-          args: [2, 100],
-          msg: 'El apellido debe tener entre 2 y 100 caracteres.',
-        },
-        is: {
-          args: /^[A-Za-zÀ-ÿ\s]+$/,
-          msg: 'El apellido solo debe contener letras y espacios.',
-        },
-      },
-    },
-    apellido: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [2, 100],
-          msg: 'El apellido debe tener entre 2 y 100 caracteres.',
-        },
-        is: {
-          args: /^[A-Za-zÀ-ÿ\s]+$/,
-          msg: 'El apellido solo debe contener letras y espacios.',
-        },
-      },
-    },
-    email: {
-      type: DataTypes.STRING(150),
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: {
-          msg: 'El email debe ser válido.',
-        },
-      },
-    },
-    clave: {
-      type: DataTypes.STRING(256),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [8, 256],
-          msg: 'La clave debe tener al menos 8 caracteres.',
-        },
-      },
-    },
-    rol_id: {
-      type: DataTypes.UUID,
-      references: {
-        model: Rol,
-        key: 'id_rol',
-      },
-      onDelete: 'CASCADE',
-    },
-    estado_id: {
-      type: DataTypes.UUID,
-      references: {
-        model: Estado,
-        key: 'id_estado',
-      },
-    },
-    cuit: {
-      type: DataTypes.CHAR(11),
-      allowNull: false,
-      unique: true,
-      validate: {
-        is: {
-          args: /^[0-9]{11}$/,
-          msg: 'El CUIT debe tener exactamente 11 dígitos.',
-        },
-      },
-    },
-    tipo_persona_id: {
-      type: DataTypes.UUID,
-      references: {
-        model: TipoPersona,
-        key: 'id_tipo_persona',
-      },
-      onDelete: 'CASCADE',
-    },
-    domicilio: {
-      type: DataTypes.STRING(200),
-    },
-    ciudad: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [2, 100],
-          msg: 'La ciudad debe tener entre 2 y 100 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El campo ciudad no puede estar vacío.',
-        },
-      },
-    },
-    provincia: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [2, 100],
-          msg: 'La provincia debe tener entre 2 y 100 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El campo provincia no puede estar vacío.',
-        },
-      },
-    },
-    pais: {
-      type: DataTypes.STRING(100),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [2, 100],
-          msg: 'El país debe tener entre 2 y 100 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El campo país no puede estar vacío.',
-        },
-      },
-    },
-    codigo_postal: {
-      type: DataTypes.STRING(20),
-      allowNull: false,
-      validate: {
-        len: {
-          args: [2, 20],
-          msg: 'El código postal debe tener entre 2 y 20 caracteres.',
-        },
-        notEmpty: {
-          msg: 'El código postal no puede estar vacío.',
+          args: [3, 255],
+          msg: 'El nombre y apellido debe tener entre 3 y 255 caracteres.',
         },
       },
     },
     telefono: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(20),
+      allowNull: false,
       validate: {
-        is: {
-          args: /^[0-9\-+() ]+$/,
-          msg: 'El teléfono solo puede contener números y los caracteres +, -, (, ) y espacio.',
+        len: {
+          args: [7, 20],
+          msg: 'El teléfono debe tener entre 7 y 20 caracteres.',
         },
       },
     },
-    isRegistro_pendiente: {
+    email: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      unique: true,
+      validate: {
+        isEmail: {
+          msg: 'Debe ser un correo electrónico válido.',
+        },
+      },
+    },
+    clave: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        len: {
+          args: [8, 255],
+          msg: 'La clave debe tener al menos 8 caracteres.',
+        },
+      },
+    },
+    is_registro_pendiente: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
       defaultValue: true,
     },
     email_verification_token: {
-      type: DataTypes.STRING(256),
+      type: DataTypes.STRING(255),
       allowNull: true,
     },
     email_verification_token_expires: {
       type: DataTypes.DATE,
       allowNull: true,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'Debe ser una fecha válida.',
+        },
+      },
     },
     reset_password_token: {
-      type: DataTypes.STRING(256),
+      type: DataTypes.STRING(255),
       allowNull: true,
     },
     reset_password_token_expires: {
       type: DataTypes.DATE,
       allowNull: true,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'Debe ser una fecha válida.',
+        },
+      },
     },
-    isHabilitado: {
+    fecha_ultimo_cambio_registro: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'Debe ser una fecha válida.',
+        },
+      },
+    },
+    is_habilitado: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
       defaultValue: true,
     },
     intentos_fallidos: {
       type: DataTypes.INTEGER,
+      allowNull: false,
       defaultValue: 0,
+      validate: {
+        isInt: {
+          msg: 'Debe ser un número entero.',
+        },
+        min: {
+          args: [0],
+          msg: 'No puede tener intentos fallidos negativos.',
+        },
+      },
     },
   },
   {
@@ -216,7 +164,32 @@ Usuario.init(
     modelName: 'Usuario',
     tableName: 'Usuario',
     timestamps: true,
+    indexes: [
+      {
+        fields: ['email'],
+        name: 'idx_usuario_email',
+        unique: true,
+      },
+      {
+        fields: ['nombres_y_apellidos'],
+        name: 'idx_usuario_nombres_y_apellidos',        
+      },
+      {
+        fields: ['tipo_registro'],
+        name: 'idx_usuario_tipo_registro',
+      },
+      {
+        fields: ['is_habilitado'],
+        name: 'idx_usuario_habilitado',
+      },
+    ],
   }
 );
+
+Usuario.beforeUpdate(async (usuario) => {
+  if (usuario.changed('tipo_registro')) {
+    usuario.fecha_ultimo_cambio_registro = new Date();
+  }
+});
 
 export default Usuario;

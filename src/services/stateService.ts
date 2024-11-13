@@ -1,4 +1,4 @@
-import Estado from '../models/Estado';
+import Estado from '../models/TipoEstado';
 
 export const findEstadoById = async (estado_id: string) => {
   return await Estado.findOne({ where: { id_estado: estado_id } });

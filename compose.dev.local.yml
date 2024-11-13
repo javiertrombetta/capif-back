@@ -16,7 +16,31 @@ services:
       interval: 10s
       retries: 5
       start_period: 30s
+      timeout: 5s
     restart: always
+    networks:
+      - capif-net
+
+  redis:
+    image: redis:alpine3.20
+    container_name: ${REDIS_NAME:-redis}
+    restart: always
+    ports:
+      - '6379:6379'
+    environment:
+      TZ: ${TZ}    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - capif-net
 
 volumes:
-  postgres_data:
+  postgres_data:  
+
+networks:
+  capif-net:
+    driver: bridge

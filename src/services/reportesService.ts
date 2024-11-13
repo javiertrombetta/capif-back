@@ -1,11 +1,10 @@
 import { Parser } from 'json2csv';
 import { promises as fs } from 'fs';
 import path from 'path';
-import ISRC from '../models/ISRC';
+import ISRC from '../models/FonogramaISRC';
 import Fonograma from '../models/Fonograma';
-import Repertorio from '../models/Repertorio';
+import Repertorio from '../models/zzzRepertorio';
 import { InternalServerError } from './customErrors';
-
 
 const getReportesDirectory = (): string => {
   return path.join(process.env.TEMP || '/tmp', 'reportes');

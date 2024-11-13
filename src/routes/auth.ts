@@ -1,18 +1,19 @@
 import express from 'express';
 import { celebrate, Segments } from 'celebrate';
 import {
+  registerPrimary,
+  registerSecondary,
   login,
-  register,
   requestPasswordReset,
-  resetPassword,
   validateEmail,
-  authorizeUser,
+  resetPassword,
+  getUser,
+  getCompanies,
+  changeCompany,
   blockOrUnblockUser,
   changeUserRole,
-  getUser,
-  logout,
   changeUserPassword,
-  deleteUser,
+  logout,
 } from '../controllers/authController';
 import {
   registerSchema,
@@ -122,34 +123,6 @@ router.post(
  *         description: Error en los datos proporcionados
  */
 router.post('/reset-password', celebrate({ [Segments.BODY]: resetPasswordSchema }), resetPassword);
-
-/**
- * @swagger
- * /auth/authorize-user:
- *   post:
- *     summary: Autorizar un usuario
- *     tags: [Autenticación]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/AuthorizeUser'
- *     responses:
- *       200:
- *         description: Usuario autorizado exitosamente
- *       403:
- *         description: Prohibido
- */
-router.post(
-  '/authorize-user',
-  authenticate,
-  authorizeRoles(['admin']),
-  celebrate({ [Segments.BODY]: authorizeProducerSchema }),
-  authorizeUser
-);
 
 /**
  * @swagger
@@ -278,32 +251,6 @@ router.get(
   '/validate-email/:token',
   celebrate({ [Segments.PARAMS]: validateEmailSchema }),
   validateEmail
-);
-
-/**
- * @swagger
- * /auth/delete-user:
- *   delete:
- *     summary: Eliminar usuario
- *     tags: [Autenticación]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/DeleteUser'
- *     responses:
- *       200:
- *         description: Usuario eliminado exitosamente
- */
-router.delete(
-  '/delete-user',
-  authenticate,
-  authorizeRoles(['admin']),
-  celebrate({ [Segments.BODY]: deleteUserSchema }),
-  deleteUser
 );
 
 export default router;

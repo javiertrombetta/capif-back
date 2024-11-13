@@ -1,155 +1,115 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+import { nanoid } from 'nanoid';
 import { Op } from 'sequelize';
 import logger from '../config/logger';
 
-import { verifyToken } from '../middlewares/auth';
-
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { UserWithRelations } from '../interfaces/UserWithRelations';
+import { verifyToken } from '../middlewares/auth';
 
 import * as MESSAGES from '../services/messages';
 import { sendEmail } from '../services/emailService';
-import { findUsuarioByEmail, findUsuarioById } from '../services/userService';
-import { findRolByDescripcion } from '../services/roleService';
-import { findEstadoByDescripcion } from '../services/stateService';
-import { findTipoPersonaByDescripcion } from '../services/tipoPersonaService'; 
+import {
+  createUsuario,
+  createUsuarioMaestro,
+  findUsuario,
+  getAssociatedCompanies,
+} from '../services/userService';
+import { actualizarFechaFinSesion } from '../services/sesionService';
 import { hashPassword, verifyPassword } from '../services/validationsService';
 import * as Err from '../services/customErrors';
 
-import Usuario from '../models/Usuario';
+import { AuditoriaEntidad, AuditoriaSesion } from '../models';
 
-//const validationLink = `${process.env.FRONTEND_URL}/validate-email/${emailToken}`
 
-export const getUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+// REGISTER USUARIO 'PRIMARIO'
+export const registerPrimary = async (req: Request, res: Response, next: NextFunction) => {
   try {
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para obtener los datos del usuario`
-    );
-
-    const token = req.cookies['auth_token'];
-
-    if (!token) {
-      logger.warn(`${req.method} ${req.originalUrl} - Token no proporcionado en la cookie.`);
-      return res.status(401).json({ message: MESSAGES.ERROR.VALIDATION.NO_TOKEN_PROVIDED });
-    }
-
-    const decodedToken = verifyToken(token, process.env.JWT_SECRET!);
-    if (!decodedToken) {
-      logger.warn(`${req.method} ${req.originalUrl} - Token inválido o expirado.`);
-      return res.status(401).json({ message: MESSAGES.ERROR.VALIDATION.INVALID_TOKEN });
-    }
-
-    const user = await findUsuarioById(decodedToken.id);
-    if (!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró un usuario con el ID: ${decodedToken.id}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-     logger.info(
-       `${req.method} ${req.originalUrl} - Datos del usuario obtenidos correctamente para el usuario con ID: ${user.id_usuario}`
-     );
-    res.status(200).json({ user });
-  } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al obtener los datos del usuario: ${
-        err instanceof Error ? err.message : 'Error desconocido'
-      }`
-    );
-    next(err);
-  }
-};
-
-export const register = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {
-
     logger.info(
       `${req.method} ${req.originalUrl} - Solicitud recibida para registrar un nuevo usuario`
     );
 
-    const {
-      email,
-      password,
-      nombre,
-      apellido,
-      cuit,
-      tipo_persona_descripcion,
-      domicilio,
-      ciudad,
-      provincia,
-      pais,
-      codigo_postal,
-      telefono,
-    } = req.body;
+    const { email, password, nombres_y_apellidos, telefono } = req.body;
 
-    const existingUser = await findUsuarioByEmail(email);
+    // Verifica si el usuario ya existe
+    const existingUser = await findUsuario({ email });
     if (existingUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Intento de registro fallido. Usuario ya registrado: ${email}`
-      );
-      throw new Err.ConflictError(MESSAGES.ERROR.USER.ALREADY_REGISTERED);
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario ya registrado: ${email}`);
+      throw new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED);
     }
 
-    const estadoNuevo = await findEstadoByDescripcion('nuevo');
-    if (!estadoNuevo) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Error interno: estado "nuevo" no encontrado.`
-      );
-      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
-    }
+    // Cifra la contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const tipoPersona = await findTipoPersonaByDescripcion(tipo_persona_descripcion);
-    if (!tipoPersona) {
-      return res.status(404).json({ message: 'Tipo de persona no encontrado.' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const newUser = await Usuario.create({
+    // Crea un nuevo usuario con el estado 'NUEVO'
+    const newUser = await createUsuario({
       email,
       clave: hashedPassword,
-      nombre,
-      apellido,
-      cuit,
-      tipo_persona_id: tipoPersona.id_tipo_persona,
-      domicilio,
-      ciudad,
-      provincia,
-      pais,
+      tipo_registro: 'NUEVO',
+      nombres_y_apellidos,
       telefono,
-      codigo_postal,
-      estado_id: estadoNuevo.id_estado,
     });
 
     logger.info(`${req.method} ${req.originalUrl} - Usuario registrado exitosamente: ${email}`);
 
-    const emailToken = jwt.sign({ id_usuario: newUser.id_usuario }, process.env.JWT_SECRET!, {
-      expiresIn: '1d',
+    // Crear el registro correspondiente en UsuarioMaestro usando el servicio
+    await createUsuarioMaestro({
+      usuario_registrante_id: newUser.id_usuario,
+      rol_id: 'usuario',
+      productora_id: null,
+      is_usuario_principal: false,
+      fecha_ultimo_cambio_rol: new Date(),
     });
+
+    // Configuración del token de verificación de email
+    const tokenExpiration = process.env.EMAIL_TOKEN_EXPIRATION || '1d';
+    if (!process.env.JWT_SECRET) throw new Error('Falta JWT_SECRET en el archivo de configuración');
+    const emailToken = jwt.sign({ id_usuario: newUser.id_usuario }, process.env.JWT_SECRET, {
+      expiresIn: tokenExpiration,
+    });
+
+    // Guarda el token de verificación en el usuario
+    const decoded = jwt.verify(emailToken, process.env.JWT_SECRET!) as JwtPayload;
     newUser.email_verification_token = emailToken;
-    newUser.email_verification_token_expires = new Date(Date.now() + 60 * 60 * 1000);
+    newUser.email_verification_token_expires = new Date(decoded.exp! * 1000);
+
     await newUser.save();
 
     logger.debug(
-      `${req.method} ${req.originalUrl} - Token de verificación generado para el usuario ${email}`
+      `${req.method} ${req.originalUrl} - Token de verificación generado para: ${email}`
     );
 
+    // Enviar correo de verificación
     const validationLink = `${emailToken}`;
     const emailBody = MESSAGES.EMAIL_BODY.VALIDATE_ACCOUNT(validationLink);
     await sendEmail({
       to: newUser.email,
-      subject: 'Confirmá tu cuenta para poder ingresar al sistema',
+      subject: 'Confirmá tu cuenta para ingresar al sistema',
       html: emailBody,
     });
 
-    logger.info(`${req.method} ${req.originalUrl} - Correo de validación enviado a ${email}`);
-    res.status(201).json({ message: MESSAGES.SUCCESS.AUTH.REGISTER });
+    logger.info(`${req.method} ${req.originalUrl} - Correo de validación enviado a: ${email}`);
+
+    // Registra la acción en AuditoriaEntidad
+    await AuditoriaEntidad.create({
+      usuario_originario_id: null,
+      usuario_destino_id: newUser.id_usuario,
+      entidad_afectada: 'Usuario',
+      tipo_auditoria: 'ALTA',
+      detalle: 'Registro de nuevo usuario principal',
+    });
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Auditoría registrada para el usuario: ${email}`
+    );
+
+    // Retorno de mensaje al usuario comn código
+    res.status(201).json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_PRIMARY });
   } catch (err) {
     logger.error(
-      `${req.method} ${req.originalUrl} - Error en el registro de usuario: ${
+      `${req.method} ${req.originalUrl} - Error en el registro: ${
         err instanceof Error ? err.message : 'Error desconocido'
       }`
     );
@@ -157,77 +117,229 @@ export const register = async (req: AuthenticatedRequest, res: Response, next: N
   }
 };
 
-export const login = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+
+// REGISTER USUARIO 'SECUNDARIO'
+export const registerSecondary = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud recibida para registrar un usuario secundario`
+    );
+
+    const { email, nombres_y_apellidos, telefono } = req.body;
+
+    // Obtener el ID del usuario autenticado desde el token
+    const primaryUserId = typeof req.user === 'object' && 'id' in req.user ? req.user.id : null;
+    if (!primaryUserId) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario no autenticado o sin ID válido.`);
+      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+    }
+
+    // Verificar que el usuario autenticado es de tipo PRIMARIO
+    const primaryUserData = await findUsuario({ userId: primaryUserId });
+    const primaryUser = primaryUserData?.user;
+    const primaryUserRole = primaryUserData?.role;
+
+    if (!primaryUser || primaryUser.tipo_registro !== 'PRINCIPAL') {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Usuario no autorizado para registrar secundarios.`
+      );
+      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+    }
+
+    // Verificar que el usuario primario tiene una productora asignada
+    if (!primaryUserData.productora_id) {
+      throw new Error('El usuario principal no tiene una productora asociada.');
+    }
+
+    // Verifica si el usuario ya existe
+    const existingUser = await findUsuario({ email });
+    if (existingUser) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario ya registrado: ${email}`);
+      throw new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED);
+    }
+
+    // Genera una clave temporal
+    const temporaryPassword = nanoid(10);
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+    // Determina el rol del usuario secundario basado en el rol del usuario principal
+    const secondaryUserRole =
+      primaryUserRole === 'admin_principal' ? 'admin_secundario' : 'productor_secundario';
+
+    // Crea el nuevo usuario con tipo_registro SECUNDARIO
+    const newUser = await createUsuario({
+      email,
+      clave: hashedPassword,
+      tipo_registro: 'SECUNDARIO',
+      nombres_y_apellidos,
+      telefono,
+    });
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Usuario secundario registrado exitosamente: ${email}`
+    );
+
+    // Crear el registro en UsuarioMaestro para el usuario secundario con el rol asignado
+    await createUsuarioMaestro({
+      usuario_registrante_id: newUser.id_usuario,
+      rol_id: secondaryUserRole,
+      productora_id: primaryUserData.productora_id,
+      is_usuario_principal: false,
+      fecha_ultimo_cambio_rol: new Date(),
+    });
+
+    // Configuración del token de verificación de email
+    const tokenExpiration = process.env.EMAIL_TOKEN_EXPIRATION || '1d';
+    if (!process.env.JWT_SECRET) throw new Error('Falta JWT_SECRET en el archivo de configuración');
+    const emailToken = jwt.sign({ id_usuario: newUser.id_usuario }, process.env.JWT_SECRET, {
+      expiresIn: tokenExpiration,
+    });
+
+    // Guarda el token de verificación en el usuario
+    const decoded = jwt.verify(emailToken, process.env.JWT_SECRET!) as JwtPayload;
+    newUser.email_verification_token = emailToken;
+    newUser.email_verification_token_expires = new Date(decoded.exp! * 1000);
+
+    await newUser.save();
+
+    logger.debug(
+      `${req.method} ${req.originalUrl} - Token de verificación generado para el usuario secundario: ${email}`
+    );
+
+    // Enviar correo de verificación con clave temporal
+    const validationLink = `${emailToken}`;
+    const emailBody = MESSAGES.EMAIL_BODY.VALIDATE_ACCOUNT_WITH_TEMP_PASSWORD(
+      validationLink,
+      temporaryPassword
+    );
+    await sendEmail({
+      to: newUser.email,
+      subject: 'Confirmá tu cuenta secundaria para ingresar al sistema',
+      html: emailBody,
+    });
+
+    logger.info(`${req.method} ${req.originalUrl} - Correo de verificación enviado a: ${email}`);
+
+    // Registrar acción en AuditoriaEntidad
+    const auditoriaDetalle = `Usuario secundario ${email} creado con rol ${secondaryUserRole}`;
+    await AuditoriaEntidad.create({
+      usuario_originario_id: primaryUserId,
+      usuario_destino_id: newUser.id_usuario,
+      entidad_afectada: 'Usuario',
+      tipo_auditoria: 'ALTA',
+      detalle: auditoriaDetalle,
+    });
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Auditoría registrada para el usuario secundario: ${email}`
+    );
+
+    // Retorno de mensaje de éxito
+    res.status(201).json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_SECONDARY });
+  } catch (err) {
+    logger.error(
+      `${req.method} ${req.originalUrl} - Error en el registro de usuario secundario: ${
+        err instanceof Error ? err.message : 'Error desconocido'
+      }`
+    );
+    next(err);
+  }
+};
+
+
+// LOGIN
+export const login = async (req: Request, res: Response, next: NextFunction) => {
+  try {
     logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para iniciar sesión`);
 
     const { email, password } = req.body;
 
-    const existingToken = req.cookies['auth_token'];
-    const decodedToken = verifyToken(existingToken, process.env.JWT_SECRET!);
+    // Realiza la consulta para obtener el usuario
+    const userData = await findUsuario({ email });
+    const user = userData?.user;
+    const role = userData?.role;
 
-    if (decodedToken) {
-      const user = (await findUsuarioByEmail(email)) as UserWithRelations; 
-      if (user && decodedToken.id === user.id_usuario) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - El usuario ${email} ya ha iniciado sesión previamente.`
-        );
-        return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
-      }
-    }
-
-    const user = (await findUsuarioByEmail(email)) as UserWithRelations;
     if (!user) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Usuario no encontrado: ${email}`
       );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
-    
-    const rolAdministrador = await findRolByDescripcion('admin');  
-    if (!user.isHabilitado && user.Rol?.descripcion !== rolAdministrador?.descripcion) {
-      logger.warn(`${req.method} ${req.originalUrl} - El usuario ${email} está bloqueado.`);
-      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.USER_BLOCKED });
+
+    // Verificación de sesión existente
+    const existingToken = req.cookies['auth_token'];
+    const decodedToken = verifyToken(existingToken, process.env.JWT_SECRET!);
+
+    if (decodedToken && decodedToken.id === user.id_usuario) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario ${email} ya ha iniciado sesión previamente.`
+      );
+      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
     }
 
-    const estadoNuevo = await findEstadoByDescripcion('nuevo');
-    if (user.estado_id === estadoNuevo?.id_estado) {
+    // Verificación de confirmación de cuenta
+    if (user.tipo_registro === 'NUEVO') {
       logger.warn(`${req.method} ${req.originalUrl} - El usuario ${email} no está confirmado.`);
-      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.USER_NOT_CONFIRMED });
+      return res.status(403).json({ message: MESSAGES.ERROR.REGISTER.USER_NOT_CONFIRMED });
     }
 
-    const isPasswordValid = await verifyPassword(password, user.clave);
+    // Validación de contraseña
+    const isPasswordValid = await bcrypt.compare(password, user.clave);
     const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10);
 
-    if (!isPasswordValid) {   
-
-      if (user.Rol?.descripcion !== rolAdministrador?.descripcion) {        
+    if (!isPasswordValid) {
+      // Incrementa intentos fallidos y verifica si debe bloquear al usuario
+      if (role !== 'admin_principal' && role !== 'admin_secundario') {
         user.intentos_fallidos += 1;
-        
+
+        // Si los intentos fallidos alcanzan el límite, deshabilitar el usuario
         if (user.intentos_fallidos >= MAX_LOGIN_ATTEMPTS) {
-          user.isHabilitado = false;
+          user.is_habilitado = false;
           logger.warn(
             `${req.method} ${req.originalUrl} - El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos`
           );
+
+          // Registro en auditoría de bloqueo de usuario
+          await AuditoriaEntidad.create({
+            usuario_registrante_id: user.id_usuario,
+            entidad_afectada: 'Usuario',
+            tipo_auditoria: 'ERROR',
+            detalle: `Bloqueo después de ${MAX_LOGIN_ATTEMPTS} intentos fallidos`,
+          });
         }
 
+        // Guardar cambios en intentos fallidos y estado de habilitación del usuario
         await user.save();
       }
 
+      // Registro de auditoría para intento de inicio de sesión fallido
+      await AuditoriaEntidad.create({
+        usuario_originario_id: user.id_usuario,
+        entidad_afectada: 'Usuario',
+        tipo_auditoria: 'ERROR',
+        detalle: `Intento ${user.intentos_fallidos} fallido de inicio de sesión.`,
+      });
+
+      // Registra en el log y lanza un error de autenticación
       logger.warn(
         `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Contraseña incorrecta para el usuario: ${email}. Intentos fallidos: ${user.intentos_fallidos}`
       );
+
       throw new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.PASSWORD_INCORRECT);
     }
 
-    if (user.intentos_fallidos > 0 && user.Rol?.descripcion !== rolAdministrador?.descripcion) {
+    // Reiniciar intentos fallidos si la autenticación es exitosa
+    if (
+      user.intentos_fallidos > 0 &&
+      (role === 'productor_principal' || role === 'productor_secundario')
+    ) {
       user.intentos_fallidos = 0;
       await user.save();
     }
 
+    // Generar nuevo token con el rol
     const token = jwt.sign(
-      { id: user.id_usuario, role: user.Rol?.descripcion },
+      { id: user.id_usuario, role: role || 'usuario' },
       process.env.JWT_SECRET!,
       {
         expiresIn: '1h',
@@ -235,15 +347,32 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
     );
 
     res.cookie('auth_token', token, {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 3600000,
     });
 
+    // Registro de auditoría para acceso exitoso
+    await AuditoriaEntidad.create({
+      usuario_originario_id: user.id_usuario,
+      entidad_afectada: 'Usuario',
+      tipo_auditoria: 'AUTH',
+      detalle: `Inicio de sesión exitoso`,
+    });
+
+    // Registro de sesión
+    await AuditoriaSesion.create({
+      usuario_registrante_id: user.id_usuario,
+      fecha_inicio_sesion: new Date(),
+      ip_origen: req.ip,
+      navegador: req.headers['user-agent'] || null,
+    });
+
     logger.info(
       `${req.method} ${req.originalUrl} - Inicio de sesión exitoso para el usuario: ${email}`
     );
+
     return res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGIN });
   } catch (err) {
     logger.error(
@@ -255,38 +384,58 @@ export const login = async (req: AuthenticatedRequest, res: Response, next: Next
   }
 };
 
-export const requestPasswordReset = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
 
+// SOLICITAR RESETEO DE CLAVE
+export const requestPasswordReset = async (req: Request, res: Response, next: NextFunction) => {
+  try {
     logger.info(
       `${req.method} ${req.originalUrl} - Solicitud recibida para restablecer la contraseña`
     );
 
     const { email } = req.body;
 
-    const user = await findUsuarioByEmail(email);
-    if (!user) {
+    // Verifica si el usuario existe
+    const result = await findUsuario({ email });
+    if (!result || !result.user) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Solicitud de restablecimiento de contraseña fallida. Usuario no encontrado: ${email}`
       );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
-    const resetToken = jwt.sign({ id_usuario: user.id_usuario }, process.env.JWT_SECRET!, {
-      expiresIn: process.env.RESET_TOKEN_EXPIRATION || '1h',
+    const user = result.user;
+
+    // Configuración de expiración del token de restablecimiento
+    const tokenExpiration = process.env.RESET_TOKEN_EXPIRATION || '1h';
+    if (!process.env.JWT_SECRET) {
+      throw new Error('Falta JWT_SECRET en el archivo de configuración');
+    }
+
+    // Genera el token de restablecimiento
+    const resetToken = jwt.sign({ id_usuario: user.id_usuario }, process.env.JWT_SECRET, {
+      expiresIn: tokenExpiration,
     });
     user.reset_password_token = resetToken;
-    user.reset_password_token_expires = new Date(Date.now() + 60 * 60 * 1000);
+
+    // Calcula la fecha de expiración del token de restablecimiento
+    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET!) as JwtPayload;
+    user.reset_password_token_expires = new Date(decoded.exp! * 1000);
+
     await user.save();
 
     logger.debug(
       `${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña generado para el usuario: ${email}`
     );
 
+    // Registro en auditoría para la solicitud de restablecimiento de contraseña
+    await AuditoriaEntidad.create({
+      usuario_originario_id: user.id_usuario,
+      entidad_afectada: 'Usuario',
+      tipo_auditoria: 'CAMBIO',
+      detalle: `Solicitud de cambio de clave.`,
+    });
+
+    // Genera el enlace de restablecimiento y envía el correo electrónico
     const resetLink = `${resetToken}`;
     const emailBody = MESSAGES.EMAIL_BODY.PASSWORD_RECOVERY(resetLink);
     await sendEmail({
@@ -311,40 +460,98 @@ export const requestPasswordReset = async (
   }
 };
 
-export const resetPassword = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
 
+// VALIDAR EL TOKEN ENVIADO AL RESETEAR LA CLAVE
+export const validateEmail = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para validar el email`);
+
+    const { token } = req.params;
+
+    let decoded: JwtPayload;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    } catch (err) {
+      logger.warn(`${req.method} ${req.originalUrl} - Token de verificación inválido o expirado.`);
+      throw new Err.UnauthorizedError(MESSAGES.ERROR.JWT.INVALID);
+    }
+
+    // Busca al usuario usando el ID decodificado y verifica el token y su expiración
+    const result = await findUsuario({ userId: decoded.id_usuario });
+    const user = result?.user;
+
+    if (!user || user.email_verification_token !== token || user.email_verification_token_expires! < new Date()) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado o token inválido.`);
+      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+    }
+
+    // Actualiza el tipo_registro del usuario a "CONFIRMADO" y limpia el token de verificación
+    user.tipo_registro = 'CONFIRMADO';
+    user.email_verification_token = null;
+    user.email_verification_token_expires = null;
+    await user.save();
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Email validado correctamente para el usuario ${user.email}`
+    );
+
+    // Registrar en la auditoría el cambio de estado a "CONFIRMADO"
+    await AuditoriaEntidad.create({
+      usuario_originario_id: user.id_usuario,
+      entidad_afectada: 'Usuario',
+      tipo_auditoria: 'CAMBIO',
+      detalle: `${user.email} confirmado`,
+    });
+
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.EMAIL_CONFIRMED });
+  } catch (err) {
+    logger.error(
+      `${req.method} ${req.originalUrl} - Error en la validación del email: ${
+        err instanceof Error ? err.message : 'Error desconocido'
+      }`
+    );
+    next(err);
+  }
+};
+
+
+// CAMBIAR CLAVE UNA VEZ VALIDADO EL MAIL
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
     logger.info(
       `${req.method} ${req.originalUrl} - Solicitud recibida para restablecer la contraseña del usuario`
     );
 
     const { token, newPassword } = req.body;
 
-    const user = await Usuario.findOne({
-      where: {
-        reset_password_token: token,
-        reset_password_token_expires: { [Op.gt]: new Date() },
-      },
-    });
-
-    if (!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña inválido o expirado.`
-      );
+    // Decodificar el token para obtener el userId
+    let decoded: JwtPayload;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    } catch (err) {
+      logger.warn(`${req.method} ${req.originalUrl} - Token de restablecimiento inválido o expirado.`);
       throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
     }
 
+    // Buscar el usuario usando el id del token y verificar el token y su expiración
+    const result = await findUsuario({ userId: decoded.id_usuario });
+    const user = result?.user;
+
+    if (!user || user.reset_password_token !== token || user.reset_password_token_expires! < new Date()) {
+      logger.warn(`${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña inválido o expirado.`);
+      throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
+    }
+
+    // Cifra la nueva contraseña
     const hashedPassword = await hashPassword(newPassword);
     user.clave = hashedPassword;
 
+    // Limpia el token de restablecimiento y su fecha de expiración
     user.reset_password_token = null;
     user.reset_password_token_expires = null;
     await user.save();
-  
+
+    // Limpia la cookie de autenticación para cerrar sesión
     res.clearCookie('auth_token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -354,6 +561,15 @@ export const resetPassword = async (
     logger.info(
       `${req.method} ${req.originalUrl} - Contraseña restablecida exitosamente para el usuario ${user.email}. Sesión cerrada.`
     );
+
+    // Registro en auditoría para el restablecimiento de la contraseña
+    await AuditoriaEntidad.create({
+      usuario_originario_id: user.id_usuario,
+      entidad_afectada: 'Usuario',
+      tipo_auditoria: 'CAMBIO',
+      detalle: `Clave modificada por mail`,
+    });
+
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
@@ -369,51 +585,45 @@ export const resetPassword = async (
   }
 };
 
-export const validateEmail = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
+
+// OBTENER LOS DATOS DEL USUARIO
+export const getUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud recibida para obtener los datos del usuario`
+    );
 
-    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para validar el email`);
+    const token = req.cookies['auth_token'];
 
-    const { token } = req.params;
+    if (!token) {
+      logger.warn(`${req.method} ${req.originalUrl} - Token no proporcionado en la cookie.`);
+      return res.status(401).json({ message: MESSAGES.ERROR.VALIDATION.NO_TOKEN_PROVIDED });
+    }
 
-    const user = await Usuario.findOne({
-      where: {
-        email_verification_token: token,
-        email_verification_token_expires: { [Op.gt]: new Date() },
-      },
-    });
+    const decodedToken = verifyToken(token, process.env.JWT_SECRET!);
+    if (!decodedToken || !decodedToken.id) {
+      logger.warn(`${req.method} ${req.originalUrl} - Token inválido o expirado.`);
+      return res.status(401).json({ message: MESSAGES.ERROR.VALIDATION.INVALID_TOKEN });
+    }
+
+    // Utilizar findUsuario para obtener los datos completos del usuario
+    const result = await findUsuario({ userId: decodedToken.id });
+    const user = result?.user;
 
     if (!user) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Token de verificación de email inválido o expirado.`
+        `${req.method} ${req.originalUrl} - No se encontró un usuario con el ID: ${decodedToken.id}`
       );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
-    const estadoConfirmado = await findEstadoByDescripcion('confirmado');
-    if (!estadoConfirmado) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Error interno: estado "confirmado" no encontrado.`
-      );
-      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
-    }
-
-    user.estado_id = estadoConfirmado.id_estado;
-    user.email_verification_token = null;
-    user.email_verification_token_expires = null;
-    await user.save();
-
     logger.info(
-      `${req.method} ${req.originalUrl} - Email validado correctamente para el usuario ${user.email}`
+      `${req.method} ${req.originalUrl} - Datos del usuario obtenidos correctamente para el usuario con ID: ${user.id_usuario}`
     );
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.EMAIL_CONFIRMED });
+    res.status(200).json({ user, role: result.role, productora_id: result.productora_id });
   } catch (err) {
     logger.error(
-      `${req.method} ${req.originalUrl} - Error en la validación del email: ${
+      `${req.method} ${req.originalUrl} - Error al obtener los datos del usuario: ${
         err instanceof Error ? err.message : 'Error desconocido'
       }`
     );
@@ -421,246 +631,34 @@ export const validateEmail = async (
   }
 };
 
-export const authorizeUser = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-
-    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para autorizar al usuario`);
-
-    const { id_usuario } = req.body;
-
-    const user = await Usuario.findByPk(id_usuario);
-    if (!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    const estadoConfirmado = await findEstadoByDescripcion('confirmado');
-    if (!estadoConfirmado) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Error interno: estado "confirmado" no encontrado.`
-      );
-      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
-    }
-
-    if (user.estado_id !== estadoConfirmado.id_estado) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario con ID ${id_usuario} no está confirmado y no puede ser autorizado.`
-      );
-      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
-    }
-
-    const estadoAutorizado = await findEstadoByDescripcion('autorizado');
-   if (!estadoAutorizado) {
-     logger.error(
-       `${req.method} ${req.originalUrl} - Error interno: estado "autorizado" no encontrado.`
-     );
-     throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
-   }
-
-    if (user.estado_id === estadoAutorizado.id_estado) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario con ID ${id_usuario} ya ha sido autorizado.`
-      );
-      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
-    }
-
-    const rolProductor = await findRolByDescripcion('productor');
-    if (!rolProductor) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Error interno: rol "productor" no encontrado.`
-      );
-      throw new Err.InternalServerError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
-    }
-
-    user.estado_id = estadoAutorizado.id_estado;
-    user.rol_id = rolProductor.id_rol;
-    await user.save();
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Usuario con ID ${id_usuario} autorizado correctamente como productor.`
-    );
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.AUTHORIZED });
-  } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al autorizar productor: ${
-        err instanceof Error ? err.message : 'Error desconocido'
-      }`
-    );
-    next(err);
-  }
-};
-
-
-
-export const blockOrUnblockUser = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-
-    const { id_usuario, bloquear } = req.body;
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para ${
-        bloquear ? 'bloquear' : 'desbloquear'
-      } al usuario`
-    );
-
-    const user = await findUsuarioById(id_usuario);
-    if (!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-  
-    user.isHabilitado = !bloquear;
-    await user.save();
-
-    const message = bloquear
-      ? MESSAGES.SUCCESS.AUTH.USER_BLOCKED
-      : MESSAGES.SUCCESS.AUTH.USER_UNBLOCKED;
- 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Usuario con ID ${id_usuario} ${
-        bloquear ? 'bloqueado' : 'desbloqueado'
-      } correctamente.`
-    );
-    res.status(200).json({ message });
-
-  } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al bloquear/desbloquear usuario: ${
-        err instanceof Error ? err.message : 'Error desconocido'
-      }`
-    );
-    next(err);
-  }
-};
-
-
-export const changeUserRole = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { id_usuario, nuevo_rol } = req.body;
-
-    const user = await findUsuarioById(id_usuario);
-   if (!user) {
-     logger.warn(
-       `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
-     );
-     throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-   }
-    
-    const estadoAutorizado = await findEstadoByDescripcion('autorizado');
-    if (!estadoAutorizado) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Error interno: estado "autorizado" no encontrado.`
-      );
-      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
-    }
-
-    if (user.estado_id !== estadoAutorizado.id_estado) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario con ID ${id_usuario} no está autorizado y no puede cambiar de rol.`
-      );
-      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.STATE_INVALID });
-    }
-   
-    const rolAdministrador = await findRolByDescripcion('administrador');
-    const rolProductor = await findRolByDescripcion('productor');
-
-    if (!rolAdministrador || !rolProductor) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Error interno: rol "administrador" o "productor" no encontrado.`
-      );
-      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
-    }
-   
-    if (user.rol_id !== rolAdministrador.id_rol && user.rol_id !== rolProductor.id_rol) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario con ID ${id_usuario} no tiene rol asignado.`
-      );
-      return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_ROLE });
-    }
- 
-    const rol = await findRolByDescripcion(nuevo_rol);
-    if (!rol) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Rol inválido: ${nuevo_rol} para el usuario con ID: ${id_usuario}`
-      );
-      throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
-    }
-    
-    user.rol_id = rol.id_rol;
-    await user.save();
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Rol del usuario con ID ${id_usuario} actualizado correctamente a ${nuevo_rol}.`
-    );
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED });
-  } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al cambiar el rol de usuario: ${
-        err instanceof Error ? err.message : 'Error desconocido'
-      }`
-    );
-    next(err);
-  }
-};
-
-export const logout = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  try {  
-    res.clearCookie('auth_token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
-
-    const user = req.user as JwtPayload;
-    const email = user?.email || 'desconocido';
-
-    logger.info(`${req.method} ${req.originalUrl} - Logout exitoso para el usuario: ${email}`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGOUT });
-  } catch (err) {
-    logger.error('Error durante el proceso de logout', err);
-    next(err);
-  }
-};
-
+// CAMBIARLE LA CLAVE A UN USUARIO
 export const changeUserPassword = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { id_usuario, newPassword, confirmPassword } = req.body;
+    const { userId, newPassword, confirmPassword } = req.body;
     const userIdFromToken = (req.user as JwtPayload)?.id;
 
     if (newPassword !== confirmPassword) {
-      logger.warn('${req.method} ${req.originalUrl} - Las contraseñas no coinciden.');
+      logger.warn(`${req.method} ${req.originalUrl} - Las contraseñas no coinciden.`);
       return res.status(400).json({ message: MESSAGES.ERROR.PASSWORD.CONFIRMATION_MISMATCH });
     }
 
-    const user = await findUsuarioById(id_usuario);
+    // Buscar el usuario cuyo password se va a cambiar
+    const userData = await findUsuario({ userId });
+    const user = userData?.user;
+
     if (!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
-      );
+      logger.warn(`${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${userId}`);
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
-    const authenticatedUser = await findUsuarioById(userIdFromToken);
+    // Buscar el usuario autenticado desde el token
+    const authenticatedUserData = await findUsuario({ userId: userIdFromToken });
+    const authenticatedUser = authenticatedUserData?.user;
+
     if (!authenticatedUser) {
       logger.warn(
         `${req.method} ${req.originalUrl} - No se encontró al usuario autenticado con ID: ${userIdFromToken}`
@@ -668,27 +666,37 @@ export const changeUserPassword = async (
       return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
     }
 
-    const rolAdministrador = await findRolByDescripcion('administrador');
-    if (!rolAdministrador) {
-      logger.error('${req.method} ${req.originalUrl} - El rol administrador no fue encontrado.');
-      throw new Err.InternalServerError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
-    }
+    // Verificar si el rol del usuario autenticado es admin_principal o admin_secundario
+    const isAdmin =
+      authenticatedUserData?.role === 'admin_principal' ||
+      authenticatedUserData?.role === 'admin_secundario';
 
-    const isAdmin = authenticatedUser.rol_id === rolAdministrador.id_rol;
-
-    if (!isAdmin && userIdFromToken !== id_usuario) {
+    // Verificar que el usuario autenticado sea administrador o esté cambiando su propia contraseña
+    if (!isAdmin && userIdFromToken !== userId) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Usuario con ID ${userIdFromToken} no está autorizado para cambiar la clave de otro usuario.`
       );
-      return res.status(403).json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_ROLE });
+      return res
+        .status(403)
+        .json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_PASSWORD });
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    // Cifrar la nueva contraseña y actualizarla en el usuario
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.clave = hashedPassword;
     await user.save();
 
+    // Registrar en auditoría el cambio de clave
+    await AuditoriaEntidad.create({
+      usuario_originario_id: userIdFromToken,
+      usuario_destino_id: userId,
+      entidad_afectada: 'Usuario',
+      tipo_auditoria: 'CAMBIO',
+      detalle: `Clave actualizada para el usuario con ID ${userId}`,
+    });
+
     logger.info(
-      `${req.method} ${req.originalUrl} - Clave actualizada correctamente para el usuario con ID ${id_usuario}.`
+      `${req.method} ${req.originalUrl} - Clave actualizada correctamente para el usuario con ID ${userId}.`
     );
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });
   } catch (err) {
@@ -701,46 +709,70 @@ export const changeUserPassword = async (
   }
 };
 
-export const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+// FUNCIÓN PARA OBTENER LAS PRODUCTORAS ASOCIADAS AL USUARIO ACTIVO Y GUARDARLAS EN UNA COOKIE
+export const getCompanies = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { id_usuario } = req.body;
+    const userId = (req.user as any)?.id;
 
-    const user = await findUsuarioById(id_usuario);
-    if (!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+    if (!userId) {
+      return res.status(400).json({ message: 'Usuario no autenticado' });
     }
 
-    const estadoNuevo = await findEstadoByDescripcion('nuevo');
-    const estadoConfirmado = await findEstadoByDescripcion('confirmado');
+    const companies = await getAssociatedCompanies(userId);
 
-    if (!estadoNuevo || !estadoConfirmado) {
-      logger.error(
-        '${req.method} ${req.originalUrl} - Error interno: estado "nuevo" o "confirmado" no encontrado.'
-      );
-      throw new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN);
-    }
+    // Guardar las productoras en una cookie
+    res.cookie('associated_companies', JSON.stringify(companies), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // Expira en 1 día
+    });
 
-    if (user.estado_id !== estadoNuevo.id_estado && user.estado_id !== estadoConfirmado.id_estado) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se puede eliminar al usuario con ID ${id_usuario} debido a su estado actual.`
-      );
-      return res.status(403).json({ message: MESSAGES.ERROR.VALIDATION.STATE_ALREADY_AUTHORIZED });
-    }
-
-    await user.destroy();
-    logger.info(
-      `${req.method} ${req.originalUrl} - Usuario con ID ${id_usuario} eliminado correctamente.`
-    );
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.USER_DELETED });
+    res.status(200).json({ companies });
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al eliminar usuario: ${
-        err instanceof Error ? err.message : 'Error desconocido'
-      }`
-    );
+    console.error('Error al obtener las productoras:', err);
+    next(err);
+  }
+};
+
+// CERRAR SESION
+export const logout = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const authToken = req.cookies['auth_token'];
+
+    if (!authToken) {
+      logger.warn(`${req.method} ${req.originalUrl} - No se encontró cookie de autenticación.`);
+      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.NO_COOKIE_FOUND });
+    }
+
+    // Limpia la cookie de autenticación para cerrar sesión
+    res.clearCookie('auth_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    // Verifica si `req.user` es un JwtPayload y extrae el id y email del usuario
+    const user = req.user as JwtPayload;
+    const userId = user?.id || 'desconocido';
+    const email = user?.email || 'desconocido';
+
+    logger.info(`${req.method} ${req.originalUrl} - Logout exitoso para el usuario: ${email}`);
+
+    // Registro de auditoría para el cierre de sesión en AuditoriaEntidad
+    await AuditoriaEntidad.create({
+      usuario_originario_id: userId,
+      entidad_afectada: 'Usuario',
+      tipo_auditoria: 'AUTH',
+      detalle: 'Logout exitoso',
+    });
+
+    // Llama al servicio para actualizar la fecha de fin de sesión
+    await actualizarFechaFinSesion(userId);
+
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGOUT });
+  } catch (err) {
+    logger.error(`${req.method} ${req.originalUrl} - Error durante el proceso de logout`, err);
     next(err);
   }
 };

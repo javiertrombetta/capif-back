@@ -1,4 +1,4 @@
-import Rol from '../models/Rol';
+import Rol from '../models/UsuarioRolTipo';
 
 export const findRolById = async (rol_id: string) => {
   return await Rol.findOne({ where: { id_rol: rol_id } });

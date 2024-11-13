@@ -111,71 +111,8 @@ export const authSchemas = {
         description: 'Contraseña del nuevo usuario',
         example: 'ClaveSegura123!',
       },
-      nombre: {
-        type: 'string',
-        description: 'Nombre del usuario',
-        example: 'Juan',
-      },
-      apellido: {
-        type: 'string',
-        description: 'Apellido del usuario',
-        example: 'Pérez',
-      },
-      cuit: {
-        type: 'string',
-        description: 'CUIT del usuario',
-        example: '20123456789',
-      },
-      tipo_persona_descripcion: {
-        type: 'string',
-        description: 'Tipo de Entidad',
-        example: 'Persona Física',
-      },
-      domicilio: {
-        type: 'string',
-        description: 'Domicilio del usuario',
-        example: 'Calle Falsa 123',
-      },
-      ciudad: {
-        type: 'string',
-        description: 'Ciudad del usuario',
-        example: 'Buenos Aires',
-      },
-      provincia: {
-        type: 'string',
-        description: 'Provincia del usuario',
-        example: 'Buenos Aires',
-      },
-      pais: {
-        type: 'string',
-        description: 'País del usuario',
-        example: 'Argentina',
-      },
-      codigo_postal: {
-        type: 'string',
-        description: 'Código postal del usuario',
-        example: '1414',
-      },
-      telefono: {
-        type: 'string',
-        description: 'Teléfono del usuario',
-        example: '+54 9 11 1234-5678',
-      },
     },
-    required: [
-      'email',
-      'password',
-      'nombre',
-      'apellido',
-      'cuit',
-      'tipo_persona_descripcion',
-      'domicilio',
-      'ciudad',
-      'provincia',
-      'pais',
-      'codigo_postal',
-      'telefono',
-    ],
+    required: ['email', 'password'],
   },
   RecoverPassword: {
     title: 'Autenticación - Mail de recuperación de clave (envío)',
@@ -206,29 +143,17 @@ export const authSchemas = {
       },
     },
     required: ['token', 'newPassword'],
-  },
-  AuthorizeUser: {
-    title: 'Autenticación - Autorizar a un usuario nuevo',
-    type: 'object',
-    properties: {
-      id_usuario: {
-        type: 'string',
-        description: 'ID del usuario a autorizar',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-    },
-    required: ['id_usuario'],
-  },
+  },  
   BlockUser: {
     title: 'Autenticación - Bloquear a un usuario existente',
     type: 'object',
     properties: {
-      id_usuario: {
+      userId: {
         type: 'string',
         description: 'ID del usuario a bloquear o desbloquear',
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
-      bloquear: {
+      isBlocked: {
         type: 'boolean',
         description: 'Estado del usuario (bloqueado o desbloqueado)',
         example: true,
@@ -240,12 +165,12 @@ export const authSchemas = {
     title: 'Autenticación - Cambiarle el rol a un usuario',
     type: 'object',
     properties: {
-      id_usuario: {
+      userId: {
         type: 'string',
         description: 'ID del usuario cuyo rol será cambiado',
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
-      nuevo_rol: {
+      newRole: {
         type: 'string',
         description: 'Nuevo rol del usuario',
         example: 'admin',
@@ -257,7 +182,7 @@ export const authSchemas = {
     title: 'Autenticación - Cambio de clave',
     type: 'object',
     properties: {
-      id_usuario: {
+      userId: {
         type: 'string',
         description: 'ID del usuario a cambiar clave',
         example: '123e4567-e89b-12d3-a456-426614174000',
@@ -274,19 +199,7 @@ export const authSchemas = {
       },
     },
     required: ['id_usuario', 'newPassword', 'confirmPassword'],
-  },
-  DeleteUser: {
-    title: 'Autenticación - Borrar un usuario',
-    type: 'object',
-    properties: {
-      id_usuario: {
-        type: 'string',
-        description: 'ID del usuario a eliminar',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-    },
-    required: ['id_usuario'],
-  },
+  },  
 };
 
 export const conflictoSchemas = {
@@ -685,54 +598,728 @@ export const dbSchemas = {
   },
 };
 
-const userProperties = {
-  nombre: { type: 'string', example: 'Juan' },
-  apellido: { type: 'string', example: 'Pérez' },
-  email: { type: 'string', example: 'juan.perez@dominio.com' },
-  password: { type: 'string', example: 'ClaveSegura123.', description: 'Clave del usuario' },
-  rol: { type: 'string', example: 'productor', description: 'Descripción del rol del usuario' },
-  estado: { type: 'string', example: 'nuevo', description: 'Estado actual del usuario' },
-  cuit: { type: 'string', example: '20304050607', description: 'CUIT del usuario' },
-  tipo_persona: {
-    type: 'string',
-    example: 'Persona Física',
-    description: 'Tipo de persona (Persona Física o Persona Jurídica)',
-  },
-  domicilio: { type: 'string', example: 'Calle Falsa 123' },
-  ciudad: { type: 'string', example: 'Buenos Aires' },
-  provincia: { type: 'string', example: 'Buenos Aires' },
-  pais: { type: 'string', example: 'Argentina' },
-  codigo_postal: { type: 'string', example: '1000' },
-  telefono: { type: 'string', example: '+54 9 11 1234 5678' },
-};
-
 export const userSchemas = {
   UsuarioCreate: {
     title: 'Usuario - Crear',
     type: 'object',
-    properties: userProperties,
-    required: [
-      'nombre',
-      'apellido',
-      'email',
-      'password',
-      'rol',
-      'estado',
-      'cuit',
-      'tipo_persona',
-      'ciudad',
-      'provincia',
-      'pais',
-      'codigo_postal',
-      'telefono',
-    ],
+    properties: {
+      email: {
+        type: 'string',
+        example: 'juan.perez@dominio.com',
+        description: 'Correo electrónico del usuario',
+      },
+      rol: {
+        type: 'string',
+        example: 'productor',
+        description: 'Rol asignado al usuario',
+      },
+      estado: {
+        type: 'string',
+        example: 'nuevo',
+        description: 'Estado del usuario',
+      },
+      personaFisica: {
+        type: 'object',
+        properties: {
+          id_persona_fisica: {
+            type: 'string',
+            example: '123e4567-e89b-12d3-a456-426614174000',
+            description: 'Identificador único de la persona física',
+          },
+          estado: {
+            type: 'string',
+            example: 'activo',
+            description: 'Estado de la persona física',
+          },
+          cuit_cuil: {
+            type: 'string',
+            example: '20-12345678-9',
+            description: 'CUIT/CUIL con formato XX-XXXXXXXX-X',
+          },
+          nombres: {
+            type: 'string',
+            example: 'Juan',
+            description: 'Nombres de la persona física',
+          },
+          apellidos: {
+            type: 'string',
+            example: 'Pérez',
+            description: 'Apellidos de la persona física',
+          },
+          email: {
+            type: 'string',
+            example: 'juan.perez@dominio.com',
+            description: 'Correo electrónico',
+          },
+          denominacion_sello: {
+            type: 'string',
+            example: 'Sello Juan Pérez',
+            description: 'Denominación o nombre del sello',
+          },
+          calle: {
+            type: 'string',
+            example: 'Calle Falsa',
+            description: 'Calle del domicilio',
+          },
+          numero: {
+            type: 'string',
+            example: '123',
+            description: 'Número del domicilio',
+          },
+          ciudad: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Ciudad del domicilio',
+          },
+          localidad: {
+            type: 'string',
+            example: 'Palermo',
+            description: 'Localidad del domicilio',
+          },
+          provincia: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Provincia del domicilio',
+          },
+          codigo_postal: {
+            type: 'string',
+            example: '1414',
+            description: 'Código postal',
+          },
+          telefono: {
+            type: 'string',
+            example: '+54 9 11 1234 5678',
+            description: 'Teléfono de la persona física',
+          },
+          nacionalidad: {
+            type: 'string',
+            example: 'Argentina',
+            description: 'Nacionalidad de la persona física',
+          },
+          cbu: {
+            type: 'string',
+            example: '2850590940090418135201',
+            description: 'Clave Bancaria Uniforme (CBU) de 22 dígitos',
+          },
+          alias_cbu: {
+            type: 'string',
+            example: 'mi.alias.banco',
+            description: 'Alias del CBU',
+          },
+          documento_identidad: {
+            type: 'string',
+            example: '/documentos/archivo_dni.pdf',
+            description: 'Documento de identidad',
+          },
+          otros_documentos: {
+            type: 'array',
+            items: {
+              type: 'string',
+              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
+            },
+            description: 'Rutas de otros documentos relevantes (PDF, imágenes, etc.)',
+          },
+        },
+      },
+      personaJuridica: {
+        type: 'object',
+        properties: {
+          id_persona_juridica: {
+            type: 'string',
+            example: '123e4567-e89b-12d3-a456-426614174000',
+            description: 'ID único de la persona jurídica',
+          },
+          estado: {
+            type: 'string',
+            example: 'activo',
+            description: 'Estado asociado a la persona jurídica',
+          },
+          cuit_cuil: {
+            type: 'string',
+            example: '30-12345678-9',
+            description: 'CUIT/CUIL de la empresa',
+          },
+          razon_social: {
+            type: 'string',
+            example: 'Mi Empresa SRL',
+            description: 'Razón social de la empresa',
+          },
+          apellidos_representante: {
+            type: 'string',
+            example: 'Pérez',
+            description: 'Apellidos del representante legal',
+          },
+          nombres_representante: {
+            type: 'string',
+            example: 'Juan',
+            description: 'Nombres del representante legal',
+          },
+          cuit_representante: {
+            type: 'string',
+            example: '20-12345678-9',
+            description: 'CUIT del representante legal',
+          },
+          denominacion_sello: {
+            type: 'string',
+            example: 'Sello Mi Empresa',
+            description: 'Denominación del sello o marca',
+          },
+          calle: {
+            type: 'string',
+            example: 'Calle Falsa',
+            description: 'Nombre de la calle',
+          },
+          numero: {
+            type: 'string',
+            example: '123',
+            description: 'Número de la dirección',
+          },
+          ciudad: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Ciudad donde se encuentra la empresa',
+          },
+          localidad: {
+            type: 'string',
+            example: 'Palermo',
+            description: 'Localidad específica',
+          },
+          provincia: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Provincia donde está ubicada la empresa',
+          },
+          codigo_postal: {
+            type: 'string',
+            example: '1414',
+            description: 'Código postal',
+          },
+          telefono: {
+            type: 'string',
+            example: '+54 11 5678 1234',
+            description: 'Número de teléfono de contacto',
+          },
+          nacionalidad: {
+            type: 'string',
+            example: 'Argentina',
+            description: 'Nacionalidad de la empresa',
+          },
+          cbu: {
+            type: 'string',
+            example: '1234567890123456789012',
+            description: 'CBU de la cuenta bancaria',
+          },
+          alias_cbu: {
+            type: 'string',
+            example: 'mi.alias.cbu',
+            description: 'Alias del CBU',
+          },
+          contrato_social: {
+            type: 'string',
+            example: '/path/contrato-social.pdf',
+            description: 'Ruta del archivo del contrato social',
+          },
+          documento_representante: {
+            type: 'string',
+            example: '/path/documento-representante.pdf',
+            description: 'Ruta del documento del representante',
+          },
+          otros_documentos: {
+            type: 'array',
+            items: {
+              type: 'string',
+              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
+            },
+            description: 'Lista de rutas de otros documentos adicionales',
+          },
+        },
+      },
+    },
+    required: ['email'],
   },
 
   UsuarioUpdate: {
     title: 'Usuario - Actualizar',
     type: 'object',
-    properties: userProperties,
+    properties: {
+      personaFisica: {
+        type: 'object',
+        properties: {
+          id_persona_fisica: {
+            type: 'string',
+            example: '123e4567-e89b-12d3-a456-426614174000',
+            description: 'Identificador único de la persona física',
+          },
+          estado: {
+            type: 'string',
+            example: 'activo',
+            description: 'Estado de la persona física',
+          },
+          cuit_cuil: {
+            type: 'string',
+            example: '20-12345678-9',
+            description: 'CUIT/CUIL con formato XX-XXXXXXXX-X',
+          },
+          nombres: {
+            type: 'string',
+            example: 'Juan',
+            description: 'Nombres de la persona física',
+          },
+          apellidos: {
+            type: 'string',
+            example: 'Pérez',
+            description: 'Apellidos de la persona física',
+          },
+          email: {
+            type: 'string',
+            example: 'juan.perez@dominio.com',
+            description: 'Correo electrónico',
+          },
+          denominacion_sello: {
+            type: 'string',
+            example: 'Sello Juan Pérez',
+            description: 'Denominación o nombre del sello',
+          },
+          calle: {
+            type: 'string',
+            example: 'Calle Falsa',
+            description: 'Calle del domicilio',
+          },
+          numero: {
+            type: 'string',
+            example: '123',
+            description: 'Número del domicilio',
+          },
+          ciudad: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Ciudad del domicilio',
+          },
+          localidad: {
+            type: 'string',
+            example: 'Palermo',
+            description: 'Localidad del domicilio',
+          },
+          provincia: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Provincia del domicilio',
+          },
+          codigo_postal: {
+            type: 'string',
+            example: '1414',
+            description: 'Código postal',
+          },
+          telefono: {
+            type: 'string',
+            example: '+54 9 11 1234 5678',
+            description: 'Teléfono de la persona física',
+          },
+          nacionalidad: {
+            type: 'string',
+            example: 'Argentina',
+            description: 'Nacionalidad de la persona física',
+          },
+          cbu: {
+            type: 'string',
+            example: '2850590940090418135201',
+            description: 'Clave Bancaria Uniforme (CBU) de 22 dígitos',
+          },
+          alias_cbu: {
+            type: 'string',
+            example: 'mi.alias.banco',
+            description: 'Alias del CBU',
+          },
+          documento_identidad: {
+            type: 'string',
+            example: '/documentos/archivo_dni.pdf',
+            description: 'Documento de identidad',
+          },
+          otros_documentos: {
+            type: 'array',
+            items: {
+              type: 'string',
+              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
+            },
+            description: 'Rutas de otros documentos relevantes (PDF, imágenes, etc.)',
+          },
+        },
+      },
+      personaJuridica: {
+        type: 'object',
+        properties: {
+          id_persona_juridica: {
+            type: 'string',
+            example: '123e4567-e89b-12d3-a456-426614174000',
+            description: 'ID único de la persona jurídica',
+          },
+          estado: {
+            type: 'string',
+            example: 'activo',
+            description: 'Estado asociado a la persona jurídica',
+          },
+          cuit_cuil: {
+            type: 'string',
+            example: '30-12345678-9',
+            description: 'CUIT/CUIL de la empresa',
+          },
+          razon_social: {
+            type: 'string',
+            example: 'Mi Empresa SRL',
+            description: 'Razón social de la empresa',
+          },
+          apellidos_representante: {
+            type: 'string',
+            example: 'Pérez',
+            description: 'Apellidos del representante legal',
+          },
+          nombres_representante: {
+            type: 'string',
+            example: 'Juan',
+            description: 'Nombres del representante legal',
+          },
+          cuit_representante: {
+            type: 'string',
+            example: '20-12345678-9',
+            description: 'CUIT del representante legal',
+          },
+          denominacion_sello: {
+            type: 'string',
+            example: 'Sello Mi Empresa',
+            description: 'Denominación del sello o marca',
+          },
+          calle: {
+            type: 'string',
+            example: 'Calle Falsa',
+            description: 'Nombre de la calle',
+          },
+          numero: {
+            type: 'string',
+            example: '123',
+            description: 'Número de la dirección',
+          },
+          ciudad: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Ciudad donde se encuentra la empresa',
+          },
+          localidad: {
+            type: 'string',
+            example: 'Palermo',
+            description: 'Localidad específica',
+          },
+          provincia: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Provincia donde está ubicada la empresa',
+          },
+          codigo_postal: {
+            type: 'string',
+            example: '1414',
+            description: 'Código postal',
+          },
+          telefono: {
+            type: 'string',
+            example: '+54 11 5678 1234',
+            description: 'Número de teléfono de contacto',
+          },
+          nacionalidad: {
+            type: 'string',
+            example: 'Argentina',
+            description: 'Nacionalidad de la empresa',
+          },
+          cbu: {
+            type: 'string',
+            example: '1234567890123456789012',
+            description: 'CBU de la cuenta bancaria',
+          },
+          alias_cbu: {
+            type: 'string',
+            example: 'mi.alias.cbu',
+            description: 'Alias del CBU',
+          },
+          contrato_social: {
+            type: 'string',
+            example: '/path/contrato-social.pdf',
+            description: 'Ruta del archivo del contrato social',
+          },
+          documento_representante: {
+            type: 'string',
+            example: '/path/documento-representante.pdf',
+            description: 'Ruta del documento del representante',
+          },
+          otros_documentos: {
+            type: 'array',
+            items: {
+              type: 'string',
+              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
+            },
+            description: 'Lista de rutas de otros documentos adicionales',
+          },
+        },
+      },
+    },
     required: [],
   },
+
+  UsuarioData: {
+    title: 'Usuario - Cargar Datos Personales',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        description: 'ID del usuario',
+      },
+      personaFisica: {
+        type: 'object',
+        properties: {
+          id_persona_fisica: {
+            type: 'string',
+            example: '123e4567-e89b-12d3-a456-426614174000',
+            description: 'Identificador único de la persona física',
+          },
+          estado: {
+            type: 'string',
+            example: 'activo',
+            description: 'Estado de la persona física',
+          },
+          cuit_cuil: {
+            type: 'string',
+            example: '20-12345678-9',
+            description: 'CUIT/CUIL con formato XX-XXXXXXXX-X',
+          },
+          nombres: {
+            type: 'string',
+            example: 'Juan',
+            description: 'Nombres de la persona física',
+          },
+          apellidos: {
+            type: 'string',
+            example: 'Pérez',
+            description: 'Apellidos de la persona física',
+          },
+          email: {
+            type: 'string',
+            example: 'juan.perez@dominio.com',
+            description: 'Correo electrónico',
+          },
+          denominacion_sello: {
+            type: 'string',
+            example: 'Sello Juan Pérez',
+            description: 'Denominación o nombre del sello',
+          },
+          calle: {
+            type: 'string',
+            example: 'Calle Falsa',
+            description: 'Calle del domicilio',
+          },
+          numero: {
+            type: 'string',
+            example: '123',
+            description: 'Número del domicilio',
+          },
+          ciudad: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Ciudad del domicilio',
+          },
+          localidad: {
+            type: 'string',
+            example: 'Palermo',
+            description: 'Localidad del domicilio',
+          },
+          provincia: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Provincia del domicilio',
+          },
+          codigo_postal: {
+            type: 'string',
+            example: '1414',
+            description: 'Código postal',
+          },
+          telefono: {
+            type: 'string',
+            example: '+54 9 11 1234 5678',
+            description: 'Teléfono de la persona física',
+          },
+          nacionalidad: {
+            type: 'string',
+            example: 'Argentina',
+            description: 'Nacionalidad de la persona física',
+          },
+          cbu: {
+            type: 'string',
+            example: '2850590940090418135201',
+            description: 'Clave Bancaria Uniforme (CBU) de 22 dígitos',
+          },
+          alias_cbu: {
+            type: 'string',
+            example: 'mi.alias.banco',
+            description: 'Alias del CBU',
+          },
+          documento_identidad: {
+            type: 'string',
+            example: '/documentos/archivo_dni.pdf',
+            description: 'Documento de identidad',
+          },
+          otros_documentos: {
+            type: 'array',
+            items: {
+              type: 'string',
+              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
+            },
+            description: 'Rutas de otros documentos relevantes (PDF, imágenes, etc.)',
+          },
+        },
+      },
+      personaJuridica: {
+        type: 'object',
+        properties: {
+          id_persona_juridica: {
+            type: 'string',
+            example: '123e4567-e89b-12d3-a456-426614174000',
+            description: 'ID único de la persona jurídica',
+          },
+          estado: {
+            type: 'string',
+            example: 'activo',
+            description: 'Estado asociado a la persona jurídica',
+          },
+          cuit_cuil: {
+            type: 'string',
+            example: '30-12345678-9',
+            description: 'CUIT/CUIL de la empresa',
+          },
+          razon_social: {
+            type: 'string',
+            example: 'Mi Empresa SRL',
+            description: 'Razón social de la empresa',
+          },
+          apellidos_representante: {
+            type: 'string',
+            example: 'Pérez',
+            description: 'Apellidos del representante legal',
+          },
+          nombres_representante: {
+            type: 'string',
+            example: 'Juan',
+            description: 'Nombres del representante legal',
+          },
+          cuit_representante: {
+            type: 'string',
+            example: '20-12345678-9',
+            description: 'CUIT del representante legal',
+          },
+          denominacion_sello: {
+            type: 'string',
+            example: 'Sello Mi Empresa',
+            description: 'Denominación del sello o marca',
+          },
+          calle: {
+            type: 'string',
+            example: 'Calle Falsa',
+            description: 'Nombre de la calle',
+          },
+          numero: {
+            type: 'string',
+            example: '123',
+            description: 'Número de la dirección',
+          },
+          ciudad: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Ciudad donde se encuentra la empresa',
+          },
+          localidad: {
+            type: 'string',
+            example: 'Palermo',
+            description: 'Localidad específica',
+          },
+          provincia: {
+            type: 'string',
+            example: 'Buenos Aires',
+            description: 'Provincia donde está ubicada la empresa',
+          },
+          codigo_postal: {
+            type: 'string',
+            example: '1414',
+            description: 'Código postal',
+          },
+          telefono: {
+            type: 'string',
+            example: '+54 11 5678 1234',
+            description: 'Número de teléfono de contacto',
+          },
+          nacionalidad: {
+            type: 'string',
+            example: 'Argentina',
+            description: 'Nacionalidad de la empresa',
+          },
+          cbu: {
+            type: 'string',
+            example: '1234567890123456789012',
+            description: 'CBU de la cuenta bancaria',
+          },
+          alias_cbu: {
+            type: 'string',
+            example: 'mi.alias.cbu',
+            description: 'Alias del CBU',
+          },
+          contrato_social: {
+            type: 'string',
+            example: '/path/contrato-social.pdf',
+            description: 'Ruta del archivo del contrato social',
+          },
+          documento_representante: {
+            type: 'string',
+            example: '/path/documento-representante.pdf',
+            description: 'Ruta del documento del representante',
+          },
+          otros_documentos: {
+            type: 'array',
+            items: {
+              type: 'string',
+              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
+            },
+            description: 'Lista de rutas de otros documentos adicionales',
+          },
+        },
+      },
+    },
+    required: ['id_usuario'],
+  },
+
+  RejectData: {
+    title: 'Usuario - Rechazar Datos',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        description: 'ID del usuario cuyos datos serán rechazados',
+      },
+      comentario: {
+        type: 'string',
+        example: 'El CUIT no es válido.',
+        description: 'Comentario del rechazo',
+      },
+    },
+    required: ['id_usuario', 'comentario'],
+  },
+
+  AuthorizeUser: {
+    title: 'Usuario - Autorizar',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        description: 'ID del usuario a autorizar',
+      },
+    },
+    required: ['id_usuario'],
+  },  
 };
 

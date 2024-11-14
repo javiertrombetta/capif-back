@@ -16,15 +16,16 @@ export const SUCCESS = {
     LOGOUT: 'La sesión se cerró exitosamente',
     USER_DELETED: 'Usuario eliminado correctamente.',
   },
-  PERSONAL_DATA: {
-    SAVED:
-      'Datos cargados y pendientes de evaluación, para la autorización definitiva del usuario.',
-    REJECTED:
-      'Datos rechazados correctamente y se ha enviado el correo con los comentarios al usuario.',
+  USUARIO: {
+    USUARIO_UPDATED: 'Los datos del usuario fueron actualizados exitosamente.',
+    USUARIO_DELETED: 'El usuario fue eliminado exitosamente.',
   },
-  CONSULTA: {
-    CONSULTA_DELETED: 'Consulta eliminada correctamente.',
-    CONSULTA_ADDED: 'Consulta generada con éxito',
+  APPLICATION: {
+    SAVED:
+      'Aplicación cargada y pendiente de evaluación, para la autorización definitiva del usuario.',
+    UPDATED:
+      'Aplicación actualizada y pendiente de evaluación, para la autorización definitiva del usuario.',
+    REJECTED: 'Aplicación rechazada y se ha enviado el correo con los comentarios al usuario.',
   },
   CONFLICTO: {
     CONFLICTO_CREATED: 'Conflicto creado exitosamente.',
@@ -81,11 +82,6 @@ export const SUCCESS = {
     DELETED: 'Sesión eliminada correctamente.',
     USER_SESSIONS_CLOSED: 'Todas las sesiones del usuario han sido cerradas.',
   },
-  TRAMITE: {
-    CREATED: 'Trámite creado con éxito.',
-    UPDATED: 'Trámite actualizado con éxito.',
-    DELETED: 'Trámite eliminado con éxito.',
-  },
 };
 
 export const ERROR = {
@@ -104,6 +100,7 @@ export const ERROR = {
     NO_TOKEN_PROVIDED: 'No se proporcionó un token.',
     INVALID_TOKEN: 'Token inválido o expirado.',
     NO_COOKIE_FOUND: 'No se encontró una sesión activa.',
+    COMMENT_REQUIRED: 'El comentario de rechazo no fue proporcionado.',
   },
   REGISTER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
@@ -121,6 +118,7 @@ export const ERROR = {
       'El usuario se encuentra bloqueado. Por favor, contacte a un administrador del sistema.',
     UPDATE_FAILED: 'Hubo un error al buscar al usuario e intentar actualizarlo.',
     DELETE_FAILED: 'Hubo un error al buscar al usuario e intentar eliminarlo.',
+    CANNOT_MODIFY_DISABLED_USER: 'EL usuario está deshabilitado. No se puede cambiar el estado de inicio de sesión.',
   },
   DATABASE: {
     CONNECTION: 'Error de conexión con la base de datos.',
@@ -249,6 +247,30 @@ export const EMAIL_BODY = {
     <p><strong>${tempPassword}</strong></p>
     <p>Por motivos de seguridad, deberá cambiar esta contraseña en su primer ingreso.</p>
     <p>Gracias por registrarse.</p>
+  `,
+  PRODUCTOR_PRINCIPAL_NOTIFICATION: (
+    nombreProductora: string,
+    cuitProductora: string,
+    cbuProductora: string,
+    aliasCbuProductora: string
+  ) => `
+    <h1>Registro exitoso como Productor Principal</h1>
+    <p>Estimado usuario,</p>
+    <p>Su cuenta fue registrada exitosamente como productor principal de la productora <strong>${nombreProductora}</strong>.</p>
+    <p>A continuación, encontrará los datos asociados a la productora:</p>
+    <ul>
+      <li><strong>Nombre de la productora:</strong> ${nombreProductora}</li>
+      <li><strong>CUIT:</strong> ${cuitProductora}</li>
+      <li><strong>CBU:</strong> ${cbuProductora}</li>
+      <li><strong>Alias CBU:</strong> ${aliasCbuProductora}</li>
+    </ul>
+    <p>Gracias por registrarte.</p>
+  `,
+  APPLICATION_SUBMITTED: (email: string) => `
+    <p>Estimado/a ${email},</p>
+    <p>Su solicitud ha sido enviada exitosamente y está en proceso de revisión.</p>
+    <p>Nos pondremos en contacto con usted una vez que se complete la revisión.</p>
+    <p>Gracias por su paciencia.</p>
   `,
 };
 

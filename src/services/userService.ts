@@ -22,6 +22,12 @@ export const createUsuarioMaestro = async (usuarioMaestroData: any) => {
   return await UsuarioMaestro.create(usuarioMaestroData);
 };
 
+export const updateUsuarioMaestro = async (usuarioRegistranteId: string, updateData: any) => {
+  return await UsuarioMaestro.update(updateData, {
+    where: { usuario_registrante_id: usuarioRegistranteId },
+  });
+};
+
 export const findUsuario = async ({ email, userId }: FindUsuarioOptions) => {
   const whereCondition = email
     ? { '$usuarioRegistrante.email$': email }
@@ -65,7 +71,8 @@ export const findUsuario = async ({ email, userId }: FindUsuarioOptions) => {
   return {
     user,
     role: usuarioMaestro.rol?.nombre_rol || 'usuario',
-    productora_id: usuarioMaestro.productora_id,
+    productora: usuarioMaestro.productora_id,
+    maestro: usuarioMaestro.id_usuario_maestro,
   };
 };
 
@@ -142,11 +149,57 @@ export const findRolByDescripcion = async (descripcion: string) => {
   return rol;
 };
 
-export const findUsuariosByFilters = async (filters: any, include: any[]) => {
-  return await UsuarioMaestro.findAll({
-    where: filters,
-    include,
+export const findUsuariosConFiltros = async (filters: any) => {
+  const whereCondition: any = {};
+
+  if (filters.userId) {
+    whereCondition.usuario_registrante_id = filters.userId;
+  }
+
+  if (filters.rol) {
+    const rolObj = await findRolByDescripcion(filters.rol);    
+    whereCondition.rol_id = rolObj.id_tipo_rol;
+  }
+
+  if (filters.tipo_registro) {
+    whereCondition.tipo_registro = filters.tipo_registro;
+  }
+
+  const usuariosMaestro = await UsuarioMaestro.findAll({
+    where: whereCondition,
+    include: [
+      {
+        model: Usuario,
+        as: 'usuarioRegistrante',
+        include: [
+          {
+            model: UsuarioRolTipo,
+            as: 'Rol',
+          },
+        ],
+      },
+      {
+        model: Productora,
+        as: 'productora',
+        include: [
+          {
+            model: ProductoraPersonaFisica,
+            as: 'personaFisica',
+          },
+          {
+            model: ProductoraPersonaJuridica,
+            as: 'personaJuridica',
+          },
+        ],
+      },
+    ],
   });
+
+  return usuariosMaestro.map((usuarioMaestro) => ({
+    user: usuarioMaestro.usuarioRegistrante,
+    role: usuarioMaestro.rol?.nombre_rol || 'usuario',
+    productora_id: usuarioMaestro.productora_id,
+  }));
 };
 
 /**

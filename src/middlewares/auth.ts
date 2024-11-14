@@ -14,7 +14,7 @@ export const verifyToken = (token: string | undefined, secret: string): JwtPaylo
 };
 
 export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-  const token = req.cookies['auth_token'] || req.header('Authorization')?.split(' ')[1]; // Soporte para token en cookies o headers
+  const token = req.cookies['auth_token'] || req.header('Authorization')?.split(' ')[1];
   const decodedToken = verifyToken(token, process.env.JWT_SECRET!);
 
   if (!decodedToken) {
@@ -23,14 +23,23 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
   }
 
   req.user = decodedToken;
+  req.role = decodedToken.role as string;
+  req.maestro = decodedToken.maestro as string;
+
+  const activeCompany = req.cookies['active_company'];
+  if (activeCompany) {
+    req.productora = activeCompany;
+  } else {
+    logger.info('Usuario autenticado sin productora activa seleccionada');
+  }
+
   next();
 };
 
 export const authorizeRoles = (roles: string[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const userRole = (req.user as JwtPayload)?.role;
-    if (!roles.includes(userRole)) {
-      logger.warn(`Acceso denegado: El rol ${userRole} no tiene permiso`);
+    if (!roles.includes(req.role!)) {
+      logger.warn(`Acceso denegado: El rol ${req.role} no tiene permiso`);
       return res.status(403).json({ error: 'No tienes permiso para acceder a este recurso.' });
     }
     next();

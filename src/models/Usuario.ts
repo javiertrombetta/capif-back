@@ -3,13 +3,12 @@ import sequelize from '../config/database/sequelize';
 
 const OPERACIONES_PERMITIDAS = [
   'DEPURAR',
-  'INCOMPLETO',
   'RECHAZADO',
   'NUEVO',
   'CONFIRMADO',
   'PENDIENTE',
-  'PRINCIPAL',
-  'SECUNDARIO',
+  'HABILITADO',
+  'DESHABILITADO',
 ] as const;
 
 class Usuario extends Model {
@@ -25,7 +24,8 @@ class Usuario extends Model {
   public reset_password_token!: string | null;
   public reset_password_token_expires!: Date | null;
   public fecha_ultimo_cambio_registro!: Date;
-  public is_habilitado!: boolean;
+  public fecha_ultimo_inicio_sesion!: Date;
+  public is_bloqueado!: boolean;
   public intentos_fallidos!: number;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -81,7 +81,7 @@ Usuario.init(
       unique: true,
       validate: {
         isEmail: {
-          msg: 'Debe ser un correo electrónico válido.',
+          msg: 'El email debe ser un correo electrónico válido.',
         },
       },
     },
@@ -110,7 +110,7 @@ Usuario.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'Debe ser una fecha válida.',
+          msg: 'La fecha de expiración del token de verificación del email debe ser una fecha válida.',
         },
       },
     },
@@ -124,7 +124,7 @@ Usuario.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'Debe ser una fecha válida.',
+          msg: 'La fecha de expiración del token de reseteo de clave debe ser una fecha válida.',
         },
       },
     },
@@ -135,7 +135,17 @@ Usuario.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'Debe ser una fecha válida.',
+          msg: 'La fecha del último cambio del registro debe ser una fecha válida.',
+        },
+      },
+    },
+    fecha_ultimo_inicio_sesion: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha del último inicio de sesión debe ser una fecha válida.',
         },
       },
     },
@@ -150,11 +160,11 @@ Usuario.init(
       defaultValue: 0,
       validate: {
         isInt: {
-          msg: 'Debe ser un número entero.',
+          msg: 'Los intentos fallidos debe ser un número entero.',
         },
         min: {
           args: [0],
-          msg: 'No puede tener intentos fallidos negativos.',
+          msg: 'No pueden existir intentos fallidos negativos.',
         },
       },
     },
@@ -172,7 +182,7 @@ Usuario.init(
       },
       {
         fields: ['nombres_y_apellidos'],
-        name: 'idx_usuario_nombres_y_apellidos',        
+        name: 'idx_usuario_nombres_y_apellidos',
       },
       {
         fields: ['tipo_registro'],

@@ -38,3 +38,9 @@ export class InternalServerError extends CustomError {
     super(message, 500);
   }
 }
+
+export class ForbiddenError extends CustomError {
+  constructor(message = 'Acción restringida') {
+    super(message, 403);
+  }
+}

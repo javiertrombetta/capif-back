@@ -129,7 +129,6 @@ FonogramaEnvio.init(
   }
 );
 
-// Asociaciones
 FonogramaEnvio.belongsTo(Fonograma, {
   foreignKey: 'fonograma_id',
   as: 'fonograma',

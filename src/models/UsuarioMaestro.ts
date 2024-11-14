@@ -9,7 +9,6 @@ class UsuarioMaestro extends Model {
   public usuario_registrante_id!: string;
   public rol_id!: string;
   public productora_id!: string | null;
-  public is_usuario_principal!: boolean;
   public fecha_ultimo_cambio_rol!: Date;
 
   public readonly createdAt!: Date;
@@ -82,11 +81,6 @@ UsuarioMaestro.init(
           msg: 'El ID de la productora debe ser un UUID válido.',
         },
       },
-    },
-    is_usuario_principal: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
     },
     fecha_ultimo_cambio_rol: {
       type: DataTypes.DATE,

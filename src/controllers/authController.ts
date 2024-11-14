@@ -2,11 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { nanoid } from 'nanoid';
-import { Op } from 'sequelize';
 import logger from '../config/logger';
 
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
-import { UserWithRelations } from '../interfaces/UserWithRelations';
 import { verifyToken } from '../middlewares/auth';
 
 import * as MESSAGES from '../services/messages';
@@ -14,11 +12,16 @@ import { sendEmail } from '../services/emailService';
 import {
   createUsuario,
   createUsuarioMaestro,
+  updateUsuarioMaestro,
   findUsuario,
   getAssociatedCompanies,
 } from '../services/userService';
 import { actualizarFechaFinSesion } from '../services/sesionService';
-import { hashPassword, verifyPassword } from '../services/validationsService';
+import {
+  hashPassword,
+  verifyPassword,
+  handleTokenVerification,
+} from '../services/validationsService';
 import * as Err from '../services/customErrors';
 
 import { AuditoriaEntidad, AuditoriaSesion } from '../models';
@@ -59,7 +62,6 @@ export const registerPrimary = async (req: Request, res: Response, next: NextFun
       usuario_registrante_id: newUser.id_usuario,
       rol_id: 'usuario',
       productora_id: null,
-      is_usuario_principal: false,
       fecha_ultimo_cambio_rol: new Date(),
     });
 
@@ -70,10 +72,17 @@ export const registerPrimary = async (req: Request, res: Response, next: NextFun
       expiresIn: tokenExpiration,
     });
 
-    // Guarda el token de verificación en el usuario
-    const decoded = jwt.verify(emailToken, process.env.JWT_SECRET!) as JwtPayload;
-    newUser.email_verification_token = emailToken;
-    newUser.email_verification_token_expires = new Date(decoded.exp! * 1000);
+    try {
+      const decoded = handleTokenVerification(emailToken, process.env.JWT_SECRET!) as JwtPayload;
+      newUser.email_verification_token = emailToken;
+      newUser.email_verification_token_expires = new Date(decoded.exp! * 1000);
+    } catch (err) {
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error al verificar el token de email para ${newUser.email}`,
+        err
+      );
+      throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
+    }
 
     await newUser.save();
 
@@ -97,6 +106,14 @@ export const registerPrimary = async (req: Request, res: Response, next: NextFun
       usuario_originario_id: null,
       usuario_destino_id: newUser.id_usuario,
       entidad_afectada: 'Usuario',
+      tipo_auditoria: 'ALTA',
+      detalle: 'Registro de nuevo usuario principal',
+    });
+
+    await AuditoriaEntidad.create({
+      usuario_originario_id: null,
+      usuario_destino_id: newUser.id_usuario,
+      entidad_afectada: 'UsuarioMaestro',
       tipo_auditoria: 'ALTA',
       detalle: 'Registro de nuevo usuario principal',
     });
@@ -138,8 +155,13 @@ export const registerSecondary = async (req: AuthenticatedRequest, res: Response
     const primaryUserData = await findUsuario({ userId: primaryUserId });
     const primaryUser = primaryUserData?.user;
     const primaryUserRole = primaryUserData?.role;
+    const primaryProductora = primaryUserData?.productora;
 
-    if (!primaryUser || primaryUser.tipo_registro !== 'PRINCIPAL') {
+    if (
+      !primaryUser ||
+      primaryUser.tipo_registro !== 'HABILITADO' ||
+      (primaryUserRole !== 'admin_principal' && primaryUserRole !== 'productor_principal')
+    ) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Usuario no autorizado para registrar secundarios.`
       );
@@ -147,15 +169,48 @@ export const registerSecondary = async (req: AuthenticatedRequest, res: Response
     }
 
     // Verificar que el usuario primario tiene una productora asignada
-    if (!primaryUserData.productora_id) {
+    if (!primaryProductora) {
       throw new Error('El usuario principal no tiene una productora asociada.');
     }
 
     // Verifica si el usuario ya existe
     const existingUser = await findUsuario({ email });
     if (existingUser) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario ya registrado: ${email}`);
-      throw new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED);
+      const { user: existingUserData, role: existingUserRole } = existingUser;
+
+      // Si el usuario ya existe y tiene tipo_registro NUEVO o CONFIRMADO, actualizar en lugar de crear uno nuevo
+      if (
+        existingUserData.tipo_registro === 'NUEVO' ||
+        existingUserData.tipo_registro === 'CONFIRMADO'
+      ) {
+        await existingUserData.update({
+          tipo_registro: 'HABILITADO',
+        });
+
+        // Llamar a updateUsuarioMaestro desde userService para actualizar el registro en UsuarioMaestro
+        await updateUsuarioMaestro(existingUserData.id_usuario, {
+          productora_id: primaryProductora,
+          rol_id:
+            existingUserRole === 'admin_principal' ? 'admin_secundario' : 'productor_secundario',
+        });
+
+        // Auditoría de actualización
+        await AuditoriaEntidad.create({
+          usuario_originario_id: primaryUserId,
+          usuario_destino_id: existingUserData.id_usuario,
+          entidad_afectada: 'UsuarioMaestro',
+          tipo_auditoria: 'CAMBIO',
+          detalle: `Asignación de productora y rol para usuario existente`,
+        });
+
+        logger.info(
+          `${req.method} ${req.originalUrl} - Usuario secundario existente actualizado: ${email}`
+        );
+        return res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_SECONDARY });
+      } else {
+        logger.warn(`${req.method} ${req.originalUrl} - Usuario ya registrado: ${email}`);
+        throw new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED);
+      }
     }
 
     // Genera una clave temporal
@@ -170,7 +225,7 @@ export const registerSecondary = async (req: AuthenticatedRequest, res: Response
     const newUser = await createUsuario({
       email,
       clave: hashedPassword,
-      tipo_registro: 'SECUNDARIO',
+      tipo_registro: 'HABILITADO',
       nombres_y_apellidos,
       telefono,
     });
@@ -183,8 +238,7 @@ export const registerSecondary = async (req: AuthenticatedRequest, res: Response
     await createUsuarioMaestro({
       usuario_registrante_id: newUser.id_usuario,
       rol_id: secondaryUserRole,
-      productora_id: primaryUserData.productora_id,
-      is_usuario_principal: false,
+      productora_id: primaryUserData.productora,
       fecha_ultimo_cambio_rol: new Date(),
     });
 
@@ -196,9 +250,17 @@ export const registerSecondary = async (req: AuthenticatedRequest, res: Response
     });
 
     // Guarda el token de verificación en el usuario
-    const decoded = jwt.verify(emailToken, process.env.JWT_SECRET!) as JwtPayload;
-    newUser.email_verification_token = emailToken;
-    newUser.email_verification_token_expires = new Date(decoded.exp! * 1000);
+    try {
+      const decoded = handleTokenVerification(emailToken, process.env.JWT_SECRET!) as JwtPayload;
+      newUser.email_verification_token = emailToken;
+      newUser.email_verification_token_expires = new Date(decoded.exp! * 1000);
+    } catch (err) {
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error al verificar el token de email para el usuario secundario ${newUser.email}`,
+        err
+      );
+      throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
+    }
 
     await newUser.save();
 
@@ -230,6 +292,15 @@ export const registerSecondary = async (req: AuthenticatedRequest, res: Response
       detalle: auditoriaDetalle,
     });
 
+    // Auditoría de actualización
+    await AuditoriaEntidad.create({
+      usuario_originario_id: primaryUserId,
+      usuario_destino_id: newUser.id_usuario,
+      entidad_afectada: 'UsuarioMaestro',
+      tipo_auditoria: 'CAMBIO',
+      detalle: `Asignación de productora y rol de usuario secundario`,
+    });
+
     logger.info(
       `${req.method} ${req.originalUrl} - Auditoría registrada para el usuario secundario: ${email}`
     );
@@ -258,6 +329,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const userData = await findUsuario({ email });
     const user = userData?.user;
     const role = userData?.role;
+    const maestro = userData?.maestro;
 
     if (!user) {
       logger.warn(
@@ -284,7 +356,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     }
 
     // Validación de contraseña
-    const isPasswordValid = await bcrypt.compare(password, user.clave);
+    const isPasswordValid = await verifyPassword(password, user.clave);
     const MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10);
 
     if (!isPasswordValid) {
@@ -294,7 +366,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
         // Si los intentos fallidos alcanzan el límite, deshabilitar el usuario
         if (user.intentos_fallidos >= MAX_LOGIN_ATTEMPTS) {
-          user.is_habilitado = false;
+          user.is_bloqueado = false;
           logger.warn(
             `${req.method} ${req.originalUrl} - El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos`
           );
@@ -339,18 +411,16 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     // Generar nuevo token con el rol
     const token = jwt.sign(
-      { id: user.id_usuario, role: role || 'usuario' },
+      { id: user.id_usuario, role: role || 'usuario', maestro: maestro },
       process.env.JWT_SECRET!,
-      {
-        expiresIn: '1h',
-      }
+      { expiresIn: process.env.JWT_EXPIRATION || '1h' }
     );
 
     res.cookie('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 3600000,
+      maxAge: parseInt(process.env.COOKIE_MAX_AGE || '3600000', 10),
     });
 
     // Registro de auditoría para acceso exitoso
@@ -418,8 +488,16 @@ export const requestPasswordReset = async (req: Request, res: Response, next: Ne
     user.reset_password_token = resetToken;
 
     // Calcula la fecha de expiración del token de restablecimiento
-    const decoded = jwt.verify(resetToken, process.env.JWT_SECRET!) as JwtPayload;
-    user.reset_password_token_expires = new Date(decoded.exp! * 1000);
+    try {
+      const decoded = handleTokenVerification(resetToken, process.env.JWT_SECRET!) as JwtPayload;
+      user.reset_password_token_expires = new Date(decoded.exp! * 1000);
+    } catch (err) {
+      logger.error(
+        `${req.method} ${req.originalUrl} - Error al verificar el token de restablecimiento de contraseña para el usuario: ${email}`,
+        err
+      );
+      throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
+    }
 
     await user.save();
 
@@ -468,9 +546,10 @@ export const validateEmail = async (req: Request, res: Response, next: NextFunct
 
     const { token } = req.params;
 
+    // Verificar el token usando handleTokenVerification
     let decoded: JwtPayload;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+      decoded = handleTokenVerification(token, process.env.JWT_SECRET!) as JwtPayload;
     } catch (err) {
       logger.warn(`${req.method} ${req.originalUrl} - Token de verificación inválido o expirado.`);
       throw new Err.UnauthorizedError(MESSAGES.ERROR.JWT.INVALID);
@@ -480,7 +559,11 @@ export const validateEmail = async (req: Request, res: Response, next: NextFunct
     const result = await findUsuario({ userId: decoded.id_usuario });
     const user = result?.user;
 
-    if (!user || user.email_verification_token !== token || user.email_verification_token_expires! < new Date()) {
+    if (
+      !user ||
+      user.email_verification_token !== token ||
+      user.email_verification_token_expires! < new Date()
+    ) {
       logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado o token inválido.`);
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
@@ -524,12 +607,14 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
 
     const { token, newPassword } = req.body;
 
-    // Decodificar el token para obtener el userId
+    // Verificar el token usando handleTokenVerification
     let decoded: JwtPayload;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+      decoded = handleTokenVerification(token, process.env.JWT_SECRET!) as JwtPayload;
     } catch (err) {
-      logger.warn(`${req.method} ${req.originalUrl} - Token de restablecimiento inválido o expirado.`);
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Token de restablecimiento inválido o expirado.`
+      );
       throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
     }
 
@@ -537,8 +622,14 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     const result = await findUsuario({ userId: decoded.id_usuario });
     const user = result?.user;
 
-    if (!user || user.reset_password_token !== token || user.reset_password_token_expires! < new Date()) {
-      logger.warn(`${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña inválido o expirado.`);
+    if (
+      !user ||
+      user.reset_password_token !== token ||
+      user.reset_password_token_expires! < new Date()
+    ) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña inválido o expirado.`
+      );
       throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
     }
 
@@ -620,7 +711,7 @@ export const getUser = async (req: AuthenticatedRequest, res: Response, next: Ne
     logger.info(
       `${req.method} ${req.originalUrl} - Datos del usuario obtenidos correctamente para el usuario con ID: ${user.id_usuario}`
     );
-    res.status(200).json({ user, role: result.role, productora_id: result.productora_id });
+    res.status(200).json({ user, role: result.role, productora_id: result.productora });
   } catch (err) {
     logger.error(
       `${req.method} ${req.originalUrl} - Error al obtener los datos del usuario: ${
@@ -630,6 +721,7 @@ export const getUser = async (req: AuthenticatedRequest, res: Response, next: Ne
     next(err);
   }
 };
+
 
 // CAMBIARLE LA CLAVE A UN USUARIO
 export const changeUserPassword = async (
@@ -709,31 +801,59 @@ export const changeUserPassword = async (
   }
 };
 
-// FUNCIÓN PARA OBTENER LAS PRODUCTORAS ASOCIADAS AL USUARIO ACTIVO Y GUARDARLAS EN UNA COOKIE
-export const getCompanies = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+
+// OBTENER LAS PRODUCTORAS ASOCIADAS AL USUARIO ACTIVO Y GUARDARLAS EN UNA COOKIE
+export const getProductoras = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const userId = (req.user as any)?.id;
+    const userId = (req.user as JwtPayload)?.id;
 
     if (!userId) {
-      return res.status(400).json({ message: 'Usuario no autenticado' });
+      return res.status(401).json({ message: 'Usuario no autenticado' });
     }
 
-    const companies = await getAssociatedCompanies(userId);
+    const productoras = await getAssociatedCompanies(userId);
 
-    // Guardar las productoras en una cookie
-    res.cookie('associated_companies', JSON.stringify(companies), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000, // Expira en 1 día
-    });
-
-    res.status(200).json({ companies });
+    res.status(200).json({ productoras });
   } catch (err) {
     console.error('Error al obtener las productoras:', err);
     next(err);
   }
 };
+
+
+// CAMBIAR DE PRODUCTORA ACTIVA
+export const setActiveProductora = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req.user as JwtPayload)?.id;
+    const { productoraId } = req.body;
+
+    if (!userId || !productoraId) {
+      return res.status(401).json({ message: 'Usuario o productora no especificados' });
+    }
+
+    // Verificar si la productora está asociada al usuario
+    const productoras = await getAssociatedCompanies(userId);
+    const productoraExists = productoras.some((productora) => productora.id === productoraId);
+
+    if (!productoraExists) {
+      return res.status(403).json({ message: 'No tienes acceso a esta productora' });
+    }
+
+    // Almacenar la productora seleccionada en una cookie
+    res.cookie('active_company', productoraId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: parseInt(process.env.COOKIE_MAX_AGE || '3600000', 10),
+    });
+
+    res.status(200).json({ message: 'Productora activa actualizada' });
+  } catch (err) {
+    console.error('Error al cambiar de productora:', err);
+    next(err);
+  }
+};
+
 
 // CERRAR SESION
 export const logout = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {

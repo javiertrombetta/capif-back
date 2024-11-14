@@ -1,4 +1,16 @@
 # Changelog
+## v0.1.26 - 14-11-2024
+## 🚀 Features
+
+- feat: change models, authController and userController
+- feat: add auth and usuario controllers
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.22
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.22 - 18-10-2024
 ## 🐛 Fixes
 

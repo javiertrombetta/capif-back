@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.29 - 23-12-2024
+## 🐛 Fixes
+
+- fix: models to latest version
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.26
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.26 - 14-11-2024
 ## 🚀 Features
 

@@ -1,3 +1,5 @@
+import { Fonograma } from "../models";
+
 export function validateCUIT(cuit: string): string | true {
   if (cuit.length !== 11) {
     return 'El CUIT/CUIL debe tener exactamente 11 dígitos.';
@@ -94,22 +96,38 @@ export async function updateConflictosActivos(fonogramaId: string, ConflictoMode
 }
 
 
-export async function actualizarDominioPublicoGlobal(FonogramaModel: any, FonogramaDatosModel: any) {
+export async function actualizarDominioPublicoGlobal(FonogramaModel: typeof Fonograma) {
   const currentYear = new Date().getFullYear();
+
+  // Obtener todos los fonogramas que potencialmente necesiten actualización
   const fonogramas = await FonogramaModel.findAll({
-    include: [{ model: FonogramaDatosModel, as: 'datosFonograma' }],
+    attributes: ['id_fonograma', 'anio_lanzamiento', 'is_dominio_publico'],
   });
 
-  for (const fonograma of fonogramas) {
-    if (fonograma.datosFonograma) {
-      const anioLanzamiento = fonograma.datosFonograma.anio_lanzamiento;
+  const actualizaciones = fonogramas
+    .filter((fonograma) => {
+      const anioLanzamiento = fonograma.anio_lanzamiento;
       const age = currentYear - anioLanzamiento;
       const nuevoEstadoDominioPublico = age > 70;
+      return fonograma.is_dominio_publico !== nuevoEstadoDominioPublico;
+    })
+    .map((fonograma) => ({
+      id_fonograma: fonograma.id_fonograma,
+      is_dominio_publico: currentYear - fonograma.anio_lanzamiento > 70,
+    }));
 
-      if (fonograma.is_dominio_publico !== nuevoEstadoDominioPublico) {
-        fonograma.is_dominio_publico = nuevoEstadoDominioPublico;
-        await fonograma.save();
-      }
-    }
+  if (actualizaciones.length === 0) {
+    console.log('No hay fonogramas que necesiten actualización de dominio público.');
+    return;
   }
+
+  // Actualizar en bloque las filas necesarias
+  for (const actualizacion of actualizaciones) {
+    await FonogramaModel.update(
+      { is_dominio_publico: actualizacion.is_dominio_publico },
+      { where: { id_fonograma: actualizacion.id_fonograma } }
+    );
+  }
+
+  console.log(`${actualizaciones.length} fonogramas actualizados a su estado de dominio público.`);
 }

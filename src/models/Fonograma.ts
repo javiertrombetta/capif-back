@@ -1,59 +1,39 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import Usuario from './Usuario';
-import FonogramaDatos from './FonogramaDatos';
-import UsuarioProductora from './Productora';
-import FonogramaTerritorialidad from './FonogramaTerritorialidad';
-import FonogramaISRC from './FonogramaISRC';
+import Productora from './Productora';
 import FonogramaArchivo from './FonogramaArchivo';
 import FonogramaEnvio from './FonogramaEnvio';
-import Conflicto from './Conflicto';
-import FonogramaParticipacion from './FonogramaParticipacion';
-import { updatePorcentajeTitularidad } from '../services/checkModels';
 
 const ESTADO_FONOGRAMA = ['ACTIVO', 'BAJA'] as const;
 
 class Fonograma extends Model {
   public id_fonograma!: string;
-  public usuario_registrante_id!: string;
-  public datos_fonograma_id!: string;
   public productora_id!: string;
   public estado_fonograma!: (typeof ESTADO_FONOGRAMA)[number];
-  public isrc_audio_id!: string | null;
-  public isrc_video_id!: string | null;
-  public archivo_audio_id!: string | null;
-  public envio_vericast_id!: string | null;
-  public territorialidad_id!: string | null;
+  public isrc!: string;
+  public titulo!: string;
+  public artista!: string;
+  public album!: string | null;
+  public duracion!: string;
+  public sello_discografico!: string;
+  public anio_lanzamiento!: number;
   public is_dominio_publico!: boolean;
   public cantidad_conflictos_activos!: number;
-  public fecha_registro_desde!: Date;
-  public fecha_registro_hasta!: Date;
   public porcentaje_titularidad_total!: number;
+  public archivo_audio_id!: string | null;
+  public envio_vericast_id!: string | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public usuarioRegistrante?: Usuario;
-  public datosFonograma?: FonogramaDatos;
-  public productora?: UsuarioProductora;
-  public territorialidad?: FonogramaTerritorialidad;
-  public isrcAudio?: FonogramaISRC;
-  public isrcVideo?: FonogramaISRC;
-  public archivoAudio?: FonogramaArchivo;
-  public envioVericast?: FonogramaEnvio;
-  public conflictos?: Conflicto[];
+  public productoraDelFonograma?: Productora;
+  public archivoDelFonograma?: FonogramaArchivo;
+  public envioDelFonograma?: FonogramaEnvio;
 
   public static associations: {
-    usuarioRegistrante: Association<Fonograma, Usuario>;
-    datosFonograma: Association<Fonograma, FonogramaDatos>;
-    productora: Association<Fonograma, UsuarioProductora>;
-    territorialidad: Association<Fonograma, FonogramaTerritorialidad>;
-    isrcAudio: Association<Fonograma, FonogramaISRC>;
-    isrcVideo: Association<Fonograma, FonogramaISRC>;
-    archivoAudio: Association<Fonograma, FonogramaArchivo>;
-    envioVericast: Association<Fonograma, FonogramaEnvio>;
-    conflictos: Association<Fonograma, Conflicto>;
-    participaciones: Association<Fonograma, FonogramaParticipacion>;
+    productoraDelFonograma: Association<Fonograma, Productora>;
+    archivoAudioDelFonograma: Association<Fonograma, FonogramaArchivo>;
+    envioDelAudio: Association<Fonograma, FonogramaEnvio>;
   };
 }
 
@@ -71,39 +51,11 @@ Fonograma.init(
         },
       },
     },
-    usuario_registrante_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
-        },
-      },
-    },
-    datos_fonograma_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: FonogramaDatos,
-        key: 'id_datos_fonograma',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID de datos del fonograma debe ser un UUID válido.',
-        },
-      },
-    },
     productora_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: UsuarioProductora,
+        model: Productora,
         key: 'id_productora',
       },
       validate: {
@@ -123,31 +75,108 @@ Fonograma.init(
         },
       },
     },
-    isrc_audio_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: FonogramaISRC,
-        key: 'id_isrc',
-      },
+    isrc: {
+      type: DataTypes.STRING(12),
+      allowNull: false,
+      unique: true,
       validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID ISRC de audio debe ser un UUID válido.',
+        is: {
+          args: /^[A-Z]{2}[0-9A-Z]{3}[0-9]{2}[0-9]{5}$/,
+          msg: 'El código ISRC debe seguir el formato correcto (Ej: ARABC2100001).',
         },
       },
     },
-    isrc_video_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: FonogramaISRC,
-        key: 'id_isrc',
-      },
+    titulo: {
+      type: DataTypes.STRING(150),
+      allowNull: false,
       validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID ISRC de video debe ser un UUID válido.',
+        len: {
+          args: [3, 150],
+          msg: 'El título debe tener entre 3 y 150 caracteres.',
+        },
+        notEmpty: {
+          msg: 'El título no puede estar vacío.',
+        },
+      },
+    },
+    artista: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      validate: {
+        len: {
+          args: [2, 100],
+          msg: 'El nombre del artista debe tener entre 2 y 100 caracteres.',
+        },
+        notEmpty: {
+          msg: 'El campo artista no puede estar vacío.',
+        },
+      },
+    },
+    album: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+    },
+    duracion: {
+      type: DataTypes.TIME,
+      allowNull: false,
+      validate: {
+        is: {
+          args: /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/,
+          msg: 'La duración debe estar en formato HH:MM:SS.',
+        },
+      },
+    },
+    sello_discografico: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+    anio_lanzamiento: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        isInt: {
+          msg: 'El año de lanzamiento debe ser un número entero.',
+        },
+        min: {
+          args: [1900],
+          msg: 'El año de lanzamiento no puede ser anterior a 1900.',
+        },
+        max: {
+          args: [new Date().getFullYear()],
+          msg: 'El año de lanzamiento no puede ser mayor al año actual.',
+        },
+      },
+    },
+    is_dominio_publico: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    cantidad_conflictos_activos: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        min: {
+          args: [0],
+          msg: 'La cantidad de conflictos activos no puede ser negativa.',
+        },
+      },
+    },
+    porcentaje_titularidad_total: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: false,
+      validate: {
+        isDecimal: {
+          msg: 'El porcentaje de titularidad total debe ser un número decimal válido.',
+        },
+        min: {
+          args: [0],
+          msg: 'El porcentaje de titularidad total no puede ser menor que 0.',
+        },
+        max: {
+          args: [100],
+          msg: 'El porcentaje de titularidad total no puede ser mayor que 100.',
         },
       },
     },
@@ -170,79 +199,12 @@ Fonograma.init(
       allowNull: true,
       references: {
         model: FonogramaEnvio,
-        key: 'id_envio',
+        key: 'id_envio_vericast',
       },
       validate: {
         isUUID: {
           args: 4,
           msg: 'El ID de envío a Vericast debe ser un UUID válido.',
-        },
-      },
-    },
-    territorialidad_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: FonogramaTerritorialidad,
-        key: 'id_territorialidad',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID de territorialidad debe ser un UUID válido.',
-        },
-      },
-    },
-    is_dominio_publico: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
-    cantidad_conflictos_activos: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-      validate: {
-        min: {
-          args: [0],
-          msg: 'La cantidad de conflictos activos no puede ser negativa.',
-        },
-      },
-    },
-    fecha_registro_desde: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de registro desde debe ser una fecha válida.',
-        },
-      },
-    },
-    fecha_registro_hasta: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de registro hasta debe ser una fecha válida.',
-        },
-      },
-    },
-    porcentaje_titularidad_total: {
-      type: DataTypes.DECIMAL(5, 2),
-      allowNull: false,
-      validate: {
-        isDecimal: {
-          msg: 'El porcentaje de titularidad total debe ser un número decimal válido.',
-        },
-        min: {
-          args: [0],
-          msg: 'El porcentaje de titularidad total no puede ser menor que 0.',
-        },
-        max: {
-          args: [100],
-          msg: 'El porcentaje de titularidad total no puede ser mayor que 100.',
         },
       },
     },
@@ -254,14 +216,6 @@ Fonograma.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_fonograma_usuario_registrante_id',
-      },
-      {
-        fields: ['datos_fonograma_id'],
-        name: 'idx_fonograma_datos_fonograma_id',
-      },
-      {
         fields: ['productora_id'],
         name: 'idx_fonograma_productora_id',
       },
@@ -269,110 +223,29 @@ Fonograma.init(
         fields: ['estado_fonograma'],
         name: 'idx_fonograma_estado',
       },
+      {
+        fields: ['isrc'],
+        name: 'idx_fonograma_isrc',
+        unique: true,
+      },
+      {
+        fields: ['titulo'],
+        name: 'idx_fonograma_datos_titulo',
+      },
+      {
+        fields: ['artista'],
+        name: 'idx_fonograma_datos_artista',
+      },
+      {
+        fields: ['sello_discografico'],
+        name: 'idx_fonograma_datos_sello_discografico',
+      },
+      {
+        fields: ['anio_lanzamiento'],
+        name: 'idx_fonograma_datos_anio_lanzamiento',
+      },
     ],
   }
 );
-
-FonogramaParticipacion.afterCreate(async (participacion) => {
-  await updatePorcentajeTitularidad(participacion.fonograma_id, Fonograma, FonogramaParticipacion);
-});
-
-FonogramaParticipacion.afterUpdate(async (participacion) => {
-  await updatePorcentajeTitularidad(participacion.fonograma_id, Fonograma, FonogramaParticipacion);
-});
-
-FonogramaParticipacion.afterDestroy(async (participacion) => {
-  await updatePorcentajeTitularidad(participacion.fonograma_id, Fonograma, FonogramaParticipacion);
-});
-
-Fonograma.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuarioRegistrante',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(Fonograma, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'fonogramasRegistrados',
-  onDelete: 'SET NULL',
-});
-
-Fonograma.belongsTo(FonogramaDatos, {
-  foreignKey: 'datos_fonograma_id',
-  as: 'datosFonograma',
-  onDelete: 'RESTRICT',
-});
-
-FonogramaDatos.hasMany(Fonograma, {
-  foreignKey: 'datos_fonograma_id',
-  as: 'fonogramas',
-  onDelete: 'RESTRICT',
-});
-
-Fonograma.belongsTo(UsuarioProductora, {
-  foreignKey: 'productora_id',
-  as: 'productora',
-  onDelete: 'RESTRICT',
-});
-
-UsuarioProductora.hasMany(Fonograma, {
-  foreignKey: 'productora_id',
-  as: 'fonogramas',
-  onDelete: 'RESTRICT',
-});
-
-Fonograma.belongsTo(FonogramaTerritorialidad, {
-  foreignKey: 'territorialidad_id',
-  as: 'territorialidad',
-  onDelete: 'SET NULL',
-});
-
-FonogramaTerritorialidad.hasMany(Fonograma, {
-  foreignKey: 'territorialidad_id',
-  as: 'fonogramas',
-  onDelete: 'SET NULL',
-});
-
-Fonograma.belongsTo(FonogramaISRC, {
-  foreignKey: 'isrc_audio_id',
-  as: 'isrcAudio',
-  onDelete: 'RESTRICT',
-});
-
-Fonograma.belongsTo(FonogramaISRC, {
-  foreignKey: 'isrc_video_id',
-  as: 'isrcVideo',
-  onDelete: 'RESTRICT',
-});
-
-Fonograma.belongsTo(FonogramaArchivo, {
-  foreignKey: 'archivo_audio_id',
-  as: 'archivoAudio',
-  onDelete: 'SET NULL',
-});
-
-FonogramaArchivo.hasMany(Fonograma, {
-  foreignKey: 'archivo_audio_id',
-  as: 'fonogramas',
-  onDelete: 'SET NULL',
-});
-
-Fonograma.belongsTo(FonogramaEnvio, {
-  foreignKey: 'envio_vericast_id',
-  as: 'envioVericast',
-  onDelete: 'SET NULL',
-});
-
-FonogramaEnvio.hasMany(Fonograma, {
-  foreignKey: 'envio_vericast_id',
-  as: 'fonogramas',
-  onDelete: 'SET NULL',
-});
-
-Fonograma.hasMany(Conflicto, {
-  foreignKey: 'fonograma_id',
-  as: 'conflictos',
-  onDelete: 'RESTRICT',
-});
 
 export default Fonograma;

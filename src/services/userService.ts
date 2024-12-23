@@ -1,17 +1,11 @@
-type FindUsuarioOptions = { email?: string; userId?: string };
-
-interface Company {
-  id: string;
-  nombre: string;
-}
+import { Op } from 'sequelize';
 
 import {
+  Productora,
   Usuario,
   UsuarioMaestro,
-  UsuarioRolTipo,
-  ProductoraPersonaFisica,
-  ProductoraPersonaJuridica,
-  Productora,
+  UsuarioRol,
+  UsuarioVista,
 } from '../models';
 
 export const createUsuario = async (userData: any) => {
@@ -28,54 +22,6 @@ export const updateUsuarioMaestro = async (usuarioRegistranteId: string, updateD
   });
 };
 
-export const findUsuario = async ({ email, userId }: FindUsuarioOptions) => {
-  const whereCondition = email
-    ? { '$usuarioRegistrante.email$': email }
-    : { usuario_registrante_id: userId };
-
-  const usuarioMaestro = await UsuarioMaestro.findOne({
-    where: whereCondition,
-    include: [
-      {
-        model: Usuario,
-        as: 'usuarioRegistrante',
-        include: [
-          {
-            model: UsuarioRolTipo,
-            as: 'Rol',
-          },
-        ],
-      },
-      {
-        model: Productora,
-        as: 'productora',
-        include: [
-          {
-            model: ProductoraPersonaFisica,
-            as: 'personaFisica',
-          },
-          {
-            model: ProductoraPersonaJuridica,
-            as: 'personaJuridica',
-          },
-        ],
-      },
-    ],
-  });
-
-  if (!usuarioMaestro || !usuarioMaestro.usuarioRegistrante || !usuarioMaestro.productora)
-    return null;
-
-  const user = usuarioMaestro.usuarioRegistrante;
-
-  return {
-    user,
-    role: usuarioMaestro.rol?.nombre_rol || 'usuario',
-    productora: usuarioMaestro.productora_id,
-    maestro: usuarioMaestro.id_usuario_maestro,
-  };
-};
-
 export const updateUsuarioById = async (userId: string, updateData: any) => {
   const usuarioMaestro = await UsuarioMaestro.findOne({
     where: { usuario_registrante_id: userId },
@@ -85,7 +31,7 @@ export const updateUsuarioById = async (userId: string, updateData: any) => {
         as: 'usuarioRegistrante',
         include: [
           {
-            model: UsuarioRolTipo,
+            model: UsuarioRol,
             as: 'Rol',
           },
         ],
@@ -93,21 +39,22 @@ export const updateUsuarioById = async (userId: string, updateData: any) => {
     ],
   });
 
-  if (!usuarioMaestro || !usuarioMaestro.usuarioRegistrante) {
-    throw new Error('Usuario no encontrado');
+  if (!usuarioMaestro || !usuarioMaestro.usuarioRegistrante || !usuarioMaestro.rol) {
+    throw new Error('Usuario no encontrado o sin rol asignado.');
   }
 
   const user = usuarioMaestro.usuarioRegistrante;
 
   if (updateData) {
     await user.update({
-      nombres_y_apellidos: updateData.nombres_y_apellidos ?? user.nombres_y_apellidos,
+      nombre: updateData.nombre ?? user.nombre,
+      apellido: updateData.apellido ?? user.apellido,
       telefono: updateData.telefono ?? user.telefono,
       email: updateData.email ?? user.email,
     });
   }
 
-  if (updateData.newRole && updateData.newRole !== usuarioMaestro.rol?.nombre_rol) {
+  if (updateData.newRole && updateData.newRole !== usuarioMaestro.rol.nombre_rol) {
     usuarioMaestro.rol_id = updateData.newRole;
     usuarioMaestro.fecha_ultimo_cambio_rol = new Date();
     await usuarioMaestro.save();
@@ -137,8 +84,116 @@ export const deleteUsuarioById = async (userId: string) => {
   return { message: 'Usuario eliminado correctamente' };
 };
 
+
+// BUSQUEDA DE UN USUARIO SEGUN UNO O VARIOS FILTROS
+export const findUsuario = async (filters: {
+  userId?: string;
+  email?: string;
+  nombre?: string;
+  apellido?: string;
+  tipo_registro?: string;
+  rolId?: string;
+  nombre_rol?: string;
+  productoraId?: string;
+  productoraNombre?: string;
+  limit?: number;
+  offset?: number;
+}) => {
+  const whereCondition: any = {};
+  const includeCondition: any[] = [];
+
+  // Filtro principal por UsuarioMaestro
+  if (filters.userId) {
+    whereCondition.usuario_registrante_id = filters.userId;
+  }
+
+  // Filtro por Usuario
+  if (filters.email || filters.tipo_registro || filters.nombre || filters.apellido) {
+    const usuarioWhere: any = {};
+    if (filters.email) {
+      usuarioWhere.email = filters.email;
+    }
+    if (filters.tipo_registro) {
+      usuarioWhere.tipo_registro = filters.tipo_registro;
+    }
+    if (filters.nombre) {
+      usuarioWhere.nombre = { [Op.like]: `%${filters.nombre}%` };
+    }
+    if (filters.apellido) {
+      usuarioWhere.apellido = { [Op.like]: `%${filters.apellido}%` };
+    }
+
+    includeCondition.push({
+      model: Usuario,
+      as: 'usuarioRegistrante',
+      attributes: ['id_usuario', 'email', 'nombre', 'apellido', 'tipo_registro'],
+      where: usuarioWhere,
+    });
+  }
+
+  // Filtro por rol
+  if (filters.rolId || filters.nombre_rol) {
+    const rolWhere: any = {};
+    if (filters.rolId) {
+      rolWhere.id_rol = filters.rolId;
+    }
+    if (filters.nombre_rol) {
+      rolWhere.nombre_rol = filters.nombre_rol;
+    }
+
+    includeCondition.push({
+      model: UsuarioRol,
+      as: 'rol',
+      attributes: ['id_rol', 'nombre_rol'],
+      where: rolWhere,
+    });
+  }
+
+  // Filtro por Productora
+  if (filters.productoraId || filters.productoraNombre) {
+    const productoraWhere: any = {};
+    if (filters.productoraId) {
+      productoraWhere.id_productora = filters.productoraId;
+    }
+    if (filters.productoraNombre) {
+      productoraWhere.nombre_productora = filters.productoraNombre;
+    }
+
+    includeCondition.push({
+      model: Productora,
+      as: 'productora',
+      attributes: ['id_productora', 'nombre_productora'],
+      where: productoraWhere,
+    });
+  }
+
+  // Consulta principal
+  const usuariosMaestro = await UsuarioMaestro.findAll({
+    where: whereCondition,
+    limit: filters.limit || 50,
+    offset: filters.offset || 0,
+    include: includeCondition,
+  });
+
+  // Si no se encuentran resultados
+  if (!usuariosMaestro || usuariosMaestro.length === 0) {
+    return null;
+  }
+
+  // Procesar los resultados
+  const user = usuariosMaestro[0].usuarioRegistrante;
+
+  const maestros = usuariosMaestro.map((usuarioMaestro) => ({
+    maestroId: usuarioMaestro.id_usuario_maestro,
+    rol: usuarioMaestro.rol || { id_rol: 'DEFAULT', nombre_rol: 'usuario' },
+    productora: usuarioMaestro.productora,
+  }));
+
+  return { user, maestros };
+};
+
 export const findRolByDescripcion = async (descripcion: string) => {
-  const rol = await UsuarioRolTipo.findOne({
+  const rol = await UsuarioRol.findOne({
     where: { descripcion },
   });
 
@@ -149,85 +204,18 @@ export const findRolByDescripcion = async (descripcion: string) => {
   return rol;
 };
 
-export const findUsuariosConFiltros = async (filters: any) => {
-  const whereCondition: any = {};
-
-  if (filters.userId) {
-    whereCondition.usuario_registrante_id = filters.userId;
-  }
-
-  if (filters.rol) {
-    const rolObj = await findRolByDescripcion(filters.rol);    
-    whereCondition.rol_id = rolObj.id_tipo_rol;
-  }
-
-  if (filters.tipo_registro) {
-    whereCondition.tipo_registro = filters.tipo_registro;
-  }
-
-  const usuariosMaestro = await UsuarioMaestro.findAll({
-    where: whereCondition,
+export const findVistasforUsuario = async (usuarioId: string) => {
+  const vistas = await UsuarioVista.findAll({
     include: [
       {
-        model: Usuario,
-        as: 'usuarioRegistrante',
-        include: [
-          {
-            model: UsuarioRolTipo,
-            as: 'Rol',
-          },
-        ],
-      },
-      {
-        model: Productora,
-        as: 'productora',
-        include: [
-          {
-            model: ProductoraPersonaFisica,
-            as: 'personaFisica',
-          },
-          {
-            model: ProductoraPersonaJuridica,
-            as: 'personaJuridica',
-          },
-        ],
+        model: UsuarioVista,
+        where: {
+          usuario_id: usuarioId,
+          acceso: true,
+        },
       },
     ],
   });
 
-  return usuariosMaestro.map((usuarioMaestro) => ({
-    user: usuarioMaestro.usuarioRegistrante,
-    role: usuarioMaestro.rol?.nombre_rol || 'usuario',
-    productora_id: usuarioMaestro.productora_id,
-  }));
-};
-
-/**
- * Obtiene los nombres de las productoras asociadas a un usuario.
- * @param userId - ID del usuario activo.
- * @returns Lista de nombres de productoras asociadas al usuario.
- */
-export const getAssociatedCompanies = async (userId: string): Promise<Company[]> => {
-  const usuarioMaestroRecords = await UsuarioMaestro.findAll({
-    where: { usuario_registrante_id: userId },
-    include: [
-      {
-        model: Productora,
-        as: 'productora',
-        attributes: ['id_productora', 'nombre_productora'],
-      },
-    ],
-  });
-
-  // Extraer el id y el nombre de las productoras y devolverlos como un array de objetos
-  const companies = usuarioMaestroRecords
-    .map((record) => ({
-      id: record.productora?.id_productora,
-      nombre: record.productora?.nombre_productora,
-    }))
-    .filter(
-      (company): company is Company => company.id !== undefined && company.nombre !== undefined
-    );
-
-  return companies;
+  return vistas.map((vista) => vista.nombre_vista);
 };

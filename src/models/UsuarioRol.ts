@@ -1,17 +1,16 @@
-import { Model, DataTypes, Association } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import UsuarioMaestro from './UsuarioMaestro';
 
-class UsuarioRolTipo extends Model {
-  public id_tipo_rol!: string;
+class UsuarioRol extends Model {
+  public id_rol!: string;
   public nombre_rol!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
 
-UsuarioRolTipo.init(
+UsuarioRol.init(
   {
-    id_tipo_rol: {
+    id_rol: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
@@ -19,7 +18,7 @@ UsuarioRolTipo.init(
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID del tipo de rol debe ser un UUID válido.',
+          msg: 'El ID del rol debe ser un UUID válido.',
         },
       },
     },
@@ -37,8 +36,8 @@ UsuarioRolTipo.init(
   },
   {
     sequelize,
-    modelName: 'UsuarioRolTipo',
-    tableName: 'UsuarioRolTipo',
+    modelName: 'UsuarioRol',
+    tableName: 'UsuarioRol',
     timestamps: true,
     indexes: [
       {
@@ -50,10 +49,6 @@ UsuarioRolTipo.init(
   }
 );
 
-UsuarioRolTipo.hasMany(UsuarioMaestro, {
-  foreignKey: 'rol_id',
-  as: 'usuariosMaestros',
-  onDelete: 'RESTRICT',
-});
 
-export default UsuarioRolTipo;
+
+export default UsuarioRol;

@@ -1,10 +1,12 @@
 export const SUCCESS = {
   AUTH: {
-    REGISTER_PRIMARY:
-      'Registro completado exitosamente. Confirmá tu cuenta ingresando a la Bandeja de Entrada del correo registrado.',
+    REGISTER_PRIMARY_FIRST:
+      'El primer paso del registro fue completado exitosamente. Confirmá tu cuenta ingresando a la Bandeja de Entrada del correo registrado.',
+    REGISTER_PRIMARY_SECOND: 'El proceso de registro se completó exitosamente.',
     REGISTER_SECONDARY:
       'Registro completado exitosamente. El usuario debe verificar la Bandeja de Entrada del correo registrado y seguir los pasos indicados.',
     LOGIN: 'Sesión iniciada correctamente.',
+    PRODUCTORA_SELECTED: 'Productora activa seleccionada correctamente.',
     PASSWORD_RECOVERY_EMAIL_SENT: 'Correo para restablecer la contraseña enviado.',
     PASSWORD_RESET: 'Contraseña actualizada correctamente.',
     EMAIL_CONFIRMED: 'Cuenta confirmada con éxito.',
@@ -101,6 +103,10 @@ export const ERROR = {
     INVALID_TOKEN: 'Token inválido o expirado.',
     NO_COOKIE_FOUND: 'No se encontró una sesión activa.',
     COMMENT_REQUIRED: 'El comentario de rechazo no fue proporcionado.',
+    PRODUCTORA_NOT_ALLOWED: 'La productora no está asociada al usuario.',
+    PRODUCTORA_ID_REQUIRED: 'El ID de la productora no fue propocionado o es inválido.',
+    MISSING_PARAMETERS: 'Faltan uno o más parámetros obligatorios.',
+    NO_DATA_PROVIDED: 'No se proporcionaron datos para actualizar.',
   },
   REGISTER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
@@ -111,6 +117,8 @@ export const ERROR = {
   USER: {
     NOT_FOUND: 'Usuario no encontrado.',
     NO_MAESTRO_RECORD: 'Usuario sin registro en la tabla maestro.',
+    MULTIPLE_MASTERS_FOR_PRINCIPAL: 'El usuario principal tiene más de una productora vinculada.',
+    MULTIPLE_MAESTRO_RECORDS: 'EL usuario tiene múltiples registros para una misma productora.',
     NOT_AUTHORIZED: 'No tienes autorización para realizar esta acción.',
     NOT_AUTHORIZED_TO_CHANGE_PASSWORD: 'No estás autorizado para cambiar la clave.',
     NOT_AUTHORIZED_TO_CHANGE_ROLE: 'No estás autorizado para cambiar el rol.',
@@ -118,7 +126,11 @@ export const ERROR = {
       'El usuario se encuentra bloqueado. Por favor, contacte a un administrador del sistema.',
     UPDATE_FAILED: 'Hubo un error al buscar al usuario e intentar actualizarlo.',
     DELETE_FAILED: 'Hubo un error al buscar al usuario e intentar eliminarlo.',
-    CANNOT_MODIFY_DISABLED_USER: 'EL usuario está deshabilitado. No se puede cambiar el estado de inicio de sesión.',
+    CANNOT_MODIFY_DISABLED_USER:
+      'EL usuario está deshabilitado. No se puede cambiar el estado de inicio de sesión.',
+    NO_ASSOCIATED_PRODUCTORAS: 'Productoras no asociadas al usuario.',
+    CANNOT_DELETE_SELF: 'No podés eliminar tu propia cuenta.',
+    ROLE_NOT_ASSIGNED: 'El usuario autenticado no tiene un rol asignado.',
   },
   DATABASE: {
     CONNECTION: 'Error de conexión con la base de datos.',
@@ -183,9 +195,11 @@ export const ERROR = {
     NOT_FOUND: 'No se encontró el archivo.',
     INVALID_FILE_EXTENSION: 'Extensión de archivo inválida.',
   },
-  PRODUCTOR: {
+  PRODUCTORA: {
     NOT_FOUND: 'Productor no encontrado.',
+    ALREADY_EXISTS: 'La productora ya existe.',
     INVALID_ROLE: 'El rol del usuario no corresponde a productor.',
+    INVALID_NAME: 'La productora asociada no tiene un nombre válido.',
     ROLE_NOT_FOUND: 'Rol de productor no encontrado en el sistema.',
     INVALID_TIPO_COMPANIA: 'El tipo de compañía proporcionado no es válido.',
     INVALID_ESTADO: 'El estado proporcionado no es válido.',
@@ -286,6 +300,7 @@ export const VALIDATION_AUTH = {
   nombre: {
     'string.min': 'El nombre debe tener al menos 2 caracteres.',
     'string.max': 'El nombre no debe exceder los 100 caracteres.',
+    'string.pattern.base': 'El nombre solo debe contener letras y espacios.',
     'any.required': 'El nombre es obligatorio.',
   },
   apellido: {
@@ -293,7 +308,7 @@ export const VALIDATION_AUTH = {
     'string.max': 'El apellido no debe exceder los 100 caracteres.',
     'string.pattern.base': 'El apellido solo debe contener letras y espacios.',
     'any.required': 'El apellido es obligatorio.',
-  },
+  }, 
   cuit: {
     'string.pattern.base': 'El CUIT debe tener exactamente 11 dígitos.',
     'any.required': 'El CUIT es obligatorio.',

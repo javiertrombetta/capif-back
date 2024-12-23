@@ -5,15 +5,17 @@ import Usuario from './Usuario';
 class AuditoriaSesion extends Model {
   public id_sesion!: string;
   public usuario_registrante_id!: string;
-  public fecha_inicio_sesion!: Date;
+  public ip_origen!: string;
+  public navegador!: string;
+  public fecha_inicio_sesion!: Date;  
   public fecha_fin_sesion!: Date | null;
-  public ip_origen!: string | null;
-  public navegador!: string | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
+  public registranteDeSesion?: Usuario;
+
   public static associations: {
-    usuarioRegistrante: Association<AuditoriaSesion, Usuario>;
+    registranteDeSesion: Association<AuditoriaSesion, Usuario>;
   };
 }
 
@@ -23,6 +25,7 @@ AuditoriaSesion.init(
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+      allowNull: false,
       validate: {
         isUUID: {
           args: 4,
@@ -41,6 +44,25 @@ AuditoriaSesion.init(
         isUUID: {
           args: 4,
           msg: 'El ID del usuario registrante debe ser un UUID válido.',
+        },
+      },
+    },
+    ip_origen: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isIP: {
+          msg: 'La dirección IP debe ser válida.',
+        },
+      },
+    },
+    navegador: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        len: {
+          args: [0, 50],
+          msg: 'El navegador no puede exceder los 50 caracteres.',
         },
       },
     },
@@ -65,25 +87,6 @@ AuditoriaSesion.init(
         },
       },
     },
-    ip_origen: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      validate: {
-        isIP: {
-          msg: 'La dirección IP debe ser válida.',
-        },
-      },
-    },
-    navegador: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      validate: {
-        len: {
-          args: [0, 50],
-          msg: 'El navegador no puede exceder los 50 caracteres.',
-        },
-      },
-    },
   },
   {
     sequelize,
@@ -98,17 +101,5 @@ AuditoriaSesion.init(
     ],
   }
 );
-
-AuditoriaSesion.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuarioRegistrante',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(AuditoriaSesion, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'auditoriasSesionRegistradas',
-  onDelete: 'SET NULL',
-});
 
 export default AuditoriaSesion;

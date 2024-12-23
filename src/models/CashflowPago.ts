@@ -2,16 +2,13 @@ import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import { calculateLoteAndOrdenPago } from '../services/checkModels';
 import Cashflow from './Cashflow';
-import Usuario from './Usuario';
-import ISRC from './FonogramaISRC';
 
 const TIPO_PAGO = ['PAGO POR ISRC', 'PAGO GENERAL'] as const;
 
 class CashflowPago extends Model {
   public id_pago!: string;
   public cashflow_destino_id!: string;
-  public isrc_id!: string | null;
-  public usuario_registrante_id!: string;
+  public numero_pago!: number;
   public tipo_pago!: (typeof TIPO_PAGO)[number];
   public monto_negativo_destino!: number;
   public monto_retencion_pago!: number;
@@ -21,14 +18,10 @@ class CashflowPago extends Model {
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public cashflow_destino?: Cashflow;
-  public isrc?: ISRC;
-  public usuario_registrante?: Usuario;
+  public ccDelPago?: Cashflow;  
 
   public static associations: {
-    cashflow_destino: Association<CashflowPago, Cashflow>;
-    isrc: Association<CashflowPago, ISRC>;
-    usuario_registrante: Association<CashflowPago, Usuario>;
+    ccDelPago: Association<CashflowPago, Cashflow>;
   };
 }
 
@@ -60,35 +53,13 @@ CashflowPago.init(
         },
       },
     },
-    isrc_id: {
-      type: DataTypes.STRING(12),
-      allowNull: true,
-      references: {
-        model: ISRC,
-        key: 'id_isrc',
-      },
-      validate: {
-        is: {
-          args: /^[A-Z]{2}[0-9A-Z]{3}[0-9]{2}[0-9]{5}$/,
-          msg: 'El código ISRC debe seguir el formato correcto (Ej: ARABC2100001).',
-        },
-        len: {
-          args: [12, 12],
-          msg: 'El ISRC debe tener exactamente 12 caracteres.',
-        },
-      },
-    },
-    usuario_registrante_id: {
-      type: DataTypes.UUID,
+    numero_pago: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
+      unique: true,
       validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
+        isInt: {
+          msg: 'El número de pago debe ser un entero.',
         },
       },
     },
@@ -153,64 +124,32 @@ CashflowPago.init(
     sequelize,
     modelName: 'CashflowPago',
     tableName: 'CashflowPago',
+    hooks: {
+      beforeCreate: async (liquidacion) => {
+        const maxNumero = await CashflowPago.max<number, CashflowPago>('numero_liquidacion');
+        liquidacion.numero_pago = (maxNumero ?? 0) + 1; // Usar coalescencia nula para asignar 1 si maxNumero es null
+      },
+    },
     timestamps: true,
     indexes: [
       {
         fields: ['cashflow_destino_id'],
         name: 'idx_cashflow_pago_destino_id',
       },
-      {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_cashflow_pago_usuario_registrante_id',
-      },
-      {
-        fields: ['isrc_id'],
-        name: 'idx_cashflow_pago_isrc_id',
-      },
+      
       {
         fields: ['lote_envio', 'orden_en_lote'],
         name: 'idx_cashflow_pago_lote_orden',
         unique: true,
       },
+      {
+        fields: ['numero_pago'],
+        name: 'idx_cashflow_numero_pago',
+        unique: true
+      },
     ],
   }
 );
-
-CashflowPago.belongsTo(Cashflow, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'cashflow_destino',
-  onDelete: 'RESTRICT',
-});
-
-Cashflow.hasMany(CashflowPago, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'pagos',
-  onDelete: 'RESTRICT',
-});
-
-CashflowPago.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuario_registrante',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(CashflowPago, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'pagos_registrados',
-  onDelete: 'SET NULL',
-});
-
-CashflowPago.belongsTo(ISRC, {
-  foreignKey: 'isrc_id',
-  as: 'isrc',
-  onDelete: 'RESTRICT',
-});
-
-ISRC.hasMany(CashflowPago, {
-  foreignKey: 'isrc_id',
-  as: 'pagos',
-  onDelete: 'RESTRICT',
-});
 
 CashflowPago.beforeCreate(async (cashflowPago, options) => {
   const lastLote = (await CashflowPago.max('lote_envio', { transaction: options.transaction })) as

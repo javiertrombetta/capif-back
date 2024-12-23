@@ -1,32 +1,26 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Fonograma from './Fonograma';
-import Usuario from './Usuario';
-import FonogramaISRC from './FonogramaISRC';
-import UsuarioProductora from './Productora';
+import Productora from './Productora';
+import { updatePorcentajeTitularidad } from '../services/checkModels';
 
 class FonogramaParticipacion extends Model {
   public id_participacion!: string;
   public fonograma_id!: string;
-  public isrc_id!: string;
   public productora_id!: string;
-  public usuario_registrante_id!: string;
   public fecha_participacion_inicio!: Date;
-  public fecha_participacion_hasta!: Date | null;
+  public fecha_participacion_hasta!: Date;
   public porcentaje_participacion!: number;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public fonograma?: Fonograma;
-  public isrc?: FonogramaISRC;
-  public productora?: UsuarioProductora;
-  public usuarioRegistrante?: Usuario;
+  public fonogramaDelParticipante?: Fonograma;
+  public productoraDeParticipante?: Productora;
+
 
   public static associations: {
-    fonograma: Association<FonogramaParticipacion, Fonograma>;
-    isrc: Association<FonogramaParticipacion, FonogramaISRC>;
-    productora: Association<FonogramaParticipacion, UsuarioProductora>;
-    usuarioRegistrante: Association<FonogramaParticipacion, Usuario>;
+    fonogramaDelParticipante: Association<FonogramaParticipacion, Fonograma>;
+    productoraDeParticipante: Association<FonogramaParticipacion, Productora>;
   };
 }
 
@@ -57,26 +51,12 @@ FonogramaParticipacion.init(
           msg: 'El ID del fonograma debe ser un UUID válido.',
         },
       },
-    },
-    isrc_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: FonogramaISRC,
-        key: 'id_isrc',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del ISRC debe ser un UUID válido.',
-        },
-      },
-    },
+    },    
     productora_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: UsuarioProductora,
+        model: Productora,
         key: 'id_productora',
       },
       validate: {
@@ -85,21 +65,7 @@ FonogramaParticipacion.init(
           msg: 'El ID de la productora debe ser un UUID válido.',
         },
       },
-    },
-    usuario_registrante_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
-        },
-      },
-    },
+    },    
     fecha_participacion_inicio: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -113,7 +79,8 @@ FonogramaParticipacion.init(
     },
     fecha_participacion_hasta: {
       type: DataTypes.DATE,
-      allowNull: true,
+      allowNull: false,
+      defaultValue: new Date('2099-12-20T00:00:00Z'),
       validate: {
         isDate: {
           args: true,
@@ -122,11 +89,11 @@ FonogramaParticipacion.init(
       },
     },
     porcentaje_participacion: {
-      type: DataTypes.DECIMAL(5, 2),
+      type: DataTypes.INTEGER,
       allowNull: false,
       validate: {
         isDecimal: {
-          msg: 'El porcentaje de participación debe ser un número decimal válido.',
+          msg: 'El porcentaje de participación debe ser un número entero positivo.',
         },
         min: {
           args: [0],
@@ -148,70 +115,25 @@ FonogramaParticipacion.init(
       {
         fields: ['fonograma_id'],
         name: 'idx_participacion_fonograma_id',
-      },
-      {
-        fields: ['isrc_id'],
-        name: 'idx_participacion_isrc_id',
-      },
+      },      
       {
         fields: ['productora_id'],
         name: 'idx_participacion_productora_id',
-      },
-      {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_participacion_usuario_registrante_id',
-      },
+      },      
     ],
   }
 );
 
-// Asociaciones
-FonogramaParticipacion.belongsTo(Fonograma, {
-  foreignKey: 'fonograma_id',
-  as: 'fonograma',
-  onDelete: 'RESTRICT',
+FonogramaParticipacion.afterCreate(async (participacion) => {
+  await updatePorcentajeTitularidad(participacion.fonograma_id, Fonograma, FonogramaParticipacion);
 });
 
-Fonograma.hasMany(FonogramaParticipacion, {
-  foreignKey: 'fonograma_id',
-  as: 'participaciones',
-  onDelete: 'RESTRICT',
+FonogramaParticipacion.afterUpdate(async (participacion) => {
+  await updatePorcentajeTitularidad(participacion.fonograma_id, Fonograma, FonogramaParticipacion);
 });
 
-FonogramaParticipacion.belongsTo(FonogramaISRC, {
-  foreignKey: 'isrc_id',
-  as: 'isrc',
-  onDelete: 'RESTRICT',
-});
-
-FonogramaISRC.hasMany(FonogramaParticipacion, {
-  foreignKey: 'isrc_id',
-  as: 'participaciones',
-  onDelete: 'RESTRICT',
-});
-
-FonogramaParticipacion.belongsTo(UsuarioProductora, {
-  foreignKey: 'productora_id',
-  as: 'productora',
-  onDelete: 'RESTRICT',
-});
-
-UsuarioProductora.hasMany(FonogramaParticipacion, {
-  foreignKey: 'productora_id',
-  as: 'participaciones',
-  onDelete: 'RESTRICT',
-});
-
-FonogramaParticipacion.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuarioRegistrante',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(FonogramaParticipacion, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'participacionesRegistradas',
-  onDelete: 'SET NULL',
+FonogramaParticipacion.afterDestroy(async (participacion) => {
+  await updatePorcentajeTitularidad(participacion.fonograma_id, Fonograma, FonogramaParticipacion);
 });
 
 export default FonogramaParticipacion;

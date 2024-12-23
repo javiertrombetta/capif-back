@@ -1,8 +1,7 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Cashflow from './Cashflow';
-import Usuario from './Usuario';
-import FonogramaISRC from './FonogramaISRC';
+
 
 const TIPO_TRASPASO = ['TRASPASO POR ISRC', 'TRASPASO GENERAL'] as const;
 
@@ -10,8 +9,7 @@ class CashflowTraspaso extends Model {
   public id_traspaso!: string;
   public cashflow_origen_id!: string;
   public cashflow_destino_id!: string;
-  public isrc_id!: string | null;
-  public usuario_registrante_id!: string;
+  public numero_traspaso!: number;
   public tipo_traspaso!: (typeof TIPO_TRASPASO)[number];
   public monto_negativo_origen!: number;
   public monto_positivo_destino!: number;
@@ -19,16 +17,13 @@ class CashflowTraspaso extends Model {
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public cashflow_origen?: Cashflow;
-  public cashflow_destino?: Cashflow;
-  public isrc?: FonogramaISRC;
-  public usuario_registrante?: Usuario;
+  public originarioDelTraspaso?: Cashflow;
+  public destinoDelTraspaso?: Cashflow;
+
 
   public static associations: {
-    cashflow_origen: Association<CashflowTraspaso, Cashflow>;
-    cashflow_destino: Association<CashflowTraspaso, Cashflow>;
-    isrc: Association<CashflowTraspaso, FonogramaISRC>;
-    usuario_registrante: Association<CashflowTraspaso, Usuario>;
+    originarioDelTraspaso: Association<CashflowTraspaso, Cashflow>;
+    destinoDelTraspaso: Association<CashflowTraspaso, Cashflow>;
   };
 }
 
@@ -74,35 +69,13 @@ CashflowTraspaso.init(
         },
       },
     },
-    isrc_id: {
-      type: DataTypes.STRING(12),
-      allowNull: true,
-      references: {
-        model: FonogramaISRC,
-        key: 'id_isrc',
-      },
-      validate: {
-        is: {
-          args: /^[A-Z]{2}[0-9A-Z]{3}[0-9]{2}[0-9]{5}$/,
-          msg: 'El código ISRC debe seguir el formato correcto (Ej: ARABC2100001).',
-        },
-        len: {
-          args: [12, 12],
-          msg: 'El ISRC debe tener exactamente 12 caracteres.',
-        },
-      },
-    },
-    usuario_registrante_id: {
-      type: DataTypes.UUID,
+    numero_traspaso: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
+      unique: true,
       validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
+        isInt: {
+          msg: 'El número de traspaso debe ser un entero.',
         },
       },
     },
@@ -158,6 +131,12 @@ CashflowTraspaso.init(
     sequelize,
     modelName: 'CashflowTraspaso',
     tableName: 'CashflowTraspaso',
+    hooks: {
+      beforeCreate: async (liquidacion) => {
+        const maxNumero = await CashflowTraspaso.max<number, CashflowTraspaso>('numero_liquidacion');
+        liquidacion.numero_traspaso = (maxNumero ?? 0) + 1; // Usar coalescencia nula para asignar 1 si maxNumero es null
+      },
+    },
     timestamps: true,
     indexes: [
       {
@@ -169,67 +148,16 @@ CashflowTraspaso.init(
         name: 'idx_cashflow_traspaso_destino_id',
       },
       {
-        fields: ['isrc_id'],
-        name: 'idx_cashflow_traspaso_isrc_id',
-      },
-      {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_cashflow_traspaso_usuario_id',
-      },
-      {
         fields: ['fecha_registro_traspaso'],
         name: 'idx_cashflow_traspaso_fecha_registro',
+      },
+      {
+        fields: ['numero_traspaso'],
+        name: 'idx_cashflow_numero_traspaso',
+        unique: true
       },
     ],
   }
 );
-
-CashflowTraspaso.belongsTo(Cashflow, {
-  foreignKey: 'cashflow_origen_id',
-  as: 'cashflow_origen',
-  onDelete: 'RESTRICT',
-});
-
-Cashflow.hasMany(CashflowTraspaso, {
-  foreignKey: 'cashflow_origen_id',
-  as: 'traspasosOrigen',
-  onDelete: 'RESTRICT',
-});
-
-CashflowTraspaso.belongsTo(Cashflow, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'cashflow_destino',
-  onDelete: 'RESTRICT',
-});
-
-Cashflow.hasMany(CashflowTraspaso, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'traspasosDestino',
-  onDelete: 'RESTRICT',
-});
-
-CashflowTraspaso.belongsTo(FonogramaISRC, {
-  foreignKey: 'isrc_id',
-  as: 'isrc',
-  onDelete: 'RESTRICT',
-});
-
-FonogramaISRC.hasMany(CashflowTraspaso, {
-  foreignKey: 'isrc_id',
-  as: 'traspasos',
-  onDelete: 'RESTRICT',
-});
-
-CashflowTraspaso.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuario_registrante',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(CashflowTraspaso, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'traspasos_registrados',
-  onDelete: 'SET NULL',
-});
 
 export default CashflowTraspaso;

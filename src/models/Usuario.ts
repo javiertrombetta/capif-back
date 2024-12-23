@@ -3,10 +3,10 @@ import sequelize from '../config/database/sequelize';
 
 const OPERACIONES_PERMITIDAS = [
   'DEPURAR',
-  'RECHAZADO',
   'NUEVO',
   'CONFIRMADO',
   'PENDIENTE',
+  'RECHAZADO',
   'HABILITADO',
   'DESHABILITADO',
 ] as const;
@@ -14,19 +14,20 @@ const OPERACIONES_PERMITIDAS = [
 class Usuario extends Model {
   public id_usuario!: string;
   public tipo_registro!: (typeof OPERACIONES_PERMITIDAS)[number];
-  public nombres_y_apellidos!: string;
-  public telefono!: string;
+  public nombre!: string;
+  public apellido!: string;  
   public email!: string;
   public clave!: string;
-  public is_registro_pendiente!: boolean;
+  public is_bloqueado!: boolean;
+  public intentos_fallidos!: number;
+  public fecha_ultimo_cambio_registro!: Date;  
+  public telefono!: string | null;
   public email_verification_token!: string | null;
   public email_verification_token_expires!: Date | null;
   public reset_password_token!: string | null;
-  public reset_password_token_expires!: Date | null;
-  public fecha_ultimo_cambio_registro!: Date;
-  public fecha_ultimo_inicio_sesion!: Date;
-  public is_bloqueado!: boolean;
-  public intentos_fallidos!: number;
+  public reset_password_token_expires!: Date | null;  
+  public fecha_ultimo_inicio_sesion!: Date | null;
+  
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -55,23 +56,23 @@ Usuario.init(
         },
       },
     },
-    nombres_y_apellidos: {
+    nombre: {
       type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
         len: {
           args: [3, 255],
-          msg: 'El nombre y apellido debe tener entre 3 y 255 caracteres.',
+          msg: 'El nombre debe tener entre 3 y 255 caracteres.',
         },
       },
     },
-    telefono: {
-      type: DataTypes.STRING(20),
+    apellido: {
+      type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
         len: {
-          args: [7, 20],
-          msg: 'El teléfono debe tener entre 7 y 20 caracteres.',
+          args: [3, 255],
+          msg: 'El apellido debe tener entre 3 y 255 caracteres.',
         },
       },
     },
@@ -95,10 +96,45 @@ Usuario.init(
         },
       },
     },
-    is_registro_pendiente: {
+    is_bloqueado: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true,
+      defaultValue: false,
+    },
+    intentos_fallidos: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        isInt: {
+          msg: 'Los intentos fallidos debe ser un número entero.',
+        },
+        min: {
+          args: [0],
+          msg: 'No pueden existir intentos fallidos negativos.',
+        },
+      },
+    },
+    fecha_ultimo_cambio_registro: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha del último cambio del registro debe ser una fecha válida.',
+        },
+      },
+    },
+    telefono: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      validate: {
+        len: {
+          args: [7, 20],
+          msg: 'El teléfono debe tener entre 7 y 20 caracteres.',
+        },
+      },
     },
     email_verification_token: {
       type: DataTypes.STRING(255),
@@ -127,47 +163,17 @@ Usuario.init(
           msg: 'La fecha de expiración del token de reseteo de clave debe ser una fecha válida.',
         },
       },
-    },
-    fecha_ultimo_cambio_registro: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha del último cambio del registro debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
     fecha_ultimo_inicio_sesion: {
       type: DataTypes.DATE,
-      allowNull: false,
+      allowNull: true,
       validate: {
         isDate: {
           args: true,
           msg: 'La fecha del último inicio de sesión debe ser una fecha válida.',
         },
       },
-    },
-    is_habilitado: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true,
-    },
-    intentos_fallidos: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-      validate: {
-        isInt: {
-          msg: 'Los intentos fallidos debe ser un número entero.',
-        },
-        min: {
-          args: [0],
-          msg: 'No pueden existir intentos fallidos negativos.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,
@@ -181,16 +187,20 @@ Usuario.init(
         unique: true,
       },
       {
-        fields: ['nombres_y_apellidos'],
-        name: 'idx_usuario_nombres_y_apellidos',
+        fields: ['nombre'],
+        name: 'idx_usuario_nombre',
+      },
+      {
+        fields: ['apellido'],
+        name: 'idx_usuario_apellido',
       },
       {
         fields: ['tipo_registro'],
         name: 'idx_usuario_tipo_registro',
       },
       {
-        fields: ['is_habilitado'],
-        name: 'idx_usuario_habilitado',
+        fields: ['is_bloqueado'],
+        name: 'idx_usuario_bloqueado',
       },
     ],
   }

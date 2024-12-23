@@ -1,5 +1,5 @@
 import { Model } from 'sequelize';
-import AuditoriaEntidad from '../models/AuditoriaEntidad';
+import AuditoriaCambio from '../models/AuditoriaCambio';
 
 /**
  * Registra un cambio de auditoría en la base de datos para cualquier cambio en una entidad.
@@ -17,9 +17,9 @@ export async function registrarAuditoria(
 ) {
   const detalle = JSON.stringify(modelo.get({ plain: true })).slice(0, 30); // Limita el detalle a 30 caracteres
 
-  await AuditoriaEntidad.create({
+  await AuditoriaCambio.create({
     usuario_registrante_id: usuarioId,
-    entidad_afectada: entidad,
+    modelo: entidad,
     tipo_auditoria: tipoAuditoria,
     detalle,
   });

@@ -20,6 +20,7 @@ if (env === 'development') {
 
 import { exec } from 'child_process';
 import sequelize from './sequelize';
+import initSeed from '../../seeders/init.seed';
 import logger from '../logger';
 
 const runSpecificMigration = (migrationFile: string): Promise<void> => {
@@ -65,9 +66,15 @@ const checkIfTablesExist = (): Promise<boolean> => {
   });
 };
 
-const runSeeders = async () => {
-  console.log('Ejecutando seeders en desarrollo...');
-  logger.info('Base de datos seedeada en entorno de desarrollo.');
+const runSeeders = async () => {  
+  try {
+    console.log('Ejecutando seeders...');
+    await initSeed();
+    logger.info('Seeders ejecutados con éxito.');
+  } catch (error) {
+    logger.error('Error al ejecutar los seeders:', error);
+    throw error;
+  }
 };
 
 const initDatabase = async () => {
@@ -79,16 +86,14 @@ const initDatabase = async () => {
       await sequelize.sync();
       console.log('Tablas sincronizadas en desarrollo.');
       await runSeeders();
-      process.exit(0);
+      console.log('Seed ejecutado correctamente.');      
     } else if (env === 'production') {
       const tablesExist = await checkIfTablesExist();
       if (!tablesExist) {
         console.log('Ejecutando migración inicial en producción...');
         await runSpecificMigration('20241109000000-dummy.js');
-        process.exit(0);
       } else {
         console.log('Migraciones ya aplicadas. No se requieren nuevas migraciones.');
-        process.exit(0);
       }
     }
   } catch (err) {
@@ -96,6 +101,8 @@ const initDatabase = async () => {
     process.exit(1);
   } finally {
     await sequelize.close();
+    logger.info('Conexión cerrada en la inicialización de Postgres.');
+    process.exit(0);
   }
 };
 

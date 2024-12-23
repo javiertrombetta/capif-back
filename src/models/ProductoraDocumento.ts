@@ -1,26 +1,22 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import Usuario from './Usuario';
 import Productora from './Productora';
 import ProductoraDocumentoTipo from './ProductoraDocumentoTipo';
 
 class ProductoraDocumento extends Model {
   public id_documento!: string;
-  public usuario_principal_id!: string;
-  public productora_id!: string | null;
+  public productora_id!: string;
   public tipo_documento_id!: string;
   public ruta_archivo_documento!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public usuarioPrincipal?: Usuario;
-  public productora?: Productora;
-  public tipoDocumento?: ProductoraDocumentoTipo;
+  public productoraDelDocumento?: Productora;
+  public tipoDeDocumento?: ProductoraDocumentoTipo;
 
   public static associations: {
-    usuarioPrincipal: Association<ProductoraDocumentoTipo, Usuario>;
-    productora: Association<ProductoraDocumentoTipo, Productora>;
-    tipoDocumento: Association<ProductoraDocumento, ProductoraDocumentoTipo>;
+    productoraDelDocumento: Association<ProductoraDocumentoTipo, Productora>;
+    tipoDeDocumento: Association<ProductoraDocumento, ProductoraDocumentoTipo>;
   };
 }
 
@@ -38,23 +34,9 @@ ProductoraDocumento.init(
         },
       },
     },
-    usuario_principal_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
-        },
-      },
-    },
     productora_id: {
       type: DataTypes.UUID,
-      allowNull: true,
+      allowNull: false,
       references: {
         model: Productora,
         key: 'id_productora',
@@ -67,12 +49,16 @@ ProductoraDocumento.init(
       },
     },
     tipo_documento_id: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.UUID,
       allowNull: false,
+      references: {
+        model: 'ProductoraDocumentoTipo',
+        key: 'id_documento_tipo',
+      },
       validate: {
-        len: {
-          args: [1, 50],
-          msg: 'El tipo de documento debe tener entre 1 y 50 caracteres.',
+        isUUID: {
+          args: 4,
+          msg: 'El ID de tipo de documento debe ser un UUID válido.',
         },
       },
     },
@@ -93,10 +79,6 @@ ProductoraDocumento.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['usuario_principal_id'],
-        name: 'idx_documento_usuario_principal',
-      },
-      {
         fields: ['productora_id'],
         name: 'idx_documento_productora',
       },
@@ -107,41 +89,5 @@ ProductoraDocumento.init(
     ],
   }
 );
-
-ProductoraDocumento.belongsTo(Usuario, {
-  foreignKey: 'usuario_principal_id',
-  as: 'usuarioPrincipal',
-  onDelete: 'CASCADE',
-});
-
-Usuario.hasMany(ProductoraDocumento, {
-  foreignKey: 'usuario_principal_id',
-  as: 'documentosRegistrados',
-  onDelete: 'CASCADE',
-});
-
-ProductoraDocumento.belongsTo(Productora, {
-  foreignKey: 'productora_id',
-  as: 'productora',
-  onDelete: 'CASCADE',
-});
-
-Productora.hasMany(ProductoraDocumento, {
-  foreignKey: 'productora_id',
-  as: 'documentos',
-  onDelete: 'CASCADE',
-});
-
-ProductoraDocumento.belongsTo(ProductoraDocumentoTipo, {
-  foreignKey: 'tipo_documento_id',
-  as: 'tipoDocumento',
-  onDelete: 'SET NULL',
-});
-
-ProductoraDocumentoTipo.hasMany(ProductoraDocumento, {
-  foreignKey: 'tipo_documento_id',
-  as: 'documentos',
-  onDelete: 'SET NULL',
-});
 
 export default ProductoraDocumento;

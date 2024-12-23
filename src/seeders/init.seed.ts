@@ -1,5 +1,4 @@
-import sequelize from '../config/database/sequelize';
-import { UsuarioRolTipo, ProductoraISRCTipo, ProductoraDocumentoTipo, FonogramaPaisTipo }from '../models'
+import { UsuarioRol, ProductoraDocumentoTipo, FonogramaTerritorio }from '../models'
 
 const rolesData = [
   { nombre_rol: 'admin_principal' },
@@ -37,44 +36,19 @@ const paisesData = [
   { nombre_pais: 'Gran Bretaña', codigo_iso: 'GB', is_activo: false },
 ];
 
-// Función para cargar completamente todo el pool disponible en ProductoraISRCTipo
-async function populateISRCCodePool() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const codes = [];
-
-  for (const char1 of chars) {
-    for (const char2 of chars) {
-      for (const char3 of chars) {
-        codes.push({ codigo: `${char1}${char2}${char3}`, is_en_uso: false });
-      }
-    }
-  }
-
-  await ProductoraISRCTipo.bulkCreate(codes, { ignoreDuplicates: true });
-}
-
-async function initSeed() {
+const initSeed = async () => {
   try {
-    await sequelize.sync();
+    console.log('Ejecutando seeders...');
 
-    // UsuarioRolTipo
-    await UsuarioRolTipo.bulkCreate(rolesData, { ignoreDuplicates: true });
+    await UsuarioRol.bulkCreate(rolesData, { ignoreDuplicates: true});
+    await ProductoraDocumentoTipo.bulkCreate(documentosData, { ignoreDuplicates: true});
+    await FonogramaTerritorio.bulkCreate(paisesData, { ignoreDuplicates: true});
 
-    // ProductoraDocumentoTipo
-    await ProductoraDocumentoTipo.bulkCreate(documentosData, { ignoreDuplicates: true });
-
-    // FonogramaPaisTipo
-    await FonogramaPaisTipo.bulkCreate(paisesData, { ignoreDuplicates: true });
-
-    // ProductoraISRCTipo
-    await populateISRCCodePool();
-
-    console.log('Se completó la carga inicial con los datos de seed.');
+    console.log('Seed completado con éxito.');
   } catch (error) {
     console.error('Error al realizar el seed:', error);
-  } finally {
-    await sequelize.close();
+    throw error;
   }
-}
+};
 
-initSeed();
+export default initSeed;

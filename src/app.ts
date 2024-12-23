@@ -29,7 +29,6 @@ import router from './routes';
 import sequelize from './config/database/sequelize';
 import logger from './config/logger';
 import { setupSwagger } from './config/swagger';
-import favicon from 'serve-favicon'; 
 import path from 'path';
 
 const app = express();
@@ -62,9 +61,6 @@ app.use(
   })
 );
 
-app.use(express.static(path.join(__dirname, '../public')));
-app.use(favicon(path.join(__dirname, '../public', 'favicon.ico')));
-
 // if (env === 'development') {
 //   setupSwagger(app); // Swagger solo disponible en entorno de desarrollo
 // }
@@ -80,7 +76,7 @@ const connectToDatabase = async () => {
     await sequelize.authenticate();
     logger.info('Conexión exitosa a la base de datos');
 
-    // await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
     logger.info('Modelos sincronizados con la base de datos');
   } catch (err) {
     logger.error('Error de conexión o sincronización con la base de datos:', err);

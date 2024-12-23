@@ -1,31 +1,42 @@
-import { Model, DataTypes, Association } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import { validateCUIT, validateCBU } from '../services/checkModels';
-import Usuario from './Usuario';
-import PersonaFisica from './ProductoraPersonaFisica';
-import PersonaJuridica from './ProductoraPersonaJuridica';
-import ProductoraISRC from './ProductoraISRCTipo';
-import Cashflow from './Cashflow';
+
+const TIPO_PERSONA = ['FISICA', 'JURIDICA'] as const;
 
 class Productora extends Model {
   public id_productora!: string;
-  public usuario_principal_id!: string | null;
-  public persona_fisica_id?: string | null;
-  public persona_juridica_id?: string | null;
   public nombre_productora!: string;
-  public cuit_productora!: string;
-  public cbu_productora!: string;
-  public alias_cbu_productora!: string;
-  public isrc_productora!: string | null;
-  public fecha_ultimo_fonograma!: Date;
+  public tipo_persona!: (typeof TIPO_PERSONA)[number];
+  public cuit_cuil!: string;
+  public email!: string;
+  public calle!: string;
+  public numero!: string;
+  public ciudad!: string;
+  public localidad!: string;
+  public provincia!: string;
+  public codigo_postal!: string;
+  public telefono!: string;
+  public nacionalidad!: string;
+  public alias_cbu!: string;
+  public cbu!: string; 
+  public denominacion_sello!: string | null;
+  public datos_adicionales!: string | null;  
+  public fecha_alta!: Date | null;
+  public fecha_ultimo_fonograma!: Date | null;
+
+  // Campos específicos para Persona Física
+  public nombres!: string | null;
+  public apellidos!: string | null;
+
+  // Campos específicos para Persona Jurídica
+  public razon_social!: string | null;
+  public apellidos_representante!: string | null;
+  public nombres_representante!: string | null;
+  public cuit_representante!: string | null;
+
   public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-
-  public usuarioPrincipal?: Usuario;
-
-  public static associations: {
-    usuarioPrincipal: Association<Productora, Usuario>;
-  };
+  public readonly updatedAt!: Date; 
 }
 
 Productora.init(
@@ -38,45 +49,7 @@ Productora.init(
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID de la productora debe ser un UUID válido.',
-        },
-      },
-    },
-    usuario_principal_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario principal debe ser un UUID válido.',
-        },
-      },
-    },
-    persona_fisica_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID de la persona física debe ser un UUID válido.',
-        },
-      },
-    },
-    persona_juridica_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: PersonaJuridica,
-        key: 'id_persona_juridica',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID de la persona jurídica debe ser un UUID válido.',
+          msg: 'El ID de Productora Datos debe ser un UUID válido.',
         },
       },
     },
@@ -90,7 +63,17 @@ Productora.init(
         },
       },
     },
-    cuit_productora: {
+    tipo_persona: {
+      type: DataTypes.ENUM(...TIPO_PERSONA),
+      allowNull: false,
+      validate: {
+        isIn: {
+          args: [TIPO_PERSONA],
+          msg: 'El tipo de persona debe ser FISICA o JURIDICA.',
+        },
+      },
+    },
+    cuit_cuil: {
       type: DataTypes.CHAR(11),
       allowNull: false,
       unique: true,
@@ -106,26 +89,55 @@ Productora.init(
         },
       },
     },
-    cbu_productora: {
-      type: DataTypes.STRING(22),
-      allowNull: true,
+    email: {
+      type: DataTypes.STRING(150),
+      allowNull: false,
+      unique: true,
       validate: {
-        isNumeric: {
-          msg: 'El CBU de la productora debe contener solo números.',
-        },
-        len: {
-          args: [22, 22],
-          msg: 'El CBU debe tener exactamente 22 dígitos.',
-        },
-        isValidCBU(value: string) {
-          const validationResult = validateCBU(value);
-          if (validationResult !== true) {
-            throw new Error(validationResult as string);
-          }
+        isEmail: {
+          msg: 'El email debe ser válido.',
         },
       },
     },
-    alias_cbu_productora: {
+    calle: {
+      type: DataTypes.STRING(150),
+      allowNull: false,
+    },
+    numero: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+    },
+    ciudad: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+    localidad: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+    provincia: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+    codigo_postal: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+    },
+    telefono: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      validate: {
+        is: {
+          args: /^[0-9]+$/,
+          msg: 'El teléfono debe contener solo números.',
+        },
+      },
+    },
+    nacionalidad: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+    },
+    alias_cbu: {
       type: DataTypes.STRING(20),
       allowNull: false,
       unique: true,
@@ -140,16 +152,41 @@ Productora.init(
         },
       },
     },
-    isrc_productora: {
-      type: DataTypes.STRING(3),
-      allowNull: true,
+    cbu: {
+      type: DataTypes.STRING(22),
+      allowNull: false,
+      unique: true,
       validate: {
-        isAlphanumeric: {
-          msg: 'El código ISRC de la productora debe ser alfanumérico.',
+        isNumeric: {
+          msg: 'El CBU debe contener solo números.',
         },
         len: {
-          args: [3, 3],
-          msg: 'El código ISRC debe tener exactamente 3 caracteres.',
+          args: [22, 22],
+          msg: 'El CBU debe tener exactamente 22 dígitos.',
+        },
+        isValidCBU(value: string) {
+          const validationResult = validateCBU(value);
+          if (validationResult !== true) {
+            throw new Error(validationResult as string);
+          }
+        },
+      },
+    },
+    denominacion_sello: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    datos_adicionales: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    fecha_alta: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de alta definitiva debe ser una fecha válida.',
         },
       },
     },
@@ -159,7 +196,47 @@ Productora.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha del último fonograma debe ser una fecha válida.',
+          msg: 'La fecha de del último fonograma registrado debe ser una fecha válida.',
+        },
+      },
+    },
+    
+    // Campos específicos para Persona Física
+    nombres: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    apellidos: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+
+    // Campos específicos para Persona Jurídica
+    razon_social: {
+      type: DataTypes.STRING(150),
+      allowNull: true,
+    },
+    apellidos_representante: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    nombres_representante: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+    },
+    cuit_representante: {
+      type: DataTypes.CHAR(11),
+      allowNull: true,
+      unique: true,
+      validate: {
+        isNumeric: {
+          msg: 'El CUIT del representante debe contener solo números.',
+        },
+        isValidCUIT(value: string) {
+          const validationResult = validateCUIT(value);
+          if (validationResult !== true) {
+            throw new Error(validationResult as string);
+          }
         },
       },
     },
@@ -171,102 +248,40 @@ Productora.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['usuario_principal_id'],
-        name: 'idx_productora_usuario_principal_id',
-      },      
-      {
         fields: ['nombre_productora'],
         name: 'idx_productora_nombre_productora',
       },
       {
-        fields: ['cuit_productora'],
-        name: 'idx_productora_cuit_productora',
+        fields: ['tipo_persona'],
+        name: 'idx_productora_tipo_persona',
       },
       {
-        fields: ['cbu_productora'],
-        name: 'idx_productora_cbu_productora',
-      },
-      {
-        fields: ['alias_cbu_productora'],
-        name: 'idx_productora_alias_cbu_productora',
-      },
-      {
-        fields: ['isrc_productora'],
-        name: 'idx_productora_isrc_productora',
-      },
-      {
+        fields: ['cuit_cuil'],
+        name: 'idx_productora_datos_cuit_cuil',
         unique: true,
-        fields: ['nombre_productora', 'cuit_productora'],
+      },
+      {
+        fields: ['email'],
+        name: 'idx_productora_datos_email',
+        unique: true,
+      },
+      {
+        fields: ['alias_cbu'],
+        name: 'idx_productora_datos_alias_cbu',
+        unique: true,
+      },
+      {
+        fields: ['cbu'],
+        name: 'idx_productora_datos_cbu',
+        unique: true,
+      },
+      {
+        fields: ['nombre_productora', 'cuit_cuil'],
+        unique: true,
         name: 'unique_productora_nombre_cuit',
       },
     ],
   }
 );
-
-// Generación de código único de 3 caracteres para isrc_productora
-Productora.beforeCreate(async (productora) => {
-  const availableCode = await ProductoraISRC.findOne({
-    where: { in_use: false },
-  });
-
-  if (availableCode) {
-    productora.isrc_productora = availableCode.codigo;
-    await availableCode.update({ in_use: true });
-  } else {
-    throw new Error('No hay códigos ISRC disponibles');
-  }
-});
-
-// Crear también un Cashflow asociado a la productora
-Productora.afterCreate(async (productora, options) => {
-  try {
-    await Cashflow.create(
-      {
-        productora_id: productora.id_productora,
-        usuario_registrante_id: productora.usuario_principal_id,
-        saldo_actual_productora: 0.0,
-      },
-      { transaction: options.transaction }
-    );
-  } catch (error) {
-    console.error('Error al crear el Cashflow asociado:', error);
-  }
-});
-
-Productora.belongsTo(Usuario, {
-  foreignKey: 'usuario_principal_id',
-  as: 'usuarioPrincipal',
-  onDelete: 'CASCADE',
-});
-
-Usuario.hasOne(Productora, {
-  foreignKey: 'usuario_principal_id',
-  as: 'productora',
-  onDelete: 'CASCADE',
-});
-
-Productora.belongsTo(PersonaFisica, {
-  foreignKey: 'persona_fisica_id',
-  as: 'personaFisica',
-  onDelete: 'SET NULL',
-});
-
-PersonaFisica.hasOne(Productora, {
-  foreignKey: 'persona_fisica_id',
-  as: 'productora',
-  onDelete: 'SET NULL',
-});
-
-Productora.belongsTo(PersonaJuridica, {
-  foreignKey: 'persona_juridica_id',
-  as: 'personaJuridica',
-  onDelete: 'SET NULL',
-});
-
-PersonaJuridica.hasOne(Productora, {
-  foreignKey: 'persona_juridica_id',
-  as: 'productora',
-  onDelete: 'SET NULL',
-});
 
 export default Productora;

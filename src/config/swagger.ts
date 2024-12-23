@@ -2,13 +2,8 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
 
-import {
-  archivoSchemas,
-  authSchemas,
-  conflictoSchemas,
-  consultaSchemas,
-  cuentaCorrienteSchemas,
-  dbSchemas,
+import {  
+  authSchemas,  
   userSchemas,
 } from './schemas';
 import packageJson from '../../package.json';
@@ -42,12 +37,7 @@ const swaggerOptions = {
         },
       },
       schemas: {
-        ...archivoSchemas,
         ...authSchemas,
-        ...conflictoSchemas,
-        ...consultaSchemas,
-        ...cuentaCorrienteSchemas,
-        ...dbSchemas,
         ...userSchemas,
       },
     },

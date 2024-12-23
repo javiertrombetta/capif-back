@@ -1,24 +1,19 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import Usuario from './Usuario';
 import Productora from './Productora';
 
 class ProductoraPremio extends Model {
   public id_premio!: string;
   public productora_id!: string;
-  public usuario_registrante_id!: string;
   public codigo_postulacion!: string;
   public fecha_asignacion!: Date;
-  public fecha_cierre!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public usuario?: Usuario;
-  public productora?: Productora;
+  public productoraDelPremio?: Productora;
 
   public static associations: {
-    usuario: Association<ProductoraPremio, Usuario>;
-    productora: Association<ProductoraPremio, Productora>;
+    productoraDelPremio: Association<ProductoraPremio, Productora>;
   };
 }
 
@@ -49,21 +44,7 @@ ProductoraPremio.init(
           msg: 'El ID de la productora debe ser un UUID válido.',
         },
       },
-    },
-    usuario_registrante_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario debe ser un UUID válido.',
-        },
-      },
-    },
+    },    
     codigo_postulacion: {
       type: DataTypes.STRING(10),
       allowNull: false,
@@ -81,23 +62,14 @@ ProductoraPremio.init(
     fecha_asignacion: {
       type: DataTypes.DATE,
       allowNull: false,
+      defaultValue: DataTypes.NOW,
       validate: {
         isDate: {
           args: true,
           msg: 'La fecha de asignación debe ser una fecha válida.',
         },
       },
-    },
-    fecha_cierre: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de cierre debe ser una fecha válida.',
-        },
-      },
-    },
+    },    
   },
   {
     sequelize,
@@ -108,11 +80,7 @@ ProductoraPremio.init(
       {
         fields: ['productora_id'],
         name: 'idx_productora_premio_productora_id',
-      },
-      {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_productora_premio_usuario_registrante_id',
-      },
+      },      
       {
         fields: ['codigo_postulacion'],
         name: 'idx_productora_premio_codigo_postulacion',
@@ -121,29 +89,5 @@ ProductoraPremio.init(
     ],
   }
 );
-
-ProductoraPremio.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuario',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(ProductoraPremio, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'premios',
-  onDelete: 'SET NULL',
-});
-
-ProductoraPremio.belongsTo(Productora, {
-  foreignKey: 'productora_id',
-  as: 'productora',
-  onDelete: 'CASCADE',
-});
-
-Productora.hasMany(ProductoraPremio, {
-  foreignKey: 'productora_id',
-  as: 'premios',
-  onDelete: 'CASCADE',
-});
 
 export default ProductoraPremio;

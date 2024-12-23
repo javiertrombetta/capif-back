@@ -2,26 +2,24 @@ import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import CashflowPago from './CashflowPago';
 import Cashflow from './Cashflow';
-import Usuario from './Usuario';
 
 class CashflowRechazo extends Model {
   public id_rechazo!: string;
   public pago_id!: string;
   public cashflow_destino_id!: string;
-  public usuario_registrante_id!: string;
+  public numero_rechazo!: number;
   public monto_positivo_destino!: number;
   public fecha_registro_rechazo!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public cashflow_pago?: CashflowPago;
-  public cashflow_destino?: Cashflow;
-  public usuario_registrante?: Usuario;
+  public pagoDelRechazo?: CashflowPago;
+  public ccDelRechazo?: Cashflow;
 
   public static associations: {
-    cashflow_pago: Association<CashflowRechazo, CashflowPago>;
-    cashflow_destino: Association<CashflowRechazo, Cashflow>;
-    usuario_registrante: Association<CashflowRechazo, Usuario>;
+    pagoDelRechazo: Association<CashflowRechazo, CashflowPago>;
+    ccDelRechazo: Association<CashflowRechazo, Cashflow>;
+
   };
 }
 
@@ -67,17 +65,13 @@ CashflowRechazo.init(
         },
       },
     },
-    usuario_registrante_id: {
-      type: DataTypes.UUID,
+    numero_rechazo: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
+      unique: true,
       validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
+        isInt: {
+          msg: 'El número de rechazo debe ser un entero.',
         },
       },
     },
@@ -110,6 +104,12 @@ CashflowRechazo.init(
     sequelize,
     modelName: 'CashflowRechazo',
     tableName: 'CashflowRechazo',
+    hooks: {
+      beforeCreate: async (liquidacion) => {
+        const maxNumero = await CashflowRechazo.max<number, CashflowRechazo>('numero_liquidacion');
+        liquidacion.numero_rechazo = (maxNumero ?? 0) + 1; // Usar coalescencia nula para asignar 1 si maxNumero es null
+      },
+    },
     timestamps: true,
     indexes: [
       {
@@ -119,53 +119,14 @@ CashflowRechazo.init(
       {
         fields: ['cashflow_destino_id'],
         name: 'idx_cashflow_rechazo_destino_id',
-      },
+      },      
       {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_cashflow_rechazo_usuario_registrante_id',
-      },
-      {
-        fields: ['fecha_registro_rechazo'],
-        name: 'idx_cashflow_rechazo_fecha_registro',
+        fields: ['numero_rechazo'],
+        name: 'idx_cashflow_numero_rechazo',
+        unique: true
       },
     ],
   }
 );
-
-CashflowRechazo.belongsTo(CashflowPago, {
-  foreignKey: 'pago_id',
-  as: 'cashflow_pago',
-  onDelete: 'RESTRICT',
-});
-
-CashflowPago.hasMany(CashflowRechazo, {
-  foreignKey: 'pago_id',
-  as: 'rechazos',
-  onDelete: 'RESTRICT',
-});
-
-CashflowRechazo.belongsTo(Cashflow, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'cashflow_destino',
-  onDelete: 'RESTRICT',
-});
-
-Cashflow.hasMany(CashflowRechazo, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'rechazos',
-  onDelete: 'RESTRICT',
-});
-
-CashflowRechazo.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuario_registrante',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(CashflowRechazo, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'rechazos_registrados',
-  onDelete: 'SET NULL',
-});
 
 export default CashflowRechazo;

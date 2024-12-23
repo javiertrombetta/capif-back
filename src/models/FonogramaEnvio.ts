@@ -1,12 +1,11 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import Usuario from './Usuario';
 import Fonograma from './Fonograma';
 
 const ESTADO_ENVIO = [
   'PENDIENTE DE ENVIO',
   'ENVIADO SIN AUDIO',
-  'ENVIADO A VERICAST',
+  'ENVIADO CON AUDIO',
   'RECHAZADO POR VERICAST',
   'ERROR EN EL ENVIO',
 ] as const;
@@ -14,19 +13,16 @@ const ESTADO_ENVIO = [
 class FonogramaEnvio extends Model {
   public id_envio_vericast!: string;
   public fonograma_id!: string;
-  public usuario_registrante_id!: string;
   public tipo_estado!: (typeof ESTADO_ENVIO)[number];
   public fecha_envio_inicial!: Date | null;
   public fecha_envio_ultimo!: Date | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public fonograma?: Fonograma;
-  public usuarioRegistrante?: Usuario;
+  public fonogramaDelEnvio?: Fonograma;
 
   public static associations: {
-    fonograma: Association<FonogramaEnvio, Fonograma>;
-    usuarioRegistrante: Association<FonogramaEnvio, Usuario>;
+    fonogramaDelEnvio: Association<FonogramaEnvio, Fonograma>;
   };
 }
 
@@ -58,20 +54,6 @@ FonogramaEnvio.init(
         },
       },
     },
-    usuario_registrante_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Usuario,
-        key: 'id_usuario',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
-        },
-      },
-    },   
     tipo_estado: {
       type: DataTypes.ENUM(...ESTADO_ENVIO),
       allowNull: false,
@@ -112,57 +94,13 @@ FonogramaEnvio.init(
       {
         fields: ['fonograma_id'],
         name: 'idx_envio_fonograma_id',
-      },
-      {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_envio_usuario_registrante_id',
-      },
+      },      
       {
         fields: ['tipo_estado'],
         name: 'idx_envio_tipo_estado',
-      },
-      {
-        fields: ['fecha_envio_inicial'],
-        name: 'idx_envio_fecha_inicial',
-      },
+      },      
     ],
   }
 );
-
-FonogramaEnvio.belongsTo(Fonograma, {
-  foreignKey: 'fonograma_id',
-  as: 'fonograma',
-  onDelete: 'RESTRICT',
-});
-
-Fonograma.hasMany(FonogramaEnvio, {
-  foreignKey: 'fonograma_id',
-  as: 'envios',
-  onDelete: 'RESTRICT',
-});
-
-FonogramaEnvio.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuarioRegistrante',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(FonogramaEnvio, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'enviosRegistrados',
-  onDelete: 'SET NULL',
-});
-
-FonogramaEnvio.belongsTo(Usuario, {
-  foreignKey: 'usuario_principal_id',
-  as: 'usuarioPrincipal',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(FonogramaEnvio, {
-  foreignKey: 'usuario_principal_id',
-  as: 'enviosPrincipal',
-  onDelete: 'SET NULL',
-});
 
 export default FonogramaEnvio;

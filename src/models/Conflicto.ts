@@ -2,25 +2,21 @@ import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import { updateConflictosActivos } from '../services/checkModels';
 import Fonograma from './Fonograma';
-import ConflictoMensaje from './ConflictoMensaje';
-import Usuario from './Usuario';
+import Productora from './Productora';
 
 const TIPO_ESTADOS = [
+  'PENDIENTE CAPIF',
   'PRIMERA INSTANCIA',
   'PRIMERA PRORROGA',
   'SEGUNDA INSTANCIA',
   'SEGUNDA PRORROGA',
-  'PRIMERA PRESENTACION',
-  'SEGUNDA PRESENTACION',
-  'FINALIZADO - VENCIDO',
-  'FINALIZADO - ACEPTADO',
-  'FINALIZADO - RECHAZADO',
+  'VENCIDO',
+  'CERRADO',
 ] as const;
 
 class Conflicto extends Model {
   public id_conflicto!: string;
-  public usuario_registrante_id!: string;
-  public productora_registrante_id!: string;
+  public productora_conflicto_id!: string;
   public fonograma_id!: string;
   public estado_conflicto!: (typeof TIPO_ESTADOS)[number];
   public fecha_inicio_conflicto!: Date;
@@ -58,14 +54,12 @@ class Conflicto extends Model {
     return fechaVencimiento ? fechaVencimiento < new Date() : false;
   }
 
-  public fonograma?: Fonograma;
-  public usuarioRegistrante?: Usuario;
-  public mensajes?: ConflictoMensaje[];
+  public productoraDelConflicto?: Productora;
+  public fonogramaDelConflicto?: Fonograma;
 
   public static associations: {
-    fonograma: Association<Conflicto, Fonograma>;
-    usuarioRegistrante: Association<Conflicto, Usuario>;
-    mensajes: Association<Conflicto, ConflictoMensaje>;
+    productoraDelConflicto: Association<Conflicto, Productora>;
+    fonogramaDelConflicto: Association<Conflicto, Fonograma>;   
   };
 }
 
@@ -82,24 +76,14 @@ Conflicto.init(
           msg: 'El ID de conflicto debe ser un UUID válido.',
         },
       },
-    },
-    usuario_registrante_id: {
+    },  
+    productora_conflicto_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: Usuario,
-        key: 'id_usuario',
+        model: Productora,
+        key: 'id_productora',
       },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
-        },
-      },
-    },
-    productora_registrante_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
       validate: {
         isUUID: {
           args: 4,
@@ -170,8 +154,8 @@ Conflicto.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_conflicto_usuario_registrante_id',
+        fields: ['productora_conflicto_id'],
+        name: 'idx_conflicto_productora_registrante',
       },
       {
         fields: ['fonograma_id'],
@@ -180,11 +164,7 @@ Conflicto.init(
       {
         fields: ['estado_conflicto'],
         name: 'idx_conflicto_estado',
-      },
-      {
-        fields: ['fecha_inicio_conflicto'],
-        name: 'idx_conflicto_fecha_inicio',
-      },
+      },      
     ],
   }
 );
@@ -199,36 +179,6 @@ Conflicto.afterUpdate(async (conflicto) => {
 
 Conflicto.afterDestroy(async (conflicto) => {
   await updateConflictosActivos(conflicto.fonograma_id, Conflicto, Fonograma);
-});
-
-Conflicto.belongsTo(Fonograma, {
-  foreignKey: 'fonograma_id',
-  as: 'fonograma',
-  onDelete: 'RESTRICT',
-});
-
-Fonograma.hasMany(Conflicto, {
-  foreignKey: 'fonograma_id',
-  as: 'conflictos',
-  onDelete: 'RESTRICT',
-});
-
-Conflicto.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuarioRegistrante',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(Conflicto, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'conflictosRegistrados',
-  onDelete: 'SET NULL',
-});
-
-Conflicto.hasMany(ConflictoMensaje, {
-  foreignKey: 'conflicto_id',
-  as: 'mensajes',
-  onDelete: 'CASCADE',
 });
 
 export default Conflicto;

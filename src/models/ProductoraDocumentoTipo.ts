@@ -1,4 +1,4 @@
-import { Model, DataTypes, Association } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 
 class ProductoraDocumentoTipo extends Model {

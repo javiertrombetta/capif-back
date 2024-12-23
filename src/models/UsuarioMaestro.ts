@@ -1,27 +1,26 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
-import UsuarioRolTipo from './UsuarioRolTipo';
-import UsuarioProductora from './Productora';
+import UsuarioRol from './UsuarioRol';
+import Productora from './Productora';
 
 class UsuarioMaestro extends Model {
   public id_usuario_maestro!: string;
   public usuario_registrante_id!: string;
   public rol_id!: string;
   public productora_id!: string | null;
-  public fecha_ultimo_cambio_rol!: Date;
-
+  public fecha_ultimo_cambio_rol!: Date | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
   public usuarioRegistrante?: Usuario;
-  public rol?: UsuarioRolTipo;
-  public productora?: UsuarioProductora;
+  public rol?: UsuarioRol;
+  public productora?: Productora;
 
   public static associations: {
     usuarioRegistrante: Association<UsuarioMaestro, Usuario>;
-    rol: Association<UsuarioMaestro, UsuarioRolTipo>;
-    productora: Association<UsuarioMaestro, UsuarioProductora>;
+    rol: Association<UsuarioMaestro, UsuarioRol>;
+    productora: Association<UsuarioMaestro, Productora>;
   };
 }
 
@@ -55,10 +54,9 @@ UsuarioMaestro.init(
     },
     rol_id: {
       type: DataTypes.UUID,
-      defaultValue: 'usuario',
       allowNull: false,
       references: {
-        model: UsuarioRolTipo,
+        model: UsuarioRol,
         key: 'id_rol',
       },
       validate: {
@@ -70,9 +68,9 @@ UsuarioMaestro.init(
     },
     productora_id: {
       type: DataTypes.UUID,
-      allowNull: false,
+      allowNull: true,
       references: {
-        model: UsuarioProductora,
+        model: Productora,
         key: 'id_productora',
       },
       validate: {
@@ -119,42 +117,6 @@ UsuarioMaestro.beforeUpdate(async (usuarioMaestro) => {
   if (usuarioMaestro.changed('rol_id')) {
     usuarioMaestro.fecha_ultimo_cambio_rol = new Date();
   }
-});
-
-UsuarioMaestro.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuarioRegistrante',
-  onDelete: 'CASCADE',
-});
-
-Usuario.hasMany(UsuarioMaestro, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'usuariosRegistrantes',
-  onDelete: 'CASCADE',
-});
-
-UsuarioMaestro.belongsTo(UsuarioRolTipo, {
-  foreignKey: 'rol_id',
-  as: 'rol',
-  onDelete: 'RESTRICT',
-});
-
-UsuarioRolTipo.hasMany(UsuarioMaestro, {
-  foreignKey: 'rol_id',
-  as: 'roles',
-  onDelete: 'SET NULL',
-});
-
-UsuarioMaestro.belongsTo(UsuarioProductora, {
-  foreignKey: 'productora_id',
-  as: 'productora',
-  onDelete: 'RESTRICT',
-});
-
-UsuarioProductora.hasMany(UsuarioMaestro, {
-  foreignKey: 'productora_id',
-  as: 'productoras',
-  onDelete: 'SET NULL',
 });
 
 export default UsuarioMaestro;

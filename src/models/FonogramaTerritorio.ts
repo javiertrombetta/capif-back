@@ -1,19 +1,18 @@
-import { Model, DataTypes, Association } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import Fonograma from './Fonograma';
 
-class FonogramaTerritorialidadPais extends Model {
-  public id_territorialidad_pais!: string;
+class FonogramaTerritorio extends Model {
+  public id_territorio!: string;
   public nombre_pais!: string;
   public codigo_iso!: string;
-  public is_activo!: boolean;
+  public is_habilitado!: boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;  
 }
 
-FonogramaTerritorialidadPais.init(
+FonogramaTerritorio.init(
   {
-    id_territorialidad_pais: {
+    id_territorio: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
@@ -21,7 +20,7 @@ FonogramaTerritorialidadPais.init(
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID de territorialidad del país debe ser un UUID válido.',
+          msg: 'El ID de territorio debe ser un UUID válido.',
         },
       },
     },
@@ -46,7 +45,7 @@ FonogramaTerritorialidadPais.init(
         },
       },
     },
-    is_activo: {
+    is_habilitado: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
@@ -54,33 +53,21 @@ FonogramaTerritorialidadPais.init(
   },
   {
     sequelize,
-    modelName: 'FonogramaTerritorialidadPais',
-    tableName: 'FonogramaTerritorialidadPais',
+    modelName: 'FonogramaTerritorio',
+    tableName: 'FonogramaTerritorio',
     timestamps: true,
     indexes: [
       {
-        fields: ['codigo_iso'],
-        name: 'idx_territorialidad_codigo_iso',
-        unique: true,
+        fields: ['nombre_pais'],
+        name: 'idx_territorio_nombre_pais',
       },
       {
-        fields: ['is_activo'],
-        name: 'idx_territorialidad_is_activo',
+        fields: ['codigo_iso'],
+        name: 'idx_territorio_codigo_iso',
+        unique: true,
       },
     ],
   }
 );
 
-FonogramaTerritorialidadPais.hasMany(Fonograma, {
-  foreignKey: 'territorialidad_id',
-  as: 'fonogramas',
-  onDelete: 'SET NULL',
-});
-
-Fonograma.belongsTo(FonogramaTerritorialidadPais, {
-  foreignKey: 'territorialidad_id',
-  as: 'territorialidad',
-  onDelete: 'SET NULL',
-});
-
-export default FonogramaTerritorialidadPais;
+export default FonogramaTerritorio;

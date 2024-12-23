@@ -1,83 +1,55 @@
-export const archivoSchemas = {
-  ArchivoCreate: {
-    title: 'Archivo - Crear',
-    type: 'object',
-    properties: {
-      nombre: {
-        type: 'string',
-        description: 'Nombre del archivo',
-        example: 'archivo_ejemplo.pdf',
-      },
-      tipo: {
-        type: 'string',
-        description: 'Tipo de archivo',
-        example: 'pdf',
-      },
-      ruta: {
-        type: 'string',
-        description: 'Ruta del archivo en el servidor',
-        example: '/uploads/archivo_ejemplo.pdf',
-      },
-    },
-    required: ['nombre', 'tipo', 'ruta'],
-  },
-  ArchivoUpdate: {
-    title: 'Archivo - Actualizar',
-    type: 'object',
-    properties: {
-      nombre: {
-        type: 'string',
-        description: 'Nombre actualizado del archivo',
-        example: 'archivo_actualizado.pdf',
-      },
-      tipo: {
-        type: 'string',
-        description: 'Tipo actualizado del archivo',
-        example: 'pdf',
-      },
-    },
-  },
-  Archivo: {
-    title: 'Archivo (modelo)',
-    type: 'object',
-    properties: {
-      id: {
-        type: 'string',
-        description: 'ID del archivo',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      nombre: {
-        type: 'string',
-        description: 'Nombre del archivo',
-        example: 'archivo_final.pdf',
-      },
-      tipo: {
-        type: 'string',
-        description: 'Tipo de archivo',
-        example: 'pdf',
-      },
-      ruta: {
-        type: 'string',
-        description: 'Ruta del archivo en el servidor',
-        example: '/uploads/archivo_final.pdf',
-      },
-      createdAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de creación del archivo',
-        example: '2023-09-30T12:34:56Z',
-      },
-      updatedAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de actualización del archivo',
-        example: '2023-10-01T12:34:56Z',
-      },
-    },
-  },
-};
-
 export const authSchemas = {
+  RegisterPrimary: {
+    title: 'Autenticación - Registro de Usuario Principal',
+    type: 'object',
+    properties: {
+      email: {
+        type: 'string',
+        format: 'email',
+        description: 'Correo electrónico del nuevo usuario',
+        example: 'usuario@dominio.com',
+      },
+      password: {
+        type: 'string',
+        description: 'Contraseña del nuevo usuario',
+        example: 'ClaveSegura123!',
+      },
+      nombres_y_apellidos: {
+        type: 'string',
+        description: 'Nombre y apellido del usuario',
+        example: 'Juan Pérez',
+      },
+      telefono: {
+        type: 'string',
+        description: 'Número de teléfono del usuario',
+        example: '+54 11 1234-5678',
+      },
+    },
+    required: ['email', 'password', 'nombres_y_apellidos'],
+  },
+  RegisterSecondary: {
+    title: 'Autenticación - Registro de Usuario Secundario',
+    type: 'object',
+    properties: {
+      email: {
+        type: 'string',
+        format: 'email',
+        description: 'Correo electrónico del nuevo usuario',
+        example: 'usuario@dominio.com',
+      },
+      nombres_y_apellidos: {
+        type: 'string',
+        description: 'Nombre y apellido del usuario',
+        example: 'Ana García',
+      },
+      telefono: {
+        type: 'string',
+        description: 'Número de teléfono del usuario',
+        example: '+54 11 8765-4321',
+      },
+    },
+    required: ['email', 'nombres_y_apellidos'],
+  },
   Login: {
     title: 'Autenticación - Login',
     type: 'object',
@@ -96,26 +68,21 @@ export const authSchemas = {
     },
     required: ['email', 'password'],
   },
-  Register: {
-    title: 'Autenticación - Registro de Usuario',
+  SelectProductora: {
+    title: 'Autenticación - Seleccionar Productora Activa',
     type: 'object',
     properties: {
-      email: {
+      productoraId: {
         type: 'string',
-        format: 'email',
-        description: 'Correo electrónico del nuevo usuario',
-        example: 'usuario@dominio.com',
-      },
-      password: {
-        type: 'string',
-        description: 'Contraseña del nuevo usuario',
-        example: 'ClaveSegura123!',
+        format: 'uuid',
+        description: 'ID de la productora activa',
+        example: '123e4567-e89b-12d3-a456-426614174000',
       },
     },
-    required: ['email', 'password'],
+    required: ['productoraId'],
   },
-  RecoverPassword: {
-    title: 'Autenticación - Mail de recuperación de clave (envío)',
+  RequestPassword: {
+    title: 'Autenticación - Solicitar Restablecimiento de Contraseña',
     type: 'object',
     properties: {
       email: {
@@ -127,8 +94,20 @@ export const authSchemas = {
     },
     required: ['email'],
   },
+  ValidateEmail: {
+    title: 'Autenticación - Validar Correo Electrónico',
+    type: 'object',
+    properties: {
+      token: {
+        type: 'string',
+        description: 'Token para validar el correo',
+        example: '12345abcde',
+      },
+    },
+    required: ['token'],
+  },
   ResetPassword: {
-    title: 'Autenticación - Mail de recuperación de clave (confirmación por token recibido)',
+    title: 'Autenticación - Restablecer Contraseña',
     type: 'object',
     properties: {
       token: {
@@ -143,1183 +122,446 @@ export const authSchemas = {
       },
     },
     required: ['token', 'newPassword'],
-  },  
-  BlockUser: {
-    title: 'Autenticación - Bloquear a un usuario existente',
-    type: 'object',
-    properties: {
-      userId: {
-        type: 'string',
-        description: 'ID del usuario a bloquear o desbloquear',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      isBlocked: {
-        type: 'boolean',
-        description: 'Estado del usuario (bloqueado o desbloqueado)',
-        example: true,
-      },
-    },
-    required: ['id_usuario', 'bloquear'],
-  },
-  ChangeRole: {
-    title: 'Autenticación - Cambiarle el rol a un usuario',
-    type: 'object',
-    properties: {
-      userId: {
-        type: 'string',
-        description: 'ID del usuario cuyo rol será cambiado',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      newRole: {
-        type: 'string',
-        description: 'Nuevo rol del usuario',
-        example: 'admin',
-      },
-    },
-    required: ['id_usuario', 'nuevo_rol'],
   },
   ChangePassword: {
-    title: 'Autenticación - Cambio de clave',
+    title: 'Autenticación - Cambio de Contraseña',
     type: 'object',
     properties: {
-      userId: {
+      id_usuario: {
         type: 'string',
-        description: 'ID del usuario a cambiar clave',
+        format: 'uuid',
+        description: 'ID del usuario que cambiará su clave',
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
       newPassword: {
         type: 'string',
-        description: 'Nueva clave para este usuario',
+        description: 'Nueva contraseña para este usuario',
         example: 'CambioDeClave123!',
       },
       confirmPassword: {
         type: 'string',
-        description: 'Confirmar nueva clave ingresada',
+        description: 'Confirmación de la nueva contraseña',
         example: 'CambioDeClave123!',
       },
     },
     required: ['id_usuario', 'newPassword', 'confirmPassword'],
-  },  
-};
-
-export const conflictoSchemas = {
-  ConflictoCreate: {
-    title: 'Conflicto - Crear',
-    type: 'object',
-    properties: {
-      id_fonograma: {
-        type: 'string',
-        description: 'ID del fonograma asociado al conflicto',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      tipo_conflicto: {
-        type: 'string',
-        description: 'Tipo de conflicto (ej. titularidad, derechos)',
-        example: 'titularidad',
-      },
-      descripcion: {
-        type: 'string',
-        description: 'Descripción detallada del conflicto',
-        example: 'El usuario reclama derechos sobre la obra.',
-      },
-    },
-    required: ['id_fonograma', 'tipo_conflicto', 'descripcion'],
-  },
-  Comentario: {
-    title: 'Conflicto - Agregar comentario',
-    type: 'object',
-    properties: {
-      comentario: {
-        type: 'string',
-        description: 'Comentario sobre el conflicto',
-        example: 'Se resolvió con acuerdo entre las partes.',
-      },
-    },
-    required: ['comentario'],
-  },
-  Decision: {
-    title: 'Conflicto - Aplicar decisión',
-    type: 'object',
-    properties: {
-      decision: {
-        type: 'string',
-        description: 'Decisión tomada por el involucrado',
-        example: 'Aceptar propuesta de resolución',
-      },
-      fecha_decision: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de la decisión',
-        example: '2024-10-14T12:34:56Z',
-      },
-    },
-    required: ['decision', 'fecha_decision'],
-  },
-  Conflicto: {
-    title: 'Conflicto (modelo)',
-    type: 'object',
-    properties: {
-      id_conflicto: {
-        type: 'string',
-        description: 'ID del conflicto',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      id_fonograma: {
-        type: 'string',
-        description: 'ID del fonograma asociado',
-      },
-      tipo_conflicto: {
-        type: 'string',
-        description: 'Tipo de conflicto',
-      },
-      descripcion: {
-        type: 'string',
-        description: 'Descripción del conflicto',
-      },
-      estado: {
-        type: 'string',
-        description: 'Estado actual del conflicto',
-        example: 'pendiente',
-      },
-      fecha_resolucion: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de resolución (si aplica)',
-        example: '2024-10-21T15:00:00Z',
-      },
-    },
-  },
-};
-
-export const consultaSchemas = {
-  ConsultaCreate: {
-    title: 'Consulta - Crear',
-    type: 'object',
-    properties: {
-      asunto: {
-        type: 'string',
-        description: 'Asunto de la consulta',
-        example: 'Consulta sobre derechos de reproducción',
-      },
-      mensaje: {
-        type: 'string',
-        description: 'Mensaje detallado de la consulta',
-        example: 'Me gustaría saber más sobre los derechos de reproducción para fonogramas.',
-      },
-      id_usuario: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID del usuario que realiza la consulta',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      estado_id: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID del estado inicial de la consulta',
-        example: '123e4567-e89b-12d3-a456-426614174111',
-      },
-    },
-    required: ['asunto', 'id_usuario', 'estado_id'],
-  },
-
-  ConsultaUpdate: {
-    title: 'Consulta - Actualizar',
-    type: 'object',
-    properties: {
-      asunto: {
-        type: 'string',
-        description: 'Asunto actualizado de la consulta',
-        example: 'Actualización del asunto de la consulta',
-      },
-      mensaje: {
-        type: 'string',
-        description: 'Mensaje actualizado de la consulta',
-        example: 'Información adicional sobre los derechos de reproducción.',
-      },
-      estado_id: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID del nuevo estado de la consulta',
-        example: '123e4567-e89b-12d3-a456-426614174222',
-      },
-    },
-  },
-
-  Consulta: {
-    title: 'Consulta (modelo)',
-    type: 'object',
-    properties: {
-      id_consulta: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID de la consulta',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      asunto: {
-        type: 'string',
-        description: 'Asunto de la consulta',
-        example: 'Consulta sobre derechos de reproducción',
-      },
-      mensaje: {
-        type: 'string',
-        description: 'Mensaje detallado de la consulta',
-        example: 'Me gustaría saber más sobre los derechos de reproducción para fonogramas.',
-      },
-      id_usuario: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID del usuario que realizó la consulta',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      estado: {
-        type: 'object',
-        properties: {
-          id_estado: {
-            type: 'string',
-            format: 'uuid',
-            description: 'ID del estado actual de la consulta',
-            example: '123e4567-e89b-12d3-a456-426614174111',
-          },
-          descripcion: {
-            type: 'string',
-            description: 'Descripción del estado actual',
-            example: 'Pendiente',
-          },
-        },
-      },
-      createdAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de creación de la consulta',
-        example: '2024-10-14T10:30:00Z',
-      },
-      updatedAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de última actualización de la consulta',
-        example: '2024-10-15T14:00:00Z',
-      },
-    },
-  },
-};
-
-export const cuentaCorrienteSchemas = {
-  CuentaCorrienteCreate: {
-    title: 'CuentaCorriente - Crear',
-    type: 'object',
-    properties: {
-      id_usuario: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID del usuario asociado a la cuenta corriente',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      saldo: {
-        type: '',
-        description: 'Saldo inicial de la cuenta corriente',
-        example: 1000.5,
-      },
-    },
-    required: ['id_usuario', 'saldo'],
-  },
-
-  UpdateSaldo: {
-    title: 'CuentaCorriente - Actualizar',
-    type: 'object',
-    properties: {
-      nuevoSaldo: {
-        type: 'number',
-        description: 'Nuevo saldo para la cuenta corriente',
-        example: 1500.75,
-      },
-    },
-    required: ['nuevoSaldo'],
-  },
-
-  CuentaCorriente: {
-    title: 'CuentaCorriente (modelo)',
-    type: 'object',
-    properties: {
-      id_cuenta_corriente: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID de la cuenta corriente',
-        example: '123e4567-e89b-12d3-a456-426614174555',
-      },
-      id_usuario: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID del usuario asociado a la cuenta corriente',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      saldo: {
-        type: 'number',
-        description: 'Saldo actual de la cuenta corriente',
-        example: 5000.0,
-      },
-      createdAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de creación de la cuenta corriente',
-        example: '2024-10-14T10:30:00Z',
-      },
-      updatedAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de última actualización de la cuenta corriente',
-        example: '2024-10-15T14:00:00Z',
-      },
-    },
-  },
-
-  Pago: {
-    title: 'CuentaCorriente - Pago (modelo)',
-    type: 'object',
-    properties: {
-      id_pago: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID del pago realizado',
-        example: '123e4567-e89b-12d3-a456-426614174777',
-      },
-      id_usuario: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID del usuario que realizó el pago',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      monto: {
-        type: 'number',
-        description: 'Monto del pago realizado',
-        example: 200.0,
-      },
-      fecha_pago: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha en que se realizó el pago',
-        example: '2024-10-13T09:45:00Z',
-      },
-      id_tipo_metodo_pago: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID del método de pago utilizado',
-        example: '123e4567-e89b-12d3-a456-426614174888',
-      },
-      referencia: {
-        type: 'string',
-        description: 'Referencia del pago',
-        example: 'Pago mensual de suscripción',
-      },
-      tipoMetodoPago: {
-        type: 'object',
-        properties: {
-          id_tipo_metodo_pago: {
-            type: 'string',
-            format: 'uuid',
-            description: 'ID del tipo de método de pago',
-            example: '123e4567-e89b-12d3-a456-426614174888',
-          },
-          descripcion: {
-            type: 'string',
-            description: 'Descripción del método de pago',
-            example: 'Tarjeta de crédito',
-          },
-        },
-      },
-    },
-  },
-};
-
-export const dbSchemas = {
-  RegistroCreate: {
-    title: 'DB - Crear',
-    type: 'object',
-    properties: {
-      nombre: {
-        type: 'string',
-        description: 'Nombre del registro',
-        example: 'TipoActividad',
-      },
-      descripcion: {
-        type: 'string',
-        description: 'Descripción del registro',
-        example: 'Actividad de prueba',
-      },
-    },
-    required: ['nombre', 'descripcion'],
-  },
-
-  RegistroUpdate: {
-    title: 'DB - Actualizar',
-    type: 'object',
-    properties: {
-      descripcion: {
-        type: 'string',
-        description: 'Nueva descripción del registro',
-        example: 'Actividad modificada',
-      },
-    },
-    required: ['descripcion'],
-  },
-
-  Registro: {
-    title: 'DB - Registro (modelo)',
-    type: 'object',
-    properties: {
-      id: {
-        type: 'string',
-        format: 'uuid',
-        description: 'ID único del registro',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-      },
-      nombre: {
-        type: 'string',
-        description: 'Nombre del registro',
-        example: 'TipoActividad',
-      },
-      descripcion: {
-        type: 'string',
-        description: 'Descripción del registro',
-        example: 'Actividad de prueba',
-      },
-      createdAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de creación',
-        example: '2024-10-14T10:30:00Z',
-      },
-      updatedAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Fecha de última actualización',
-        example: '2024-10-15T14:00:00Z',
-      },
-    },
   },
 };
 
 export const userSchemas = {
-  UsuarioCreate: {
-    title: 'Usuario - Crear',
+  User: {
+    title: 'Usuario',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID único del usuario.',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+      email: {
+        type: 'string',
+        format: 'email',
+        description: 'Correo electrónico del usuario.',
+        example: 'usuario@dominio.com',
+      },
+      nombres_y_apellidos: {
+        type: 'string',
+        description: 'Nombre completo del usuario.',
+        example: 'Juan Pérez',
+      },
+      telefono: {
+        type: 'string',
+        description: 'Número de teléfono del usuario.',
+        example: '+54 11 1234-5678',
+      },
+      estado: {
+        type: 'string',
+        enum: ['HABILITADO', 'DESHABILITADO', 'PENDIENTE', 'NUEVO'],
+        description: 'Estado del usuario.',
+        example: 'HABILITADO',
+      },
+      rol: {
+        type: 'string',
+        description: 'Rol asignado al usuario.',
+        example: 'admin_principal',
+      },
+      fecha_creacion: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Fecha en la que el usuario fue creado.',
+        example: '2024-01-01T12:00:00Z',
+      },
+      fecha_actualizacion: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Última fecha de actualización del usuario.',
+        example: '2024-01-02T15:00:00Z',
+      },
+    },
+    required: ['id_usuario', 'email', 'nombres_y_apellidos', 'estado', 'rol'],
+  },
+  AvailableDisableUser: {
+    title: 'Autenticación - Habilitar o Deshabilitar Usuario',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario que se desea habilitar o deshabilitar',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+    },
+    required: ['id_usuario'],
+  },
+  BlockOrUnblockUser: {
+    title: 'Usuarios - Bloquear o Desbloquear Usuario',
+    type: 'object',
+    properties: {
+      userId: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario que se desea bloquear o desbloquear',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+      isBlocked: {
+        type: 'boolean',
+        description: 'Estado del bloqueo. `true` para bloquear y `false` para desbloquear.',
+        example: true,
+      },
+    },
+    required: ['userId', 'isBlocked'],
+  },
+  ChangeUserRole: {
+    title: 'Usuarios - Cambiar Rol de Usuario',
+    type: 'object',
+    properties: {
+      userId: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario cuyo rol será cambiado',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+      productoraId: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID de la productora asociada (si aplica)',
+        example: '456e7890-e12f-34g5-h678-910ijklmnopq',
+      },
+      newRole: {
+        type: 'string',
+        description: 'Nuevo rol que se asignará al usuario',
+        example: 'admin_secundario',
+      },
+    },
+    required: ['userId', 'newRole'],
+  },
+  CreateAdminUser: {
+    title: 'Usuarios - Crear Usuario Administrador',
     type: 'object',
     properties: {
       email: {
         type: 'string',
-        example: 'juan.perez@dominio.com',
-        description: 'Correo electrónico del usuario',
+        format: 'email',
+        description: 'Correo electrónico del administrador a crear',
+        example: 'admin@domain.com',
+      },
+      nombres_y_apellidos: {
+        type: 'string',
+        description: 'Nombre completo del administrador',
+        example: 'Juan Pérez',
+      },
+      telefono: {
+        type: 'string',
+        description: 'Número de teléfono del administrador (opcional)',
+        example: '+54 11 1234-5678',
       },
       rol: {
         type: 'string',
-        example: 'productor',
-        description: 'Rol asignado al usuario',
+        enum: ['admin_principal', 'admin_secundario'],
+        description: 'Rol del administrador a crear',
+        example: 'admin_principal',
       },
       estado: {
         type: 'string',
-        example: 'nuevo',
-        description: 'Estado del usuario',
-      },
-      personaFisica: {
-        type: 'object',
-        properties: {
-          id_persona_fisica: {
-            type: 'string',
-            example: '123e4567-e89b-12d3-a456-426614174000',
-            description: 'Identificador único de la persona física',
-          },
-          estado: {
-            type: 'string',
-            example: 'activo',
-            description: 'Estado de la persona física',
-          },
-          cuit_cuil: {
-            type: 'string',
-            example: '20-12345678-9',
-            description: 'CUIT/CUIL con formato XX-XXXXXXXX-X',
-          },
-          nombres: {
-            type: 'string',
-            example: 'Juan',
-            description: 'Nombres de la persona física',
-          },
-          apellidos: {
-            type: 'string',
-            example: 'Pérez',
-            description: 'Apellidos de la persona física',
-          },
-          email: {
-            type: 'string',
-            example: 'juan.perez@dominio.com',
-            description: 'Correo electrónico',
-          },
-          denominacion_sello: {
-            type: 'string',
-            example: 'Sello Juan Pérez',
-            description: 'Denominación o nombre del sello',
-          },
-          calle: {
-            type: 'string',
-            example: 'Calle Falsa',
-            description: 'Calle del domicilio',
-          },
-          numero: {
-            type: 'string',
-            example: '123',
-            description: 'Número del domicilio',
-          },
-          ciudad: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Ciudad del domicilio',
-          },
-          localidad: {
-            type: 'string',
-            example: 'Palermo',
-            description: 'Localidad del domicilio',
-          },
-          provincia: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Provincia del domicilio',
-          },
-          codigo_postal: {
-            type: 'string',
-            example: '1414',
-            description: 'Código postal',
-          },
-          telefono: {
-            type: 'string',
-            example: '+54 9 11 1234 5678',
-            description: 'Teléfono de la persona física',
-          },
-          nacionalidad: {
-            type: 'string',
-            example: 'Argentina',
-            description: 'Nacionalidad de la persona física',
-          },
-          cbu: {
-            type: 'string',
-            example: '2850590940090418135201',
-            description: 'Clave Bancaria Uniforme (CBU) de 22 dígitos',
-          },
-          alias_cbu: {
-            type: 'string',
-            example: 'mi.alias.banco',
-            description: 'Alias del CBU',
-          },
-          documento_identidad: {
-            type: 'string',
-            example: '/documentos/archivo_dni.pdf',
-            description: 'Documento de identidad',
-          },
-          otros_documentos: {
-            type: 'array',
-            items: {
-              type: 'string',
-              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
-            },
-            description: 'Rutas de otros documentos relevantes (PDF, imágenes, etc.)',
-          },
-        },
-      },
-      personaJuridica: {
-        type: 'object',
-        properties: {
-          id_persona_juridica: {
-            type: 'string',
-            example: '123e4567-e89b-12d3-a456-426614174000',
-            description: 'ID único de la persona jurídica',
-          },
-          estado: {
-            type: 'string',
-            example: 'activo',
-            description: 'Estado asociado a la persona jurídica',
-          },
-          cuit_cuil: {
-            type: 'string',
-            example: '30-12345678-9',
-            description: 'CUIT/CUIL de la empresa',
-          },
-          razon_social: {
-            type: 'string',
-            example: 'Mi Empresa SRL',
-            description: 'Razón social de la empresa',
-          },
-          apellidos_representante: {
-            type: 'string',
-            example: 'Pérez',
-            description: 'Apellidos del representante legal',
-          },
-          nombres_representante: {
-            type: 'string',
-            example: 'Juan',
-            description: 'Nombres del representante legal',
-          },
-          cuit_representante: {
-            type: 'string',
-            example: '20-12345678-9',
-            description: 'CUIT del representante legal',
-          },
-          denominacion_sello: {
-            type: 'string',
-            example: 'Sello Mi Empresa',
-            description: 'Denominación del sello o marca',
-          },
-          calle: {
-            type: 'string',
-            example: 'Calle Falsa',
-            description: 'Nombre de la calle',
-          },
-          numero: {
-            type: 'string',
-            example: '123',
-            description: 'Número de la dirección',
-          },
-          ciudad: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Ciudad donde se encuentra la empresa',
-          },
-          localidad: {
-            type: 'string',
-            example: 'Palermo',
-            description: 'Localidad específica',
-          },
-          provincia: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Provincia donde está ubicada la empresa',
-          },
-          codigo_postal: {
-            type: 'string',
-            example: '1414',
-            description: 'Código postal',
-          },
-          telefono: {
-            type: 'string',
-            example: '+54 11 5678 1234',
-            description: 'Número de teléfono de contacto',
-          },
-          nacionalidad: {
-            type: 'string',
-            example: 'Argentina',
-            description: 'Nacionalidad de la empresa',
-          },
-          cbu: {
-            type: 'string',
-            example: '1234567890123456789012',
-            description: 'CBU de la cuenta bancaria',
-          },
-          alias_cbu: {
-            type: 'string',
-            example: 'mi.alias.cbu',
-            description: 'Alias del CBU',
-          },
-          contrato_social: {
-            type: 'string',
-            example: '/path/contrato-social.pdf',
-            description: 'Ruta del archivo del contrato social',
-          },
-          documento_representante: {
-            type: 'string',
-            example: '/path/documento-representante.pdf',
-            description: 'Ruta del documento del representante',
-          },
-          otros_documentos: {
-            type: 'array',
-            items: {
-              type: 'string',
-              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
-            },
-            description: 'Lista de rutas de otros documentos adicionales',
-          },
-        },
+        enum: ['HABILITADO', 'DESHABILITADO'],
+        description: 'Estado inicial del administrador',
+        example: 'HABILITADO',
       },
     },
-    required: ['email'],
+    required: ['email', 'nombres_y_apellidos', 'rol', 'estado'],
   },
-
-  UsuarioUpdate: {
-    title: 'Usuario - Actualizar',
-    type: 'object',
-    properties: {
-      personaFisica: {
-        type: 'object',
-        properties: {
-          id_persona_fisica: {
-            type: 'string',
-            example: '123e4567-e89b-12d3-a456-426614174000',
-            description: 'Identificador único de la persona física',
-          },
-          estado: {
-            type: 'string',
-            example: 'activo',
-            description: 'Estado de la persona física',
-          },
-          cuit_cuil: {
-            type: 'string',
-            example: '20-12345678-9',
-            description: 'CUIT/CUIL con formato XX-XXXXXXXX-X',
-          },
-          nombres: {
-            type: 'string',
-            example: 'Juan',
-            description: 'Nombres de la persona física',
-          },
-          apellidos: {
-            type: 'string',
-            example: 'Pérez',
-            description: 'Apellidos de la persona física',
-          },
-          email: {
-            type: 'string',
-            example: 'juan.perez@dominio.com',
-            description: 'Correo electrónico',
-          },
-          denominacion_sello: {
-            type: 'string',
-            example: 'Sello Juan Pérez',
-            description: 'Denominación o nombre del sello',
-          },
-          calle: {
-            type: 'string',
-            example: 'Calle Falsa',
-            description: 'Calle del domicilio',
-          },
-          numero: {
-            type: 'string',
-            example: '123',
-            description: 'Número del domicilio',
-          },
-          ciudad: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Ciudad del domicilio',
-          },
-          localidad: {
-            type: 'string',
-            example: 'Palermo',
-            description: 'Localidad del domicilio',
-          },
-          provincia: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Provincia del domicilio',
-          },
-          codigo_postal: {
-            type: 'string',
-            example: '1414',
-            description: 'Código postal',
-          },
-          telefono: {
-            type: 'string',
-            example: '+54 9 11 1234 5678',
-            description: 'Teléfono de la persona física',
-          },
-          nacionalidad: {
-            type: 'string',
-            example: 'Argentina',
-            description: 'Nacionalidad de la persona física',
-          },
-          cbu: {
-            type: 'string',
-            example: '2850590940090418135201',
-            description: 'Clave Bancaria Uniforme (CBU) de 22 dígitos',
-          },
-          alias_cbu: {
-            type: 'string',
-            example: 'mi.alias.banco',
-            description: 'Alias del CBU',
-          },
-          documento_identidad: {
-            type: 'string',
-            example: '/documentos/archivo_dni.pdf',
-            description: 'Documento de identidad',
-          },
-          otros_documentos: {
-            type: 'array',
-            items: {
-              type: 'string',
-              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
-            },
-            description: 'Rutas de otros documentos relevantes (PDF, imágenes, etc.)',
-          },
-        },
-      },
-      personaJuridica: {
-        type: 'object',
-        properties: {
-          id_persona_juridica: {
-            type: 'string',
-            example: '123e4567-e89b-12d3-a456-426614174000',
-            description: 'ID único de la persona jurídica',
-          },
-          estado: {
-            type: 'string',
-            example: 'activo',
-            description: 'Estado asociado a la persona jurídica',
-          },
-          cuit_cuil: {
-            type: 'string',
-            example: '30-12345678-9',
-            description: 'CUIT/CUIL de la empresa',
-          },
-          razon_social: {
-            type: 'string',
-            example: 'Mi Empresa SRL',
-            description: 'Razón social de la empresa',
-          },
-          apellidos_representante: {
-            type: 'string',
-            example: 'Pérez',
-            description: 'Apellidos del representante legal',
-          },
-          nombres_representante: {
-            type: 'string',
-            example: 'Juan',
-            description: 'Nombres del representante legal',
-          },
-          cuit_representante: {
-            type: 'string',
-            example: '20-12345678-9',
-            description: 'CUIT del representante legal',
-          },
-          denominacion_sello: {
-            type: 'string',
-            example: 'Sello Mi Empresa',
-            description: 'Denominación del sello o marca',
-          },
-          calle: {
-            type: 'string',
-            example: 'Calle Falsa',
-            description: 'Nombre de la calle',
-          },
-          numero: {
-            type: 'string',
-            example: '123',
-            description: 'Número de la dirección',
-          },
-          ciudad: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Ciudad donde se encuentra la empresa',
-          },
-          localidad: {
-            type: 'string',
-            example: 'Palermo',
-            description: 'Localidad específica',
-          },
-          provincia: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Provincia donde está ubicada la empresa',
-          },
-          codigo_postal: {
-            type: 'string',
-            example: '1414',
-            description: 'Código postal',
-          },
-          telefono: {
-            type: 'string',
-            example: '+54 11 5678 1234',
-            description: 'Número de teléfono de contacto',
-          },
-          nacionalidad: {
-            type: 'string',
-            example: 'Argentina',
-            description: 'Nacionalidad de la empresa',
-          },
-          cbu: {
-            type: 'string',
-            example: '1234567890123456789012',
-            description: 'CBU de la cuenta bancaria',
-          },
-          alias_cbu: {
-            type: 'string',
-            example: 'mi.alias.cbu',
-            description: 'Alias del CBU',
-          },
-          contrato_social: {
-            type: 'string',
-            example: '/path/contrato-social.pdf',
-            description: 'Ruta del archivo del contrato social',
-          },
-          documento_representante: {
-            type: 'string',
-            example: '/path/documento-representante.pdf',
-            description: 'Ruta del documento del representante',
-          },
-          otros_documentos: {
-            type: 'array',
-            items: {
-              type: 'string',
-              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
-            },
-            description: 'Lista de rutas de otros documentos adicionales',
-          },
-        },
-      },
-    },
-    required: [],
-  },
-
-  UsuarioData: {
-    title: 'Usuario - Cargar Datos Personales',
+  GetRegistroPendiente: {
+    title: 'Usuarios - Obtener Registro Pendiente',
     type: 'object',
     properties: {
       id_usuario: {
         type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario del cual se obtendrán los datos del registro pendiente',
         example: '123e4567-e89b-12d3-a456-426614174000',
-        description: 'ID del usuario',
       },
-      personaFisica: {
+    },
+    required: ['id_usuario'],
+  },
+  ApproveApplication: {
+    title: 'Usuarios - Aprobar Solicitud de Aplicación',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario cuya aplicación será aprobada.',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+      nombre_productora: {
+        type: 'string',
+        description: 'Nombre de la productora asociada al usuario.',
+        example: 'Productora Ejemplo S.A.',
+      },
+      cuit_productora: {
+        type: 'string',
+        description: 'CUIT de la productora.',
+        example: '20-12345678-9',
+      },
+      cbu_productora: {
+        type: 'string',
+        description: 'CBU de la productora.',
+        example: '0123456789012345678901',
+      },
+      alias_cbu_productora: {
+        type: 'string',
+        description: 'Alias del CBU de la productora.',
+        example: 'mi.alias.cbu',
+      },
+    },
+    required: ['id_usuario', 'nombre_productora', 'cuit_productora', 'cbu_productora', 'alias_cbu_productora'],
+  },
+  RejectApplication: {
+    title: 'Usuarios - Rechazar Solicitud de Aplicación',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario cuya solicitud de aplicación será rechazada.',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+      motivo_rechazo: {
+        type: 'string',
+        description: 'Motivo del rechazo de la solicitud.',
+        example: 'La documentación proporcionada es incompleta.',
+      },
+    },
+    required: ['id_usuario', 'motivo_rechazo'],
+  },
+  SendApplication: {
+    title: 'Usuarios - Enviar Solicitud de Aplicación',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario que envía la solicitud de aplicación.',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+      datosFisica: {
         type: 'object',
+        description: 'Datos relacionados con la persona física (opcional).',
         properties: {
-          id_persona_fisica: {
+          nombre: {
             type: 'string',
-            example: '123e4567-e89b-12d3-a456-426614174000',
-            description: 'Identificador único de la persona física',
+            description: 'Nombre de la persona física.',
+            example: 'Juan Pérez',
           },
-          estado: {
+          dni: {
             type: 'string',
-            example: 'activo',
-            description: 'Estado de la persona física',
+            description: 'Documento Nacional de Identidad (DNI) de la persona física.',
+            example: '12345678',
           },
-          cuit_cuil: {
+          fecha_nacimiento: {
             type: 'string',
-            example: '20-12345678-9',
-            description: 'CUIT/CUIL con formato XX-XXXXXXXX-X',
+            format: 'date',
+            description: 'Fecha de nacimiento de la persona física.',
+            example: '1980-01-01',
           },
-          nombres: {
+        },
+        required: ['nombre', 'dni', 'fecha_nacimiento'],
+      },
+      datosJuridica: {
+        type: 'object',
+        description: 'Datos relacionados con la persona jurídica (opcional).',
+        properties: {
+          razon_social: {
             type: 'string',
-            example: 'Juan',
-            description: 'Nombres de la persona física',
+            description: 'Razón social de la persona jurídica.',
+            example: 'Empresa S.A.',
           },
-          apellidos: {
+          cuit: {
             type: 'string',
-            example: 'Pérez',
-            description: 'Apellidos de la persona física',
+            description: 'CUIT de la persona jurídica.',
+            example: '30-12345678-9',
           },
-          email: {
+          direccion: {
             type: 'string',
-            example: 'juan.perez@dominio.com',
-            description: 'Correo electrónico',
+            description: 'Dirección de la persona jurídica.',
+            example: 'Av. Siempre Viva 123',
           },
-          denominacion_sello: {
-            type: 'string',
-            example: 'Sello Juan Pérez',
-            description: 'Denominación o nombre del sello',
-          },
-          calle: {
-            type: 'string',
-            example: 'Calle Falsa',
-            description: 'Calle del domicilio',
-          },
-          numero: {
-            type: 'string',
-            example: '123',
-            description: 'Número del domicilio',
-          },
-          ciudad: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Ciudad del domicilio',
-          },
-          localidad: {
-            type: 'string',
-            example: 'Palermo',
-            description: 'Localidad del domicilio',
-          },
-          provincia: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Provincia del domicilio',
-          },
-          codigo_postal: {
-            type: 'string',
-            example: '1414',
-            description: 'Código postal',
-          },
-          telefono: {
-            type: 'string',
-            example: '+54 9 11 1234 5678',
-            description: 'Teléfono de la persona física',
-          },
-          nacionalidad: {
-            type: 'string',
-            example: 'Argentina',
-            description: 'Nacionalidad de la persona física',
-          },
-          cbu: {
-            type: 'string',
-            example: '2850590940090418135201',
-            description: 'Clave Bancaria Uniforme (CBU) de 22 dígitos',
-          },
-          alias_cbu: {
-            type: 'string',
-            example: 'mi.alias.banco',
-            description: 'Alias del CBU',
-          },
-          documento_identidad: {
-            type: 'string',
-            example: '/documentos/archivo_dni.pdf',
-            description: 'Documento de identidad',
-          },
-          otros_documentos: {
-            type: 'array',
-            items: {
+        },
+        required: ['razon_social', 'cuit', 'direccion'],
+      },
+      documentos: {
+        type: 'array',
+        description: 'Lista de documentos asociados a la solicitud.',
+        items: {
+          type: 'object',
+          properties: {
+            tipo_documento_id: {
               type: 'string',
-              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
+              format: 'uuid',
+              description: 'ID del tipo de documento.',
+              example: '123e4567-e89b-12d3-a456-426614174000',
             },
-            description: 'Rutas de otros documentos relevantes (PDF, imágenes, etc.)',
+            ruta_archivo_documento: {
+              type: 'string',
+              description: 'Ruta del archivo del documento.',
+              example: '/uploads/documento.pdf',
+            },
+          },
+          required: ['tipo_documento_id', 'ruta_archivo_documento'],
+        },
+      },
+    },
+    required: ['id_usuario'],
+  },
+  UpdateApplication: {
+    title: 'Usuarios - Actualizar Aplicación',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario cuya solicitud de aplicación será actualizada.',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+      datosFisica: {
+        type: 'object',
+        description: 'Datos relacionados con la persona física (opcional).',
+        properties: {
+          nombre: {
+            type: 'string',
+            description: 'Nombre de la persona física.',
+            example: 'Juan Pérez',
+          },
+          dni: {
+            type: 'string',
+            description: 'Documento Nacional de Identidad (DNI) de la persona física.',
+            example: '12345678',
+          },
+          fecha_nacimiento: {
+            type: 'string',
+            format: 'date',
+            description: 'Fecha de nacimiento de la persona física.',
+            example: '1980-01-01',
           },
         },
       },
-      personaJuridica: {
+      datosJuridica: {
         type: 'object',
+        description: 'Datos relacionados con la persona jurídica (opcional).',
         properties: {
-          id_persona_juridica: {
-            type: 'string',
-            example: '123e4567-e89b-12d3-a456-426614174000',
-            description: 'ID único de la persona jurídica',
-          },
-          estado: {
-            type: 'string',
-            example: 'activo',
-            description: 'Estado asociado a la persona jurídica',
-          },
-          cuit_cuil: {
-            type: 'string',
-            example: '30-12345678-9',
-            description: 'CUIT/CUIL de la empresa',
-          },
           razon_social: {
             type: 'string',
-            example: 'Mi Empresa SRL',
-            description: 'Razón social de la empresa',
+            description: 'Razón social de la persona jurídica.',
+            example: 'Empresa S.A.',
           },
-          apellidos_representante: {
+          cuit: {
             type: 'string',
-            example: 'Pérez',
-            description: 'Apellidos del representante legal',
+            description: 'CUIT de la persona jurídica.',
+            example: '30-12345678-9',
           },
-          nombres_representante: {
+          direccion: {
             type: 'string',
-            example: 'Juan',
-            description: 'Nombres del representante legal',
+            description: 'Dirección de la persona jurídica.',
+            example: 'Av. Siempre Viva 123',
           },
-          cuit_representante: {
-            type: 'string',
-            example: '20-12345678-9',
-            description: 'CUIT del representante legal',
-          },
-          denominacion_sello: {
-            type: 'string',
-            example: 'Sello Mi Empresa',
-            description: 'Denominación del sello o marca',
-          },
-          calle: {
-            type: 'string',
-            example: 'Calle Falsa',
-            description: 'Nombre de la calle',
-          },
-          numero: {
-            type: 'string',
-            example: '123',
-            description: 'Número de la dirección',
-          },
-          ciudad: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Ciudad donde se encuentra la empresa',
-          },
-          localidad: {
-            type: 'string',
-            example: 'Palermo',
-            description: 'Localidad específica',
-          },
-          provincia: {
-            type: 'string',
-            example: 'Buenos Aires',
-            description: 'Provincia donde está ubicada la empresa',
-          },
-          codigo_postal: {
-            type: 'string',
-            example: '1414',
-            description: 'Código postal',
-          },
-          telefono: {
-            type: 'string',
-            example: '+54 11 5678 1234',
-            description: 'Número de teléfono de contacto',
-          },
-          nacionalidad: {
-            type: 'string',
-            example: 'Argentina',
-            description: 'Nacionalidad de la empresa',
-          },
-          cbu: {
-            type: 'string',
-            example: '1234567890123456789012',
-            description: 'CBU de la cuenta bancaria',
-          },
-          alias_cbu: {
-            type: 'string',
-            example: 'mi.alias.cbu',
-            description: 'Alias del CBU',
-          },
-          contrato_social: {
-            type: 'string',
-            example: '/path/contrato-social.pdf',
-            description: 'Ruta del archivo del contrato social',
-          },
-          documento_representante: {
-            type: 'string',
-            example: '/path/documento-representante.pdf',
-            description: 'Ruta del documento del representante',
-          },
-          otros_documentos: {
-            type: 'array',
-            items: {
+        },
+      },
+      documentos: {
+        type: 'array',
+        description: 'Lista de documentos asociados a la solicitud.',
+        items: {
+          type: 'object',
+          properties: {
+            tipo_documento_id: {
               type: 'string',
-              example: '[/documentos/inscripcion_afip.pdf, /documentos/constancia_cuit.pdf]',
+              format: 'uuid',
+              description: 'ID del tipo de documento.',
+              example: '123e4567-e89b-12d3-a456-426614174000',
             },
-            description: 'Lista de rutas de otros documentos adicionales',
+            ruta_archivo_documento: {
+              type: 'string',
+              description: 'Ruta del archivo del documento.',
+              example: '/uploads/documento.pdf',
+            },
           },
         },
       },
     },
     required: ['id_usuario'],
   },
-
-  RejectData: {
-    title: 'Usuario - Rechazar Datos',
+  UpdateUser: {
+    title: 'Usuarios - Actualizar Usuario',
     type: 'object',
     properties: {
       id_usuario: {
         type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario que será actualizado.',
         example: '123e4567-e89b-12d3-a456-426614174000',
-        description: 'ID del usuario cuyos datos serán rechazados',
       },
-      comentario: {
+      email: {
         type: 'string',
-        example: 'El CUIT no es válido.',
-        description: 'Comentario del rechazo',
+        format: 'email',
+        description: 'Nuevo correo electrónico del usuario (opcional).',
+        example: 'nuevo.correo@dominio.com',
       },
-    },
-    required: ['id_usuario', 'comentario'],
-  },
-
-  AuthorizeUser: {
-    title: 'Usuario - Autorizar',
-    type: 'object',
-    properties: {
-      id_usuario: {
+      nombres_y_apellidos: {
         type: 'string',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-        description: 'ID del usuario a autorizar',
+        description: 'Nuevo nombre completo del usuario (opcional).',
+        example: 'Juan Pérez Actualizado',
+      },
+      telefono: {
+        type: 'string',
+        description: 'Nuevo número de teléfono del usuario (opcional).',
+        example: '+54 11 9876-5432',
+      },
+      estado: {
+        type: 'string',
+        enum: ['HABILITADO', 'DESHABILITADO', 'PENDIENTE'],
+        description: 'Nuevo estado del usuario (opcional).',
+        example: 'HABILITADO',
+      },
+      rol: {
+        type: 'string',
+        description: 'Nuevo rol asignado al usuario (opcional).',
+        example: 'admin_secundario',
       },
     },
     required: ['id_usuario'],
-  },  
+  },
+  DeleteUser: {
+    title: 'Usuarios - Eliminar Usuario',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario que se desea eliminar.',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+    },
+    required: ['id_usuario'],
+  },
 };
 

@@ -1,5 +1,5 @@
-import express from 'express';
-import { celebrate, Segments } from 'celebrate';
+import express from "express";
+import { celebrate, Segments } from "celebrate";
 import {
   registerPrimary,
   registerSecondary,
@@ -13,8 +13,8 @@ import {
   resetPassword,
   getUser,
   changeUserPassword,
-  logout,  
-} from '../controllers/authController';
+  logout,
+} from "../controllers/authController";
 import {
   registerPrimarySchema,
   registerSecondarySchema,
@@ -23,10 +23,10 @@ import {
   requestPasswordSchema,
   validateEmailSchema,
   completeProfileSchema,
-  resetPasswordSchema,  
+  resetPasswordSchema,
   changePasswordSchema,
-} from '../services/validationSchemas';
-import { authenticate, authorizeRoles } from '../middlewares/auth';
+} from "../services/validationSchemas";
+import { authenticate, authorizeRoles } from "../middlewares/auth";
 
 const router = express.Router();
 
@@ -57,7 +57,11 @@ const router = express.Router();
  *       400:
  *         description: Error en los datos proporcionados
  */
-router.post('/registro/primario', celebrate({ [Segments.BODY]: registerPrimarySchema }), registerPrimary);
+router.post(
+  "/registro/primario",
+  celebrate({ [Segments.BODY]: registerPrimarySchema }),
+  registerPrimary
+);
 
 // [POST] REGISTRO SECUNDARIO
 /**
@@ -80,9 +84,9 @@ router.post('/registro/primario', celebrate({ [Segments.BODY]: registerPrimarySc
  *         description: Error en los datos proporcionados
  */
 router.post(
-  '/registro/secundario',
+  "/registro/secundario",
   authenticate,
-  authorizeRoles(['admin_principal', 'productor_principal']),
+  authorizeRoles(["admin_principal", "productor_principal"]),
   celebrate({ [Segments.BODY]: registerSecondarySchema }),
   registerSecondary
 );
@@ -107,7 +111,7 @@ router.post(
  *       401:
  *         description: Credenciales inválidas
  */
-router.post('/login', celebrate({ [Segments.BODY]: loginSchema }), login);
+router.post("/login", celebrate({ [Segments.BODY]: loginSchema }), login);
 
 // [GET] OBTENER ROL DEL USUARIO
 /**
@@ -130,7 +134,7 @@ router.post('/login', celebrate({ [Segments.BODY]: loginSchema }), login);
  *       400:
  *         description: Error en los datos proporcionados
  */
-router.get('/rol', authenticate, getRole);
+router.get("/rol", authenticate, getRole);
 
 // [POST] SELECCIONAR PRODUCTORA ACTIVA
 /**
@@ -152,7 +156,7 @@ router.get('/rol', authenticate, getRole);
  *         description: Error en los datos proporcionados
  */
 router.post(
-  '/productora/activa',
+  "/productora/activa",
   authenticate,
   celebrate({ [Segments.BODY]: selectProductoraSchema }),
   selectProductora
@@ -171,7 +175,7 @@ router.post(
  *       200:
  *         description: Productoras obtenidas exitosamente
  */
-router.get('/productora', authenticate, getProductoras);
+router.get("/productora", authenticate, getProductoras);
 
 // [POST] SOLICITAR RESETEO DE CLAVE
 /**
@@ -193,7 +197,7 @@ router.get('/productora', authenticate, getProductoras);
  *         description: Datos inválidos
  */
 router.post(
-  '/clave/mail/reseteo',
+  "/clave/mail/reseteo",
   celebrate({ [Segments.BODY]: requestPasswordSchema }),
   requestPasswordReset
 );
@@ -211,13 +215,13 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
- *           description: Token de validación de correo     
+ *           description: Token de validación de correo
  *     responses:
  *       200:
  *         description: Correo validado exitosamente
  */
 router.put(
-  '/clave/mail/validacion/:token',
+  "/clave/mail/validacion/:token",
   celebrate({ [Segments.PARAMS]: validateEmailSchema }),
   validateEmail
 );
@@ -291,7 +295,7 @@ router.put(
  *                   example: Error interno del servidor.
  */
 router.post(
-  '/registro/completar',
+  "/registro/completar",
   authenticate,
   celebrate({ [Segments.BODY]: completeProfileSchema }),
   completeProfile
@@ -316,7 +320,11 @@ router.post(
  *       400:
  *         description: Error en los datos proporcionados
  */
-router.post('/clave/mail/cambio', celebrate({ [Segments.BODY]: resetPasswordSchema }), resetPassword);
+router.post(
+  "/clave/mail/cambio",
+  celebrate({ [Segments.BODY]: resetPasswordSchema }),
+  resetPassword
+);
 
 // [GET] OBTENER DATOS DEL USUARIO Y SUS MAESTROS
 /**
@@ -331,7 +339,7 @@ router.post('/clave/mail/cambio', celebrate({ [Segments.BODY]: resetPasswordSche
  *       200:
  *         description: Información del usuario obtenida exitosamente
  */
-router.get('/me', authenticate, getUser);
+router.get("/me", authenticate, getUser);
 
 /**
  * @swagger
@@ -352,9 +360,9 @@ router.get('/me', authenticate, getUser);
  *         description: Contraseña cambiada exitosamente
  */
 router.post(
-  '/clave/cambio',
+  "/clave/cambio",
   authenticate,
-  authorizeRoles(['admin', 'productor']),
+  authorizeRoles(["admin", "productor"]),
   celebrate({ [Segments.BODY]: changePasswordSchema }),
   changeUserPassword
 );
@@ -371,6 +379,6 @@ router.post(
  *       200:
  *         description: Sesión cerrada exitosamente
  */
-router.post('/logout', authenticate, logout);
+router.post("/logout", authenticate, logout);
 
 export default router;

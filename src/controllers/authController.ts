@@ -78,31 +78,31 @@ export const registerPrimary = async (
     });
 
     // Obtener todas las vistas del rol 'productor_principal'
-    const vistasParaProductorPrincipal = await UsuarioVista.findAll({
-      where: {
-        rol_id: userRol.id_rol,
-      },
-      attributes: ["id_vista"],
-    });
+    // const vistasParaProductorPrincipal = await UsuarioVista.findAll({
+    //   where: {
+    //     rol_id: userRol.id_rol,
+    //   },
+    //   attributes: ["id_vista"],
+    // });
 
-    if (vistasParaProductorPrincipal.length > 0) {
-      // Crear la relación entre el usuario y sus vistas
-      const vistasMaestroData = vistasParaProductorPrincipal.map((vista) => ({
-        usuario_id: newUsuario.id_usuario,
-        vista_id: vista.id_vista,
-        is_habilitado: true,
-      }));
+    // if (vistasParaProductorPrincipal.length > 0) {
+    //   // Crear la relación entre el usuario y sus vistas
+    //   const vistasMaestroData = vistasParaProductorPrincipal.map((vista) => ({
+    //     usuario_id: newUsuario.id_usuario,
+    //     vista_id: vista.id_vista,
+    //     is_habilitado: true,
+    //   }));
 
-      await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
+    //   await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
 
-      logger.info(
-        `${req.method} ${req.originalUrl} - Se asignaron ${vistasMaestroData.length} vistas al Productor Principal: ${email}`
-      );
-    } else {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontraron vistas para Productor Principal`
-      );
-    }
+    //   logger.info(
+    //     `${req.method} ${req.originalUrl} - Se asignaron ${vistasMaestroData.length} vistas al Productor Principal: ${email}`
+    //   );
+    // } else {
+    //   logger.warn(
+    //     `${req.method} ${req.originalUrl} - No se encontraron vistas para Productor Principal`
+    //   );
+    // }
 
     // Configuración del token de verificación de email
     const tokenExpiration = process.env.EMAIL_TOKEN_EXPIRATION || "1d";
@@ -140,6 +140,7 @@ export const registerPrimary = async (
     );
 
     // Enviar correo de verificación
+    /*
     const validationLink = `${emailToken}`;
     const emailBody = MESSAGES.EMAIL_BODY.VALIDATE_ACCOUNT(validationLink);
     await sendEmail({
@@ -147,10 +148,12 @@ export const registerPrimary = async (
       subject: "Confirmá tu cuenta para ingresar al sistema",
       html: emailBody,
     });
-
+ 
     logger.info(
       `${req.method} ${req.originalUrl} - Correo de validación enviado a: ${email}`
     );
+    
+    */
 
     // Registra la acción en AuditoriaCambio
     await AuditoriaCambio.create({
@@ -484,7 +487,6 @@ export const login = async (
 
     // Consulta para obtener el usuario y los maestros asociados
     const userData = await findUsuario({ email });
-
     if (!userData || !userData.user) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Usuario no encontrado: ${email}`
@@ -995,7 +997,6 @@ export const validateEmail = async (
     );
 
     const { token } = req.params;
-
     // Verificar el token usando handleTokenVerification
     let decoded: JwtPayload;
     try {

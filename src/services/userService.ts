@@ -6,7 +6,10 @@ import {
   UsuarioMaestro,
   UsuarioRol,
   UsuarioVista,
+  UsuarioVistaMaestro,
 } from "../models";
+
+import { v4 as uuidv4 } from "uuid";
 
 export const createUsuario = async (userData: any) => {
   return await Usuario.create(userData);
@@ -121,9 +124,13 @@ export const findUsuario = async (filters: {
     filters.email ||
     filters.tipo_registro ||
     filters.nombre ||
-    filters.apellido
+    filters.apellido ||
+    filters.userId
   ) {
     const usuarioWhere: any = {};
+    if (filters.userId) {
+      usuarioWhere.id_usuario = filters.userId;
+    }
     if (filters.email) {
       usuarioWhere.email = filters.email;
     }
@@ -143,9 +150,11 @@ export const findUsuario = async (filters: {
       attributes: [
         "id_usuario",
         "email",
+        "clave",
         "nombre",
         "apellido",
         "tipo_registro",
+        "email_verification_token",
       ],
       where: usuarioWhere,
     });
@@ -194,7 +203,6 @@ export const findUsuario = async (filters: {
     offset: filters.offset || 0,
     include: includeCondition,
   });
-
   // Si no se encuentran resultados
   if (!usuariosMaestro || usuariosMaestro.length === 0) {
     return null;
@@ -205,7 +213,7 @@ export const findUsuario = async (filters: {
 
   const maestros = usuariosMaestro.map((usuarioMaestro) => ({
     maestroId: usuarioMaestro.id_usuario_maestro,
-    rol: usuarioMaestro.rol || { id_rol: "DEFAULT", nombre_rol: "usuario" },
+    rol: usuarioMaestro.rol || { id_rol: uuidv4(), nombre_rol: "usuario" },
     productora: usuarioMaestro.productora,
   }));
 
@@ -225,17 +233,19 @@ export const findRolByNombre = async (nombre_rol: string) => {
 };
 
 export const findVistasforUsuario = async (usuarioId: string) => {
-  const vistas = await UsuarioVista.findAll({
+  const vistasMaestro = await UsuarioVistaMaestro.findAll({
+    where: {
+      usuario_id: usuarioId,
+      is_habilitado: true,
+    },
     include: [
       {
         model: UsuarioVista,
-        where: {
-          usuario_id: usuarioId,
-          acceso: true,
-        },
+        as: "vista",
+        attributes: ["nombre_vista"],
       },
     ],
   });
 
-  return vistas.map((vista) => vista.nombre_vista);
+  return vistasMaestro.map((vistaMaestro) => vistaMaestro.vista?.nombre_vista);
 };

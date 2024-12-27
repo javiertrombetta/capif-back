@@ -1,39 +1,39 @@
-import { Model, DataTypes, Association } from 'sequelize';
-import sequelize from '../config/database/sequelize';
-import Usuario from './Usuario';
+import { Model, DataTypes, Association } from "sequelize";
+import sequelize from "../config/database/sequelize";
+import Usuario from "./Usuario";
 
 const ENTIDADES_PERMITIDAS = [
-  'AuditoriaCambio',
-  'AuditoriaRepertorio',
-  'AuditoriaSesion',
-  'Cashflow',
-  'CashflowLiquidacion',
-  'CashflowPago',
-  'CashflowRechazo',
-  'CashflowTraspaso',
-  'Conflicto',
-  'ConflictoParte',
-  'Fonograma',
-  'FonogramaArchivo',  
-  'FonogramaEnvio',
-  'FonogramaMaestro',  
-  'FonogramaParticipacion',
-  'FonogramaTerritorio',
-  'FonogramaTerritorioMaestro',
-  'Productora',
-  'ProductoraDocumento',
-  'ProductoraDocumentoTipo',
-  'ProductoraISRC',
-  'ProductoraPremio',
-  'Usuario',
-  'UsuarioMaestro',
-  'UsuarioRol',
-  'UsuarioVista',
-  'UsuarioVistaMaestro',
+  "AuditoriaCambio",
+  "AuditoriaRepertorio",
+  "AuditoriaSesion",
+  "Cashflow",
+  "CashflowLiquidacion",
+  "CashflowPago",
+  "CashflowRechazo",
+  "CashflowTraspaso",
+  "Conflicto",
+  "ConflictoParte",
+  "Fonograma",
+  "FonogramaArchivo",
+  "FonogramaEnvio",
+  "FonogramaMaestro",
+  "FonogramaParticipacion",
+  "FonogramaTerritorio",
+  "FonogramaTerritorioMaestro",
+  "Productora",
+  "ProductoraDocumento",
+  "ProductoraDocumentoTipo",
+  "ProductoraISRC",
+  "ProductoraPremio",
+  "Usuario",
+  "UsuarioMaestro",
+  "UsuarioRol",
+  "UsuarioVista",
+  "UsuarioVistaMaestro",
 ];
 
 class AuditoriaCambio extends Model {
-  public id_auditoria!: string;  
+  public id_auditoria!: string;
   public modelo!: string;
   public tipo_auditoria!: string;
   public detalle!: string;
@@ -61,7 +61,7 @@ AuditoriaCambio.init(
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID de auditoría debe ser un UUID válido.',
+          msg: "El ID de auditoría debe ser un UUID válido.",
         },
       },
     },
@@ -72,7 +72,7 @@ AuditoriaCambio.init(
         isIn: {
           args: [ENTIDADES_PERMITIDAS],
           msg: `El modelo afectado debe ser uno de los siguientes: ${ENTIDADES_PERMITIDAS.join(
-            ', '
+            ", "
           )}.`,
         },
       },
@@ -82,8 +82,8 @@ AuditoriaCambio.init(
       allowNull: false,
       validate: {
         isIn: {
-          args: [['ALTA', 'BAJA', 'CAMBIO', 'ERROR', 'SISTEMA']],
-          msg: 'El tipo de auditoría debe ser uno de los siguientes: ALTA, BAJA, MODIFICACION, ERROR, SISTEMA, AUTH.',
+          args: [["ALTA", "BAJA", "CAMBIO", "ERROR", "SISTEMA", "AUTH"]],
+          msg: "El tipo de auditoría debe ser uno de los siguientes: ALTA, BAJA, MODIFICACION, ERROR, SISTEMA, AUTH.",
         },
       },
     },
@@ -93,7 +93,7 @@ AuditoriaCambio.init(
       validate: {
         len: {
           args: [0, 50],
-          msg: 'El detalle libre no puede exceder los 30 caracteres.',
+          msg: "El detalle libre no puede exceder los 30 caracteres.",
         },
       },
     },
@@ -102,12 +102,12 @@ AuditoriaCambio.init(
       allowNull: true,
       references: {
         model: Usuario,
-        key: 'id_usuario',
-      },      
+        key: "id_usuario",
+      },
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID del usuario originario debe ser un UUID válido.',
+          msg: "El ID del usuario originario debe ser un UUID válido.",
         },
       },
     },
@@ -116,29 +116,29 @@ AuditoriaCambio.init(
       allowNull: true,
       references: {
         model: Usuario,
-        key: 'id_usuario',
-      },      
+        key: "id_usuario",
+      },
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID del usuario destino debe ser un UUID válido.',
+          msg: "El ID del usuario destino debe ser un UUID válido.",
         },
       },
     },
   },
   {
     sequelize,
-    modelName: 'AuditoriaCambio',
-    tableName: 'AuditoriaCambio',
+    modelName: "AuditoriaCambio",
+    tableName: "AuditoriaCambio",
     timestamps: true,
     indexes: [
       {
-        fields: ['usuario_originario_id'],
-        name: 'idx_auditoria_usuario_originario_id',
+        fields: ["usuario_originario_id"],
+        name: "idx_auditoria_usuario_originario_id",
       },
       {
-        fields: ['usuario_destino_id'],
-        name: 'idx_auditoria_usuario_destino_id',
+        fields: ["usuario_destino_id"],
+        name: "idx_auditoria_usuario_destino_id",
       },
     ],
   }

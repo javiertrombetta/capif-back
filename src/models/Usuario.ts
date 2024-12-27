@@ -1,33 +1,33 @@
-import { Model, DataTypes } from 'sequelize';
-import sequelize from '../config/database/sequelize';
+import { Model, DataTypes } from "sequelize";
+import sequelize from "../config/database/sequelize";
 
 const OPERACIONES_PERMITIDAS = [
-  'DEPURAR',
-  'NUEVO',
-  'CONFIRMADO',
-  'PENDIENTE',
-  'RECHAZADO',
-  'HABILITADO',
-  'DESHABILITADO',
+  "DEPURAR",
+  "NUEVO",
+  "CONFIRMADO",
+  "PENDIENTE",
+  "RECHAZADO",
+  "HABILITADO",
+  "DESHABILITADO",
 ] as const;
 
 class Usuario extends Model {
   public id_usuario!: string;
   public tipo_registro!: (typeof OPERACIONES_PERMITIDAS)[number];
-  public nombre!: string;
-  public apellido!: string;  
+  public nombre!: string | null;
+  public apellido!: string | null;
   public email!: string;
   public clave!: string;
   public is_bloqueado!: boolean;
   public intentos_fallidos!: number;
-  public fecha_ultimo_cambio_registro!: Date;  
+  public fecha_ultimo_cambio_registro!: Date;
   public telefono!: string | null;
   public email_verification_token!: string | null;
   public email_verification_token_expires!: Date | null;
   public reset_password_token!: string | null;
-  public reset_password_token_expires!: Date | null;  
+  public reset_password_token_expires!: Date | null;
   public fecha_ultimo_inicio_sesion!: Date | null;
-  
+
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -42,7 +42,7 @@ Usuario.init(
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID de usuario debe ser un UUID válido.',
+          msg: "El ID de usuario debe ser un UUID válido.",
         },
       },
     },
@@ -52,27 +52,27 @@ Usuario.init(
       validate: {
         isIn: {
           args: [OPERACIONES_PERMITIDAS],
-          msg: 'El tipo de registro debe ser una operación permitida.',
+          msg: "El tipo de registro debe ser una operación permitida.",
         },
       },
     },
     nombre: {
       type: DataTypes.STRING(255),
-      allowNull: false,
+      allowNull: true,
       validate: {
         len: {
           args: [3, 255],
-          msg: 'El nombre debe tener entre 3 y 255 caracteres.',
+          msg: "El nombre debe tener entre 3 y 255 caracteres.",
         },
       },
     },
     apellido: {
       type: DataTypes.STRING(255),
-      allowNull: false,
+      allowNull: true,
       validate: {
         len: {
           args: [3, 255],
-          msg: 'El apellido debe tener entre 3 y 255 caracteres.',
+          msg: "El apellido debe tener entre 3 y 255 caracteres.",
         },
       },
     },
@@ -82,7 +82,7 @@ Usuario.init(
       unique: true,
       validate: {
         isEmail: {
-          msg: 'El email debe ser un correo electrónico válido.',
+          msg: "El email debe ser un correo electrónico válido.",
         },
       },
     },
@@ -92,7 +92,7 @@ Usuario.init(
       validate: {
         len: {
           args: [8, 255],
-          msg: 'La clave debe tener al menos 8 caracteres.',
+          msg: "La clave debe tener al menos 8 caracteres.",
         },
       },
     },
@@ -107,11 +107,11 @@ Usuario.init(
       defaultValue: 0,
       validate: {
         isInt: {
-          msg: 'Los intentos fallidos debe ser un número entero.',
+          msg: "Los intentos fallidos debe ser un número entero.",
         },
         min: {
           args: [0],
-          msg: 'No pueden existir intentos fallidos negativos.',
+          msg: "No pueden existir intentos fallidos negativos.",
         },
       },
     },
@@ -122,7 +122,7 @@ Usuario.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha del último cambio del registro debe ser una fecha válida.',
+          msg: "La fecha del último cambio del registro debe ser una fecha válida.",
         },
       },
     },
@@ -132,7 +132,7 @@ Usuario.init(
       validate: {
         len: {
           args: [7, 20],
-          msg: 'El teléfono debe tener entre 7 y 20 caracteres.',
+          msg: "El teléfono debe tener entre 7 y 20 caracteres.",
         },
       },
     },
@@ -146,7 +146,7 @@ Usuario.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha de expiración del token de verificación del email debe ser una fecha válida.',
+          msg: "La fecha de expiración del token de verificación del email debe ser una fecha válida.",
         },
       },
     },
@@ -160,54 +160,54 @@ Usuario.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha de expiración del token de reseteo de clave debe ser una fecha válida.',
+          msg: "La fecha de expiración del token de reseteo de clave debe ser una fecha válida.",
         },
       },
-    },    
+    },
     fecha_ultimo_inicio_sesion: {
       type: DataTypes.DATE,
       allowNull: true,
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha del último inicio de sesión debe ser una fecha válida.',
+          msg: "La fecha del último inicio de sesión debe ser una fecha válida.",
         },
       },
-    },    
+    },
   },
   {
     sequelize,
-    modelName: 'Usuario',
-    tableName: 'Usuario',
+    modelName: "Usuario",
+    tableName: "Usuario",
     timestamps: true,
     indexes: [
       {
-        fields: ['email'],
-        name: 'idx_usuario_email',
+        fields: ["email"],
+        name: "idx_usuario_email",
         unique: true,
       },
       {
-        fields: ['nombre'],
-        name: 'idx_usuario_nombre',
+        fields: ["nombre"],
+        name: "idx_usuario_nombre",
       },
       {
-        fields: ['apellido'],
-        name: 'idx_usuario_apellido',
+        fields: ["apellido"],
+        name: "idx_usuario_apellido",
       },
       {
-        fields: ['tipo_registro'],
-        name: 'idx_usuario_tipo_registro',
+        fields: ["tipo_registro"],
+        name: "idx_usuario_tipo_registro",
       },
       {
-        fields: ['is_bloqueado'],
-        name: 'idx_usuario_bloqueado',
+        fields: ["is_bloqueado"],
+        name: "idx_usuario_bloqueado",
       },
     ],
   }
 );
 
 Usuario.beforeUpdate(async (usuario) => {
-  if (usuario.changed('tipo_registro')) {
+  if (usuario.changed("tipo_registro")) {
     usuario.fecha_ultimo_cambio_registro = new Date();
   }
 });

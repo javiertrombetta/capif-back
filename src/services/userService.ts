@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op } from "sequelize";
 
 import {
   Productora,
@@ -6,7 +6,10 @@ import {
   UsuarioMaestro,
   UsuarioRol,
   UsuarioVista,
-} from '../models';
+  UsuarioVistaMaestro,
+} from "../models";
+
+import { v4 as uuidv4 } from "uuid";
 
 export const createUsuario = async (userData: any) => {
   return await Usuario.create(userData);
@@ -16,7 +19,10 @@ export const createUsuarioMaestro = async (usuarioMaestroData: any) => {
   return await UsuarioMaestro.create(usuarioMaestroData);
 };
 
-export const updateUsuarioMaestro = async (usuarioRegistranteId: string, updateData: any) => {
+export const updateUsuarioMaestro = async (
+  usuarioRegistranteId: string,
+  updateData: any
+) => {
   return await UsuarioMaestro.update(updateData, {
     where: { usuario_registrante_id: usuarioRegistranteId },
   });
@@ -28,19 +34,23 @@ export const updateUsuarioById = async (userId: string, updateData: any) => {
     include: [
       {
         model: Usuario,
-        as: 'usuarioRegistrante',
+        as: "usuarioRegistrante",
         include: [
           {
             model: UsuarioRol,
-            as: 'Rol',
+            as: "Rol",
           },
         ],
       },
     ],
   });
 
-  if (!usuarioMaestro || !usuarioMaestro.usuarioRegistrante || !usuarioMaestro.rol) {
-    throw new Error('Usuario no encontrado o sin rol asignado.');
+  if (
+    !usuarioMaestro ||
+    !usuarioMaestro.usuarioRegistrante ||
+    !usuarioMaestro.rol
+  ) {
+    throw new Error("Usuario no encontrado o sin rol asignado.");
   }
 
   const user = usuarioMaestro.usuarioRegistrante;
@@ -54,7 +64,10 @@ export const updateUsuarioById = async (userId: string, updateData: any) => {
     });
   }
 
-  if (updateData.newRole && updateData.newRole !== usuarioMaestro.rol.nombre_rol) {
+  if (
+    updateData.newRole &&
+    updateData.newRole !== usuarioMaestro.rol.nombre_rol
+  ) {
     usuarioMaestro.rol_id = updateData.newRole;
     usuarioMaestro.fecha_ultimo_cambio_rol = new Date();
     await usuarioMaestro.save();
@@ -69,21 +82,20 @@ export const deleteUsuarioById = async (userId: string) => {
     include: [
       {
         model: Usuario,
-        as: 'usuarioRegistrante',
+        as: "usuarioRegistrante",
       },
     ],
   });
 
   if (!usuarioMaestro || !usuarioMaestro.usuarioRegistrante) {
-    throw new Error('Usuario no encontrado');
+    throw new Error("Usuario no encontrado");
   }
 
   await usuarioMaestro.destroy();
   await usuarioMaestro.usuarioRegistrante.destroy();
 
-  return { message: 'Usuario eliminado correctamente' };
+  return { message: "Usuario eliminado correctamente" };
 };
-
 
 // BUSQUEDA DE UN USUARIO SEGUN UNO O VARIOS FILTROS
 export const findUsuario = async (filters: {
@@ -108,8 +120,17 @@ export const findUsuario = async (filters: {
   }
 
   // Filtro por Usuario
-  if (filters.email || filters.tipo_registro || filters.nombre || filters.apellido) {
+  if (
+    filters.email ||
+    filters.tipo_registro ||
+    filters.nombre ||
+    filters.apellido ||
+    filters.userId
+  ) {
     const usuarioWhere: any = {};
+    if (filters.userId) {
+      usuarioWhere.id_usuario = filters.userId;
+    }
     if (filters.email) {
       usuarioWhere.email = filters.email;
     }
@@ -125,8 +146,16 @@ export const findUsuario = async (filters: {
 
     includeCondition.push({
       model: Usuario,
-      as: 'usuarioRegistrante',
-      attributes: ['id_usuario', 'email', 'nombre', 'apellido', 'tipo_registro'],
+      as: "usuarioRegistrante",
+      attributes: [
+        "id_usuario",
+        "email",
+        "clave",
+        "nombre",
+        "apellido",
+        "tipo_registro",
+        "email_verification_token",
+      ],
       where: usuarioWhere,
     });
   }
@@ -143,8 +172,8 @@ export const findUsuario = async (filters: {
 
     includeCondition.push({
       model: UsuarioRol,
-      as: 'rol',
-      attributes: ['id_rol', 'nombre_rol'],
+      as: "rol",
+      attributes: ["id_rol", "nombre_rol"],
       where: rolWhere,
     });
   }
@@ -161,8 +190,8 @@ export const findUsuario = async (filters: {
 
     includeCondition.push({
       model: Productora,
-      as: 'productora',
-      attributes: ['id_productora', 'nombre_productora'],
+      as: "productora",
+      attributes: ["id_productora", "nombre_productora"],
       where: productoraWhere,
     });
   }
@@ -174,7 +203,6 @@ export const findUsuario = async (filters: {
     offset: filters.offset || 0,
     include: includeCondition,
   });
-
   // Si no se encuentran resultados
   if (!usuariosMaestro || usuariosMaestro.length === 0) {
     return null;
@@ -185,37 +213,39 @@ export const findUsuario = async (filters: {
 
   const maestros = usuariosMaestro.map((usuarioMaestro) => ({
     maestroId: usuarioMaestro.id_usuario_maestro,
-    rol: usuarioMaestro.rol || { id_rol: 'DEFAULT', nombre_rol: 'usuario' },
+    rol: usuarioMaestro.rol || { id_rol: uuidv4(), nombre_rol: "usuario" },
     productora: usuarioMaestro.productora,
   }));
 
   return { user, maestros };
 };
 
-export const findRolByDescripcion = async (descripcion: string) => {
+export const findRolByNombre = async (nombre_rol: string) => {
   const rol = await UsuarioRol.findOne({
-    where: { descripcion },
+    where: { nombre_rol },
   });
 
   if (!rol) {
-    throw new Error(`No se encontró un rol con la descripción: ${descripcion}`);
+    throw new Error(`No se encontró un rol con la descripción: ${nombre_rol}`);
   }
 
   return rol;
 };
 
 export const findVistasforUsuario = async (usuarioId: string) => {
-  const vistas = await UsuarioVista.findAll({
+  const vistasMaestro = await UsuarioVistaMaestro.findAll({
+    where: {
+      usuario_id: usuarioId,
+      is_habilitado: true,
+    },
     include: [
       {
         model: UsuarioVista,
-        where: {
-          usuario_id: usuarioId,
-          acceso: true,
-        },
+        as: "vista",
+        attributes: ["nombre_vista"],
       },
     ],
   });
 
-  return vistas.map((vista) => vista.nombre_vista);
+  return vistasMaestro.map((vistaMaestro) => vistaMaestro.vista?.nombre_vista);
 };

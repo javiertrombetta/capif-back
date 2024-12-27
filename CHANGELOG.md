@@ -1,4 +1,20 @@
 # Changelog
+## v0.1.34 - 27-12-2024
+## 🚀 Features
+
+- feat: register
+- feat: validate-email
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.29
+- chore(docs): update CHANGELOG.MD
+
+## 🔄 Uncategorized Commits
+
+- Merge pull request #1 from javiertrombetta/feature-register
+
+
 ## v0.1.29 - 23-12-2024
 ## 🐛 Fixes
 

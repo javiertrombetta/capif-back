@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.48 - 05-01-2025
+## 🚀 Features
+
+- feat: views for users and roles
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.45
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.45 - 05-01-2025
 ## 🐛 Fixes
 

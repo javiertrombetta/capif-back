@@ -1,7 +1,7 @@
-import { Model, DataTypes, Association } from 'sequelize';
-import sequelize from '../config/database/sequelize';
-import Usuario from './Usuario';
-import Fonograma from './Fonograma';
+import { Model, DataTypes, Association } from "sequelize";
+import sequelize from "../config/database/sequelize";
+import Usuario from "./Usuario";
+import Fonograma from "./Fonograma";
 
 class AuditoriaRepertorio extends Model {
   public id_auditoria!: string;
@@ -14,7 +14,6 @@ class AuditoriaRepertorio extends Model {
 
   public fonogramaAuditado?: Fonograma;
   public registranteDeRepertorio?: Usuario;
-
 
   public static associations: {
     fonogramaAuditado: Association<AuditoriaRepertorio, Fonograma>;
@@ -32,7 +31,7 @@ AuditoriaRepertorio.init(
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID de auditoría debe ser un UUID válido.',
+          msg: "El ID de auditoría debe ser un UUID válido.",
         },
       },
     },
@@ -41,12 +40,12 @@ AuditoriaRepertorio.init(
       allowNull: false,
       references: {
         model: Fonograma,
-        key: 'id_fonograma',
+        key: "id_fonograma",
       },
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID del fonograma debe ser un UUID válido.',
+          msg: "El ID del fonograma debe ser un UUID válido.",
         },
       },
     },
@@ -55,18 +54,18 @@ AuditoriaRepertorio.init(
       allowNull: false,
       validate: {
         isIn: {
-          args: [['ALTA', 'BAJA', 'CAMBIO', 'ERROR', 'SISTEMA']],
-          msg: 'El tipo de auditoría debe ser uno de los siguientes: ALTA, BAJA, MODIFICACION, ERROR, SISTEMA, AUTH.',
+          args: [["ALTA", "BAJA", "CAMBIO", "ERROR", "SISTEMA"]],
+          msg: "El tipo de auditoría debe ser uno de los siguientes: ALTA, BAJA, MODIFICACION, ERROR, SISTEMA, AUTH.",
         },
       },
     },
     detalle: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
         len: {
-          args: [0, 50],
-          msg: 'El detalle libre no puede exceder los 30 caracteres.',
+          args: [0, 255],
+          msg: "El detalle libre no puede exceder los 30 caracteres.",
         },
       },
     },
@@ -75,30 +74,30 @@ AuditoriaRepertorio.init(
       allowNull: true,
       references: {
         model: Usuario,
-        key: 'id_usuario',
-      },      
+        key: "id_usuario",
+      },
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
+          msg: "El ID del usuario registrante debe ser un UUID válido.",
         },
       },
-    },    
+    },
   },
   {
     sequelize,
-    modelName: 'AuditoriaRepertorio',
-    tableName: 'AuditoriaRepertorio',
+    modelName: "AuditoriaRepertorio",
+    tableName: "AuditoriaRepertorio",
     timestamps: true,
     indexes: [
-        {
-        fields: ['fonograma_id'],
-        name: 'idx_auditoria_repertorio_fonograma',
+      {
+        fields: ["fonograma_id"],
+        name: "idx_auditoria_repertorio_fonograma",
       },
       {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_auditoria_repertorio_usuario',
-      },      
+        fields: ["usuario_registrante_id"],
+        name: "idx_auditoria_repertorio_usuario",
+      },
     ],
   }
 );

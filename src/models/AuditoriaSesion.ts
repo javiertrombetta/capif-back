@@ -1,13 +1,13 @@
-import { Model, DataTypes, Association } from 'sequelize';
-import sequelize from '../config/database/sequelize';
-import Usuario from './Usuario';
+import { Model, DataTypes, Association } from "sequelize";
+import sequelize from "../config/database/sequelize";
+import Usuario from "./Usuario";
 
 class AuditoriaSesion extends Model {
   public id_sesion!: string;
   public usuario_registrante_id!: string;
   public ip_origen!: string;
   public navegador!: string;
-  public fecha_inicio_sesion!: Date;  
+  public fecha_inicio_sesion!: Date;
   public fecha_fin_sesion!: Date | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -29,7 +29,7 @@ AuditoriaSesion.init(
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID de la sesión debe ser un UUID válido.',
+          msg: "El ID de la sesión debe ser un UUID válido.",
         },
       },
     },
@@ -38,12 +38,12 @@ AuditoriaSesion.init(
       allowNull: false,
       references: {
         model: Usuario,
-        key: 'id_usuario',
+        key: "id_usuario",
       },
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID del usuario registrante debe ser un UUID válido.',
+          msg: "El ID del usuario registrante debe ser un UUID válido.",
         },
       },
     },
@@ -52,7 +52,7 @@ AuditoriaSesion.init(
       allowNull: false,
       validate: {
         isIP: {
-          msg: 'La dirección IP debe ser válida.',
+          msg: "La dirección IP debe ser válida.",
         },
       },
     },
@@ -61,8 +61,8 @@ AuditoriaSesion.init(
       allowNull: false,
       validate: {
         len: {
-          args: [0, 50],
-          msg: 'El navegador no puede exceder los 50 caracteres.',
+          args: [0, 255],
+          msg: "El navegador no puede exceder los 50 caracteres.",
         },
       },
     },
@@ -73,7 +73,7 @@ AuditoriaSesion.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha de inicio debe ser una fecha válida.',
+          msg: "La fecha de inicio debe ser una fecha válida.",
         },
       },
     },
@@ -83,20 +83,20 @@ AuditoriaSesion.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha de fin debe ser una fecha válida.',
+          msg: "La fecha de fin debe ser una fecha válida.",
         },
       },
     },
   },
   {
     sequelize,
-    modelName: 'AuditoriaSesion',
-    tableName: 'AuditoriaSesion',
+    modelName: "AuditoriaSesion",
+    tableName: "AuditoriaSesion",
     timestamps: true,
     indexes: [
       {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_auditoria_sesion_usuario_registrante_id',
+        fields: ["usuario_registrante_id"],
+        name: "idx_auditoria_sesion_usuario_registrante_id",
       },
     ],
   }

@@ -9,7 +9,7 @@ import * as MESSAGES from "../services/messages";
 import * as Err from "../services/customErrors";
 import { sendEmail } from "../services/emailService";
 
-import { findUsuario, findRolByNombre } from "../services/userService";
+import { findUsuario, findRolByNombre, createVistaRelationsForUser } from "../services/userService";
 
 import {
   Usuario,
@@ -526,22 +526,11 @@ export const createUser = async (
       throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
     }
 
-    const authenticatedUser = authenticatedData.user;
+    // const authenticatedUser = authenticatedData.user;
     const authenticatedRole = authenticatedData.maestros[0].rol.nombre_rol;
-    const authenticatedProductora = authenticatedData.maestros[0].productora;
-
-    if (!authenticatedProductora) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario sin productora: ${authenticatedData.maestros[0].maestroId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
 
     // Verificar que el rol del usuario autenticado sea válido
-    if (
-      authenticatedRole !== "productor_principal" &&
-      authenticatedRole !== "admin_principal"
-    ) {
+    if (authenticatedRole !== "admin_principal") {
       logger.warn(
         `${req.method} ${req.originalUrl} - Usuario autenticado con rol no permitido para crear usuarios.`
       );
@@ -549,11 +538,7 @@ export const createUser = async (
     }
 
     // Verificar que el rol a crear sea válido según el rol del usuario autenticado
-    if (
-      (authenticatedRole === "productor_principal" &&
-        rol !== "productor_secundario") ||
-      (authenticatedRole === "admin_principal" && rol !== "admin_secundario")
-    ) {
+    if (authenticatedRole === "admin_principal" && rol !== "admin_secundario") {
       logger.warn(
         `${req.method} ${req.originalUrl} - Rol ${rol} no permitido para el usuario con rol ${authenticatedRole}.`
       );
@@ -612,15 +597,19 @@ export const createUser = async (
     await UsuarioMaestro.create({
       usuario_registrante_id: newUser.id_usuario,
       rol_id: rolObj.id_rol,
-      productora_id:
-        authenticatedRole === "productor_principal"
-          ? authenticatedProductora.id_productora
-          : null,
+      productora_id: null,
       fecha_ultimo_cambio_rol: new Date(),
     });
 
     logger.info(
       `${req.method} ${req.originalUrl} - Registro en UsuarioMaestro creado exitosamente para usuario: ${newUser.id_usuario}`
+    );
+
+    // Crear relaciones en UsuarioVistaMaestro
+    await createVistaRelationsForUser(newUser.id_usuario, rolObj.id_rol);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Administrador Secundario: ${newUser.email}`
     );
 
     // Registrar en Auditoría

@@ -15,6 +15,7 @@ import {
   findUsuario,
   findVistasforUsuario,
   findRolByNombre,
+  createVistaRelationsForUser,
 } from "../services/userService";
 import { actualizarFechaFinSesion } from "../services/sesionService";
 import {
@@ -77,32 +78,12 @@ export const registerPrimary = async (
       fecha_ultimo_cambio_rol: new Date(),
     });
 
-    // Obtener todas las vistas del rol 'productor_principal'
-    // const vistasParaProductorPrincipal = await UsuarioVista.findAll({
-    //   where: {
-    //     rol_id: userRol.id_rol,
-    //   },
-    //   attributes: ["id_vista"],
-    // });
+    // Crear relaciones en UsuarioVistaMaestro
+    await createVistaRelationsForUser(newUsuario.id_usuario, userRol.id_rol);
 
-    // if (vistasParaProductorPrincipal.length > 0) {
-    //   // Crear la relación entre el usuario y sus vistas
-    //   const vistasMaestroData = vistasParaProductorPrincipal.map((vista) => ({
-    //     usuario_id: newUsuario.id_usuario,
-    //     vista_id: vista.id_vista,
-    //     is_habilitado: true,
-    //   }));
-
-    //   await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
-
-    //   logger.info(
-    //     `${req.method} ${req.originalUrl} - Se asignaron ${vistasMaestroData.length} vistas al Productor Principal: ${email}`
-    //   );
-    // } else {
-    //   logger.warn(
-    //     `${req.method} ${req.originalUrl} - No se encontraron vistas para Productor Principal`
-    //   );
-    // }
+    logger.info(
+      `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Productor Principal: ${email}`
+    );
 
     // Configuración del token de verificación de email
     const tokenExpiration = process.env.EMAIL_TOKEN_EXPIRATION || "1d";
@@ -300,34 +281,13 @@ export const registerSecondary = async (
           rol_id: secondaryUserRole,
         });
 
-        // Obtener todas las vistas del rol 'productor_secundario'
-        const vistasParaProductorSecundario = await UsuarioVista.findAll({
-          where: {
-            rol_id: "productor_secundario",
-          },
-          attributes: ["id_vista"],
-        });
+        // Crear relaciones de vistas
+        const rolObj = await findRolByNombre(secondaryUserRole);
+        await createVistaRelationsForUser(existingUser.user.id_usuario, rolObj.id_rol);
 
-        if (vistasParaProductorSecundario.length > 0) {
-          // Crear la relación entre el usuario y sus vistas
-          const vistasMaestroData = vistasParaProductorSecundario.map(
-            (vista) => ({
-              usuario_id: newUsuario.id_usuario,
-              vista_id: vista.id_vista,
-              is_habilitado: true,
-            })
-          );
-
-          await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
-
-          logger.info(
-            `${req.method} ${req.originalUrl} - Se asignaron ${vistasMaestroData.length} vistas al Productor Secundario: ${email}`
-          );
-        } else {
-          logger.warn(
-            `${req.method} ${req.originalUrl} - No se encontraron vistas para Productor Secundario`
-          );
-        }
+        logger.info(
+          `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Productor Secundario: ${existingUser.user.email}`
+        );
 
         // Auditoría de actualización
         await AuditoriaCambio.create({
@@ -539,15 +499,14 @@ export const login = async (
           `${req.method} ${req.originalUrl} - El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos`
         );
 
-        // Registro en auditoría de bloqueo de usuario
-        /*
+        // Registro en auditoría de bloqueo de usuario        
         await AuditoriaCambio.create({
           usuario_originario_id: user.id_usuario,
           modelo: "Usuario",
           tipo_auditoria: "ERROR",
           detalle: `Bloqueo después de ${MAX_LOGIN_ATTEMPTS} intentos fallidos`,
         });
-        */
+        
       }
 
       // Guardar cambios en intentos fallidos y estado de habilitación del usuario

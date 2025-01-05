@@ -48,7 +48,6 @@ UsuarioVista.init(
     nombre_vista: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       validate: {
         len: {
           args: [3, 50],
@@ -64,9 +63,8 @@ UsuarioVista.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['nombre_vista'],
+        fields: ['rol_id', 'nombre_vista'],
         name: 'idx_rol_nombre_vista',
-        unique: true,
       },
     ],
   }

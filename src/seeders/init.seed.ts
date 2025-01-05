@@ -2,6 +2,7 @@ import {
   UsuarioRol,
   ProductoraDocumentoTipo,
   FonogramaTerritorio,
+  UsuarioVista,
 } from "../models";
 
 const rolesData = [
@@ -41,6 +42,106 @@ const paisesData = [
   { nombre_pais: "Gran Bretaña", codigo_iso: "GB", is_activo: false },
 ];
 
+type VistaData = {
+  nombre_vista: string;
+  rol_id: string;
+};
+
+const vistasData = async (): Promise<VistaData[]> => {
+  const roles = await UsuarioRol.findAll({ attributes: ["id_rol", "nombre_rol"] });
+
+  const vistas: VistaData[] = [];
+
+  const agregarVistasPorRol = (nombreRol: string, vistasParaRol: string[]): void => {
+    const rolId = roles.find((rol) => rol.nombre_rol === nombreRol)?.id_rol;
+    if (!rolId) return;
+
+    vistasParaRol.forEach((nombreVista: string) => {
+      vistas.push({ nombre_vista: nombreVista, rol_id: rolId });
+    });
+  };
+
+  agregarVistasPorRol("admin_principal", [
+    "REPERTORIO",
+    "BUSCAR REPERTORIO",
+    "DECLARACION REPERTORIO",
+    "CONFLICTOS",
+    "ENVIO ARCHIVO AUDIO",
+    "TERRITORIALIDAD",
+    "PRODUCTORES",
+    "BUSCAR PRODUCTORES",
+    "PREMIOS GARDEL",
+    "USUARIOS",
+    "BUSCAR USUARIOS",
+    "ALTAS USUARIOS",
+    "CUENTAS CORRIENTES",
+    "LIQUIDACIONES",
+    "PAGOS",
+    "TRASPASOS",
+    "PAGOS RECHAZADOS",
+    "ESTADO DE CUENTA",
+    "AUDITORIA",
+    "HISTORIAL DE CAMBIOS",
+    "CAMBIOS EN REPERTORIOS",
+    "SESIONES",
+  ]);
+
+  agregarVistasPorRol("admin_secundario", [
+    "REPERTORIO",
+    "BUSCAR REPERTORIO",
+    "DECLARACION REPERTORIO",
+    "CONFLICTOS",
+    "ENVIO ARCHIVO AUDIO",
+    "TERRITORIALIDAD",
+    "PRODUCTORES",
+    "BUSCAR PRODUCTORES",
+    "PREMIOS GARDEL",
+    "USUARIOS",
+    "BUSCAR USUARIOS",
+    "CUENTAS CORRIENTES",
+    "LIQUIDACIONES",
+    "PAGOS",
+    "TRASPASOS",
+    "PAGOS RECHAZADOS",
+    "ESTADO DE CUENTA",
+    "AUDITORIA",
+    "HISTORIAL DE CAMBIOS",
+    "CAMBIOS EN REPERTORIOS",
+    "SESIONES",
+  ]);
+
+  agregarVistasPorRol("productor_principal", [
+    "REPERTORIO",
+    "BUSCAR REPERTORIO",
+    "DECLARACION REPERTORIO",
+    "CONFLICTOS",
+    "PRODUCTORES",
+    "BUSCAR PRODUCTORES",
+    "PREMIOS GARDEL",
+    "USUARIOS",
+    "BUSCAR USUARIOS",
+    "ALTAS USUARIOS",
+    "CUENTAS CORRIENTES",
+    "ESTADO DE CUENTA",
+  ]);
+
+  agregarVistasPorRol("productor_secundario", [
+    "REPERTORIO",
+    "BUSCAR REPERTORIO",
+    "DECLARACION REPERTORIO",
+    "CONFLICTOS",
+    "PRODUCTORES",
+    "BUSCAR PRODUCTORES",
+    "PREMIOS GARDEL",
+    "USUARIOS",
+    "BUSCAR USUARIOS",
+    "CUENTAS CORRIENTES",
+    "ESTADO DE CUENTA",
+  ]);
+
+  return vistas;
+};
+
 const initSeed = async () => {
   try {
     console.log("Ejecutando seeders...");
@@ -52,6 +153,9 @@ const initSeed = async () => {
     await FonogramaTerritorio.bulkCreate(paisesData, {
       ignoreDuplicates: true,
     });
+
+    const vistas = await vistasData();
+    await UsuarioVista.bulkCreate(vistas, { ignoreDuplicates: true });
 
     console.log("Seed completado con éxito.");
   } catch (error) {

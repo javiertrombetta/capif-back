@@ -232,20 +232,60 @@ export const findRolByNombre = async (nombre_rol: string) => {
   return rol;
 };
 
-export const findVistasforUsuario = async (usuarioId: string) => {
-  const vistasMaestro = await UsuarioVistaMaestro.findAll({
-    where: {
-      usuario_id: usuarioId,
-      is_habilitado: true,
-    },
-    include: [
-      {
-        model: UsuarioVista,
-        as: "vista",
-        attributes: ["nombre_vista"],
-      },
-    ],
+export const findVistasforUsuario = async (usuarioId: string): Promise<string[]> => {
+  const vistas = await UsuarioVistaMaestro.findAll({
+    where: { usuario_id: usuarioId, is_habilitado: true },
+    include: [{ model: UsuarioVista, as: "vista", attributes: ["nombre_vista"] }],
   });
 
-  return vistasMaestro.map((vistaMaestro) => vistaMaestro.vista?.nombre_vista);
+  return vistas.map((vista) => {
+    if (!vista.vista) {
+      throw new Error("Vista no definida en UsuarioVistaMaestro.");
+    }
+    return vista.vista.nombre_vista;
+  });
+};
+
+export const findVistasForRol = async (rolId: string): Promise<{ id_vista: string; nombre_vista: string }[]> => {
+  if (!rolId) {
+    throw new Error("El ID del rol es obligatorio para buscar vistas asociadas.");
+  }
+
+  const vistas = await UsuarioVista.findAll({
+    where: { rol_id: rolId },
+    attributes: ["id_vista", "nombre_vista"],
+  });
+
+  if (!vistas || vistas.length === 0) {
+    throw new Error(`No se encontraron vistas para el rol con ID: ${rolId}`);
+  }
+
+  return vistas;
+};
+
+export const createVistaRelationsForUser = async (
+  usuarioId: string,
+  rolId: string
+): Promise<void> => {
+  if (!usuarioId || !rolId) {
+    throw new Error("UsuarioId y RolId son obligatorios para crear relaciones.");
+  }
+
+  // Obtener las vistas asociadas al rol
+  const vistas = await findVistasForRol(rolId);
+
+  if (!vistas || vistas.length === 0) {
+    throw new Error(`No se encontraron vistas para el rol con ID: ${rolId}`);
+  }
+
+  // Crear relaciones en UsuarioVistaMaestro
+  const vistasMaestroData = vistas.map((vista) => ({
+    usuario_id: usuarioId,
+    vista_id: vista.id_vista,
+    is_habilitado: true,
+  }));
+
+  await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
+
+  console.log(`Se asignaron ${vistasMaestroData.length} vistas al usuario con ID: ${usuarioId}`);
 };

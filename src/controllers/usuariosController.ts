@@ -1106,7 +1106,7 @@ export const sendApplication = async (
     usuarioMaestro.productora_id = nuevaProductora.id_productora;
     await usuarioMaestro.save();
 
-    // Mapear nombres de documentos a sus IDs
+    // Obtener los IDs correspondientes a los nombres de documentos enviados
     const nombresDocumentos = documentos.map(
       (doc: any) => doc.nombre_documento
     );
@@ -1117,13 +1117,6 @@ export const sendApplication = async (
       },
     });
 
-    if (tiposDocumentos.length !== documentos.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Algunos documentos no fueron encontrados.`
-      );
-      throw new Err.BadRequestError("Algunos tipos de documentos no son válidos.");
-    }
-
     // Crear los documentos
     const documentosCargados = documentos.map(async (doc: any) => {
       const tipoDocumento = tiposDocumentos.find(
@@ -1131,6 +1124,9 @@ export const sendApplication = async (
       );
 
       if (!tipoDocumento) {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - Tipo de documento no encontrado: ${doc.nombre_documento}`
+        );
         throw new Err.BadRequestError(
           `No se encontró un tipo de documento con el nombre: ${doc.nombre_documento}`
         );

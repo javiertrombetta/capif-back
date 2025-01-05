@@ -156,6 +156,7 @@ export const registerPrimary = async (
     */
 
     // Registra la acción en AuditoriaCambio
+
     await AuditoriaCambio.create({
       usuario_originario_id: null,
       usuario_destino_id: newUsuario.id_usuario,
@@ -539,18 +540,21 @@ export const login = async (
         );
 
         // Registro en auditoría de bloqueo de usuario
+        /*
         await AuditoriaCambio.create({
           usuario_originario_id: user.id_usuario,
           modelo: "Usuario",
           tipo_auditoria: "ERROR",
           detalle: `Bloqueo después de ${MAX_LOGIN_ATTEMPTS} intentos fallidos`,
         });
+        */
       }
 
       // Guardar cambios en intentos fallidos y estado de habilitación del usuario
       await user.save();
 
       // Registro de auditoría para intento de inicio de sesión fallido
+
       if (!user.is_bloqueado) {
         await AuditoriaCambio.create({
           usuario_originario_id: user.id_usuario,
@@ -605,6 +609,7 @@ export const login = async (
     });
 
     // Registro de auditoría para acceso exitoso
+
     await AuditoriaCambio.create({
       usuario_originario_id: user.id_usuario,
       modelo: "Usuario",
@@ -613,6 +618,7 @@ export const login = async (
     });
 
     // Registro de sesión
+
     await AuditoriaSesion.create({
       usuario_registrante_id: user.id_usuario,
       fecha_inicio_sesion: new Date(),

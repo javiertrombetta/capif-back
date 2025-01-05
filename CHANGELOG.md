@@ -1,4 +1,19 @@
 # Changelog
+## v0.1.38 - 05-01-2025
+## 🚀 Features
+
+- feat: auth
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.34
+- chore(docs): update CHANGELOG.MD
+
+## 🔄 Uncategorized Commits
+
+- Merge pull request #2 from javiertrombetta/feature-auth
+
+
 ## v0.1.34 - 27-12-2024
 ## 🚀 Features
 

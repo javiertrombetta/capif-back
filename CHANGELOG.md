@@ -1,4 +1,19 @@
 # Changelog
+## v0.1.45 - 05-01-2025
+## 🐛 Fixes
+
+- fix: sendApplication in usuariosController
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.41
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.1.41 - 05-01-2025
 ## 🐛 Fixes
 

@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.41 - 05-01-2025
+## 🐛 Fixes
+
+- fix: sendApplication in usuariosController
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.38
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.38 - 05-01-2025
 ## 🚀 Features
 

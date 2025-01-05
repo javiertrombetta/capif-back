@@ -88,11 +88,11 @@ AuditoriaCambio.init(
       },
     },
     detalle: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(255),
       allowNull: false,
       validate: {
         len: {
-          args: [0, 50],
+          args: [0, 255],
           msg: "El detalle libre no puede exceder los 30 caracteres.",
         },
       },

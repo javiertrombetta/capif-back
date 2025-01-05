@@ -985,6 +985,7 @@ export const rejectApplication = async (
     });
 
     // Enviar correo de notificación de rechazo
+
     await sendEmail({
       to: user.email,
       subject: "Rechazo de su Aplicación",
@@ -1017,10 +1018,17 @@ export const sendApplication = async (
       `${req.method} ${req.originalUrl} - Solicitud para enviar aplicación`
     );
 
-    const { id_usuario, productoraData, documentos } = req.body;
+    const {
+      id_usuario,
+      productoraData,
+      documentos,
+      nombre,
+      apellido,
+      telefono,
+    } = req.body;
 
     // Validar parámetros
-    if (!productoraData || documentos) {
+    if (!productoraData || !documentos || !nombre || !apellido || !telefono) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Faltan parámetros obligatorios.`
       );
@@ -1046,7 +1054,6 @@ export const sendApplication = async (
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
-
     const { user } = userData;
 
     if (!user) {
@@ -1055,6 +1062,9 @@ export const sendApplication = async (
         message: MESSAGES.ERROR.USER.NOT_FOUND,
       });
     }
+
+    await user.update({ nombre, apellido, telefono });
+    await user.save();
 
     // Validar el tipo de persona (FÍSICA o JURÍDICA)
     const tipoPersonaValida = ["FISICA", "JURIDICA"].includes(
@@ -1079,11 +1089,27 @@ export const sendApplication = async (
       `${req.method} ${req.originalUrl} - Productora creada con éxito: ${nuevaProductora.id_productora}`
     );
 
+    // Actualizar UsuarioMaestro con el productora_id
+    const usuarioMaestro = await UsuarioMaestro.findOne({
+      where: { usuario_registrante_id: id_usuario },
+    });
+
+    if (!usuarioMaestro) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - UsuarioMaestro no encontrado para el usuario: ${id_usuario}
+    `
+      );
+      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NO_MAESTRO_RECORD);
+    }
+
+    usuarioMaestro.productora_id = nuevaProductora.id_productora;
+    await usuarioMaestro.save();
+
     // Cargar los documentos según los tipo_documento_id
     const documentosCargados = documentos.map(async (doc: any) => {
       return await ProductoraDocumento.create({
         usuario_principal_id: id_usuario,
-        productora_id: null,
+        productora_id: nuevaProductora.id_productora,
         tipo_documento_id: doc.tipo_documento_id,
         ruta_archivo_documento: doc.ruta_archivo_documento,
       });
@@ -1092,11 +1118,11 @@ export const sendApplication = async (
     await Promise.all(documentosCargados);
 
     // Enviar correo de notificación al usuario
-    await sendEmail({
-      to: user.email,
-      subject: "Solicitud de Aplicación Enviada",
-      html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(user.email),
-    });
+    // await sendEmail({
+    //   to: user.email,
+    //   subject: "Solicitud de Aplicación Enviada",
+    //   html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(user.email),
+    // });
 
     // Registrar auditoría
     await AuditoriaCambio.create({

@@ -416,11 +416,10 @@ export const userSchemas = {
         items: {
           type: 'object',
           properties: {
-            tipo_documento_id: {
+            nombre_documento: {
               type: 'string',
-              format: 'uuid',
-              description: 'ID del tipo de documento.',
-              example: '123e4567-e89b-12d3-a456-426614174000',
+              description: 'Nombre del tipo de documento.',
+              example: 'dni_persona_fisica',
             },
             ruta_archivo_documento: {
               type: 'string',
@@ -428,7 +427,7 @@ export const userSchemas = {
               example: '/uploads/documento.pdf',
             },
           },
-          required: ['tipo_documento_id', 'ruta_archivo_documento'],
+          required: ['nombre_documento', 'ruta_archivo_documento'],
         },
       },
     },

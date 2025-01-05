@@ -17,6 +17,7 @@ import {
   Productora,
   ProductoraDocumento,
   AuditoriaCambio,
+  ProductoraDocumentoTipo,
 } from "../models";
 
 // HABILITAR O DESHABILITAR EL REGISTRO DE UN USUARIO
@@ -1105,17 +1106,45 @@ export const sendApplication = async (
     usuarioMaestro.productora_id = nuevaProductora.id_productora;
     await usuarioMaestro.save();
 
-    // Cargar los documentos según los tipo_documento_id
+    // Mapear nombres de documentos a sus IDs
+    const nombresDocumentos = documentos.map(
+      (doc: any) => doc.nombre_documento
+    );
+
+    const tiposDocumentos = await ProductoraDocumentoTipo.findAll({
+      where: {
+        nombre_documento: nombresDocumentos,
+      },
+    });
+
+    if (tiposDocumentos.length !== documentos.length) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Algunos documentos no fueron encontrados.`
+      );
+      throw new Err.BadRequestError("Algunos tipos de documentos no son válidos.");
+    }
+
+    // Crear los documentos
     const documentosCargados = documentos.map(async (doc: any) => {
+      const tipoDocumento = tiposDocumentos.find(
+        (tipo) => tipo.nombre_documento === doc.nombre_documento
+      );
+
+      if (!tipoDocumento) {
+        throw new Err.BadRequestError(
+          `No se encontró un tipo de documento con el nombre: ${doc.nombre_documento}`
+        );
+      }
+
       return await ProductoraDocumento.create({
         usuario_principal_id: id_usuario,
         productora_id: nuevaProductora.id_productora,
-        tipo_documento_id: doc.tipo_documento_id,
+        tipo_documento_id: tipoDocumento.id_documento_tipo,
         ruta_archivo_documento: doc.ruta_archivo_documento,
       });
     });
 
-    await Promise.all(documentosCargados);
+    await Promise.all(documentosCargados); 
 
     // Enviar correo de notificación al usuario
     // await sendEmail({

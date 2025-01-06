@@ -1,4 +1,19 @@
 # Changelog
+## v0.1.55 - 06-01-2025
+## 🐛 Fixes
+
+- fix: add vistas in getUser and change routes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.51
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch feature_vistas of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.1.51 - 06-01-2025
 ## 🚀 Features
 

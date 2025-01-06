@@ -1224,7 +1224,7 @@ export const getUser = async (
     );
 
     // Devuelve el usuario y sus maestros asociados
-    res.status(200).json({ user: result.user, maestros: result.maestros });
+    res.status(200).json({ user: result.user, maestros: result.maestros, vistas: result.vistas });
   } catch (err) {
     logger.error(
       `${req.method} ${

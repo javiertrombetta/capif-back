@@ -2,13 +2,8 @@ import { Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import logger from '../config/logger';
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+import { UsuarioRol } from '../models';
 
-const ROLES_MAP: { [key: string]: string } = {
-  '1': 'admin_principal',
-  '2': 'admin_secundario',
-  '3': 'productor_principal',
-  '4': 'productor_secundario',
-};
 
 // Verificar token y devolver el payload
 export const verifyToken = (token: string | undefined, secret: string): JwtPayload | null => {
@@ -65,21 +60,37 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
 
 // Middleware para autorizar roles
 export const authorizeRoles = (roles: string[]) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const roleId = req.roleId;
+  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const roleId = req.roleId;
 
-    if (!roleId) {
-      logger.warn('Acceso denegado: Rol no encontrado en la solicitud');
-      return res.status(403).json({ error: 'No tienes permiso para acceder a este recurso.' });
+      if (!roleId) {
+        logger.warn('Acceso denegado: Rol no encontrado en la solicitud');
+        return res.status(403).json({ error: 'No tienes permiso para acceder a este recurso.' });
+      }
+     
+      const role = await UsuarioRol.findOne({
+        where: { id_rol: roleId }, 
+        attributes: ['nombre_rol'],
+      });
+
+      if (!role) {
+        logger.warn(`Acceso denegado: El rol con ID ${roleId} no está definido en la base de datos.`);
+        return res.status(403).json({ error: 'No tienes permiso para acceder a este recurso.' });
+      }
+
+      const roleName = role.nombre_rol;
+
+      if (!roles.includes(roleName)) {
+        logger.warn(`Acceso denegado: El rol ${roleName} no tiene permiso para acceder.`);
+        return res.status(403).json({ error: 'No tienes permiso para acceder a este recurso.' });
+      }
+
+      next();
+
+    } catch (err) {
+      logger.error('Error en el middleware de autorización:', err);
+      return res.status(500).json({ error: 'Error interno del servidor.' });
     }
-
-    const roleName = ROLES_MAP[roleId];
-
-    if (!roleName || !roles.includes(roleName)) {
-      logger.warn(`Acceso denegado: El rol ${roleName || 'desconocido'} no tiene permiso`);
-      return res.status(403).json({ error: 'No tienes permiso para acceder a este recurso.' });
-    }
-
-    next();
   };
 };

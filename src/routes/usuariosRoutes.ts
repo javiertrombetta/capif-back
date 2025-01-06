@@ -675,11 +675,11 @@ router.put(
   updateUserViews
 );
 
-// [PUT] Alternar el estado de las vistas de un usuario
+// [PUT] Cambiar el estado de las vistas de un usuario
 /**
  * @swagger
  * /usuarios/vistas/estado:
- *   patch:
+ *   put:
  *     summary: Cambiar el estado de habilitación de las vistas de un usuario.
  *     tags: [Usuarios]
  *     security:
@@ -692,7 +692,7 @@ router.put(
  *             $ref: '#/components/schemas/ToggleUserViewStatus'
  *     responses:
  *       200:
- *         description: Estado de vistas actualizado exitosamente.
+ *         description: Estado de vistas actualizado exitosamente. 
  *       400:
  *         description: Datos inválidos.
  *       401:

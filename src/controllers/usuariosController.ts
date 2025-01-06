@@ -1488,17 +1488,16 @@ export const updateUserViews = async (
   next: NextFunction
 ) => {
   try {
-    const { idUsuario } = req.params;
-    const { vistas } = req.body;
+    const { id_usuario, vistas } = req.body;
 
-    if (!idUsuario) {
+    if (!id_usuario) {
       throw new Err.BadRequestError("Debe proporcionar un ID de usuario.");
     }
 
-    await updateUserViewsService(idUsuario, vistas);
+    await updateUserViewsService(id_usuario, vistas);
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Vistas actualizadas correctamente para el usuario: ${idUsuario}`
+      `${req.method} ${req.originalUrl} - Vistas actualizadas correctamente para el usuario: ${id_usuario}`
     );
 
     res.status(200).json({ message: "Vistas actualizadas exitosamente" });
@@ -1520,17 +1519,16 @@ export const toggleUserViewStatus = async (
   next: NextFunction
 ) => {
   try {
-    const { idUsuario } = req.params;
-    const { vistas } = req.body;
+    const { id_usuario, vistas } = req.body;
 
-    if (!idUsuario) {
+    if (!id_usuario) {
       throw new Err.BadRequestError("Debe proporcionar un ID de usuario.");
     }
 
-    await toggleUserViewStatusService(idUsuario, vistas);
+    await toggleUserViewStatusService(id_usuario, vistas);
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Estado de vistas actualizado correctamente para el usuario: ${idUsuario}`
+      `${req.method} ${req.originalUrl} - Estado de vistas actualizado correctamente para el usuario: ${id_usuario}`
     );
 
     res

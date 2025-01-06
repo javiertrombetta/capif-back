@@ -13,6 +13,8 @@ import {
   updateApplication,
   updateUser,
   deleteUser,
+  updateUserViews,
+  toggleUserViewStatus,
 } from '../controllers/usuariosController';
 import { authenticate, authorizeRoles } from '../middlewares/auth';
 import { celebrate, Segments } from 'celebrate';
@@ -28,6 +30,8 @@ import {
   updateApplicationSchema,
   updateUserSchema,
   deleteUserSchema,
+  updateUserViewsSchema,
+  toggleUserViewStatusSchema,
 } from '../services/validationSchemas';
 
 const router = Router();
@@ -632,6 +636,80 @@ router.delete(
   authorizeRoles(['admin_principal', 'admin_secundario']),
   celebrate({ [Segments.QUERY]: deleteUserSchema }),
   deleteUser
+);
+
+// [PUT] Actualizar vistas de un usuario
+/**
+ * @swagger
+ * /usuarios/vistas:
+ *   put:
+ *     summary: Actualizar las vistas de un usuario.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateUserViews'
+ *     responses:
+ *       200:
+ *         description: Vistas actualizadas exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.put(
+  "/vistas",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.BODY]: updateUserViewsSchema }),
+  updateUserViews
+);
+
+// [PUT] Alternar el estado de las vistas de un usuario
+/**
+ * @swagger
+ * /usuarios/vistas/estado:
+ *   patch:
+ *     summary: Cambiar el estado de habilitación de las vistas de un usuario.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ToggleUserViewStatus'
+ *     responses:
+ *       200:
+ *         description: Estado de vistas actualizado exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.put(
+  "/vistas/estado",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.BODY]: toggleUserViewStatusSchema }),
+  toggleUserViewStatus
 );
 
 export default router;

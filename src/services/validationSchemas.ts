@@ -239,3 +239,18 @@ export const deleteUserSchema = Joi.object({
   'object.base': 'Los datos proporcionados deben ser un objeto válido.',
   'any.required': 'Los datos para eliminar un usuario son obligatorios.',
 });
+
+// Schema for updating user's views
+export const updateUserViewsSchema = Joi.object({
+  vistas: Joi.array().items(Joi.string().uuid()).required(),
+});
+
+// Schema for updating status of user's views
+export const toggleUserViewStatusSchema = Joi.array()
+  .items(
+    Joi.object({
+      id_vista: Joi.string().uuid().required(),
+      is_habilitado: Joi.boolean().required(),
+    })
+  )
+  .required();

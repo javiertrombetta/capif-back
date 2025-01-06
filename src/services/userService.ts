@@ -246,11 +246,15 @@ export const findVistasforUsuario = async (usuarioId: string): Promise<string[]>
   });
 };
 
-export const findVistasForRol = async (rolId: string): Promise<{ id_vista: string; nombre_vista: string }[]> => {
-  if (!rolId) {
-    throw new Error("El ID del rol es obligatorio para buscar vistas asociadas.");
+export const assignVistasToUser = async (
+  usuarioId: string,
+  rolId: string
+): Promise<void> => {
+  if (!usuarioId || !rolId) {
+    throw new Error("UsuarioId y RolId son obligatorios para asignar vistas.");
   }
 
+  // Buscar vistas asociadas al rol y crear relaciones para el usuario
   const vistas = await UsuarioVista.findAll({
     where: { rol_id: rolId },
     attributes: ["id_vista", "nombre_vista"],
@@ -260,25 +264,6 @@ export const findVistasForRol = async (rolId: string): Promise<{ id_vista: strin
     throw new Error(`No se encontraron vistas para el rol con ID: ${rolId}`);
   }
 
-  return vistas;
-};
-
-export const createVistaRelationsForUser = async (
-  usuarioId: string,
-  rolId: string
-): Promise<void> => {
-  if (!usuarioId || !rolId) {
-    throw new Error("UsuarioId y RolId son obligatorios para crear relaciones.");
-  }
-
-  // Obtener las vistas asociadas al rol
-  const vistas = await findVistasForRol(rolId);
-
-  if (!vistas || vistas.length === 0) {
-    throw new Error(`No se encontraron vistas para el rol con ID: ${rolId}`);
-  }
-
-  // Crear relaciones en UsuarioVistaMaestro
   const vistasMaestroData = vistas.map((vista) => ({
     usuario_id: usuarioId,
     vista_id: vista.id_vista,
@@ -287,5 +272,56 @@ export const createVistaRelationsForUser = async (
 
   await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
 
-  console.log(`Se asignaron ${vistasMaestroData.length} vistas al usuario con ID: ${usuarioId}`);
+  console.log(
+    `Se asignaron ${vistasMaestroData.length} vistas al usuario con ID: ${usuarioId}`
+  );
+};
+
+export const updateUserViewsService = async (
+  usuarioId: string,
+  vistas: string[]
+): Promise<void> => {
+  if (!vistas || !Array.isArray(vistas)) {
+    throw new Error("Debe proporcionar un array de vistas.");
+  }
+
+  // Eliminar todas las vistas actuales del usuario
+  await UsuarioVistaMaestro.destroy({
+    where: { usuario_id: usuarioId },
+  });
+
+  // Crear nuevas vistas para el usuario
+  const vistasMaestroData = vistas.map((vistaId) => ({
+    usuario_id: usuarioId,
+    vista_id: vistaId,
+    is_habilitado: true,
+  }));
+
+  await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
+};
+
+export const toggleUserViewStatusService = async (
+  usuarioId: string,
+  vistas: { id_vista: string; is_habilitado: boolean }[]
+): Promise<void> => {
+  if (!vistas || !Array.isArray(vistas)) {
+    throw new Error("Debe proporcionar un array de vistas.");
+  }
+
+  for (const vista of vistas) {
+    if (!vista.id_vista || typeof vista.is_habilitado !== "boolean") {
+      throw new Error("El formato de las vistas es incorrecto.");
+    }
+
+    // Actualizar el estado de la vista
+    await UsuarioVistaMaestro.update(
+      { is_habilitado: vista.is_habilitado },
+      {
+        where: {
+          usuario_id: usuarioId,
+          vista_id: vista.id_vista,
+        },
+      }
+    );
+  }
 };

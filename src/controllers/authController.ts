@@ -15,7 +15,7 @@ import {
   findUsuario,
   findVistasforUsuario,
   findRolByNombre,
-  createVistaRelationsForUser,
+  assignVistasToUser,
 } from "../services/userService";
 import { actualizarFechaFinSesion } from "../services/sesionService";
 import {
@@ -28,8 +28,6 @@ import * as Err from "../services/customErrors";
 import {
   AuditoriaCambio,
   AuditoriaSesion,
-  UsuarioVista,
-  UsuarioVistaMaestro,
 } from "../models";
 
 // REGISTER PRODUCTOR 'PRIMARIO'
@@ -79,7 +77,7 @@ export const registerPrimary = async (
     });
 
     // Crear relaciones en UsuarioVistaMaestro
-    await createVistaRelationsForUser(newUsuario.id_usuario, userRol.id_rol);
+    await assignVistasToUser(newUsuario.id_usuario, userRol.id_rol);
 
     logger.info(
       `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Productor Principal: ${email}`
@@ -283,7 +281,7 @@ export const registerSecondary = async (
 
         // Crear relaciones de vistas
         const rolObj = await findRolByNombre(secondaryUserRole);
-        await createVistaRelationsForUser(existingUser.user.id_usuario, rolObj.id_rol);
+        await assignVistasToUser(existingUser.user.id_usuario, rolObj.id_rol);
 
         logger.info(
           `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Productor Secundario: ${existingUser.user.email}`
@@ -1423,110 +1421,6 @@ export const logout = async (
   } catch (err) {
     logger.error(
       `${req.method} ${req.originalUrl} - Error durante el proceso de logout: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
-  }
-};
-
-export const updateUserViews = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { idUsuario } = req.params;
-    const { vistas } = req.body;
-
-    if (!vistas || !Array.isArray(vistas)) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Vistas no proporcionadas o formato incorrecto.`
-      );
-      throw new Err.BadRequestError("Debe proporcionar un array de vistas.");
-    }
-
-    // Eliminar todas las vistas actuales del usuario
-    await UsuarioVistaMaestro.destroy({
-      where: { usuario_id: idUsuario },
-    });
-
-    // Crear las nuevas vistas para el usuario
-    const vistasMaestroData = vistas.map((vistaId) => ({
-      usuario_id: idUsuario,
-      vista_id: vistaId,
-      is_habilitado: true,
-    }));
-
-    await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Vistas actualizadas correctamente para el usuario: ${idUsuario}`
-    );
-
-    res.status(200).json({ message: "Vistas actualizadas exitosamente" });
-  } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al actualizar vistas del usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
-  }
-};
-
-export const toggleUserViewStatus = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { idUsuario } = req.params;
-    const { vistas } = req.body;
-
-    if (!vistas || !Array.isArray(vistas)) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Vistas no proporcionadas o formato incorrecto.`
-      );
-      throw new Err.BadRequestError("Debe proporcionar un array de vistas.");
-    }
-
-    for (const vista of vistas) {
-      if (!vista.id_vista || typeof vista.is_habilitado !== "boolean") {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Formato incorrecto en las vistas proporcionadas.`
-        );
-        throw new Err.BadRequestError(
-          "El formato de las vistas es incorrecto."
-        );
-      }
-
-      // Actualizar la columna is_habilitado de la vista
-      await UsuarioVistaMaestro.update(
-        { is_habilitado: vista.is_habilitado },
-        {
-          where: {
-            usuario_id: idUsuario,
-            vista_id: vista.id_vista,
-          },
-        }
-      );
-    }
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Estado de vistas actualizado correctamente para el usuario: ${idUsuario}`
-    );
-
-    res
-      .status(200)
-      .json({ message: "Estado de vistas actualizado exitosamente" });
-  } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al cambiar el estado de vistas del usuario: ${
         err instanceof Error ? err.message : "Error desconocido"
       }`
     );

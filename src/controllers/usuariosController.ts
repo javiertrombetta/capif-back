@@ -9,7 +9,7 @@ import * as MESSAGES from "../services/messages";
 import * as Err from "../services/customErrors";
 import { sendEmail } from "../services/emailService";
 
-import { findUsuario, findRolByNombre, createVistaRelationsForUser } from "../services/userService";
+import { findUsuario, findRolByNombre, assignVistasToUser, updateUserViewsService, toggleUserViewStatusService } from "../services/userService";
 
 import {
   Usuario,
@@ -606,7 +606,7 @@ export const createUser = async (
     );
 
     // Crear relaciones en UsuarioVistaMaestro
-    await createVistaRelationsForUser(newUser.id_usuario, rolObj.id_rol);
+    await assignVistasToUser(newUser.id_usuario, rolObj.id_rol);
 
     logger.info(
       `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Administrador Secundario: ${newUser.email}`
@@ -1479,5 +1479,71 @@ export const deleteUser = async (
       }`
     );
     next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
+  }
+};
+
+export const updateUserViews = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { idUsuario } = req.params;
+    const { vistas } = req.body;
+
+    if (!idUsuario) {
+      throw new Err.BadRequestError("Debe proporcionar un ID de usuario.");
+    }
+
+    await updateUserViewsService(idUsuario, vistas);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Vistas actualizadas correctamente para el usuario: ${idUsuario}`
+    );
+
+    res.status(200).json({ message: "Vistas actualizadas exitosamente" });
+  } catch (err) {
+    logger.error(
+      `${req.method} ${
+        req.originalUrl
+      } - Error al actualizar vistas del usuario: ${
+        err instanceof Error ? err.message : "Error desconocido"
+      }`
+    );
+    next(err);
+  }
+};
+
+export const toggleUserViewStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { idUsuario } = req.params;
+    const { vistas } = req.body;
+
+    if (!idUsuario) {
+      throw new Err.BadRequestError("Debe proporcionar un ID de usuario.");
+    }
+
+    await toggleUserViewStatusService(idUsuario, vistas);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Estado de vistas actualizado correctamente para el usuario: ${idUsuario}`
+    );
+
+    res
+      .status(200)
+      .json({ message: "Estado de vistas actualizado exitosamente" });
+  } catch (err) {
+    logger.error(
+      `${req.method} ${
+        req.originalUrl
+      } - Error al cambiar el estado de vistas del usuario: ${
+        err instanceof Error ? err.message : "Error desconocido"
+      }`
+    );
+    next(err);
   }
 };

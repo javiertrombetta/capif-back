@@ -206,7 +206,7 @@ export const findUsuario = async (filters: {
   // Si no se encuentran resultados
   if (!usuariosMaestro || usuariosMaestro.length === 0) {
     return null;
-  }
+  }  
 
   // Procesar los resultados
   const user = usuariosMaestro[0].usuarioRegistrante;
@@ -217,7 +217,26 @@ export const findUsuario = async (filters: {
     productora: usuarioMaestro.productora,
   }));
 
-  return { user, maestros };
+  // Buscar vistas asociadas
+  const vistas = await UsuarioVistaMaestro.findAll({
+    where: { usuario_id: filters.userId },
+    include: [
+      {
+        model: UsuarioVista,
+        as: "vista",
+        attributes: ["id_vista", "nombre_vista"],
+      },
+    ],
+  });
+
+  // Formatear vistas
+  const vistasFormatted = vistas.map((vista) => ({
+    id_vista: vista.vista?.id_vista,
+    nombre_vista: vista.vista?.nombre_vista,
+    is_habilitado: vista.is_habilitado,
+  }));
+
+  return { user, maestros, vistas: vistasFormatted };
 };
 
 export const findRolByNombre = async (nombre_rol: string) => {

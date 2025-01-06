@@ -491,7 +491,7 @@ router.post(
 router.post(
   '/aplicaciones/enviar',
   authenticate,
-  authorizeRoles(['productor_principal']),
+  authorizeRoles(['usuario']),
   celebrate({ [Segments.BODY]: sendApplicationSchema }),
   sendApplication
 );

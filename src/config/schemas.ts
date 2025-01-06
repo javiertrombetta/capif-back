@@ -562,5 +562,44 @@ export const userSchemas = {
     },
     required: ['id_usuario'],
   },
+  UpdateUserViews: {
+    title: "Usuarios - Actualizar Vistas",
+    type: "object",
+    properties: {
+      vistas: {
+        type: "array",
+        description: "Lista de IDs de las vistas a asignar al usuario.",
+        items: {
+          type: "string",
+          format: "uuid",
+          description: "ID de la vista.",
+          example: "123e4567-e89b-12d3-a456-426614174000",
+        },
+      },
+    },
+    required: ["vistas"],
+  },
+  ToggleUserViewStatus: {
+    title: "Usuarios - Cambiar Estado de Vistas",
+    type: "array",
+    description: "Lista de vistas con su estado de habilitación.",
+    items: {
+      type: "object",
+      properties: {
+        id_vista: {
+          type: "string",
+          format: "uuid",
+          description: "ID de la vista.",
+          example: "123e4567-e89b-12d3-a456-426614174000",
+        },
+        is_habilitado: {
+          type: "boolean",
+          description: "Estado de habilitación de la vista.",
+          example: true,
+        },
+      },
+      required: ["id_vista", "is_habilitado"],
+    },
+  },
 };
 

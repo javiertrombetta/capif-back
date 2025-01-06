@@ -563,43 +563,61 @@ export const userSchemas = {
     required: ['id_usuario'],
   },
   UpdateUserViews: {
-    title: "Usuarios - Actualizar Vistas",
-    type: "object",
+    title: 'Usuarios - Actualizar Vistas',
+    type: 'object',
     properties: {
+      id_usuario: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario cuyas vistas serán actualizadas.',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
       vistas: {
-        type: "array",
-        description: "Lista de IDs de las vistas a asignar al usuario.",
+        type: 'array',
+        description: 'Lista de IDs de vistas que se asignarán al usuario.',
         items: {
-          type: "string",
-          format: "uuid",
-          description: "ID de la vista.",
-          example: "123e4567-e89b-12d3-a456-426614174000",
+          type: 'string',
+          format: 'uuid',
+          description: 'ID de la vista.',
+          example: '123e4567-e89b-12d3-a456-426614174001',
         },
       },
     },
-    required: ["vistas"],
+    required: ['id_usuario', 'vistas'],
   },
   ToggleUserViewStatus: {
-    title: "Usuarios - Cambiar Estado de Vistas",
-    type: "array",
-    description: "Lista de vistas con su estado de habilitación.",
-    items: {
-      type: "object",
-      properties: {
-        id_vista: {
-          type: "string",
-          format: "uuid",
-          description: "ID de la vista.",
-          example: "123e4567-e89b-12d3-a456-426614174000",
-        },
-        is_habilitado: {
-          type: "boolean",
-          description: "Estado de habilitación de la vista.",
-          example: true,
+    title: 'Usuarios - Cambiar Estado de Vistas',
+    type: 'object',
+    properties: {
+      id_usuario: {
+        type: 'string',
+        format: 'uuid',
+        description: 'ID del usuario cuyas vistas serán modificadas.',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+      },
+      vistas: {
+        type: 'array',
+        description: 'Lista de vistas con su estado de habilitación.',
+        items: {
+          type: 'object',
+          properties: {
+            id_vista: {
+              type: 'string',
+              format: 'uuid',
+              description: 'ID de la vista.',
+              example: '123e4567-e89b-12d3-a456-426614174001',
+            },
+            is_habilitado: {
+              type: 'boolean',
+              description: 'Estado de habilitación de la vista.',
+              example: true,
+            },
+          },
+          required: ['id_vista', 'is_habilitado'],
         },
       },
-      required: ["id_vista", "is_habilitado"],
     },
+    required: ['id_usuario', 'vistas'],
   },
 };
 

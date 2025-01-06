@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.51 - 06-01-2025
+## 🚀 Features
+
+- feat: new routes files
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.48
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.48 - 05-01-2025
 ## 🚀 Features
 

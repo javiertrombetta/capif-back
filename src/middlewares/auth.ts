@@ -17,7 +17,7 @@ export const verifyToken = (token: string | undefined, secret: string): JwtPaylo
 };
 
 // Middleware para autenticar el usuario
-export const authenticate = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticate = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const token = req.cookies['auth_token'] || req.header('Authorization')?.split(' ')[1];
 
@@ -35,7 +35,7 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
     // Asignar el usuario al request
     req.userId = decodedToken.id;
 
-    // Leer información de la cookie `active_sesion`
+    // Verificar si existe la cookie `active_sesion`
     const activeSesion = req.cookies['active_sesion'];
     if (activeSesion) {
       try {
@@ -48,7 +48,21 @@ export const authenticate = (req: AuthenticatedRequest, res: Response, next: Nex
         return res.status(400).json({ error: 'Cookie de sesión activa inválida.' });
       }
     } else {
+      // Si no existe la cookie `active_sesion`, asignar el rol "usuario" al usuario
       logger.info('Usuario autenticado sin maestro activo seleccionado');
+
+      const rolUsuario = await UsuarioRol.findOne({
+        where: { nombre_rol: 'usuario' }, // Busca el rol base "usuario"
+        attributes: ['id_rol'],
+      });
+
+      if (!rolUsuario) {
+        logger.error('Error: No se encontró el rol "usuario" en la base de datos.');
+        return res.status(500).json({ error: 'Error interno del servidor: Rol base no encontrado.' });
+      }
+
+      // Asignar el ID del rol "usuario" al request
+      req.roleId = rolUsuario.id_rol;
     }
 
     next();

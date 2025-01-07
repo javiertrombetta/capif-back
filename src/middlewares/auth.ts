@@ -52,7 +52,7 @@ export const authenticate = async (req: AuthenticatedRequest, res: Response, nex
       logger.info('Usuario autenticado sin maestro activo seleccionado');
 
       const rolUsuario = await UsuarioRol.findOne({
-        where: { nombre_rol: 'usuario' }, // Busca el rol base "usuario"
+        where: { nombre_rol: 'usuario' },
         attributes: ['id_rol'],
       });
 
@@ -60,8 +60,7 @@ export const authenticate = async (req: AuthenticatedRequest, res: Response, nex
         logger.error('Error: No se encontró el rol "usuario" en la base de datos.');
         return res.status(500).json({ error: 'Error interno del servidor: Rol base no encontrado.' });
       }
-
-      // Asignar el ID del rol "usuario" al request
+      
       req.roleId = rolUsuario.id_rol;
     }
 

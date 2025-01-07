@@ -28,8 +28,8 @@ const ENTIDADES_PERMITIDAS = [
   "Usuario",
   "UsuarioMaestro",
   "UsuarioRol",
-  "UsuarioVista",
-  "UsuarioVistaMaestro",
+  "UsuarioAcceso",
+  "UsuarioAccesoMaestro",
 ];
 
 class AuditoriaCambio extends Model {

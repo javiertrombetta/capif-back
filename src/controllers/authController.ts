@@ -55,28 +55,25 @@ export const registerPrimary = async (
     // Cifra la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Busca el rol "productor_principal"
+    const userRol = await findRolByNombre("productor_principal");
+    if (!userRol) {
+      throw new Err.NotFoundError("No se encontró el rol 'productor_principal'.");
+    }
+
     // Crea un nuevo usuario con el estado 'NUEVO'
     const newUsuario = await createUsuario({
       email,
       clave: hashedPassword,
       tipo_registro: "NUEVO",
+      rol_id: userRol.id_rol,
     });
 
     logger.info(
       `${req.method} ${req.originalUrl} - Usuario registrado exitosamente: ${email}`
     );
 
-    const userRol = await findRolByNombre("productor_principal");
-
-    // Crear el registro correspondiente en UsuarioMaestro usando el servicio
-    const newUsuarioMaestro = await createUsuarioMaestro({
-      usuario_registrante_id: newUsuario.id_usuario,
-      rol_id: userRol.id_rol,
-      productora_id: null,
-      fecha_ultimo_cambio_rol: new Date(),
-    });
-
-    // Crear relaciones en UsuarioVistaMaestro
+    // Crear relaciones en UsuarioVistasMaestro
     await assignVistasToUser(newUsuario.id_usuario, userRol.id_rol);
 
     logger.info(
@@ -142,15 +139,7 @@ export const registerPrimary = async (
       modelo: "Usuario",
       tipo_auditoria: "ALTA",
       detalle: `Registro en Usuario (${newUsuario.id_usuario})`,
-    });
-
-    await AuditoriaCambio.create({
-      usuario_originario_id: null,
-      usuario_destino_id: newUsuario.id_usuario,
-      modelo: "UsuarioMaestro",
-      tipo_auditoria: "ALTA",
-      detalle: `Registro de usuario principal en UsuarioMaestro (${newUsuarioMaestro.id_usuario_maestro})`,
-    });
+    });   
 
     logger.info(
       `${req.method} ${req.originalUrl} - Auditoría registrada para el usuario: ${email}`
@@ -201,7 +190,7 @@ export const registerSecondary = async (
     });
 
     // Error si se comprueba que no es igual lo buscado a lo pasado por el body
-    if (!primaryUserData) {
+    if (!primaryUserData || !primaryUserData.user.rol) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Usuario principal no encontrado o sin acceso válido.`
       );
@@ -229,7 +218,7 @@ export const registerSecondary = async (
     }
 
     const primaryUser = primaryUserData.user;
-    const primaryUserRoleName = primaryUserData.maestros[0].rol.nombre_rol;
+    const primaryUserRoleName = primaryUserData.user.rol.nombre_rol;
     const primaryProductoraId =
       primaryUserData.maestros[0].productora.id_productora;
 

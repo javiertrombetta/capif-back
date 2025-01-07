@@ -9,8 +9,6 @@ import {
   UsuarioVistaMaestro,
 } from "../models";
 
-import { v4 as uuidv4 } from "uuid";
-
 export const createUsuario = async (userData: any) => {
   return await Usuario.create(userData);
 };
@@ -29,72 +27,72 @@ export const updateUsuarioMaestro = async (
 };
 
 export const updateUsuarioById = async (userId: string, updateData: any) => {
-  const usuarioMaestro = await UsuarioMaestro.findOne({
-    where: { usuario_registrante_id: userId },
+  // Buscar el usuario por su ID
+  const usuario = await Usuario.findOne({
+    where: { id_usuario: userId },
     include: [
       {
-        model: Usuario,
-        as: "usuarioRegistrante",
-        include: [
-          {
-            model: UsuarioRol,
-            as: "Rol",
-          },
-        ],
+        model: UsuarioRol,
+        as: 'rol', // Asociación definida en el modelo Usuario
       },
     ],
   });
 
-  if (
-    !usuarioMaestro ||
-    !usuarioMaestro.usuarioRegistrante ||
-    !usuarioMaestro.rol
-  ) {
+  if (!usuario || !usuario.rol) {
     throw new Error("Usuario no encontrado o sin rol asignado.");
   }
 
-  const user = usuarioMaestro.usuarioRegistrante;
-
+  // Actualizar datos del usuario si se proporcionan
   if (updateData) {
-    await user.update({
-      nombre: updateData.nombre ?? user.nombre,
-      apellido: updateData.apellido ?? user.apellido,
-      telefono: updateData.telefono ?? user.telefono,
-      email: updateData.email ?? user.email,
+    await usuario.update({
+      nombre: updateData.nombre ?? usuario.nombre,
+      apellido: updateData.apellido ?? usuario.apellido,
+      telefono: updateData.telefono ?? usuario.telefono,
+      email: updateData.email ?? usuario.email,
     });
   }
 
-  if (
-    updateData.newRole &&
-    updateData.newRole !== usuarioMaestro.rol.nombre_rol
-  ) {
-    usuarioMaestro.rol_id = updateData.newRole;
-    usuarioMaestro.fecha_ultimo_cambio_rol = new Date();
-    await usuarioMaestro.save();
+  // Cambiar el rol si se solicita un cambio
+  if (updateData.newRole && updateData.newRole !== usuario.rol.nombre_rol) {
+    const nuevoRol = await UsuarioRol.findOne({
+      where: { nombre_rol: updateData.newRole },
+    });
+
+    if (!nuevoRol) {
+      throw new Error("El nuevo rol especificado no existe.");
+    }
+
+    usuario.rol_id = nuevoRol.id_rol;
+    usuario.fecha_ultimo_cambio_rol = new Date();
+    await usuario.save();
   }
 
-  return user;
+  return usuario;
 };
 
 export const deleteUsuarioById = async (userId: string) => {
-  const usuarioMaestro = await UsuarioMaestro.findOne({
-    where: { usuario_registrante_id: userId },
+  // Buscar al usuario por su ID
+  const usuario = await Usuario.findOne({
+    where: { id_usuario: userId },
     include: [
       {
-        model: Usuario,
-        as: "usuarioRegistrante",
+        model: UsuarioMaestro,
+        as: 'usuarioRegistrante',
       },
     ],
   });
 
-  if (!usuarioMaestro || !usuarioMaestro.usuarioRegistrante) {
+  if (!usuario) {
     throw new Error("Usuario no encontrado");
   }
 
-  await usuarioMaestro.destroy();
-  await usuarioMaestro.usuarioRegistrante.destroy();
+  await UsuarioMaestro.destroy({
+    where: { usuario_registrante_id: userId },
+  });
 
-  return { message: "Usuario eliminado correctamente" };
+  await usuario.destroy();
+
+  return { message: "Usuario y relaciones eliminados correctamente" };
 };
 
 // BUSQUEDA DE UN USUARIO SEGUN UNO O VARIOS FILTROS
@@ -111,109 +109,87 @@ export const findUsuario = async (filters: {
   limit?: number;
   offset?: number;
 }) => {
-  const whereCondition: any = {};
-  const includeCondition: any[] = [];
-
-  // Filtro principal por UsuarioMaestro
-  if (filters.userId) {
-    whereCondition.usuario_registrante_id = filters.userId;
-  }
+  const whereUsuario: any = {};
+  const includeUsuario: any[] = [];
+  const includeMaestro: any[] = [];
 
   // Filtro por Usuario
-  if (
-    filters.email ||
-    filters.tipo_registro ||
-    filters.nombre ||
-    filters.apellido ||
-    filters.userId
-  ) {
-    const usuarioWhere: any = {};
-    if (filters.userId) {
-      usuarioWhere.id_usuario = filters.userId;
-    }
-    if (filters.email) {
-      usuarioWhere.email = filters.email;
-    }
-    if (filters.tipo_registro) {
-      usuarioWhere.tipo_registro = filters.tipo_registro;
-    }
-    if (filters.nombre) {
-      usuarioWhere.nombre = { [Op.like]: `%${filters.nombre}%` };
-    }
-    if (filters.apellido) {
-      usuarioWhere.apellido = { [Op.like]: `%${filters.apellido}%` };
-    }
-
-    includeCondition.push({
-      model: Usuario,
-      as: "usuarioRegistrante",
-      attributes: [
-        "id_usuario",
-        "email",
-        "clave",
-        "nombre",
-        "apellido",
-        "tipo_registro",
-        "email_verification_token",
-      ],
-      where: usuarioWhere,
-    });
+  if (filters.userId) {
+    whereUsuario.id_usuario = filters.userId;
+  }
+  if (filters.email) {
+    whereUsuario.email = filters.email;
+  }
+  if (filters.tipo_registro) {
+    whereUsuario.tipo_registro = filters.tipo_registro;
+  }
+  if (filters.nombre) {
+    whereUsuario.nombre = { [Op.like]: `%${filters.nombre}%` };
+  }
+  if (filters.apellido) {
+    whereUsuario.apellido = { [Op.like]: `%${filters.apellido}%` };
   }
 
   // Filtro por rol
   if (filters.rolId || filters.nombre_rol) {
-    const rolWhere: any = {};
+    const whereRol: any = {};
     if (filters.rolId) {
-      rolWhere.id_rol = filters.rolId;
+      whereRol.id_rol = filters.rolId;
     }
     if (filters.nombre_rol) {
-      rolWhere.nombre_rol = filters.nombre_rol;
+      whereRol.nombre_rol = filters.nombre_rol;
     }
 
-    includeCondition.push({
+    includeUsuario.push({
       model: UsuarioRol,
       as: "rol",
       attributes: ["id_rol", "nombre_rol"],
-      where: rolWhere,
+      where: whereRol,
     });
   }
 
   // Filtro por Productora
   if (filters.productoraId || filters.productoraNombre) {
-    const productoraWhere: any = {};
+    const whereProductora: any = {};
     if (filters.productoraId) {
-      productoraWhere.id_productora = filters.productoraId;
+      whereProductora.id_productora = filters.productoraId;
     }
     if (filters.productoraNombre) {
-      productoraWhere.nombre_productora = filters.productoraNombre;
+      whereProductora.nombre_productora = filters.productoraNombre;
     }
 
-    includeCondition.push({
+    includeMaestro.push({
       model: Productora,
       as: "productora",
       attributes: ["id_productora", "nombre_productora"],
-      where: productoraWhere,
+      where: whereProductora,
     });
   }
 
-  // Consulta principal
-  const usuariosMaestro = await UsuarioMaestro.findAll({
-    where: whereCondition,
+  // Buscar Usuarios
+  const usuarios = await Usuario.findAll({
+    where: whereUsuario,
+    include: includeUsuario,
     limit: filters.limit || 50,
     offset: filters.offset || 0,
-    include: includeCondition,
   });
-  // Si no se encuentran resultados
-  if (!usuariosMaestro || usuariosMaestro.length === 0) {
+
+  if (!usuarios || usuarios.length === 0) {
     return null;
-  }  
+  }
 
-  // Procesar los resultados
-  const user = usuariosMaestro[0].usuarioRegistrante;
+  // Determinar si hay un único usuario
+  const isSingleUser = usuarios.length === 1 ? 1 : 0;
 
+  // Buscar UsuariosMaestro relacionados
+  const usuariosMaestro = await UsuarioMaestro.findAll({
+    where: { usuario_registrante_id: { [Op.in]: usuarios.map((u) => u.id_usuario) } },
+    include: includeMaestro,
+  });
+
+  // Procesar resultados
   const maestros = usuariosMaestro.map((usuarioMaestro) => ({
     maestroId: usuarioMaestro.id_usuario_maestro,
-    rol: usuarioMaestro.rol || { id_rol: uuidv4(), nombre_rol: "usuario" },
     productora: usuarioMaestro.productora,
   }));
 
@@ -236,7 +212,7 @@ export const findUsuario = async (filters: {
     is_habilitado: vista.is_habilitado,
   }));
 
-  return { user, maestros, vistas: vistasFormatted };
+  return { user: usuarios[0], maestros, vistas: vistasFormatted, isSingleUser };
 };
 
 export const findRolByNombre = async (nombre_rol: string) => {
@@ -259,7 +235,7 @@ export const findVistasforUsuario = async (usuarioId: string): Promise<string[]>
 
   return vistas.map((vista) => {
     if (!vista.vista) {
-      throw new Error("Vista no definida en UsuarioVistaMaestro.");
+      throw new Error("Vista no definida en UsuarioAccesoMaestro.");
     }
     return vista.vista.nombre_vista;
   });

@@ -9,7 +9,13 @@ import * as MESSAGES from "../services/messages";
 import * as Err from "../services/customErrors";
 import { sendEmail } from "../services/emailService";
 
-import { findUsuario, findRolByNombre, assignVistasToUser, updateUserViewsService, toggleUserViewStatusService } from "../services/userService";
+import {
+  findUsuario,
+  findRolByNombre,
+  assignVistasToUser,
+  updateUserViewsService,
+  toggleUserViewStatusService,
+} from "../services/userService";
 
 import {
   Usuario,
@@ -282,7 +288,7 @@ export const changeUserRole = async (
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
-    const authenticatedRole = authenticatedUserData.maestros[0].rol.nombre_rol;
+    const authenticatedRole = authenticatedUserData.user.rol?.nombre_rol;
 
     if (
       authenticatedRole !== "admin_principal" &&
@@ -307,10 +313,10 @@ export const changeUserRole = async (
       );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NO_MAESTRO_RECORD);
     }
-
-    usuarioMaestro.rol_id = rol.id_rol;
-    usuarioMaestro.fecha_ultimo_cambio_rol = new Date();
-    await usuarioMaestro.save();
+    user.rol_id = rol.id_rol;
+    // usuarioMaestro.rol_id = rol.id_rol;
+    // usuarioMaestro.fecha_ultimo_cambio_rol = new Date();
+    await user.save();
 
     logger.info(
       `${req.method} ${req.originalUrl} - Rol del usuario con ID ${userId} actualizado correctamente a ${newRole}.`
@@ -527,7 +533,7 @@ export const createUser = async (
     }
 
     // const authenticatedUser = authenticatedData.user;
-    const authenticatedRole = authenticatedData.maestros[0].rol.nombre_rol;
+    const authenticatedRole = authenticatedData.user.rol?.nombre_rol;
 
     // Verificar que el rol del usuario autenticado sea válido
     if (authenticatedRole !== "admin_principal") {
@@ -789,7 +795,7 @@ export const approveApplication = async (
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
-    const authenticatedRole = authenticatedUserData.maestros[0].rol.nombre_rol;
+    const authenticatedRole = authenticatedUserData.user.rol?.nombre_rol;
 
     if (!userAuthId || !authenticatedUserData || !authenticatedUserData.user) {
       logger.warn(
@@ -915,7 +921,7 @@ export const rejectApplication = async (
       throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
     }
 
-    const authenticatedRole = authenticatedUserData.maestros[0].rol.nombre_rol;
+    const authenticatedRole = authenticatedUserData.user.rol?.nombre_rol;
 
     if (!userAuthId || !authenticatedUserData || !authenticatedUserData.user) {
       logger.warn(
@@ -1129,7 +1135,7 @@ export const sendApplication = async (
       });
     });
 
-    await Promise.all(documentosCargados); 
+    await Promise.all(documentosCargados);
 
     // Enviar correo de notificación al usuario
     // await sendEmail({
@@ -1396,7 +1402,7 @@ export const deleteUser = async (
       throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
     }
 
-    const authenticatedRole = authenticatedUserData.maestros[0].rol.nombre_rol;
+    const authenticatedRole = authenticatedUserData.user.rol?.nombre_rol;
 
     if (
       !authenticatedRole ||

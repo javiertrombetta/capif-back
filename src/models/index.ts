@@ -491,12 +491,23 @@ Productora.hasMany(ProductoraPremio, {
 
 
 
-// Usuario (NA)
+// Usuario
+
+Usuario.belongsTo(UsuarioRol, {
+  foreignKey: 'rol_id',
+  as: 'rol',
+  onDelete: 'RESTRICT',
+});
+
+UsuarioRol.hasMany(Usuario, {
+  foreignKey: 'rol_id',
+  as: 'roles',
+  onDelete: 'SET NULL',
+});
 
 
 
 // UsuarioMaestro
-
 
 UsuarioMaestro.belongsTo(Usuario, {
   foreignKey: 'usuario_registrante_id',
@@ -508,18 +519,6 @@ Usuario.hasMany(UsuarioMaestro, {
   foreignKey: 'usuario_registrante_id',
   as: 'usuariosRegistrantes',
   onDelete: 'CASCADE',
-});
-
-UsuarioMaestro.belongsTo(UsuarioRol, {
-  foreignKey: 'rol_id',
-  as: 'rol',
-  onDelete: 'RESTRICT',
-});
-
-UsuarioRol.hasMany(UsuarioMaestro, {
-  foreignKey: 'rol_id',
-  as: 'roles',
-  onDelete: 'SET NULL',
 });
 
 UsuarioMaestro.belongsTo(Productora, {

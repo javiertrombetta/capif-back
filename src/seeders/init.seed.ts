@@ -48,11 +48,16 @@ type VistaData = {
 };
 
 const vistasData = async (): Promise<VistaData[]> => {
-  const roles = await UsuarioRol.findAll({ attributes: ["id_rol", "nombre_rol"] });
+  const roles = await UsuarioRol.findAll({
+    attributes: ["id_rol", "nombre_rol"],
+  });
 
   const vistas: VistaData[] = [];
 
-  const agregarVistasPorRol = (nombreRol: string, vistasParaRol: string[]): void => {
+  const agregarVistasPorRol = (
+    nombreRol: string,
+    vistasParaRol: string[]
+  ): void => {
     const rolId = roles.find((rol) => rol.nombre_rol === nombreRol)?.id_rol;
     if (!rolId) return;
 

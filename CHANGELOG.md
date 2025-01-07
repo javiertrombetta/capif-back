@@ -1,4 +1,20 @@
 # Changelog
+## v0.1.68 - 07-01-2025
+## 🐛 Fixes
+
+- fix: controllers
+- fix: add changes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.63
+- chore(docs): update CHANGELOG.MD
+
+## 🔄 Uncategorized Commits
+
+- Merge pull request #3 from javiertrombetta/fix_usuarios_and_auth_controllers
+
+
 ## v0.1.63 - 07-01-2025
 ## 🐛 Fixes
 

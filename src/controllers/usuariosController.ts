@@ -605,7 +605,7 @@ export const createUser = async (
       `${req.method} ${req.originalUrl} - Registro en UsuarioMaestro creado exitosamente para usuario: ${newUser.id_usuario}`
     );
 
-    // Crear relaciones en UsuarioVistaMaestro
+    // Crear relaciones en UsuarioAccesoMaestro
     await assignVistasToUser(newUser.id_usuario, rolObj.id_rol);
 
     logger.info(

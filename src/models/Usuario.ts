@@ -1,5 +1,6 @@
-import { Model, DataTypes } from "sequelize";
+import { Model, DataTypes, Association } from "sequelize";
 import sequelize from "../config/database/sequelize";
+import UsuarioRol from "./UsuarioRol";
 
 const OPERACIONES_PERMITIDAS = [
   "DEPURAR",
@@ -13,6 +14,7 @@ const OPERACIONES_PERMITIDAS = [
 
 class Usuario extends Model {
   public id_usuario!: string;
+  public rol_id!: string;
   public tipo_registro!: (typeof OPERACIONES_PERMITIDAS)[number];
   public nombre!: string | null;
   public apellido!: string | null;
@@ -27,9 +29,16 @@ class Usuario extends Model {
   public reset_password_token!: string | null;
   public reset_password_token_expires!: Date | null;
   public fecha_ultimo_inicio_sesion!: Date | null;
+  public fecha_ultimo_cambio_rol!: Date | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
+
+  public rol?: UsuarioRol;
+  
+  public static associations: {
+    rol: Association<Usuario, UsuarioRol>;
+  };
 }
 
 Usuario.init(
@@ -43,6 +52,20 @@ Usuario.init(
         isUUID: {
           args: 4,
           msg: "El ID de usuario debe ser un UUID válido.",
+        },
+      },
+    },
+    rol_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: UsuarioRol,
+        key: 'id_rol',
+      },
+      validate: {
+        isUUID: {
+          args: 4,
+          msg: 'El ID del rol debe ser un UUID válido.',
         },
       },
     },
@@ -174,6 +197,16 @@ Usuario.init(
         },
       },
     },
+    fecha_ultimo_cambio_rol: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de último cambio de rol debe ser una fecha válida.',
+        },
+      },
+    },
   },
   {
     sequelize,
@@ -202,13 +235,33 @@ Usuario.init(
         fields: ["is_bloqueado"],
         name: "idx_usuario_bloqueado",
       },
+      {
+        fields: ['rol_id'],
+        name: 'idx_usuario_rol_id',
+      },
     ],
   }
 );
 
+// Usuario.beforeCreate(async (usuario) => {
+//   if (!usuario.rol_id) {
+//     const usuarioRol = await UsuarioRol.findOne({ where: { nombre_rol: 'usuario' } });
+//     if (!usuarioRol) {
+//       throw new Error('No se encontró el rol "usuario" en la base de datos.');
+//     }
+//     usuario.rol_id = usuarioRol.id_rol;
+//   }
+// });
+
 Usuario.beforeUpdate(async (usuario) => {
   if (usuario.changed("tipo_registro")) {
     usuario.fecha_ultimo_cambio_registro = new Date();
+  }
+});
+
+Usuario.beforeUpdate(async (usuario) => {
+  if (usuario.changed('rol_id')) {
+    usuario.fecha_ultimo_cambio_rol = new Date();
   }
 });
 

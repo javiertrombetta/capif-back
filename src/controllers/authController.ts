@@ -25,10 +25,7 @@ import {
 } from "../services/validationsService";
 import * as Err from "../services/customErrors";
 
-import {
-  AuditoriaCambio,
-  AuditoriaSesion,
-} from "../models";
+import { AuditoriaCambio, AuditoriaSesion } from "../models";
 
 // REGISTER PRODUCTOR 'PRIMARIO'
 export const registerPrimary = async (
@@ -58,7 +55,9 @@ export const registerPrimary = async (
     // Busca el rol "productor_principal"
     const userRol = await findRolByNombre("productor_principal");
     if (!userRol) {
-      throw new Err.NotFoundError("No se encontró el rol 'productor_principal'.");
+      throw new Err.NotFoundError(
+        "No se encontró el rol 'productor_principal'."
+      );
     }
 
     // Crea un nuevo usuario con el estado 'NUEVO'
@@ -139,7 +138,7 @@ export const registerPrimary = async (
       modelo: "Usuario",
       tipo_auditoria: "ALTA",
       detalle: `Registro en Usuario (${newUsuario.id_usuario})`,
-    });   
+    });
 
     logger.info(
       `${req.method} ${req.originalUrl} - Auditoría registrada para el usuario: ${email}`
@@ -265,7 +264,7 @@ export const registerSecondary = async (
 
         await updateUsuarioMaestro(existingUserData.id_usuario, {
           productora_id: primaryProductoraId,
-          rol_id: secondaryUserRole,
+          // rol_id: secondaryUserRole,
         });
 
         // Crear relaciones de vistas
@@ -327,9 +326,8 @@ export const registerSecondary = async (
     // Crear el registro en UsuarioMaestro para el usuario secundario con el rol asignado
     const newUsuarioMaestro = await createUsuarioMaestro({
       usuario_registrante_id: newUsuario.id_usuario,
-      rol_id: secondaryUserRole,
       productora_id: primaryProductoraId,
-      fecha_ultimo_cambio_rol: new Date(),
+      // fecha_ultimo_cambio_rol: new Date(),
     });
 
     // Configuración del token de verificación de email
@@ -441,7 +439,6 @@ export const login = async (
       );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
-
     const user = userData.user;
     const maestros = userData.maestros;
 
@@ -486,14 +483,13 @@ export const login = async (
           `${req.method} ${req.originalUrl} - El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos`
         );
 
-        // Registro en auditoría de bloqueo de usuario        
+        // Registro en auditoría de bloqueo de usuario
         await AuditoriaCambio.create({
           usuario_originario_id: user.id_usuario,
           modelo: "Usuario",
           tipo_auditoria: "ERROR",
           detalle: `Bloqueo después de ${MAX_LOGIN_ATTEMPTS} intentos fallidos`,
         });
-        
       }
 
       // Guardar cambios en intentos fallidos y estado de habilitación del usuario
@@ -630,8 +626,7 @@ export const getRole = async (
       return res.status(404).json({ message: MESSAGES.ERROR.USER.NOT_FOUND });
     }
 
-    const maestro = userData.maestros[0];
-    const roleName = maestro.rol.nombre_rol;
+    const roleName = userData.user.rol?.nombre_rol;
 
     if (!roleName) {
       logger.warn(
@@ -743,7 +738,7 @@ export const selectProductora = async (
       JSON.stringify({
         maestroId: selectedMaestro.maestroId,
         productoraId: selectedMaestro.productora.id_productora,
-        rolId: selectedMaestro.rol.id_rol,
+        rolId: userData.user.rol?.id_rol,
       }),
       {
         httpOnly: true,
@@ -1213,7 +1208,11 @@ export const getUser = async (
     );
 
     // Devuelve el usuario y sus maestros asociados
-    res.status(200).json({ user: result.user, maestros: result.maestros, vistas: result.vistas });
+    res.status(200).json({
+      user: result.user,
+      maestros: result.maestros,
+      vistas: result.vistas,
+    });
   } catch (err) {
     logger.error(
       `${req.method} ${
@@ -1267,7 +1266,7 @@ export const changeUserPassword = async (
     }
 
     const authenticatedUser = authenticatedUserData.user;
-    const authenticatedRole = authenticatedUserData.maestros[0].rol.nombre_rol;
+    const authenticatedRole = authenticatedUserData.user.rol_id;
 
     if (!authenticatedUser || !authenticatedRole) {
       logger.warn(

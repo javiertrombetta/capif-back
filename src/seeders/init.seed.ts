@@ -2,7 +2,7 @@ import {
   UsuarioRol,
   ProductoraDocumentoTipo,
   FonogramaTerritorio,
-  UsuarioAcceso,
+  UsuarioVista,
 } from "../models";
 
 const rolesData = [
@@ -160,7 +160,7 @@ const initSeed = async () => {
     });
 
     const vistas = await vistasData();
-    await UsuarioAcceso.bulkCreate(vistas, { ignoreDuplicates: true });
+    await UsuarioVista.bulkCreate(vistas, { ignoreDuplicates: true });
 
     console.log("Seed completado con éxito.");
   } catch (error) {

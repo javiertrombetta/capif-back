@@ -439,7 +439,6 @@ export const login = async (
       );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
-
     const user = userData.user;
     const maestros = userData.maestros;
 
@@ -1209,13 +1208,11 @@ export const getUser = async (
     );
 
     // Devuelve el usuario y sus maestros asociados
-    res
-      .status(200)
-      .json({
-        user: result.user,
-        maestros: result.maestros,
-        vistas: result.vistas,
-      });
+    res.status(200).json({
+      user: result.user,
+      maestros: result.maestros,
+      vistas: result.vistas,
+    });
   } catch (err) {
     logger.error(
       `${req.method} ${

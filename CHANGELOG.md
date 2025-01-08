@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.75 - 08-01-2025
+## 🐛 Fixes
+
+- fix: schemas of auth and users
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.72
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.72 - 08-01-2025
 ## 🐛 Fixes
 

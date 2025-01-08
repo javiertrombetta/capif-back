@@ -15,6 +15,8 @@ import {
   assignVistasToUser,
   updateUserViewsService,
   toggleUserViewStatusService,
+  deleteUsuarioMaestrosByUserId,
+  updateUsuarioById,
 } from "../services/userService";
 
 import {
@@ -112,10 +114,10 @@ export const blockOrUnblockUser = async (
   next: NextFunction
 ) => {
   try {
-    const { userId, isBlocked } = req.body;
+    const { id_usuario, isBlocked } = req.body;
 
     // Verificar que los parámetros necesarios estén en el body
-    if (!userId || !isBlocked) {
+    if (!id_usuario || !isBlocked) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Falta uno o más parámetros obligatorios (id_usuario).`
       );
@@ -140,10 +142,10 @@ export const blockOrUnblockUser = async (
     }
 
     // Realiza la consulta para obtener el usuario
-    const userData = await findUsuario({ userId });
+    const userData = await findUsuario({ userId: id_usuario });
     if (!userData) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${userId}`
+        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
@@ -152,7 +154,7 @@ export const blockOrUnblockUser = async (
 
     if (!user) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${userId}`
+        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
       );
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
@@ -162,7 +164,7 @@ export const blockOrUnblockUser = async (
       logger.warn(
         `${req.method} ${req.originalUrl} - No se puede ${
           isBlocked ? "bloquear" : "desbloquear"
-        } al usuario con ID ${userId} porque está DESHABILITADO.`
+        } al usuario con ID ${id_usuario} porque está DESHABILITADO.`
       );
       return next(
         new Err.ForbiddenError(MESSAGES.ERROR.USER.CANNOT_MODIFY_DISABLED_USER)
@@ -179,7 +181,7 @@ export const blockOrUnblockUser = async (
       : MESSAGES.SUCCESS.AUTH.USER_UNBLOCKED;
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Usuario con ID ${userId} ${
+      `${req.method} ${req.originalUrl} - Usuario con ID ${id_usuario} ${
         isBlocked ? "bloqueado" : "desbloqueado"
       } correctamente.`
     );
@@ -213,128 +215,66 @@ export const changeUserRole = async (
   next: NextFunction
 ) => {
   try {
-    const { userId, productoraId, newRole } = req.body;
+    const { id_usuario, newRole } = req.body;
 
-    // Verificar que los parámetros necesarios estén en el body
-    if (!userId || !productoraId || !newRole) {
+    // Validar parámetros
+    if (!id_usuario || !newRole) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Falta uno o más parámetros obligatorios (userId, productoraId, newRole).`
+        `${req.method} ${req.originalUrl} - Faltan parámetros obligatorios (userId, newRole).`
       );
-      throw new Err.BadRequestError(
-        MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS
-      );
+      return res
+        .status(400)
+        .json({ message: MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS });
     }
 
-    // Verificar el usuario activo desde AuthenticatedRequest
-    const userAuthId = req.userId as string;
-
-    if (!userAuthId || typeof userAuthId !== "string") {
+    // Verificar que el usuario existe
+    const userData = await findUsuario({ userId: id_usuario });
+    if (!userData || !userData.user) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario activo no encontrado o ID no válido en la solicitud.`
+        `${req.method} ${req.originalUrl} - Usuario no encontrado con ID: ${id_usuario}`
       );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+      return res.status(404).json({ message: MESSAGES.ERROR.USER.NOT_FOUND });
     }
 
-    // Buscar el usuario y productora proporcionados
-    const userData = await findUsuario({ userId, productoraId });
-
-    // Error si se comprueba que no es igual lo buscado
-    if (!userData) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    const user = userData.user;
-
-    if (!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${userId}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    if (!userData || userData.maestros.length === 0) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró el registro de UsuarioMaestro para userId: ${userId} y productoraId: ${productoraId}.`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NO_MAESTRO_RECORD);
-    }
-
-    if (userData.maestros.length > 1) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Más de un registro de UsuarioMaestro encontrado para userId: ${userId} y productoraId: ${productoraId}.`
-      );
-      throw new Err.BadRequestError(
-        MESSAGES.ERROR.USER.MULTIPLE_MAESTRO_RECORDS
-      );
-    }
-
-    const maestro = userData.maestros[0];
-
-    // Verificar que el nuevo rol existe
+    // Buscar el nuevo rol
     const rol = await findRolByNombre(newRole);
     if (!rol) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Rol inválido: ${newRole}.`
-      );
-      throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
-    }
-
-    // Verificar que el usuario autenticado tiene permisos para cambiar roles
-    const authenticatedUserData = await findUsuario({ userId: userAuthId });
-    if (!authenticatedUserData) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
-    const authenticatedRole = authenticatedUserData.user.rol?.nombre_rol;
-
-    if (
-      authenticatedRole !== "admin_principal" &&
-      authenticatedRole !== "admin_secundario"
-    ) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario activo con ID ${userAuthId} no autorizado para cambiar roles.`
+        `${req.method} ${req.originalUrl} - Rol no válido: ${newRole}.`
       );
       return res
-        .status(403)
-        .json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
+        .status(400)
+        .json({ message: MESSAGES.ERROR.VALIDATION.ROLE_INVALID });
     }
 
-    // Actualizar el rol en UsuarioMaestro
-    const usuarioMaestro = await UsuarioMaestro.findOne({
-      where: { id_usuario_maestro: maestro.maestroId },
+    // Eliminar relaciones de UsuarioMaestro asociadas al usuario
+    await deleteUsuarioMaestrosByUserId(id_usuario);
+
+    // Actualizar el rol del usuario
+    const updatedUser = await updateUsuarioById(id_usuario, {
+      newRole,
     });
 
-    if (!usuarioMaestro) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró registro en UsuarioMaestro para el maestro ID: ${maestro.maestroId}.`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NO_MAESTRO_RECORD);
-    }
-    user.rol_id = rol.id_rol;
-    // usuarioMaestro.rol_id = rol.id_rol;
-    // usuarioMaestro.fecha_ultimo_cambio_rol = new Date();
-    await user.save();
-
     logger.info(
-      `${req.method} ${req.originalUrl} - Rol del usuario con ID ${userId} actualizado correctamente a ${newRole}.`
+      `${req.method} ${req.originalUrl} - Rol del usuario con ID ${id_usuario} actualizado a ${newRole}.`
     );
 
     // Registrar en Auditoría
     await AuditoriaCambio.create({
-      usuario_originario_id: userAuthId,
-      usuario_destino_id: user.id_usuario,
+      usuario_originario_id: req.userId as string,
+      usuario_destino_id: id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
-      detalle: `Rol actualizado a ${newRole} para el usuario con ID ${userId}`,
+      detalle: `Rol cambiado a ${newRole} para el usuario con ID ${id_usuario}`,
     });
 
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED });
+    res.status(200).json({
+      message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED,
+      user: updatedUser,
+    });
   } catch (err) {
     logger.error(
-      `${req.method} ${req.originalUrl} - Error al cambiar el rol de usuario: ${
+      `${req.method} ${req.originalUrl} - Error al cambiar el rol del usuario: ${
         err instanceof Error ? err.message : "Error desconocido"
       }`
     );
@@ -344,29 +284,29 @@ export const changeUserRole = async (
 
 // OBTENER TODOS LOS USUARIOS SEGÚN CONDICIONES
 export const getUsers = async (
-  req: Request<{ id?: string }>,
+  req: Request<{ id_usuario?: string }>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { id_usuario } = req.params;
     const filters = req.query;
 
-    if (id) {
+    if (id_usuario) {
       logger.info(
-        `${req.method} ${req.originalUrl} - Solicitud recibida para obtener un usuario con ID: ${id}`
+        `${req.method} ${req.originalUrl} - Solicitud recibida para obtener un usuario con ID: ${id_usuario}`
       );
 
-      const user = await findUsuario({ userId: id });
+      const user = await findUsuario({ userId: id_usuario });
       if (!user) {
         logger.warn(
-          `${req.method} ${req.originalUrl} - Usuario no encontrado con ID: ${id}`
+          `${req.method} ${req.originalUrl} - Usuario no encontrado con ID: ${id_usuario}`
         );
         return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
       }
 
       logger.info(
-        `${req.method} ${req.originalUrl} - Usuario encontrado con éxito con ID: ${id}`
+        `${req.method} ${req.originalUrl} - Usuario encontrado con éxito con ID: ${id_usuario}`
       );
       res.status(200).json(user);
       return;
@@ -381,8 +321,10 @@ export const getUsers = async (
 
     // Agregar filtros dinámicos desde la query
     if (filters.email) findFilters.email = String(filters.email);
-    if (filters.nombresApellidos)
-      findFilters.nombresApellidos = String(filters.nombresApellidos);
+    if (filters.nombre)
+      findFilters.nombre = String(filters.nombre);
+    if (filters.apellido)
+      findFilters.nombre = String(filters.nombre);
     if (filters.tipo_registro)
       findFilters.tipo_registro = String(filters.tipo_registro);
     if (filters.rolId) findFilters.rolId = String(filters.rolId);
@@ -486,26 +428,19 @@ export const getRegistrosPendientes = async (
 };
 
 // CREAR UN USUARIO ADMIN
-export const createUser = async (
+export const createAdminUser = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { email, nombres_y_apellidos, telefono, rol } = req.body;
+    const { email, nombre, apellido, telefono, rol } = req.body;
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para crear un usuario`,
-      {
-        email,
-        nombres_y_apellidos,
-        telefono,
-        rol,
-      }
-    );
+      `${req.method} ${req.originalUrl} - Solicitud recibida para crear un usuario`);
 
     // Verificar que se proporcionen los datos requeridos
-    if (!email || !nombres_y_apellidos || !telefono || !rol) {
+    if (!email || !nombre || !apellido ||!rol) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Faltan parámetros obligatorios.`
       );
@@ -587,35 +522,26 @@ export const createUser = async (
 
     // Crear el usuario con tipo_registro "HABILITADO" y la fecha actual
     const newUser = await Usuario.create({
+      rol_id: rolObj.id_rol,
       email,
       clave: hashedPassword,
       tipo_registro: "HABILITADO",
-      nombres_y_apellidos,
+      nombre,
+      apellido,
       telefono,
-      fecha_ultimo_cambio_registro: new Date(),
+      fecha_ultimo_cambio_rol: new Date(),
+      fecha_ultimo_cambio_registro: new Date(),      
     });
 
     logger.info(
       `${req.method} ${req.originalUrl} - Usuario creado exitosamente: ${newUser.id_usuario}`
-    );
-
-    // Crear el registro en UsuarioMaestro
-    await UsuarioMaestro.create({
-      usuario_registrante_id: newUser.id_usuario,
-      rol_id: rolObj.id_rol,
-      productora_id: null,
-      fecha_ultimo_cambio_rol: new Date(),
-    });
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Registro en UsuarioMaestro creado exitosamente para usuario: ${newUser.id_usuario}`
-    );
+    );   
 
     // Crear relaciones en UsuarioAccesoMaestro
     await assignVistasToUser(newUser.id_usuario, rolObj.id_rol);
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Administrador Secundario: ${newUser.email}`
+      `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para ${rolObj.nombre_rol}: ${newUser.email}`
     );
 
     // Registrar en Auditoría
@@ -774,10 +700,10 @@ export const approveApplication = async (
       `${req.method} ${req.originalUrl} - Solicitud para autorizar usuario`
     );
 
-    const { usuario } = req.body;
+    const { id_usuario } = req.body;
 
     // Validar parámetros
-    if (!usuario) {
+    if (!id_usuario) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Faltan parámetros obligatorios.`
       );
@@ -818,10 +744,10 @@ export const approveApplication = async (
     }
 
     // Buscar al usuario mediante findUsuario
-    const userData = await findUsuario({ userId: usuario });
+    const userData = await findUsuario({ userId: id_usuario });
     if (!userData) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - UsuarioMaestro no encontrado: ${usuario}`
+        `${req.method} ${req.originalUrl} - UsuarioMaestro no encontrado: ${id_usuario}`
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }

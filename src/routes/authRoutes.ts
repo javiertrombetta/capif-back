@@ -1,8 +1,8 @@
 import express from "express";
 import { celebrate, Segments } from "celebrate";
 import {
-  registerPrimary,
-  registerSecondary,
+  registerPrimaryProductor,
+  registerSecondaryProductor,
   login,
   getRole,
   selectProductora,
@@ -60,7 +60,7 @@ const router = express.Router();
 router.post(
   "/registro/primario",
   celebrate({ [Segments.BODY]: registerPrimarySchema }),
-  registerPrimary
+  registerPrimaryProductor
 );
 
 // [POST] REGISTRO SECUNDARIO
@@ -88,7 +88,7 @@ router.post(
   authenticate,
   authorizeRoles(["admin_principal", "productor_principal"]),
   celebrate({ [Segments.BODY]: registerSecondarySchema }),
-  registerSecondary
+  registerSecondaryProductor
 );
 
 // [POST] LOGIN
@@ -244,55 +244,15 @@ router.put(
  *             $ref: '#/components/schemas/CompleteProfile'
  *     responses:
  *       200:
- *         description: Perfil completado exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Perfil completado exitosamente.
+ *         description: Perfil completado exitosamente. 
  *       400:
  *         description: Error en los datos proporcionados.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Faltan datos obligatorios.
  *       401:
- *         description: Usuario no autenticado.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Usuario no autenticado.
+ *         description: Usuario no autenticado. 
  *       404:
- *         description: Usuario no encontrado o no verificado.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Usuario no encontrado.
+ *         description: Usuario no encontrado o no verificado. 
  *       500:
  *         description: Error interno del servidor.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Error interno del servidor.
  */
 router.post(
   "/registro/completar",

@@ -33,7 +33,7 @@ export const updateUsuarioById = async (userId: string, updateData: any) => {
     include: [
       {
         model: UsuarioRol,
-        as: "rol", // Asociación definida en el modelo Usuario
+        as: "rol",
       },
     ],
   });
@@ -71,28 +71,36 @@ export const updateUsuarioById = async (userId: string, updateData: any) => {
 };
 
 export const deleteUsuarioById = async (userId: string) => {
-  // Buscar al usuario por su ID
+  // Verificar si el usuario existe
   const usuario = await Usuario.findOne({
     where: { id_usuario: userId },
-    include: [
-      {
-        model: UsuarioMaestro,
-        as: "usuarioRegistrante",
-      },
-    ],
   });
 
   if (!usuario) {
     throw new Error("Usuario no encontrado");
   }
 
-  await UsuarioMaestro.destroy({
+  // Eliminar registros relacionados en UsuarioMaestro
+  const deletedMaestros = await UsuarioMaestro.destroy({
     where: { usuario_registrante_id: userId },
   });
 
+  // Eliminar el usuario
   await usuario.destroy();
 
-  return { message: "Usuario y relaciones eliminados correctamente" };
+  return {
+    message: "Usuario y relaciones eliminados correctamente",
+    details: {
+      deletedUsuario: userId,
+      deletedMaestros,
+    },
+  };
+};
+
+export const deleteUsuarioMaestrosByUserId = async (userId: string) => {
+  await UsuarioMaestro.destroy({
+    where: { usuario_registrante_id: userId },
+  });
 };
 
 // BUSQUEDA DE UN USUARIO SEGUN UNO O VARIOS FILTROS

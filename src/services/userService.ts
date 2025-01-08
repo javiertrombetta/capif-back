@@ -33,7 +33,7 @@ export const updateUsuarioById = async (userId: string, updateData: any) => {
     include: [
       {
         model: UsuarioRol,
-        as: 'rol', // Asociación definida en el modelo Usuario
+        as: "rol", // Asociación definida en el modelo Usuario
       },
     ],
   });
@@ -77,7 +77,7 @@ export const deleteUsuarioById = async (userId: string) => {
     include: [
       {
         model: UsuarioMaestro,
-        as: 'usuarioRegistrante',
+        as: "usuarioRegistrante",
       },
     ],
   });
@@ -183,7 +183,9 @@ export const findUsuario = async (filters: {
 
   // Buscar UsuariosMaestro relacionados
   const usuariosMaestro = await UsuarioMaestro.findAll({
-    where: { usuario_registrante_id: { [Op.in]: usuarios.map((u) => u.id_usuario) } },
+    where: {
+      usuario_registrante_id: { [Op.in]: usuarios.map((u) => u.id_usuario) },
+    },
     include: includeMaestro,
   });
 
@@ -194,8 +196,9 @@ export const findUsuario = async (filters: {
   }));
 
   // Buscar vistas asociadas
+
   const vistas = await UsuarioVistaMaestro.findAll({
-    where: { usuario_id: filters.userId },
+    where: { usuario_id: usuarios[0].id_usuario },
     include: [
       {
         model: UsuarioVista,
@@ -227,10 +230,14 @@ export const findRolByNombre = async (nombre_rol: string) => {
   return rol;
 };
 
-export const findVistasforUsuario = async (usuarioId: string): Promise<string[]> => {
+export const findVistasforUsuario = async (
+  usuarioId: string
+): Promise<string[]> => {
   const vistas = await UsuarioVistaMaestro.findAll({
     where: { usuario_id: usuarioId, is_habilitado: true },
-    include: [{ model: UsuarioVista, as: "vista", attributes: ["nombre_vista"] }],
+    include: [
+      { model: UsuarioVista, as: "vista", attributes: ["nombre_vista"] },
+    ],
   });
 
   return vistas.map((vista) => {

@@ -5,7 +5,7 @@ import {
   changeUserRole,
   getUsers,
   getRegistrosPendientes,
-  createUser,
+  createAdminUser,
   getRegistroPendiente,
   approveApplication,
   rejectApplication,
@@ -32,6 +32,7 @@ import {
   deleteUserSchema,
   updateUserViewsSchema,
   toggleUserViewStatusSchema,
+  getUsuariosSchema,
 } from "../services/validationSchemas";
 
 const router = Router();
@@ -151,35 +152,42 @@ router.put(
 // [GET] Obtener los usuarios según filtros
 /**
  * @swagger
- * /usuarios:
+* /usuarios:
  *   get:
- *     summary: Obtener todos los usuarios o un usuario específico.
- *     description: Permite obtener una lista de usuarios filtrados o un usuario específico mediante su ID.
+ *     summary: Obtener usuarios filtrados.
+ *     description: Permite obtener una lista de usuarios aplicando filtros en los parámetros de consulta.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: id
+ *         name: id_usuario
+ *         required: true
  *         schema:
  *           type: string
  *           format: uuid
- *         description: ID único del usuario.
+ *           description: ID del usuario.
+ *           example: '123e4567-e89b-12d3-a456-426614174000'
  *       - in: query
  *         name: email
  *         schema:
  *           type: string
  *         description: Correo electrónico del usuario.
  *       - in: query
- *         name: nombresApellidos
+ *         name: nombre
  *         schema:
  *           type: string
- *         description: Nombre o apellido del usuario.
+ *         description: Nombre del usuario.
+ *       - in: query
+ *         name: apellido
+ *         schema:
+ *           type: string
+ *         description: Apellido del usuario.
  *       - in: query
  *         name: tipo_registro
  *         schema:
  *           type: string
- *           enum: [HABILITADO, DESHABILITADO, NUEVO, PENDIENTE]
+ *           enum: [DEPURAR, NUEVO, CONFIRMADO, PENDIENTE, RECHAZADO, HABILITADO, DESHABILITADO]
  *         description: Tipo de registro del usuario.
  *       - in: query
  *         name: rolId
@@ -209,23 +217,17 @@ router.put(
  *           type: integer
  *           format: int32
  *           minimum: 1
- *           description: Número máximo de resultados a devolver.
+ *         description: Número máximo de resultados a devolver.
  *       - in: query
  *         name: offset
  *         schema:
  *           type: integer
  *           format: int32
  *           minimum: 0
- *           description: Desplazamiento para la paginación.
+ *         description: Desplazamiento para la paginación.
  *     responses:
  *       200:
  *         description: Lista de usuarios obtenida exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
  *       400:
  *         description: Parámetros inválidos.
  *       401:
@@ -238,9 +240,10 @@ router.put(
  *         description: Error interno del servidor.
  */
 router.get(
-  "/",
-  authenticate,
+  "/:id_usuario",
+  authenticate,  
   authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.QUERY]: getUsuariosSchema }),
   getUsers
 );
 
@@ -256,12 +259,6 @@ router.get(
  *     responses:
  *       200:
  *         description: Lista de registros pendientes.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
  *       401:
  *         description: Usuario no autenticado.
  *       403:
@@ -279,9 +276,9 @@ router.get(
 // [POST] Crear un usuario manualmente
 /**
  * @swagger
- * /usuarios/crear:
+ * /usuarios/admin/nuevo:
  *   post:
- *     summary: Crear un nuevo usuario secundario.
+ *     summary: Crear un nuevo usuario administrador.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -295,10 +292,6 @@ router.get(
  *     responses:
  *       201:
  *         description: Usuario administrador creado exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
  *       400:
  *         description: Datos inválidos.
  *       401:
@@ -309,11 +302,11 @@ router.get(
  *         description: Error interno del servidor.
  */
 router.post(
-  "/crear",
+  "/admin/nuevo",
   authenticate,
   authorizeRoles(["admin_principal", "productor_principal"]),
   celebrate({ [Segments.BODY]: createAdminSchema }),
-  createUser
+  createAdminUser
 );
 
 /**
@@ -337,10 +330,6 @@ router.post(
  *     responses:
  *       200:
  *         description: Registro pendiente del usuario obtenido exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/GetRegistroPendiente'
  *       400:
  *         description: Parámetros inválidos.
  *       401:
@@ -378,15 +367,6 @@ router.get(
  *     responses:
  *       200:
  *         description: Aplicación aprobada exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Mensaje de éxito.
- *                   example: 'Usuario autorizado exitosamente.'
  *       400:
  *         description: Datos inválidos.
  *       401:
@@ -473,15 +453,6 @@ router.post(
  *     responses:
  *       200:
  *         description: Solicitud enviada exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Mensaje de éxito.
- *                   example: 'Solicitud enviada exitosamente.'
  *       400:
  *         description: Datos inválidos.
  *       401:
@@ -520,15 +491,6 @@ router.post(
  *     responses:
  *       200:
  *         description: Solicitud actualizada exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Mensaje de éxito.
- *                   example: 'Solicitud actualizada exitosamente.'
  *       400:
  *         description: Datos inválidos.
  *       401:
@@ -567,15 +529,6 @@ router.put(
  *     responses:
  *       200:
  *         description: Usuario actualizado exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Mensaje de éxito.
- *                   example: 'Usuario actualizado exitosamente.'
  *       400:
  *         description: Datos inválidos.
  *       401:
@@ -615,15 +568,6 @@ router.put(
  *     responses:
  *       200:
  *         description: Usuario eliminado exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Mensaje de éxito.
- *                   example: 'Usuario eliminado exitosamente.'
  *       400:
  *         description: Parámetros inválidos.
  *       401:

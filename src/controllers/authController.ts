@@ -13,7 +13,6 @@ import {
   createUsuarioMaestro,
   updateUsuarioMaestro,
   findUsuario,
-  findVistasforUsuario,
   findRolByNombre,
   assignVistasToUser,
 } from "../services/userService";
@@ -28,14 +27,14 @@ import * as Err from "../services/customErrors";
 import { AuditoriaCambio, AuditoriaSesion } from "../models";
 
 // REGISTER PRODUCTOR 'PRIMARIO'
-export const registerPrimary = async (
+export const registerPrimaryProductor = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
     logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para registrar un nuevo usuario`
+      `${req.method} ${req.originalUrl} - Solicitud recibida para registrar un nuevo productor principal`
     );
 
     const { email, password } = req.body;
@@ -159,7 +158,7 @@ export const registerPrimary = async (
 };
 
 // REGISTER PRODUCTOR 'SECUNDARIO'
-export const registerSecondary = async (
+export const registerSecondaryProductor = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
@@ -218,8 +217,7 @@ export const registerSecondary = async (
 
     const primaryUser = primaryUserData.user;
     const primaryUserRoleName = primaryUserData.user.rol.nombre_rol;
-    const primaryProductoraId =
-      primaryUserData.maestros[0].productora.id_productora;
+    const primaryProductoraId = primaryUserData.maestros[0].productora.id_productora;
 
     if (
       !primaryUser ||
@@ -257,18 +255,12 @@ export const registerSecondary = async (
         });
 
         // Llamar a updateUsuarioMaestro desde userService para actualizar el registro en UsuarioMaestro
-        const secondaryUserRole =
-          primaryUserRoleName === "admin_principal"
-            ? "admin_secundario"
-            : "productor_secundario";
-
         await updateUsuarioMaestro(existingUserData.id_usuario, {
           productora_id: primaryProductoraId,
-          // rol_id: secondaryUserRole,
         });
 
         // Crear relaciones de vistas
-        const rolObj = await findRolByNombre(secondaryUserRole);
+        const rolObj = await findRolByNombre('productor_secundario');
         await assignVistasToUser(existingUser.user.id_usuario, rolObj.id_rol);
 
         logger.info(
@@ -303,20 +295,16 @@ export const registerSecondary = async (
     const temporaryPassword = nanoid(10);
     const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
-    // Determina el rol del usuario secundario basado en el rol del usuario principal
-    const secondaryUserRole =
-      primaryUserRoleName === "admin_principal"
-        ? "admin_secundario"
-        : "productor_secundario";
-
     // Crea el nuevo usuario con tipo_registro SECUNDARIO
     const newUsuario = await createUsuario({
+      rol_id: (await findRolByNombre('productor_secundario')).id_rol,
       email,
       clave: hashedPassword,
       tipo_registro: "HABILITADO",
       nombre,
       apellido,
       telefono,
+      fecha_ultimo_cambio_rol: new Date(),
     });
 
     logger.info(
@@ -327,7 +315,6 @@ export const registerSecondary = async (
     const newUsuarioMaestro = await createUsuarioMaestro({
       usuario_registrante_id: newUsuario.id_usuario,
       productora_id: primaryProductoraId,
-      // fecha_ultimo_cambio_rol: new Date(),
     });
 
     // Configuración del token de verificación de email
@@ -593,66 +580,39 @@ export const getRole = async (
       `${req.method} ${req.originalUrl} - Solicitud para obtener el rol del usuario`
     );
 
-    const { productora_id } = req.query;
-
     // Verificar que el usuario esté autenticado
-    const primaryUserAuthId = req.userId as string;
+    const userId = req.userId as string;
 
-    if (!primaryUserAuthId) {
+    if (!userId) {
       logger.warn(`${req.method} ${req.originalUrl} - Usuario no autenticado.`);
       return res
         .status(401)
         .json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
     }
 
-    // Buscar información del usuario autenticado
-    const userData = await findUsuario({
-      userId: primaryUserAuthId,
-      productoraId: productora_id ? (productora_id as string) : undefined,
-    });
+    // Buscar información del usuario autenticado usando su id_usuario
+    const userData = await findUsuario({ userId });
 
-    if (
-      !userData ||
-      !userData.user ||
-      !userData.maestros ||
-      userData.maestros.length === 0
-    ) {
+    if (!userData || !userData.user.rol) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró información del usuario con ID: ${primaryUserAuthId}`
+        `${req.method} ${req.originalUrl} - No se encontró información del usuario con ID: ${userId}`
       );
       return res.status(404).json({ message: MESSAGES.ERROR.USER.NOT_FOUND });
     }
 
-    const roleName = userData.user.rol?.nombre_rol;
+    const roleName = userData.user.rol.nombre_rol;
 
     if (!roleName) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario con ID ${primaryUserAuthId} no tiene un rol asignado.`
+        `${req.method} ${req.originalUrl} - El usuario con ID ${userId} no tiene un rol asignado.`
       );
       return res
         .status(404)
         .json({ message: MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED });
     }
 
-    // Validar si el rol requiere `productora_id`
-    if (
-      (roleName === "productor_principal" &&
-        userData.user.tipo_registro !== "HABILITADO" &&
-        userData.user.tipo_registro !== "DESHABILITADO") ||
-      roleName === "productor_secundario"
-    ) {
-      if (!productora_id) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - El rol ${roleName} requiere un productora_id.`
-        );
-        return res
-          .status(400)
-          .json({ message: MESSAGES.ERROR.VALIDATION.PRODUCTORA_ID_REQUIRED });
-      }
-    }
-
     logger.info(
-      `${req.method} ${req.originalUrl} - Rol del usuario con ID ${primaryUserAuthId}: ${roleName}`
+      `${req.method} ${req.originalUrl} - Rol del usuario con ID ${userId}: ${roleName}`
     );
 
     res.status(200).json({ role: roleName });
@@ -1233,7 +1193,7 @@ export const changeUserPassword = async (
       `${req.method} ${req.originalUrl} - Solicitud recibida para cambiar la clave del usuario`
     );
 
-    const { userId, newPassword, confirmPassword } = req.body;
+    const { id_usuario, newPassword, confirmPassword } = req.body;
     const userIdFromToken = req.userId as string;
 
     if (!userIdFromToken) {
@@ -1275,7 +1235,7 @@ export const changeUserPassword = async (
     }
 
     // Verificar si el usuario autenticado está cambiando su propia clave
-    const isSelfUpdate = !userId || userIdFromToken === userId;
+    const isSelfUpdate = !id_usuario || userIdFromToken === id_usuario;
 
     if (!isSelfUpdate) {
       // Solo admin_principal o admin_secundario pueden cambiar la clave de otros usuarios
@@ -1293,7 +1253,7 @@ export const changeUserPassword = async (
     }
 
     // Buscar el usuario objetivo
-    const targetUserId = isSelfUpdate ? userIdFromToken : userId;
+    const targetUserId = isSelfUpdate ? userIdFromToken : id_usuario;
     const targetUserData = await findUsuario({ userId: targetUserId });
 
     if (!targetUserData) {

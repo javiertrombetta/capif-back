@@ -197,6 +197,7 @@ export const ERROR = {
   },
   PRODUCTORA: {
     NOT_FOUND: 'Productor no encontrado.',
+    ID_REQUIRED: "Se requiere el id de la productora",
     ALREADY_EXISTS: 'La productora ya existe.',
     INVALID_ROLE: 'El rol del usuario no corresponde a productor.',
     INVALID_NAME: 'La productora asociada no tiene un nombre válido.',

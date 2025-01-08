@@ -433,7 +433,7 @@ export const login = async (
 
     // Consulta para obtener el usuario y los maestros asociados
     const userData = await findUsuario({ email });
-    if (!userData || !userData.user) {
+    if (!userData || !userData.user || !userData.isSingleUser) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Usuario no encontrado: ${email}`
       );
@@ -531,12 +531,9 @@ export const login = async (
       }
     });
 
-    // Obtener las vistas permitidas para este usuario
-    const vistasPermitidas = await findVistasforUsuario(user.id_usuario);
-
     // Generar un token básico con `userId`
     const token = jwt.sign(
-      { id: user.id_usuario, vistas: vistasPermitidas },
+      { id: user.id_usuario, role: user.rol_id },
       process.env.JWT_SECRET!,
       {
         expiresIn: process.env.JWT_EXPIRATION || "1h",

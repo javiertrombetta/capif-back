@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   availableDisableUser,
   blockOrUnblockUser,
@@ -15,9 +15,9 @@ import {
   deleteUser,
   updateUserViews,
   toggleUserViewStatus,
-} from '../controllers/usuariosController';
-import { authenticate, authorizeRoles } from '../middlewares/auth';
-import { celebrate, Segments } from 'celebrate';
+} from "../controllers/usuariosController";
+import { authenticate, authorizeRoles } from "../middlewares/auth";
+import { celebrate, Segments } from "celebrate";
 import {
   availableDisableSchema,
   blockOrUnblockSchema,
@@ -32,7 +32,7 @@ import {
   deleteUserSchema,
   updateUserViewsSchema,
   toggleUserViewStatusSchema,
-} from '../services/validationSchemas';
+} from "../services/validationSchemas";
 
 const router = Router();
 
@@ -42,7 +42,6 @@ const router = Router();
  *   name: Usuarios
  *   description: Gestión de usuarios y registros.
  */
-
 
 // [PUT] Habilitar/Deshabilitar Usuario
 /**
@@ -72,13 +71,12 @@ const router = Router();
  *         description: Usuario no encontrado.
  */
 router.put(
-  '/estado/habilitacion',
+  "/estado/habilitacion",
   authenticate,
-  authorizeRoles(['admin_principal', 'admin_secundario']),
+  authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.BODY]: availableDisableSchema }),
   availableDisableUser
 );
-
 
 // [PUT] Bloquear/Desbloquear Usuario
 /**
@@ -108,9 +106,9 @@ router.put(
  *         description: Usuario no encontrado.
  */
 router.put(
-  '/estado/sesion',
+  "/estado/sesion",
   authenticate,
-  authorizeRoles(['admin_principal', 'admin_secundario']),
+  authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.BODY]: blockOrUnblockSchema }),
   blockOrUnblockUser
 );
@@ -143,13 +141,12 @@ router.put(
  *         description: Usuario no encontrado.
  */
 router.put(
-  '/rol',
+  "/rol",
   authenticate,
-  authorizeRoles(['admin_principal', 'admin_secundario']),
+  authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.BODY]: changeRoleSchema }),
   changeUserRole
 );
-
 
 // [GET] Obtener los usuarios según filtros
 /**
@@ -240,8 +237,12 @@ router.put(
  *       500:
  *         description: Error interno del servidor.
  */
-router.get('/', authenticate, authorizeRoles(['admin_principal', 'admin_secundario']), getUsers);
-
+router.get(
+  "/",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  getUsers
+);
 
 // [GET] Obtener todos los usuarios pendientes de registro
 /**
@@ -268,8 +269,12 @@ router.get('/', authenticate, authorizeRoles(['admin_principal', 'admin_secundar
  *       500:
  *         description: Error interno del servidor.
  */
-router.get('/pendientes', authenticate, authorizeRoles(['admin_principal', 'admin_secundario']), getRegistrosPendientes);
-
+router.get(
+  "/pendientes",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  getRegistrosPendientes
+);
 
 // [POST] Crear un usuario manualmente
 /**
@@ -304,9 +309,9 @@ router.get('/pendientes', authenticate, authorizeRoles(['admin_principal', 'admi
  *         description: Error interno del servidor.
  */
 router.post(
-  '/crear',
+  "/crear",
   authenticate,
-  authorizeRoles(['admin_principal', 'productor_principal']),
+  authorizeRoles(["admin_principal", "productor_principal"]),
   celebrate({ [Segments.BODY]: createAdminSchema }),
   createUser
 );
@@ -348,9 +353,9 @@ router.post(
  *         description: Error interno del servidor.
  */
 router.get(
-  '/aplicaciones/pendientes',
+  "/aplicaciones/pendientes",
   authenticate,
-  authorizeRoles(['admin_principal', 'admin_secundario']),
+  authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.QUERY]: getRegistroPendienteSchema }),
   getRegistroPendiente
 );
@@ -396,9 +401,9 @@ router.get(
  *         description: Error interno del servidor.
  */
 router.post(
-  '/aplicaciones/autorizar',
+  "/aplicaciones/autorizar",
   authenticate,
-  authorizeRoles(['admin_principal', 'admin_secundario']),
+  authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.BODY]: approveApplicationSchema }),
   approveApplication
 );
@@ -442,9 +447,9 @@ router.post(
  *         description: Error interno del servidor.
  */
 router.post(
-  '/aplicaciones/rechazar',
+  "/aplicaciones/rechazar",
   authenticate,
-  authorizeRoles(['admin_principal', 'admin_secundario']),
+  authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.BODY]: rejectApplicationSchema }),
   rejectApplication
 );
@@ -489,9 +494,9 @@ router.post(
  *         description: Error interno del servidor.
  */
 router.post(
-  '/aplicaciones/enviar',
+  "/aplicaciones/enviar",
   authenticate,
-  authorizeRoles(['usuario']),
+  authorizeRoles(["usuario"]),
   celebrate({ [Segments.BODY]: sendApplicationSchema }),
   sendApplication
 );
@@ -536,9 +541,9 @@ router.post(
  *         description: Error interno del servidor.
  */
 router.put(
-  '/aplicaciones/actualizar',
+  "/aplicaciones/actualizar",
   authenticate,
-  authorizeRoles(['productor_principal']),
+  authorizeRoles(["productor_principal"]),
   celebrate({ [Segments.BODY]: updateApplicationSchema }),
   updateApplication
 );
@@ -583,9 +588,9 @@ router.put(
  *         description: Error interno del servidor.
  */
 router.put(
-  '/cambiar',
+  "/cambiar",
   authenticate,
-  authorizeRoles(['admin_principal', 'admin_secundario']),
+  authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.BODY]: updateUserSchema }),
   updateUser
 );
@@ -631,9 +636,9 @@ router.put(
  *         description: Error interno del servidor.
  */
 router.delete(
-  '/eliminar',
+  "/eliminar",
   authenticate,
-  authorizeRoles(['admin_principal', 'admin_secundario']),
+  authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.QUERY]: deleteUserSchema }),
   deleteUser
 );
@@ -692,7 +697,7 @@ router.put(
  *             $ref: '#/components/schemas/ToggleUserViewStatus'
  *     responses:
  *       200:
- *         description: Estado de vistas actualizado exitosamente. 
+ *         description: Estado de vistas actualizado exitosamente.
  *       400:
  *         description: Datos inválidos.
  *       401:

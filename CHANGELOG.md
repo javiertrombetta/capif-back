@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.78 - 09-01-2025
+## 🐛 Fixes
+
+- fix: init and dev separate in package.json
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.75
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.75 - 08-01-2025
 ## 🐛 Fixes
 

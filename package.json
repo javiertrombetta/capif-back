@@ -1,6 +1,6 @@
 {
   "name": "capif-back",
-  "version": "v0.1.75",
+  "version": "v0.1.72",
   "main": "dist/app.js",
   "scripts": {
     "prepare": "husky install",
@@ -15,7 +15,8 @@
     "prod.local:up": "docker compose --env-file .env.prod.local -f compose.prod.local.yml up --build -d",
     "prod.local:down": "docker compose --env-file .env.prod.local -f compose.prod.local.yml down -v && docker rmi javiertrombetta/capif-back:latest",
     "prod.local:restart": "npm run prod.local:down && npm run prod.local:up",
-    "dev": "NODE_ENV=development npm run dev.local:down && npm run clean:dist && npm run dev.local:up && npm run build && npm run postgres:init && nodemon --watch src --exec ts-node src/app.ts",
+    "init": "NODE_ENV=development npm run dev.local:down && npm run clean:dist && npm run dev.local:up && npm run build && npm run postgres:init",
+    "dev": "NODE_ENV=development nodemon --watch src --exec ts-node src/app.ts",
     "test": "echo \"No tests defined yet\""
   },
   "keywords": [],

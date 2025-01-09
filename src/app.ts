@@ -76,7 +76,8 @@ const connectToDatabase = async () => {
     await sequelize.authenticate();
     logger.info('Conexión exitosa a la base de datos');
 
-    await sequelize.sync({ alter: false });
+    // await sequelize.sync({ alter: false });
+    await sequelize.sync();
     logger.info('Modelos sincronizados con la base de datos');
   } catch (err) {
     logger.error('Error de conexión o sincronización con la base de datos:', err);

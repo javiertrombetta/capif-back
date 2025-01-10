@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.81 - 10-01-2025
+## 🐛 Fixes
+
+- fix: applications in usuariosController
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.78
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.78 - 09-01-2025
 ## 🐛 Fixes
 

@@ -284,12 +284,12 @@ export const changeUserRole = async (
 
 // OBTENER TODOS LOS USUARIOS SEGÚN CONDICIONES
 export const getUsers = async (
-  req: Request<{ id_usuario?: string }>,
+  req: Request<{}, {}, { id_usuario?: string }>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id_usuario } = req.params;
+    const { id_usuario } = req.body;
     const filters = req.query;
 
     if (id_usuario) {
@@ -321,10 +321,8 @@ export const getUsers = async (
 
     // Agregar filtros dinámicos desde la query
     if (filters.email) findFilters.email = String(filters.email);
-    if (filters.nombre)
-      findFilters.nombre = String(filters.nombre);
-    if (filters.apellido)
-      findFilters.nombre = String(filters.nombre);
+    if (filters.nombre) findFilters.nombre = String(filters.nombre);
+    if (filters.apellido) findFilters.apellido = String(filters.apellido);
     if (filters.tipo_registro)
       findFilters.tipo_registro = String(filters.tipo_registro);
     if (filters.rolId) findFilters.rolId = String(filters.rolId);
@@ -337,7 +335,8 @@ export const getUsers = async (
     if (filters.offset)
       findFilters.offset = parseInt(String(filters.offset), 10);
 
-    const users = await findUsuario(findFilters);
+    // Obtener todos los usuarios si no hay filtros
+    const users = await findUsuario(Object.keys(findFilters).length ? findFilters : {});
 
     if (!users || (Array.isArray(users) && users.length === 0)) {
       logger.warn(
@@ -353,70 +352,6 @@ export const getUsers = async (
     );
 
     res.status(200).json(Array.isArray(users) ? users : [users]);
-  } catch (error) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error: ${
-        error instanceof Error ? error.message : "Error desconocido."
-      }`
-    );
-    next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
-  }
-};
-
-// OBTENER USUARIOS CON REGISTRO PENDIENTE
-export const getRegistrosPendientes = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para obtener usuarios pendientes.`
-    );
-
-    // Configuración del filtro para usuarios con tipo_registro PENDIENTE
-    const userFilters = { tipo_registro: "PENDIENTE" };
-
-    // Buscar usuarios pendientes con su maestro asociado
-    const pendingUsers = await findUsuario(userFilters);
-    if (!pendingUsers) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${userFilters}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
-
-    // Si no hay usuarios pendientes, devolver un array vacío
-    if (
-      !pendingUsers ||
-      (Array.isArray(pendingUsers) && pendingUsers.length === 0)
-    ) {
-      logger.info(
-        `${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes.`
-      );
-      res.status(200).json([]);
-    }
-
-    // Filtrar usuarios con un único maestro asociado
-    const usersWithSingleMaestro = Array.isArray(pendingUsers)
-      ? pendingUsers.filter((user) => user.maestros.length === 1)
-      : pendingUsers.maestros.length === 1
-      ? [pendingUsers]
-      : [];
-
-    // Si no hay usuarios con un único maestro, devolver un array vacío
-    if (usersWithSingleMaestro.length === 0) {
-      logger.info(
-        `${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes con un único maestro asociado.`
-      );
-      res.status(200).json([]);
-    }
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - ${usersWithSingleMaestro.length} usuarios pendientes encontrados.`
-    );
-
-    res.status(200).json(usersWithSingleMaestro);
   } catch (error) {
     logger.error(
       `${req.method} ${req.originalUrl} - Error: ${
@@ -591,102 +526,109 @@ export const createAdminUser = async (
   }
 };
 
-// OBTENER LOS DATOS CARGADOS POR UN USUARIO
-export const getRegistroPendiente = async (
+export const getRegistrosPendientes = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<Response | void> => {
   try {
     logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud para cargar datos personales`
+      `${req.method} ${req.originalUrl} - Solicitud recibida para obtener registro(s) pendiente(s).`
     );
 
     const { id_usuario } = req.body;
 
-    // Verificar que se proporcionen los datos requeridos
-    if (!id_usuario) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Faltan parámetros obligatorios.`
-      );
-      return next(
-        new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS)
-      );
-    }
+    if (id_usuario) {
+      // Obtener datos de un único usuario
+      const userData = await findUsuario({ userId: id_usuario });
 
-    // Buscar el usuario y los datos asociados mediante findUsuario
-    const userData = await findUsuario({ userId: id_usuario });
-    if (!userData) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
+      if (!userData || !userData.user) {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
+        );
+        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
+      }
 
-    const { user, maestros } = userData;
+      const { user, maestros } = userData;
 
-    if (!user) {
-      logger.error(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      return res.status(404).json({
-        message: MESSAGES.ERROR.USER.NOT_FOUND,
+      if (user.tipo_registro !== "PENDIENTE") {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - Usuario no tiene registro pendiente.`
+        );
+        return next(
+          new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS)
+        );
+      }
+
+      const productoras = maestros
+        .filter((maestro) => maestro.productora)
+        .map((maestro) => maestro.productora);
+
+      if (productoras.length === 0) {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - No se encontraron productoras asociadas para el usuario.`
+        );
+        return next(
+          new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS)
+        );
+      }
+
+      if (productoras.length > 1) {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - El usuario ya tiene productoras asociadas.`
+        );
+        return next(
+          new Err.NotFoundError(
+            MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
+          )
+        );
+      }
+
+      return res.status(200).json({
+        message: MESSAGES.SUCCESS.APPLICATION.SAVED,
+        data: { user, productoras },
       });
+    } else {
+      // Obtener datos de todos los usuarios pendientes
+      const pendingUsersData = await findUsuario({ tipo_registro: "PENDIENTE" });
+
+      if (!pendingUsersData || !pendingUsersData.maestros) {
+        logger.info(
+          `${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes.`
+        );
+        return next(
+          new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS)
+        );
+      }
+
+      const usersWithSingleMaestro = pendingUsersData.maestros.filter(
+        (user) => user.maestroId
+      );
+
+      if (usersWithSingleMaestro.length === 0) {
+        logger.info(
+          `${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes con un único maestro asociado.`
+        );
+        return next(
+          new Err.NotFoundError(
+            MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
+          )
+        );
+      }
+
+      logger.info(
+        `${req.method} ${req.originalUrl} - ${usersWithSingleMaestro.length} usuarios pendientes encontrados.`
+      );
+
+      return res.status(200).json(usersWithSingleMaestro);
     }
-
-    if (user.tipo_registro !== "PENDIENTE") {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no tiene registro pendiente.`
-      );
-      return res.status(400).json({
-        message: MESSAGES.ERROR.REGISTER.NO_PENDING_USERS,
-      });
-    }
-
-    // Extraer las productoras asociadas
-    const productoras = maestros
-      .filter((maestro) => maestro.productora)
-      .map((maestro) => maestro.productora);
-
-    if (productoras.length === 0) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontraron productoras asociadas para el usuario.`
-      );
-      return next(
-        new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS)
-      );
-    }
-
-    if (productoras.length > 1) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario ya tiene productoras asociadas.`
-      );
-      return next(
-        new Err.NotFoundError(
-          MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
-        )
-      );
-    }
-
-    // Configurar la respuesta con datos personales y asociados
-    const responseData: any = {
-      user,
-      productoras,
-    };
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Datos personales y asociados cargados con éxito para el usuario ${id_usuario}`
-    );
-
-    res.status(200).json({
-      message: MESSAGES.SUCCESS.APPLICATION.SAVED,
-      data: responseData,
-    });
   } catch (err) {
     logger.error(
-      `${req.method} ${req.originalUrl} - Error al cargar datos personales: ${
-        err instanceof Error ? err.message : "Error desconocido"
+      `${req.method} ${req.originalUrl} - Error: ${
+        err instanceof Error ? err.message : "Error desconocido."
       }`
     );
-    next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
+    return next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
   }
 };
 
@@ -715,13 +657,13 @@ export const approveApplication = async (
     // Verificar el usuario autenticado desde AuthenticatedRequest
     const userAuthId = req.userId as string;
     const authenticatedUserData = await findUsuario({ userId: userAuthId });
-    if (!authenticatedUserData) {
+    if (!authenticatedUserData || !authenticatedUserData.user.rol) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Usuario no encontrado: ${userAuthId}`
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
-    const authenticatedRole = authenticatedUserData.user.rol?.nombre_rol;
+    const authenticatedRole = authenticatedUserData.user.rol.nombre_rol;
 
     if (!userAuthId || !authenticatedUserData || !authenticatedUserData.user) {
       logger.warn(
@@ -752,19 +694,10 @@ export const approveApplication = async (
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
 
-    if (!userData.user) {
+    if (!userData.user || !userData.isSingleUser) {
       logger.error(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
       return res.status(404).json({
         message: MESSAGES.ERROR.USER.NOT_FOUND,
-      });
-    }
-
-    if (!userData.maestros[0].productora) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Datos de productora no encontrada.`
-      );
-      return res.status(404).json({
-        message: MESSAGES.ERROR.PRODUCTORA.NOT_FOUND,
       });
     }
 
@@ -777,8 +710,20 @@ export const approveApplication = async (
       });
     }
 
+    if (!userData.maestros[0].productora) {
+      logger.error(
+        `${req.method} ${req.originalUrl} - Datos de productora no encontrada.`
+      );
+      return res.status(404).json({
+        message: MESSAGES.ERROR.PRODUCTORA.NOT_FOUND,
+      });
+    }
+
     // Establecer la fecha de hoy para fecha_alta en Productora
     userData.maestros[0].productora.fecha_alta = new Date();
+
+    // Actualizar el tipo_registro del usuario a HABILITADO
+    await userData.user.update({ tipo_registro: "HABILITADO" });
 
     // Crear las auditorías correspondientes
     await AuditoriaCambio.create({
@@ -842,12 +787,12 @@ export const rejectApplication = async (
     const userAuthId = req.userId as string;
     const authenticatedUserData = await findUsuario({ userId: userAuthId });
 
-    if (!authenticatedUserData) {
+    if (!authenticatedUserData || !authenticatedUserData.user.rol) {
       logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
       throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
     }
 
-    const authenticatedRole = authenticatedUserData.user.rol?.nombre_rol;
+    const authenticatedRole = authenticatedUserData.user.rol.nombre_rol;
 
     if (!userAuthId || !authenticatedUserData || !authenticatedUserData.user) {
       logger.warn(
@@ -908,6 +853,9 @@ export const rejectApplication = async (
 
     // Enviar correo de notificación de rechazo
 
+    // Actualizar el tipo_registro del usuario a PENDIENTE
+    await user.update({ tipo_registro: "PENDIENTE" });
+
     await sendEmail({
       to: user.email,
       subject: "Rechazo de su Aplicación",
@@ -937,7 +885,7 @@ export const sendApplication = async (
 ) => {
   try {
     logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud para enviar aplicación`
+      `${req.method} ${req.originalUrl} - Enviando solicitud de aplicación`
     );
 
     const {
@@ -969,14 +917,14 @@ export const sendApplication = async (
     }
 
     // Buscar al usuario mediante findUsuario
-    const userData = await findUsuario({ userId: id_usuario });
-    if (!userData) {
+    const userData = await findUsuario({ userId: id_usuario, tipo_registro: "PENDIENTE" });
+    if (!userData || !userData.user) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
-    const { user } = userData;
+    const user = userData.user;
 
     if (!user) {
       logger.error(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
@@ -985,8 +933,12 @@ export const sendApplication = async (
       });
     }
 
-    await user.update({ nombre, apellido, telefono });
-    await user.save();
+    await user.update({ nombre, apellido, telefono }); 
+
+    // Verificar si existe una relación en UsuarioMaestro con la productora
+    const existingRelation = userData.maestros.find(
+      (maestro) => maestro.productora?.id_productora === productoraData.id_productora
+    );  
 
     // Validar el tipo de persona (FÍSICA o JURÍDICA)
     const tipoPersonaValida = ["FISICA", "JURIDICA"].includes(
@@ -1000,68 +952,56 @@ export const sendApplication = async (
         "El tipo de persona debe ser FISICA o JURIDICA."
       );
     }
+ 
+    let productora = null;
 
-    // Crear la nueva Productora
-    const nuevaProductora = await Productora.create({
-      ...productoraData,
-      fecha_alta: new Date(),
-    });
+    // Chequear si existe ya la productora
+    if (existingRelation && existingRelation.productora?.fecha_alta) {
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Productora creada con éxito: ${nuevaProductora.id_productora}`
-    );
+      // Actualizar la productora si fecha_alta no es null
+      await existingRelation.productora.update(productoraData);
+      logger.info(`Productora actualizada: ${existingRelation.productora.id_productora}`);
+      productora = existingRelation.productora;
 
-    // Actualizar UsuarioMaestro con el productora_id
-    const usuarioMaestro = await UsuarioMaestro.findOne({
-      where: { usuario_registrante_id: id_usuario },
-    });
+    } else {
 
-    if (!usuarioMaestro) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - UsuarioMaestro no encontrado para el usuario: ${id_usuario}
-    `
+      // Crear nueva productora y relación UsuarioMaestro
+      productora = await Productora.create({ ...productoraData, fecha_alta: null });
+      await UsuarioMaestro.create({
+        usuario_registrante_id: id_usuario,
+        productora_id: productora.id_productora,
+      });
+      logger.info(`Nueva productora creada: ${productora.id_productora}`);
+
+    }    
+
+    // Manejar documentos de forma opcional
+    if (documentos && documentos.length > 0) {
+      const tiposDocumentos = await ProductoraDocumentoTipo.findAll({
+        where: {
+          nombre_documento: documentos.map((doc: { nombre_documento: string }) => doc.nombre_documento),
+        },
+      });
+
+      await Promise.all(
+        documentos.map(async (doc: { nombre_documento: string; ruta_archivo_documento: string }) => {
+          const tipoDocumento = tiposDocumentos.find((tipo) => tipo.nombre_documento === doc.nombre_documento);
+          if (!tipoDocumento) {
+            logger.warn(`Tipo de documento no encontrado: ${doc.nombre_documento}`);
+            throw new Err.BadRequestError(`Tipo de documento no válido: ${doc.nombre_documento}`);
+          }
+          await ProductoraDocumento.create({
+            usuario_principal_id: id_usuario,
+            productora_id: existingRelation?.productora?.id_productora || productora?.id_productora,
+            tipo_documento_id: tipoDocumento.id_documento_tipo,
+            ruta_archivo_documento: doc.ruta_archivo_documento,
+          });
+        })
       );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NO_MAESTRO_RECORD);
     }
 
-    usuarioMaestro.productora_id = nuevaProductora.id_productora;
-    await usuarioMaestro.save();
-
-    // Obtener los IDs correspondientes a los nombres de documentos enviados
-    const nombresDocumentos = documentos.map(
-      (doc: any) => doc.nombre_documento
-    );
-
-    const tiposDocumentos = await ProductoraDocumentoTipo.findAll({
-      where: {
-        nombre_documento: nombresDocumentos,
-      },
-    });
-
-    // Crear los documentos
-    const documentosCargados = documentos.map(async (doc: any) => {
-      const tipoDocumento = tiposDocumentos.find(
-        (tipo) => tipo.nombre_documento === doc.nombre_documento
-      );
-
-      if (!tipoDocumento) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Tipo de documento no encontrado: ${doc.nombre_documento}`
-        );
-        throw new Err.BadRequestError(
-          `No se encontró un tipo de documento con el nombre: ${doc.nombre_documento}`
-        );
-      }
-
-      return await ProductoraDocumento.create({
-        usuario_principal_id: id_usuario,
-        productora_id: nuevaProductora.id_productora,
-        tipo_documento_id: tipoDocumento.id_documento_tipo,
-        ruta_archivo_documento: doc.ruta_archivo_documento,
-      });
-    });
-
-    await Promise.all(documentosCargados);
+    // Actualizar el tipo_registro del usuario a ENVIADO
+    await user.update({ tipo_registro: "ENVIADO" });
 
     // Enviar correo de notificación al usuario
     // await sendEmail({
@@ -1076,7 +1016,7 @@ export const sendApplication = async (
       usuario_destino_id: user.id_usuario,
       modelo: "Productora",
       tipo_auditoria: "APLICACION_ENVIADA",
-      detalle: `Solicitud de aplicación enviada por ${user.email} para la productora ${nuevaProductora.id_productora}`,
+      detalle: `Solicitud de aplicación enviada por ${user.email} para la productora ${productora.id_productora}`,
     });
 
     logger.info(
@@ -1145,20 +1085,26 @@ export const updateApplication = async (
 
     // Obtener los datos de la Productora asociada al usuario
     const productora = await Productora.findOne({
-      where: { cuit_cuil: productoraData?.cuit_cuil }, // Usar CUIT/CUIL como identificador
+      where: { cuit_cuil: productoraData.cuit_cuil },
     });
+
+    if (!productora) {
+      logger.error(`${req.method} ${req.originalUrl} - Paroductora no encontrada.`);
+      return res.status(404).json({
+        message: MESSAGES.ERROR.PRODUCTORA.NOT_FOUND,
+      });
+    }
 
     const cambios: string[] = [];
 
-    // Paso 1: Modificar o crear los datos de la Productora
-    if (productoraData) {
+    // Paso 1: Modificar o crear los datos de la Productora, en caso de que no esté ya dada de alta
+    if (productoraData && !productora.fecha_alta) {
       if (productora) {
         await productora.update(productoraData);
         cambios.push("Productora actualizada");
       } else {
         const nuevaProductora = await Productora.create({
           ...productoraData,
-          fecha_alta: new Date(), // Fecha de alta automática
         });
         cambios.push(
           `Productora creada con ID: ${nuevaProductora.id_productora}`

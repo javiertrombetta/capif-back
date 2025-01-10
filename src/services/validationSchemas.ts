@@ -118,10 +118,34 @@ export const changeRoleSchema = Joi.object({
     }),
 });
 
-// Schema for getting filtered users
-export const getUsuariosSchema = Joi.object({
-  id_usuario: uuidSchema,
-});
+// Schema para filtros en query
+export const getUsuariosQuerySchema = Joi.object({
+  email: Joi.string().email().optional(),
+  nombre: Joi.string().optional(),
+  apellido: Joi.string().optional(),
+  tipo_registro: Joi.string()
+    .valid(
+      'DEPURAR',
+      'NUEVO',
+      'CONFIRMADO',
+      'PENDIENTE',
+      'ENVIADO',
+      'HABILITADO',
+      'DESHABILITADO'
+    )
+    .optional(),
+  rolId: Joi.string().uuid().optional(),
+  nombre_rol: Joi.string().optional(),
+  productoraId: Joi.string().uuid().optional(),
+  productoraNombre: Joi.string().optional(),
+  limit: Joi.number().integer().min(1).optional(),
+  offset: Joi.number().integer().min(0).optional(),
+}).options({ allowUnknown: false });
+
+// Schema para el body
+export const getUsuariosBodySchema = Joi.object({
+  id_usuario: Joi.string().uuid().optional(),
+}).optional();
 
 // Schema for creating an admin user
 export const createAdminSchema = Joi.object({
@@ -156,7 +180,7 @@ export const createAdminSchema = Joi.object({
 });
 
 // Schema for getting pending registrations
-export const getRegistroPendienteSchema = Joi.object({
+export const getRegistrosPendientesSchema = Joi.object({
   id_usuario: uuidSchema,
 });
 

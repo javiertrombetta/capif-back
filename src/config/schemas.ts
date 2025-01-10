@@ -278,7 +278,7 @@ export const userSchemas = {
         format: 'uuid',
         description: 'ID del usuario cuya aplicación será aprobada.',
         example: '123e4567-e89b-12d3-a456-426614174000',
-      },      
+      },
     },
     required: ['id_usuario'],
   },

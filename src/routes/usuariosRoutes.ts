@@ -4,9 +4,8 @@ import {
   blockOrUnblockUser,
   changeUserRole,
   getUsers,
-  getRegistrosPendientes,
   createAdminUser,
-  getRegistroPendiente,
+  getRegistrosPendientes,
   approveApplication,
   rejectApplication,
   sendApplication,
@@ -23,7 +22,7 @@ import {
   blockOrUnblockSchema,
   changeRoleSchema,
   createAdminSchema,
-  getRegistroPendienteSchema,
+  getRegistrosPendientesSchema,
   approveApplicationSchema,
   rejectApplicationSchema,
   sendApplicationSchema,
@@ -32,7 +31,8 @@ import {
   deleteUserSchema,
   updateUserViewsSchema,
   toggleUserViewStatusSchema,
-  getUsuariosSchema,
+  getUsuariosQuerySchema,
+  getUsuariosBodySchema,
 } from "../services/validationSchemas";
 
 const router = Router();
@@ -187,7 +187,7 @@ router.put(
  *         name: tipo_registro
  *         schema:
  *           type: string
- *           enum: [DEPURAR, NUEVO, CONFIRMADO, PENDIENTE, RECHAZADO, HABILITADO, DESHABILITADO]
+ *           enum: [DEPURAR, NUEVO, CONFIRMADO, PENDIENTE, ENVIADO, HABILITADO, DESHABILITADO]
  *         description: Tipo de registro del usuario.
  *       - in: query
  *         name: rolId
@@ -239,38 +239,15 @@ router.put(
  *       500:
  *         description: Error interno del servidor.
  */
-router.get(
-  "/:id_usuario",
-  authenticate,  
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.QUERY]: getUsuariosSchema }),
-  getUsers
-);
-
-// [GET] Obtener todos los usuarios pendientes de registro
-/**
- * @swagger
- * /usuarios/pendientes:
- *   get:
- *     summary: Obtener registros pendientes.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de registros pendientes.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado para acceder a este recurso.
- *       500:
- *         description: Error interno del servidor.
- */
-router.get(
-  "/pendientes",
+router.post(
+  "/",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
-  getRegistrosPendientes
+  celebrate({
+    [Segments.QUERY]: getUsuariosQuerySchema,
+    [Segments.BODY]: getUsuariosBodySchema,
+  }),
+  getUsers
 );
 
 // [POST] Crear un usuario manualmente
@@ -313,23 +290,23 @@ router.post(
  * @swagger
  * /usuarios/aplicaciones/pendientes:
  *   get:
- *     summary: Obtener el registro pendiente de un usuario.
- *     description: Devuelve la información del registro pendiente para el usuario especificado.
+ *     summary: Obtener registros pendientes de uno o todos los usuarios.
+ *     description: Devuelve la información del registro pendiente para un usuario especificado o todos los usuarios con registro pendiente.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: id_usuario
- *         required: true
+ *         required: false
  *         schema:
  *           type: string
  *           format: uuid
- *           description: ID del usuario.
+ *           description: ID del usuario. Si no se especifica, devuelve todos los usuarios pendientes.
  *           example: '123e4567-e89b-12d3-a456-426614174000'
  *     responses:
  *       200:
- *         description: Registro pendiente del usuario obtenido exitosamente.
+ *         description: Registros pendientes obtenidos exitosamente.
  *       400:
  *         description: Parámetros inválidos.
  *       401:
@@ -345,8 +322,8 @@ router.get(
   "/aplicaciones/pendientes",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.QUERY]: getRegistroPendienteSchema }),
-  getRegistroPendiente
+  celebrate({ [Segments.BODY]: getRegistrosPendientesSchema }),
+  getRegistrosPendientes
 );
 
 /**

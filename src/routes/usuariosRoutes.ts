@@ -84,7 +84,7 @@ router.put(
  * @swagger
  * /usuarios/estado/sesion:
  *   put:
- *     summary: Bloquear o desbloquear un usuario.
+ *     summary: PENDIENTE Bloquear o desbloquear un usuario.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -255,7 +255,7 @@ router.post(
  * @swagger
  * /usuarios/admin/nuevo:
  *   post:
- *     summary: Crear un nuevo usuario administrador.
+ *     summary: PENDIENTE Crear un nuevo usuario administrador.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -290,8 +290,8 @@ router.post(
  * @swagger
  * /usuarios/aplicaciones/pendientes:
  *   get:
- *     summary: Obtener registros pendientes de uno o todos los usuarios.
- *     description: Devuelve la información del registro pendiente para un usuario especificado o todos los usuarios con registro pendiente.
+ *     summary: PENDIENTE Obtener registros pendientes de uno o todos los usuarios.
+ *     description: PENDIENTE Devuelve la información del registro pendiente para un usuario especificado o todos los usuarios con registro pendiente.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -330,8 +330,8 @@ router.get(
  * @swagger
  * /usuarios/aplicaciones/autorizar:
  *   post:
- *     summary: Aprobar la solicitud de aplicación de un usuario.
- *     description: Autoriza la solicitud de un usuario, asigna una productora y actualiza los registros asociados.
+ *     summary: PENDIENTE Aprobar la solicitud de aplicación de un usuario.
+ *     description: PENDIENTE Autoriza la solicitud de un usuario, asigna una productora y actualiza los registros asociados.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -369,8 +369,8 @@ router.post(
  * @swagger
  * /usuarios/aplicaciones/rechazar:
  *   post:
- *     summary: Rechazar la solicitud de aplicación de un usuario.
- *     description: Rechaza la solicitud de un usuario especificando el motivo del rechazo.
+ *     summary: PENDIENTE Rechazar la solicitud de aplicación de un usuario.
+ *     description: PENDIENTE Rechaza la solicitud de un usuario especificando el motivo del rechazo.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -415,8 +415,8 @@ router.post(
  * @swagger
  * /usuarios/aplicaciones/enviar:
  *   post:
- *     summary: Enviar solicitud de aplicación.
- *     description: Permite a un usuario enviar una solicitud de aplicación con sus datos y documentos asociados.
+ *     summary: PENDIENTE Enviar solicitud de aplicación.
+ *     description: PENDIENTE Permite a un usuario enviar una solicitud de aplicación con sus datos y documentos asociados.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -444,7 +444,7 @@ router.post(
 router.post(
   "/aplicaciones/enviar",
   authenticate,
-  authorizeRoles(["usuario"]),
+  authorizeRoles(["productor_principal"]),
   celebrate({ [Segments.BODY]: sendApplicationSchema }),
   sendApplication
 );
@@ -453,8 +453,8 @@ router.post(
  * @swagger
  * /usuarios/aplicaciones/actualizar:
  *   put:
- *     summary: Actualizar solicitud de aplicación.
- *     description: Permite actualizar los datos de la solicitud de aplicación de un usuario, incluyendo datos físicos, datos jurídicos y documentos asociados.
+ *     summary: PENDIENTE Actualizar solicitud de aplicación.
+ *     description: PENDIENTE Permite actualizar los datos de la solicitud de aplicación de un usuario, incluyendo datos físicos, datos jurídicos y documentos asociados.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -569,7 +569,7 @@ router.delete(
  * @swagger
  * /usuarios/vistas:
  *   put:
- *     summary: Actualizar las vistas de un usuario.
+ *     summary: PENDIENTE Actualizar las vistas de un usuario.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -606,7 +606,7 @@ router.put(
  * @swagger
  * /usuarios/vistas/estado:
  *   put:
- *     summary: Cambiar el estado de habilitación de las vistas de un usuario.
+ *     summary: PENDIENTE Cambiar el estado de habilitación de las vistas de un usuario.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []

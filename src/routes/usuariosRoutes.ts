@@ -32,7 +32,6 @@ import {
   updateUserViewsSchema,
   toggleUserViewStatusSchema,
   getUsuariosQuerySchema,
-  getUsuariosBodySchema,
 } from "../services/validationSchemas";
 
 const router = Router();
@@ -152,7 +151,7 @@ router.put(
 // [GET] Obtener los usuarios según filtros
 /**
  * @swagger
-* /usuarios:
+ * /usuarios:
  *   get:
  *     summary: Obtener usuarios filtrados.
  *     description: Permite obtener una lista de usuarios aplicando filtros en los parámetros de consulta.
@@ -162,7 +161,7 @@ router.put(
  *     parameters:
  *       - in: query
  *         name: id_usuario
- *         required: true
+ *         required: false
  *         schema:
  *           type: string
  *           format: uuid
@@ -239,13 +238,12 @@ router.put(
  *       500:
  *         description: Error interno del servidor.
  */
-router.post(
+router.get(
   "/",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({
     [Segments.QUERY]: getUsuariosQuerySchema,
-    [Segments.BODY]: getUsuariosBodySchema,
   }),
   getUsers
 );

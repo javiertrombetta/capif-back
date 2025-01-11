@@ -284,13 +284,12 @@ export const changeUserRole = async (
 
 // OBTENER TODOS LOS USUARIOS SEGÚN CONDICIONES
 export const getUsers = async (
-  req: Request<{}, {}, { id_usuario?: string }>,
+  req: Request<{}, {}, {}, { id_usuario?: string; [key: string]: string | undefined }>,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id_usuario } = req.body;
-    const filters = req.query;
+    const { id_usuario, ...filters } = req.query;
 
     if (id_usuario) {
       logger.info(
@@ -323,17 +322,13 @@ export const getUsers = async (
     if (filters.email) findFilters.email = String(filters.email);
     if (filters.nombre) findFilters.nombre = String(filters.nombre);
     if (filters.apellido) findFilters.apellido = String(filters.apellido);
-    if (filters.tipo_registro)
-      findFilters.tipo_registro = String(filters.tipo_registro);
+    if (filters.tipo_registro) findFilters.tipo_registro = String(filters.tipo_registro);
     if (filters.rolId) findFilters.rolId = String(filters.rolId);
     if (filters.nombre_rol) findFilters.nombre_rol = String(filters.nombre_rol);
-    if (filters.productoraId)
-      findFilters.productoraId = String(filters.productoraId);
-    if (filters.productoraNombre)
-      findFilters.productoraNombre = String(filters.productoraNombre);
+    if (filters.productoraId) findFilters.productoraId = String(filters.productoraId);
+    if (filters.productoraNombre) findFilters.productoraNombre = String(filters.productoraNombre);
     if (filters.limit) findFilters.limit = parseInt(String(filters.limit), 10);
-    if (filters.offset)
-      findFilters.offset = parseInt(String(filters.offset), 10);
+    if (filters.offset) findFilters.offset = parseInt(String(filters.offset), 10);
 
     // Obtener todos los usuarios si no hay filtros
     const users = await findUsuario(Object.keys(findFilters).length ? findFilters : {});
@@ -854,7 +849,7 @@ export const rejectApplication = async (
     // Enviar correo de notificación de rechazo
 
     // Actualizar el tipo_registro del usuario a PENDIENTE
-    await user.update({ tipo_registro: "PENDIENTE" });
+    await user.update({ tipo_registro: "RECHAZADO" });
 
     await sendEmail({
       to: user.email,
@@ -898,7 +893,7 @@ export const sendApplication = async (
     } = req.body;
 
     // Validar parámetros
-    if (!productoraData || !documentos || !nombre || !apellido || !telefono) {
+    if (!id_usuario || !productoraData || !nombre || !apellido || !telefono) {
       logger.warn(
         `${req.method} ${req.originalUrl} - Faltan parámetros obligatorios.`
       );
@@ -916,15 +911,44 @@ export const sendApplication = async (
       throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
     }
 
+    logger.debug(
+      `${req.method} ${req.originalUrl} - ID de usuario autenticado: ${userAuthId}`
+    );
+
     // Buscar al usuario mediante findUsuario
-    const userData = await findUsuario({ userId: id_usuario, tipo_registro: "PENDIENTE" });
+    const userData = await findUsuario({ userId: id_usuario });
     if (!userData || !userData.user) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
+        `${req.method} ${req.originalUrl} - Usuario no encontrado con ID: ${id_usuario}`
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
+    }   
+    
     const user = userData.user;
+    
+    if (userData.user.tipo_registro === "CONFIRMADO") {
+      logger.info(
+        `${req.method} ${req.originalUrl} - Usuario con estado CONFIRMADO encontrado: ${userData.user.email}`
+      );
+    } else if (userData.user.tipo_registro === "PENDIENTE") {
+      logger.info(
+        `${req.method} ${req.originalUrl} - Usuario con estado PENDIENTE encontrado: ${userData.user.email}`
+      );
+    } else if (userData.user.tipo_registro === "RECHAZADO") {
+      logger.info(
+        `${req.method} ${req.originalUrl} - Usuario con estado RECHAZADO encontrado: ${userData.user.email}`
+      );
+    } else {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Usuario con un estado inesperado: ${userData.user.tipo_registro}`
+      );
+
+      return next(
+        new Err.BadRequestError(
+          `El usuario tiene un estado no permitido: ${userData.user.tipo_registro}. Solo se permiten los estados CONFIRMADO, PENDIENTE o RECHAZADO.`
+        )
+      );
+    }
 
     if (!user) {
       logger.error(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
@@ -933,12 +957,17 @@ export const sendApplication = async (
       });
     }
 
-    await user.update({ nombre, apellido, telefono }); 
+    await user.update({ nombre, apellido, telefono });
+    logger.info(
+      `${req.method} ${req.originalUrl} - Datos del usuario actualizados: nombre=${nombre}, apellido=${apellido}, telefono=${telefono}`
+    );
+
+    let productora = null;
 
     // Verificar si existe una relación en UsuarioMaestro con la productora
     const existingRelation = userData.maestros.find(
       (maestro) => maestro.productora?.id_productora === productoraData.id_productora
-    );  
+    );
 
     // Validar el tipo de persona (FÍSICA o JURÍDICA)
     const tipoPersonaValida = ["FISICA", "JURIDICA"].includes(
@@ -946,37 +975,59 @@ export const sendApplication = async (
     );
     if (!tipoPersonaValida) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Tipo de persona inválido.`
+        `${req.method} ${req.originalUrl} - Tipo de persona inválido: ${productoraData.tipo_persona}`
       );
       throw new Err.BadRequestError(
         "El tipo de persona debe ser FISICA o JURIDICA."
       );
     }
- 
-    let productora = null;
 
-    // Chequear si existe ya la productora
-    if (existingRelation && existingRelation.productora?.fecha_alta) {
+    // Manejar creación o actualización de la productora
+    if (productoraData.id_productora) {
+      // Buscar productora existente por ID
+      productora = await Productora.findOne({
+        where: { id_productora: productoraData.id_productora },
+      });
 
-      // Actualizar la productora si fecha_alta no es null
-      await existingRelation.productora.update(productoraData);
-      logger.info(`Productora actualizada: ${existingRelation.productora.id_productora}`);
-      productora = existingRelation.productora;
-
+      if (productora) {
+        // Actualizar datos de la productora existente
+        await productora.update(productoraData);
+        logger.info(
+          `${req.method} ${req.originalUrl} - Productora actualizada con ID: ${productora.id_productora}`
+        );
+      } else {
+        // Crear una nueva productora si no existe
+        productora = await Productora.create({ ...productoraData, fecha_alta: null });
+        logger.info(
+          `${req.method} ${req.originalUrl} - Nueva productora creada con ID: ${productora.id_productora}`
+        );
+      }
     } else {
-
-      // Crear nueva productora y relación UsuarioMaestro
+      // Crear nueva productora si no se proporciona un ID
       productora = await Productora.create({ ...productoraData, fecha_alta: null });
+      logger.info(
+        `${req.method} ${req.originalUrl} - Nueva productora creada sin ID proporcionado. ID asignado: ${productora.id_productora}`
+      );
+    }
+
+    // Verificar si existe una relación UsuarioMaestro para esta productora
+    if (!existingRelation) {
       await UsuarioMaestro.create({
         usuario_registrante_id: id_usuario,
         productora_id: productora.id_productora,
       });
-      logger.info(`Nueva productora creada: ${productora.id_productora}`);
-
-    }    
+      logger.info(
+        `${req.method} ${req.originalUrl} - Relación UsuarioMaestro creada para la productora con ID: ${productora.id_productora}`
+      );
+    }
 
     // Manejar documentos de forma opcional
     if (documentos && documentos.length > 0) {
+
+      logger.info(
+        `${req.method} ${req.originalUrl} - Procesando documentos. Cantidad: ${documentos.length}`
+      );
+
       const tiposDocumentos = await ProductoraDocumentoTipo.findAll({
         where: {
           nombre_documento: documentos.map((doc: { nombre_documento: string }) => doc.nombre_documento),
@@ -987,7 +1038,11 @@ export const sendApplication = async (
         documentos.map(async (doc: { nombre_documento: string; ruta_archivo_documento: string }) => {
           const tipoDocumento = tiposDocumentos.find((tipo) => tipo.nombre_documento === doc.nombre_documento);
           if (!tipoDocumento) {
-            logger.warn(`Tipo de documento no encontrado: ${doc.nombre_documento}`);
+
+            logger.warn(
+              `${req.method} ${req.originalUrl} - Tipo de documento no válido: ${doc.nombre_documento}`
+            );
+
             throw new Err.BadRequestError(`Tipo de documento no válido: ${doc.nombre_documento}`);
           }
           await ProductoraDocumento.create({
@@ -996,12 +1051,21 @@ export const sendApplication = async (
             tipo_documento_id: tipoDocumento.id_documento_tipo,
             ruta_archivo_documento: doc.ruta_archivo_documento,
           });
+
+          logger.info(
+            `${req.method} ${req.originalUrl} - Documento registrado: ${doc.nombre_documento}, ruta: ${doc.ruta_archivo_documento}`
+          );
+
         })
       );
     }
 
     // Actualizar el tipo_registro del usuario a ENVIADO
     await user.update({ tipo_registro: "ENVIADO" });
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Tipo de registro actualizado a ENVIADO para el usuario: ${user.email}`
+    );
 
     // Enviar correo de notificación al usuario
     // await sendEmail({
@@ -1015,15 +1079,18 @@ export const sendApplication = async (
       usuario_originario_id: userAuthId,
       usuario_destino_id: user.id_usuario,
       modelo: "Productora",
-      tipo_auditoria: "APLICACION_ENVIADA",
+      tipo_auditoria: "ALTA",
       detalle: `Solicitud de aplicación enviada por ${user.email} para la productora ${productora.id_productora}`,
     });
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Aplicación enviada exitosamente.`
+      `${req.method} ${req.originalUrl} - Auditoría registrada exitosamente.`
     );
+
     res.status(200).json({ message: MESSAGES.SUCCESS.APPLICATION.SAVED });
+
   } catch (err) {
+    
     logger.error(
       `${req.method} ${req.originalUrl} - Error al enviar aplicación: ${
         err instanceof Error ? err.message : "Error desconocido"

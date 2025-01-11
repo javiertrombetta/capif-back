@@ -143,10 +143,10 @@ export const registerPrimaryProductor = async (
       `${req.method} ${req.originalUrl} - Auditoría registrada para el usuario: ${email}`
     );
 
-    // Retorno de mensaje al usuario comn código
+    // Retorno de mensaje al usuario con código
     res
       .status(201)
-      .json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_PRIMARY_FIRST });
+      .json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_PRIMARY_FIRST, token: newUsuario.email_verification_token });
   } catch (err) {
     logger.error(
       `${req.method} ${req.originalUrl} - Error en el registro: ${

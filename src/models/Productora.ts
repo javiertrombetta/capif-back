@@ -164,12 +164,12 @@ Productora.init(
           args: [22, 22],
           msg: 'El CBU debe tener exactamente 22 dígitos.',
         },
-        isValidCBU(value: string) {
-          const validationResult = validateCBU(value);
-          if (validationResult !== true) {
-            throw new Error(validationResult as string);
-          }
-        },
+        // isValidCBU(value: string) {
+        //   const validationResult = validateCBU(value);
+        //   if (validationResult !== true) {
+        //     throw new Error(validationResult as string);
+        //   }
+        // },
       },
     },
     denominacion_sello: {
@@ -232,7 +232,8 @@ Productora.init(
         isNumeric: {
           msg: 'El CUIT del representante debe contener solo números.',
         },
-        isValidCUIT(value: string) {
+        isValidCUIT(value: string | null) {
+          if (value === null || value === undefined) return;
           const validationResult = validateCUIT(value);
           if (validationResult !== true) {
             throw new Error(validationResult as string);

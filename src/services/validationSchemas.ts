@@ -120,18 +120,19 @@ export const changeRoleSchema = Joi.object({
 
 // Schema para filtros en query
 export const getUsuariosQuerySchema = Joi.object({
+  id_usuario: Joi.string().uuid().optional(),
   email: Joi.string().email().optional(),
   nombre: Joi.string().optional(),
   apellido: Joi.string().optional(),
   tipo_registro: Joi.string()
     .valid(
-      'DEPURAR',
-      'NUEVO',
-      'CONFIRMADO',
-      'PENDIENTE',
-      'ENVIADO',
-      'HABILITADO',
-      'DESHABILITADO'
+      "DEPURAR",
+      "NUEVO",
+      "CONFIRMADO",
+      "PENDIENTE",
+      "ENVIADO",
+      "HABILITADO",
+      "DESHABILITADO"
     )
     .optional(),
   rolId: Joi.string().uuid().optional(),
@@ -141,11 +142,6 @@ export const getUsuariosQuerySchema = Joi.object({
   limit: Joi.number().integer().min(1).optional(),
   offset: Joi.number().integer().min(0).optional(),
 }).options({ allowUnknown: false });
-
-// Schema para el body
-export const getUsuariosBodySchema = Joi.object({
-  id_usuario: Joi.string().uuid().optional(),
-}).optional();
 
 // Schema for creating an admin user
 export const createAdminSchema = Joi.object({
@@ -198,137 +194,165 @@ export const rejectApplicationSchema = Joi.object({
   }),
 });
 
-// Schema for sending an application
+// Document Schema (Optional)
+const documentSchema = Joi.object({
+  nombre_documento: Joi.string().required().messages({
+    'any.required': 'El campo nombre_documento es obligatorio.',
+  }),
+  ruta_archivo_documento: Joi.string()
+    .uri()
+    .required()
+    .messages({
+      'string.uri': 'El campo ruta_archivo_documento debe ser una URI válida.',
+      'any.required': 'El campo ruta_archivo_documento es obligatorio.',
+    }),
+});
+
+// Productora Data Schema
+const productoraDataSchema = Joi.object({
+  id_productora: uuidSchema.optional().messages({
+    'string.guid': 'El campo id_productora debe ser un UUID válido.',
+  }),
+  tipo_persona: Joi.string()
+    .valid('FISICA', 'JURIDICA')
+    .required()
+    .messages({
+      'any.required': 'El campo tipo_persona es obligatorio.',
+      'any.only': 'El campo tipo_persona debe ser "FISICA" o "JURIDICA".',
+    }),
+  nombre_productora: Joi.string()
+    .min(3)
+    .max(255)
+    .required()
+    .messages({
+      'any.required': 'El campo nombre_productora es obligatorio.',
+      'string.min': 'El campo nombre_productora debe tener al menos 3 caracteres.',
+      'string.max': 'El campo nombre_productora no debe exceder los 255 caracteres.',
+    }),
+  cuit_cuil: Joi.string()
+    .length(11)
+    .required()
+    .messages({
+      'any.required': 'El campo cuit_cuil es obligatorio.',
+      'string.length': 'El campo cuit_cuil debe tener exactamente 11 caracteres.',
+    }),
+  email: Joi.string()
+    .email()
+    .required()
+    .messages({
+      'any.required': 'El campo email es obligatorio.',
+      'string.email': 'El campo email debe ser un correo electrónico válido.',
+    }),
+  calle: Joi.string().required().messages({
+    'any.required': 'El campo calle es obligatorio.',
+  }),
+  numero: Joi.string().required().messages({
+    'any.required': 'El campo numero es obligatorio.',
+  }),
+  ciudad: Joi.string().required().messages({
+    'any.required': 'El campo ciudad es obligatorio.',
+  }),
+  localidad: Joi.string().required().messages({
+    'any.required': 'El campo localidad es obligatorio.',
+  }),
+  provincia: Joi.string().required().messages({
+    'any.required': 'El campo provincia es obligatorio.',
+  }),
+  codigo_postal: Joi.string().required().messages({
+    'any.required': 'El campo codigo_postal es obligatorio.',
+  }),
+  telefono: Joi.string()
+    .pattern(/^[0-9]+$/)
+    .required()
+    .messages({
+      'any.required': 'El campo telefono es obligatorio.',
+      'string.pattern.base': 'El campo telefono debe contener solo números.',
+    }),
+  nacionalidad: Joi.string().required().messages({
+    'any.required': 'El campo nacionalidad es obligatorio.',
+  }),
+  alias_cbu: Joi.string()
+    .min(6)
+    .max(20)
+    .required()
+    .messages({
+      'any.required': 'El campo alias_cbu es obligatorio.',
+      'string.min': 'El campo alias_cbu debe tener al menos 6 caracteres.',
+      'string.max': 'El campo alias_cbu no debe exceder los 20 caracteres.',
+    }),
+  cbu: Joi.string()
+    .length(22)
+    .required()
+    .messages({
+      'any.required': 'El campo cbu es obligatorio.',
+      'string.length': 'El campo cbu debe tener exactamente 22 caracteres.',
+    }),
+  denominacion_sello: Joi.string().optional().messages({
+    'string.base': 'El campo denominacion_sello debe ser un texto.',
+  }),
+  datos_adicionales: Joi.string().optional().messages({
+    'string.base': 'El campo datos_adicionales debe ser un texto.',
+  }),
+  nombres: Joi.string().optional().messages({
+    'string.base': 'El campo nombres debe ser un texto.',
+  }),
+  apellidos: Joi.string().optional().messages({
+    'string.base': 'El campo apellidos debe ser un texto.',
+  }),
+  razon_social: Joi.string().optional().messages({
+    'string.base': 'El campo razon_social debe ser un texto.',
+  }),
+  nombres_representante: Joi.string().optional().messages({
+    'string.base': 'El campo nombres_representante debe ser un texto.',
+  }),
+  apellidos_representante: Joi.string().optional().messages({
+    'string.base': 'El campo apellidos_representante debe ser un texto.',
+  }),
+  cuit_representante: Joi.string()
+    .length(11)
+    .optional()
+    .messages({
+      'string.length': 'El campo cuit_representante debe tener exactamente 11 caracteres.',
+    }),
+}).required().messages({
+  'object.base': 'El campo productoraData debe ser un objeto.',
+  'any.required': 'El campo productoraData es obligatorio.',
+});
+
+// Main Schema for sendApplication
 export const sendApplicationSchema = Joi.object({
   id_usuario: uuidSchema.required().messages({
     'any.required': 'El campo id_usuario es obligatorio.',
     'string.guid': 'El campo id_usuario debe ser un UUID válido.',
   }),
-  productoraData: Joi.object({
-    tipo_persona: Joi.string()
-      .valid('FISICA', 'JURIDICA')
-      .required()
-      .messages({
-        'any.required': 'El campo tipo_persona es obligatorio.',
-        'any.only': 'El campo tipo_persona debe ser "FISICA" o "JURIDICA".',
-      }),
-    nombre_productora: Joi.string()
-      .min(3)
-      .max(255)
-      .required()
-      .messages({
-        'any.required': 'El campo nombre_productora es obligatorio.',
-        'string.min': 'El campo nombre_productora debe tener al menos 3 caracteres.',
-        'string.max': 'El campo nombre_productora no debe exceder los 255 caracteres.',
-      }),
-    cuit_cuil: Joi.string()
-      .length(11)
-      .required()
-      .messages({
-        'any.required': 'El campo cuit_cuil es obligatorio.',
-        'string.length': 'El campo cuit_cuil debe tener exactamente 11 caracteres.',
-      }),
-    email: Joi.string()
-      .email()
-      .required()
-      .messages({
-        'any.required': 'El campo email es obligatorio.',
-        'string.email': 'El campo email debe ser un correo electrónico válido.',
-      }),
-    calle: Joi.string().required().messages({
-      'any.required': 'El campo calle es obligatorio.',
-    }),
-    numero: Joi.string().required().messages({
-      'any.required': 'El campo numero es obligatorio.',
-    }),
-    ciudad: Joi.string().required().messages({
-      'any.required': 'El campo ciudad es obligatorio.',
-    }),
-    localidad: Joi.string().required().messages({
-      'any.required': 'El campo localidad es obligatorio.',
-    }),
-    provincia: Joi.string().required().messages({
-      'any.required': 'El campo provincia es obligatorio.',
-    }),
-    codigo_postal: Joi.string().required().messages({
-      'any.required': 'El campo codigo_postal es obligatorio.',
-    }),
-    telefono: Joi.string()
-      .pattern(/^[0-9]+$/)
-      .required()
-      .messages({
-        'any.required': 'El campo telefono es obligatorio.',
-        'string.pattern.base': 'El campo telefono debe contener solo números.',
-      }),
-    nacionalidad: Joi.string().required().messages({
-      'any.required': 'El campo nacionalidad es obligatorio.',
-    }),
-    alias_cbu: Joi.string()
-      .min(6)
-      .max(20)
-      .required()
-      .messages({
-        'any.required': 'El campo alias_cbu es obligatorio.',
-        'string.min': 'El campo alias_cbu debe tener al menos 6 caracteres.',
-        'string.max': 'El campo alias_cbu no debe exceder los 20 caracteres.',
-      }),
-    cbu: Joi.string()
-      .length(22)
-      .required()
-      .messages({
-        'any.required': 'El campo cbu es obligatorio.',
-        'string.length': 'El campo cbu debe tener exactamente 22 caracteres.',
-      }),
-    denominacion_sello: Joi.string().optional().messages({
-      'string.base': 'El campo denominacion_sello debe ser un texto.',
-    }),
-    datos_adicionales: Joi.string().optional().messages({
-      'string.base': 'El campo datos_adicionales debe ser un texto.',
-    }),
-    nombres: Joi.string().optional().messages({
-      'string.base': 'El campo nombres debe ser un texto.',
-    }),
-    apellidos: Joi.string().optional().messages({
-      'string.base': 'El campo apellidos debe ser un texto.',
-    }),
-    razon_social: Joi.string().optional().messages({
-      'string.base': 'El campo razon_social debe ser un texto.',
-    }),
-    nombres_representante: Joi.string().optional().messages({
-      'string.base': 'El campo nombres_representante debe ser un texto.',
-    }),
-    apellidos_representante: Joi.string().optional().messages({
-      'string.base': 'El campo apellidos_representante debe ser un texto.',
-    }),
-    cuit_representante: Joi.string()
-      .length(11)
-      .optional()
-      .messages({
-        'string.length': 'El campo cuit_representante debe tener exactamente 11 caracteres.',
-      }),
-  }).required().messages({
-    'object.base': 'El campo productoraData debe ser un objeto.',
-    'any.required': 'El campo productoraData es obligatorio.',
+  productoraData: productoraDataSchema,
+  documentos: Joi.array().items(documentSchema).optional().messages({
+    'array.base': 'El campo documentos debe ser un arreglo.',
   }),
-  documentos: Joi.array()
-    .items(
-      Joi.object({
-        nombre_documento: Joi.string().required().messages({
-          'any.required': 'El campo nombre_documento es obligatorio.',
-        }),
-        ruta_archivo_documento: Joi.string()
-          .uri()
-          .required()
-          .messages({
-            'string.uri': 'El campo ruta_archivo_documento debe ser una URI válida.',
-            'any.required': 'El campo ruta_archivo_documento es obligatorio.',
-          }),
-      })
-    )
+  nombre: Joi.string()
+    .min(3)
+    .max(255)
     .required()
     .messages({
-      'array.base': 'El campo documentos debe ser un arreglo.',
-      'any.required': 'El campo documentos es obligatorio.',
+      'any.required': 'El campo nombre es obligatorio.',
+      'string.min': 'El campo nombre debe tener al menos 3 caracteres.',
+      'string.max': 'El campo nombre no debe exceder los 255 caracteres.',
+    }),
+  apellido: Joi.string()
+    .min(3)
+    .max(255)
+    .required()
+    .messages({
+      'any.required': 'El campo apellido es obligatorio.',
+      'string.min': 'El campo apellido debe tener al menos 3 caracteres.',
+      'string.max': 'El campo apellido no debe exceder los 255 caracteres.',
+    }),
+  telefono: Joi.string()
+    .pattern(/^[0-9]+$/)
+    .required()
+    .messages({
+      'any.required': 'El campo telefono es obligatorio.',
+      'string.pattern.base': 'El campo telefono debe contener solo números.',
     }),
 });
 

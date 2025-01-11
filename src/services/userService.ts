@@ -109,7 +109,7 @@ export const findUsuario = async (filters: {
   email?: string;
   nombre?: string;
   apellido?: string;
-  tipo_registro?: string;
+  tipo_registro?: string | string[];
   rolId?: string;
   nombre_rol?: string;
   productoraId?: string;
@@ -129,7 +129,13 @@ export const findUsuario = async (filters: {
     whereUsuario.email = filters.email;
   }
   if (filters.tipo_registro) {
-    whereUsuario.tipo_registro = filters.tipo_registro;
+    if (Array.isArray(filters.tipo_registro)) {
+      // Manejar varios tipos de registros
+      whereUsuario.tipo_registro = { [Op.in]: filters.tipo_registro };
+    } else {
+      // Manejar un único tipo de registro
+      whereUsuario.tipo_registro = filters.tipo_registro;
+    }
   }
   if (filters.nombre) {
     whereUsuario.nombre = { [Op.like]: `%${filters.nombre}%` };

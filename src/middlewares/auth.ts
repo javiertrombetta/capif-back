@@ -43,22 +43,24 @@ export const authenticate = async (
         .json({ error: "Acceso denegado. Token inválido." });
     }
 
-    const rolUsuario = await UsuarioRol.findOne({
-      where: { id_rol: decodedToken.role },
-      attributes: ["nombre_rol"],
-    });
     // Asignar el usuario al request
     req.userId = decodedToken.id;
 
+    const rolUsuario = await UsuarioRol.findOne({
+      where: { id_rol: decodedToken.role },
+      attributes: ["nombre_rol"],
+    });    
+
     if (!rolUsuario) {
       logger.error(
-        'Error: No se encontró el rol "usuario" en la base de datos.'
+        `Error: No se encontró un rol correspondiente al ID ${decodedToken.role} en la base de datos.`
       );
       return res
         .status(500)
         .json({ error: "Error interno del servidor: Rol base no encontrado." });
     }
 
+    // Asignar el nombre del rol al request
     req.role = rolUsuario.nombre_rol;
 
     // Verificar si existe la cookie `active_sesion`
@@ -75,6 +77,11 @@ export const authenticate = async (
           .json({ error: "Cookie de sesión activa inválida." });
       }
     }
+
+    logger.info(
+      `Autenticación exitosa. Usuario ID: ${req.userId}, Rol: ${req.role}`
+    );
+
     next();
   } catch (err) {
     logger.error("Error en el middleware de autenticación:", err);
@@ -93,7 +100,9 @@ export const authorizeRoles = (roles: string[]) => {
       const roleName = req.role;
 
       if (!roleName) {
-        logger.warn("Acceso denegado: Rol no encontrado en la solicitud");
+        logger.warn(
+          `Acceso denegado: Rol no encontrado en la solicitud. Usuario autenticado con ID: ${req.userId}`
+        );
         return res
           .status(403)
           .json({ error: "No tienes permiso para acceder a este recurso." });
@@ -101,7 +110,9 @@ export const authorizeRoles = (roles: string[]) => {
 
       if (!roles.includes(roleName)) {
         logger.warn(
-          `Acceso denegado: El rol ${roleName} no tiene permiso para acceder.`
+          `Acceso denegado: El rol ${roleName} no tiene permiso para acceder. Roles permitidos: ${roles.join(
+            ", "
+          )}`
         );
         return res
           .status(403)

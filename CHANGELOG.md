@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.93 - 13-01-2025
+## 🚀 Features
+
+- feat: add repertoriosController mock
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.90
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.90 - 13-01-2025
 ## 🚀 Features
 

@@ -37,6 +37,28 @@ export const SUCCESS = {
     DECISION_ADDED: 'Decisión agregada exitosamente.',
     CONFLICTO_DELETED: 'Conflicto eliminado exitosamente.',
   },
+  PRODUCTORA: {
+    PRODUCTORA_CREATED: 'Productora creado exitosamente.',
+    UPDATED: 'Productora actualizada exitosamente.',
+    DELETED: 'Productora eliminada exitosamente.',
+  },
+  DOCUMENTO: {
+    CREATED: 'Documento creado exitosamente.',
+    UPDATED: 'Documento actualizado exitosamente.',
+    DELETED: 'Documento eliminado exitosamente.',
+    ALL_DELETED: 'Todos los documentos de la productora fueron eliminados exitosamente.',
+  },
+  ISRC: {
+    CREATED: 'ISRC creado exitosamente.',
+    UPDATED: 'ISRC actualizado exitosamente.',
+    DELETED: 'Todos los ISRCs de la productora fueron eliminados exitosamente.',
+  },
+  POSTULACION: {
+    CREATED: 'Postulación creada exitosamente.',
+    UPDATED: 'Postulación actualizada exitosamente.',
+    DELETED: 'Postulaciones eliminadas exitosamente para la productora.',
+    ALL_DELETED: 'Todas las postulaciones de todas las productoras fueron eliminadas exitosamente.',
+  },
   CUENTA_CORRIENTE: {
     CUENTA_DELETED: 'Cuenta corriente eliminada correctamente.',
     SALDO_UPDATED: 'Saldo de la cuenta corriente actualizado correctamente.',
@@ -188,8 +210,11 @@ export const ERROR = {
   AUTH: {
     NOT_AUTHORIZED: 'No estás autorizado para realizar esta acción.',
   },
-  PREMIO: {
-    NOT_FOUND: 'No se encontró la postulación.',
+  POSTULACIONES: {
+    NOT_FOUND: 'No se encontraron postulaciones en la búsqueda.',
+    NOT_FOUND_FOR_PRODUCTORA: 'No se encontró la postulación de la productora especificada.',
+    ALREADY_EXISTS: 'Ya existe una postulación con el código proporcionado para esta productora.',
+    CREATION_FAILED: 'No se pudo crear la postulación.',
   },
   ARCHIVO: {
     NOT_FOUND: 'No se encontró el archivo.',
@@ -197,6 +222,7 @@ export const ERROR = {
   },
   PRODUCTORA: {
     NOT_FOUND: 'Productor no encontrado.',
+    CREATION_FAILED: 'No se pudo crear la productora de forma correcta.',
     ID_REQUIRED: "Se requiere el id de la productora",
     ALREADY_EXISTS: 'La productora ya existe.',
     INVALID_ROLE: 'El rol del usuario no corresponde a productor.',
@@ -204,6 +230,17 @@ export const ERROR = {
     ROLE_NOT_FOUND: 'Rol de productor no encontrado en el sistema.',
     INVALID_TIPO_COMPANIA: 'El tipo de compañía proporcionado no es válido.',
     INVALID_ESTADO: 'El estado proporcionado no es válido.',
+  },
+  DOCUMENTOS: {
+    NOT_FOUND: 'No se encontron documentos.',
+    NOT_FOUND_BY_ID: 'No se encontró el documento solicitado.',
+    CREATION_FAILED: 'No se pudo crear el documento.',
+  },
+  ISRC: {
+    NOT_FOUND: 'No se encontron ISRC en la búsqueda.',
+    NOT_FOUND_FOR_PRODUCTORA: 'No se encontraron ISRCs para la productora especificada.',
+    ALREADY_EXISTS: 'Ya existe un ISRC con este código para la productora especificada.',
+    CREATION_FAILED: 'No se pudo crear el ISRC.',
   },
   REGLA: {
     NOT_FOUND: 'Regla no encontrada.',

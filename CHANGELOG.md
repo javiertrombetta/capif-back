@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.90 - 13-01-2025
+## 🚀 Features
+
+- feat: add productorasController
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.87
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.87 - 11-01-2025
 ## 🐛 Fixes
 

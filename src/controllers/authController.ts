@@ -520,7 +520,7 @@ export const login = async (
 
     // Generar un token básico con `userId`
     const token = jwt.sign(
-      { id: user.id_usuario, role: user.rol_id },
+      { id: user.id_usuario },
       process.env.JWT_SECRET!,
       {
         expiresIn: process.env.JWT_EXPIRATION || "1h",
@@ -923,15 +923,21 @@ export const validateEmail = async (
     }
     const user = result.user;
 
-    if (
-      !user ||
+    if(!user) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Usuario no encontrado.`
+      );
+      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+    }
+
+    if (      
       user.email_verification_token !== token ||
       user.email_verification_token_expires! < new Date()
     ) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado o token inválido.`
+        `${req.method} ${req.originalUrl} - Token inválido o expirado.`
       );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+      throw new Err.NotFoundError(MESSAGES.ERROR.VALIDATION.INVALID_TOKEN);
     }
 
     // Actualiza el tipo_registro del usuario a "CONFIRMADO" y limpia el token de verificación

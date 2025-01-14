@@ -1,4 +1,16 @@
 # Changelog
+## v0.1.97 - 14-01-2025
+## 🐛 Fixes
+
+- fix: change cookies in auth middleware
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.93
+- chore(docs): update CHANGELOG.MD
+- chore: changes in comments
+
+
 ## v0.1.93 - 13-01-2025
 ## 🚀 Features
 

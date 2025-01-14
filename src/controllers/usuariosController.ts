@@ -19,6 +19,8 @@ import {
   updateUsuarioById,
 } from "../services/userService";
 
+import { generarCodigosISRC } from "../services/productoraService";
+
 import {
   Usuario,
   UsuarioMaestro,
@@ -546,7 +548,7 @@ export const getRegistrosPendientes = async (
 
       const { user, maestros } = userData;
 
-      if (user.tipo_registro !== "PENDIENTE") {
+      if (user.tipo_registro !== "ENVIADO") {
         logger.warn(
           `${req.method} ${req.originalUrl} - Usuario no tiene registro pendiente.`
         );
@@ -585,7 +587,7 @@ export const getRegistrosPendientes = async (
       });
     } else {
       // Obtener datos de todos los usuarios pendientes
-      const pendingUsersData = await findUsuario({ tipo_registro: "PENDIENTE" });
+      const pendingUsersData = await findUsuario({ tipo_registro: "ENVIADO" });
 
       if (!pendingUsersData || !pendingUsersData.maestros) {
         logger.info(
@@ -615,7 +617,7 @@ export const getRegistrosPendientes = async (
         `${req.method} ${req.originalUrl} - ${usersWithSingleMaestro.length} usuarios pendientes encontrados.`
       );
 
-      return res.status(200).json(usersWithSingleMaestro);
+      return res.status(200).json(pendingUsersData);
     }
   } catch (err) {
     logger.error(
@@ -717,8 +719,13 @@ export const approveApplication = async (
     // Establecer la fecha de hoy para fecha_alta en Productora
     userData.maestros[0].productora.fecha_alta = new Date();
 
+    // Llamar al servicio para generar códigos ISRC
+    const productoraId = userData.maestros[0].productora.id_productora;
+    const isrcs = await generarCodigosISRC(productoraId);
+    res.status(200).json({ message: "Códigos ISRC generados exitosamente.", data: isrcs });
+
     // Actualizar el tipo_registro del usuario a HABILITADO
-    await userData.user.update({ tipo_registro: "HABILITADO" });
+    await userData.user.update({ tipo_registro: "HABILITADO" });    
 
     // Crear las auditorías correspondientes
     await AuditoriaCambio.create({

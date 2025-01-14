@@ -85,32 +85,32 @@ ProductoraISRC.init(
   }
 );
 
-// Hook para asignar los primeros códigos disponibles
-ProductoraISRC.beforeBulkCreate(async (productorasISRC, options) => {
-  // Verificar que la creación sea para dos códigos (audio y video)
-  if (productorasISRC.length !== 2) {
-    throw new Error('Deben generarse exactamente dos códigos: uno para AUDIO y otro para VIDEO.');
-  }
+// // Hook para asignar los primeros códigos disponibles
+// ProductoraISRC.beforeBulkCreate(async (productorasISRC, options) => {
+//   // Verificar que la creación sea para dos códigos (audio y video)
+//   if (productorasISRC.length !== 2) {
+//     throw new Error('Deben generarse exactamente dos códigos: uno para AUDIO y otro para VIDEO.');
+//   }
 
-  const availableCodes = await ProductoraISRC.findAll({
-    where: { productora_id: null },
-    order: [['codigo_productora', 'ASC']],
-    limit: 2, // Obtener los dos primeros códigos disponibles
-  });
+//   const availableCodes = await ProductoraISRC.findAll({
+//     where: { productora_id: null },
+//     order: [['codigo_productora', 'ASC']],
+//     limit: 2, // Obtener los dos primeros códigos disponibles
+//   });
 
-  if (availableCodes.length < 2) {
-    throw new Error('No hay suficientes códigos disponibles en ProductoraISRC.');
-  }
+//   if (availableCodes.length < 2) {
+//     throw new Error('No hay suficientes códigos disponibles en ProductoraISRC.');
+//   }
 
-  // Asignar códigos correlativos y tipos a las instancias
-  productorasISRC.forEach((productoraISRC, index) => {
-    productoraISRC.codigo_productora = availableCodes[index].codigo_productora;
-    productoraISRC.tipo = index === 0 ? 'AUDIO' : 'VIDEO';
+//   // Asignar códigos correlativos y tipos a las instancias
+//   productorasISRC.forEach((productoraISRC, index) => {
+//     productoraISRC.codigo_productora = availableCodes[index].codigo_productora;
+//     productoraISRC.tipo = index === 0 ? 'AUDIO' : 'VIDEO';
 
-    // Marcar el código como asignado
-    availableCodes[index].productora_id = productoraISRC.productora_id;
-    availableCodes[index].save({ transaction: options.transaction });
-  });
-});
+//     // Marcar el código como asignado
+//     availableCodes[index].productora_id = productoraISRC.productora_id;
+//     availableCodes[index].save({ transaction: options.transaction });
+//   });
+// });
 
 export default ProductoraISRC;

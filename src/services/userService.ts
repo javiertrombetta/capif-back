@@ -122,95 +122,64 @@ export const findUsuario = async (filters: {
   const includeMaestro: any[] = [];
 
   // Filtro por Usuario
-  if (filters.userId) {
-    whereUsuario.id_usuario = filters.userId;
-  }
-  if (filters.email) {
-    whereUsuario.email = filters.email;
-  }
+  if (filters.userId) whereUsuario.id_usuario = filters.userId;
+  if (filters.email) whereUsuario.email = filters.email;
   if (filters.tipo_registro) {
-    if (Array.isArray(filters.tipo_registro)) {
-      // Manejar varios tipos de registros
-      whereUsuario.tipo_registro = { [Op.in]: filters.tipo_registro };
-    } else {
-      // Manejar un único tipo de registro
-      whereUsuario.tipo_registro = filters.tipo_registro;
-    }
+    whereUsuario.tipo_registro = Array.isArray(filters.tipo_registro)
+      ? { [Op.in]: filters.tipo_registro }
+      : filters.tipo_registro;
   }
-  if (filters.nombre) {
-    whereUsuario.nombre = { [Op.like]: `%${filters.nombre}%` };
-  }
-  if (filters.apellido) {
-    whereUsuario.apellido = { [Op.like]: `%${filters.apellido}%` };
-  }
+  if (filters.nombre) whereUsuario.nombre = { [Op.like]: `%${filters.nombre}%` };
+  if (filters.apellido) whereUsuario.apellido = { [Op.like]: `%${filters.apellido}%` };
 
   // Filtro por rol
-  if (filters.rolId || filters.nombre_rol) {
-    const whereRol: any = {};
-    if (filters.rolId) {
-      whereRol.id_rol = filters.rolId;
-    }
-    if (filters.nombre_rol) {
-      whereRol.nombre_rol = filters.nombre_rol;
-    }
+  const whereRol: any = {};
+  if (filters.rolId) whereRol.id_rol = filters.rolId;
+  if (filters.nombre_rol) whereRol.nombre_rol = filters.nombre_rol;
 
-    includeUsuario.push({
-      model: UsuarioRol,
-      as: "rol",
-      attributes: ["id_rol", "nombre_rol"],
-      where: whereRol,
-    });
-  }
+  includeUsuario.push({
+    model: UsuarioRol,
+    as: "rol",
+    attributes: ["id_rol", "nombre_rol"],
+    where: Object.keys(whereRol).length ? whereRol : undefined,
+  });
 
-  // Filtro por Productora
-  if (filters.productoraId || filters.productoraNombre) {
-    const whereProductora: any = {};
-    if (filters.productoraId) {
-      whereProductora.id_productora = filters.productoraId;
-    }
-    if (filters.productoraNombre) {
-      whereProductora.nombre_productora = filters.productoraNombre;
-    }
+  // Filtro por productora
+  const whereProductora: any = {};
+  if (filters.productoraId) whereProductora.id_productora = filters.productoraId;
+  if (filters.productoraNombre) whereProductora.nombre_productora = filters.productoraNombre;
 
-    includeMaestro.push({
-      model: Productora,
-      as: "productora",
-      attributes: ["id_productora", "nombre_productora"],
-      where: whereProductora,
-    });
-  }
+  includeMaestro.push({
+    model: Productora,
+    as: "productora",
+    attributes: ["id_productora", "nombre_productora"],
+    where: Object.keys(whereProductora).length ? whereProductora : undefined,
+  });
 
   // Buscar Usuarios
   const usuarios = await Usuario.findAll({
     where: whereUsuario,
     include: includeUsuario,
-    limit: filters.limit || 50,
-    offset: filters.offset || 0,
+    limit: filters.limit ?? 50,
+    offset: filters.offset ?? 0,
   });
 
-  if (!usuarios || usuarios.length === 0) {
-    return null;
-  }
+  if (!usuarios.length) return null;
 
-  // Determinar si hay un único usuario
   const isSingleUser = usuarios.length === 1 ? 1 : 0;
 
   // Buscar UsuariosMaestro relacionados
   const usuariosMaestro = await UsuarioMaestro.findAll({
-    where: {
-      usuario_registrante_id: { [Op.in]: usuarios.map((u) => u.id_usuario) },
-    },
+    where: { usuario_registrante_id: { [Op.in]: usuarios.map((u) => u.id_usuario) } },
     include: includeMaestro,
   });
 
-  // Procesar resultados
   const maestros = usuariosMaestro.map((usuarioMaestro) => ({
     maestroId: usuarioMaestro.id_usuario_maestro,
-    productora: usuarioMaestro.productora,
+    productora: usuarioMaestro.productora || null,
   }));
 
   // Buscar vistas asociadas
-
   const vistas = await UsuarioVistaMaestro.findAll({
     where: { usuario_id: usuarios[0].id_usuario },
     include: [
@@ -222,14 +191,25 @@ export const findUsuario = async (filters: {
     ],
   });
 
-  // Formatear vistas
-  const vistasFormatted = vistas.map((vista) => ({
-    id_vista: vista.vista?.id_vista,
-    nombre_vista: vista.vista?.nombre_vista,
-    is_habilitado: vista.is_habilitado,
+  // Definir un tipo de guardia
+  function hasValidVista(vistaMaestro: UsuarioVistaMaestro): vistaMaestro is UsuarioVistaMaestro & { vista: UsuarioVista } {
+    return vistaMaestro.vista !== undefined && vistaMaestro.vista !== null;
+  }
+
+  const vistasFiltered = vistas.filter(hasValidVista);
+
+  const vistasFormatted = vistasFiltered.map((vistaMaestro) => ({
+    id_vista: vistaMaestro.vista.id_vista,
+    nombre_vista: vistaMaestro.vista.nombre_vista,
+    is_habilitado: vistaMaestro.is_habilitado,
   }));
 
-  return { user: usuarios[0], maestros, vistas: vistasFormatted, isSingleUser };
+  return {
+    user: usuarios[0],
+    maestros,
+    vistas: vistasFormatted,
+    isSingleUser,
+  };
 };
 
 export const findRolByNombre = async (nombre_rol: string) => {

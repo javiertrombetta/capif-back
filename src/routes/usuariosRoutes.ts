@@ -442,7 +442,7 @@ router.post(
 router.post(
   "/aplicaciones/enviar",
   authenticate,
-  authorizeRoles(["productor_principal"]),
+  authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
   celebrate({ [Segments.BODY]: sendApplicationSchema }),
   sendApplication
 );

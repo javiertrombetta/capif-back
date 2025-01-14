@@ -651,23 +651,21 @@ export const approveApplication = async (
       );
     }
 
-    // Verificar el usuario autenticado desde AuthenticatedRequest
     const userAuthId = req.userId as string;
     const authenticatedUserData = await findUsuario({ userId: userAuthId });
-    if (!authenticatedUserData || !authenticatedUserData.user.rol) {
+
+    if (
+      !authenticatedUserData ||
+      !authenticatedUserData.user ||
+      !authenticatedUserData.user.rol
+    ) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${userAuthId}`
+        `${req.method} ${req.originalUrl} - Usuario no encontrado o sin rol válido: ${userAuthId}`
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
-    const authenticatedRole = authenticatedUserData.user.rol.nombre_rol;
 
-    if (!userAuthId || !authenticatedUserData || !authenticatedUserData.user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no autenticado o sin datos válidos.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
+    const authenticatedRole = authenticatedUserData.user.rol.nombre_rol;
 
     if (
       !authenticatedRole ||
@@ -675,27 +673,20 @@ export const approveApplication = async (
         authenticatedRole !== "admin_secundario")
     ) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario autenticado no autorizado para realizar esta acción.`
+        `${req.method} ${req.originalUrl} - Usuario autenticado no autorizado.`
       );
-      res.status(403).json({
+      return res.status(403).json({
         message: MESSAGES.ERROR.USER.NOT_AUTHORIZED,
       });
     }
 
-    // Buscar al usuario mediante findUsuario
     const userData = await findUsuario({ userId: id_usuario });
-    if (!userData) {
+
+    if (!userData || !userData.user || !userData.isSingleUser) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - UsuarioMaestro no encontrado: ${id_usuario}`
+        `${req.method} ${req.originalUrl} - Usuario no encontrado o con datos inválidos: ${id_usuario}`
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
-
-    if (!userData.user || !userData.isSingleUser) {
-      logger.error(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      return res.status(404).json({
-        message: MESSAGES.ERROR.USER.NOT_FOUND,
-      });
     }
 
     if (userData.maestros.length > 1) {
@@ -707,22 +698,20 @@ export const approveApplication = async (
       });
     }
 
-    if (!userData.maestros[0].productora) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Datos de productora no encontrada.`
-      );
-      return res.status(404).json({
-        message: MESSAGES.ERROR.PRODUCTORA.NOT_FOUND,
-      });
-    }
+    const productora = userData.maestros[0].productora;
 
+    if (!productora) {
+      logger.error(
+        `${req.method} ${req.originalUrl} - Datos de productora no encontrados.`
+      );
+      return next(new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND));
+    }
     // Establecer la fecha de hoy para fecha_alta en Productora
-    userData.maestros[0].productora.fecha_alta = new Date();
+    productora.fecha_alta = new Date();
 
     // Llamar al servicio para generar códigos ISRC
-    const productoraId = userData.maestros[0].productora.id_productora;
+    const productoraId = productora.id_productora;
     const isrcs = await generarCodigosISRC(productoraId);
-    res.status(200).json({ message: "Códigos ISRC generados exitosamente.", data: isrcs });
 
     // Actualizar el tipo_registro del usuario a HABILITADO
     await userData.user.update({ tipo_registro: "HABILITADO" });    
@@ -733,7 +722,7 @@ export const approveApplication = async (
       usuario_destino_id: userData.user.id_usuario,
       modelo: "Productora",
       tipo_auditoria: "ALTA",
-      detalle: `Autorización de ${userData.maestros[0].productora.nombre_productora} en Productora (${userData.maestros[0].productora.id_productora})`,
+      detalle: `Autorización de ${productora.nombre_productora} en Productora (${productora.id_productora})`,
     });
 
     // Enviar el correo de notificación al usuario
@@ -741,17 +730,22 @@ export const approveApplication = async (
       to: userData.user.email,
       subject: "Registro Exitoso como Productor Principal",
       html: MESSAGES.EMAIL_BODY.PRODUCTOR_PRINCIPAL_NOTIFICATION(
-        userData.maestros[0].productora.nombre_productora,
-        userData.maestros[0].productora.cuit_cuil,
-        userData.maestros[0].productora.cbu,
-        userData.maestros[0].productora.alias_cbu
+        productora.nombre_productora,
+        productora.cuit_cuil,
+        productora.cbu,
+        productora.alias_cbu
       ),
     });
 
     logger.info(
       `${req.method} ${req.originalUrl} - Usuario autorizado y correo enviado exitosamente.`
     );
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.AUTHORIZED });
+
+    // Enviar respuesta exitosa al cliente
+    return res.status(200).json({
+      message: MESSAGES.SUCCESS.AUTH.AUTHORIZED,
+      data: isrcs,
+    });
   } catch (err) {
     logger.error(
       `${req.method} ${req.originalUrl} - Error al autorizar usuario: ${

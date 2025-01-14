@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import logger from "../config/logger";
 import { AuthenticatedRequest } from "../interfaces/AuthenticatedRequest";
-import { UsuarioRol } from "../models";
+import { Usuario, UsuarioRol } from "../models";
 
 // Verificar token y devolver el payload
 export const verifyToken = (
@@ -35,46 +35,67 @@ export const authenticate = async (
       });
     }
 
-    const decodedToken = verifyToken(token, process.env.JWT_SECRET!);
-    if (!decodedToken) {
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+
+    if (!decodedToken.id) {
       logger.warn("Acceso denegado: Token inválido");
       return res
         .status(401)
         .json({ error: "Acceso denegado. Token inválido." });
     }
 
-    // Asignar el usuario al request
-    req.userId = decodedToken.id;
+    const usuario = await Usuario.findByPk(decodedToken.id, {
+      include: [{ model: UsuarioRol, as: "rol", attributes: ["nombre_rol"] }],
+    });
 
-    const rolUsuario = await UsuarioRol.findOne({
-      where: { id_rol: decodedToken.role },
-      attributes: ["nombre_rol"],
-    });    
-
-    if (!rolUsuario) {
-      logger.error(
-        `Error: No se encontró un rol correspondiente al ID ${decodedToken.role} en la base de datos.`
-      );
-      return res
-        .status(500)
-        .json({ error: "Error interno del servidor: Rol base no encontrado." });
+    if (!usuario) {
+      logger.warn("Usuario no encontrado con el ID proporcionado en el token.");
+      return res.status(404).json({ error: "Usuario no encontrado." });
     }
 
-    // Asignar el nombre del rol al request
-    req.role = rolUsuario.nombre_rol;
+    if (usuario.is_bloqueado) {
+      logger.warn(`Usuario ${usuario.email} está bloqueado.`);
+      return res.status(403).json({ error: "Usuario bloqueado. Contacte al administrador." });
+    }
+
+    if (!usuario.rol) {
+      logger.warn(`Usuario ${usuario.email} está bloqueado.`);
+      return res.status(403).json({ error: "Usuario sin rol asignado. Contacte al administrador." });
+    }
+
+    // Asignar propiedades al request
+    req.userId = usuario.id_usuario;
+    req.role = usuario.rol.nombre_rol;
 
     // Verificar si existe la cookie `active_sesion`
     const activeSesion = req.cookies["active_sesion"];
     if (activeSesion) {
       try {
         const activeData = JSON.parse(activeSesion);
+
+        // Validar maestroId y productoraId
+        if (!activeData.maestroId) {
+          logger.warn("La cookie active_sesion no contiene un maestroId válido.");
+          return res.status(400).json({
+            error: "Cookie de sesión activa inválida: falta el maestroId.",
+          });
+        }
+
+        if (!activeData.productoraId) {
+          logger.warn("La cookie active_sesion no contiene un productoraId válido.");
+          return res.status(400).json({
+            error: "Cookie de sesión activa inválida: falta el productoraId.",
+          });
+        }
+
+        // Asignar valores si son válidos
         req.maestroId = activeData.maestroId;
         req.productoraId = activeData.productoraId;
       } catch (err) {
         logger.error("Error parseando la cookie active_sesion:", err);
         return res
           .status(400)
-          .json({ error: "Cookie de sesión activa inválida." });
+          .json({ error: "Cookie de sesión activa inválida. Formato incorrecto." });
       }
     }
 
@@ -97,32 +118,30 @@ export const authorizeRoles = (roles: string[]) => {
     next: NextFunction
   ) => {
     try {
-      const roleName = req.role;
-
-      if (!roleName) {
+      if (!req.role) {
         logger.warn(
-          `Acceso denegado: Rol no encontrado en la solicitud. Usuario autenticado con ID: ${req.userId}`
+          `Acceso denegado: No se encontró un rol en la solicitud. Usuario ID: ${req.userId || "desconocido"}`
         );
-        return res
-          .status(403)
-          .json({ error: "No tienes permiso para acceder a este recurso." });
+        return res.status(403).json({
+          error: "No tienes permiso para acceder a este recurso. Rol no definido.",
+        });
       }
 
-      if (!roles.includes(roleName)) {
+      if (!roles.includes(req.role)) {
         logger.warn(
-          `Acceso denegado: El rol ${roleName} no tiene permiso para acceder. Roles permitidos: ${roles.join(
-            ", "
-          )}`
+          `Acceso denegado: El rol ${req.role} no tiene permiso para acceder. Roles permitidos: ${roles.join(", ")}`
         );
-        return res
-          .status(403)
-          .json({ error: "No tienes permiso para acceder a este recurso." });
+        return res.status(403).json({
+          error: "No tienes permiso para acceder a este recurso.",
+        });
       }
 
       next();
     } catch (err) {
       logger.error("Error en el middleware de autorización:", err);
-      return res.status(500).json({ error: "Error interno del servidor." });
+      return res.status(500).json({
+        error: "Error interno del servidor.",
+      });
     }
   };
 };

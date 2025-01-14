@@ -843,7 +843,7 @@ export const rejectApplication = async (
       usuario_originario_id: userAuthId,
       usuario_destino_id: user.id_usuario,
       modelo: "Usuario",
-      tipo_auditoria: "RECHAZO",
+      tipo_auditoria: "CAMBIO",
       detalle: `Rechazo de aplicación con comentario: ${comentario}`,
     });
 

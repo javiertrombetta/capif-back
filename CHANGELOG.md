@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.110 - 14-01-2025
+## 🐛 Fixes
+
+- fix: change rejectApplication controller
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.107
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.107 - 14-01-2025
 ## 🐛 Fixes
 

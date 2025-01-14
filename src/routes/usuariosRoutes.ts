@@ -288,8 +288,8 @@ router.post(
  * @swagger
  * /usuarios/aplicaciones/pendientes:
  *   get:
- *     summary: PENDIENTE Obtener registros pendientes de uno o todos los usuarios.
- *     description: PENDIENTE Devuelve la información del registro pendiente para un usuario especificado o todos los usuarios con registro pendiente.
+ *     summary: Obtener registros pendientes de uno o todos los usuarios.
+ *     description: Devuelve la información del registro pendiente para un usuario especificado o todos los usuarios con registro pendiente.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -367,8 +367,8 @@ router.post(
  * @swagger
  * /usuarios/aplicaciones/rechazar:
  *   post:
- *     summary: PENDIENTE Rechazar la solicitud de aplicación de un usuario.
- *     description: PENDIENTE Rechaza la solicitud de un usuario especificando el motivo del rechazo.
+ *     summary: Rechazar la solicitud de aplicación de un usuario.
+ *     description: Rechaza la solicitud de un usuario especificando el motivo del rechazo.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -413,8 +413,8 @@ router.post(
  * @swagger
  * /usuarios/aplicaciones/enviar:
  *   post:
- *     summary: PENDIENTE Enviar solicitud de aplicación.
- *     description: PENDIENTE Permite a un usuario enviar una solicitud de aplicación con sus datos y documentos asociados.
+ *     summary: Enviar solicitud de aplicación.
+ *     description: Permite a un usuario enviar una solicitud de aplicación con sus datos y documentos asociados.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []

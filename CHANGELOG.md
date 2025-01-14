@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.103 - 14-01-2025
+## 🐛 Fixes
+
+- fix: change approveApplication controller
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.100
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.100 - 14-01-2025
 ## 🐛 Fixes
 

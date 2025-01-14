@@ -11,6 +11,12 @@ interface DateRange {
   fechaFin?: string;
 }
 
+type ProductoraISRCData = {
+  productora_id: string;
+  tipo: string;
+  codigo_productora?: string;
+};
+
 // Servicio para obtener todas las productoras
 export const findAllProductoras = async () => {
   const productoras = await Productora.findAll();
@@ -317,4 +323,63 @@ export const deleteAllPostulaciones = async () => {
   if (count === 0) {
     throw new Err.NotFoundError(MESSAGES.ERROR.POSTULACIONES.NOT_FOUND);
   }
+};
+
+// Servicio para crear los códigos ISRC al aprobar una solicitud
+export const generarCodigosISRC = async (productoraId: string) => {
+  if (!productoraId) {
+    throw new Error("El ID de la productora es obligatorio.");
+  }
+
+  const caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const base = caracteres.length;
+
+  // Función para generar el próximo código progresivo
+  const generarCodigoProgresivo = (indice: number): string => {
+    let codigo = "";
+    do {
+      codigo = caracteres[indice % base] + codigo;
+      indice = Math.floor(indice / base);
+    } while (indice > 0);
+
+    // Ajustar el código a 3 caracteres llenando con "A"
+    while (codigo.length < 3) {
+      codigo = "A" + codigo;
+    }
+
+    return codigo;
+  };
+
+  const productoraISRCs: ProductoraISRCData[] = [
+    { productora_id: productoraId, tipo: "AUDIO" },
+    { productora_id: productoraId, tipo: "VIDEO" },
+  ];
+
+  // Obtener todos los códigos ya asignados
+  const assignedCodes = await ProductoraISRC.findAll({
+    attributes: ["codigo_productora"],
+  });
+  const usedCodes = new Set(
+    assignedCodes.map((entry) => entry.codigo_productora)
+  );
+
+  // Generar los próximos dos códigos disponibles
+  const availableCodes: string[] = [];
+  let indice = 0;
+
+  while (availableCodes.length < 2) {
+    const codigo = generarCodigoProgresivo(indice);
+    if (!usedCodes.has(codigo)) {
+      availableCodes.push(codigo);
+    }
+    indice++;
+  }
+
+  // Asignar los códigos generados a los ISRC de la productora
+  for (let i = 0; i < productoraISRCs.length; i++) {
+    productoraISRCs[i].codigo_productora = availableCodes[i];
+    await ProductoraISRC.create(productoraISRCs[i]);
+  }
+
+  return productoraISRCs;
 };

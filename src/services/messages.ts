@@ -240,6 +240,7 @@ export const ERROR = {
     NOT_FOUND: 'No se encontron ISRC en la búsqueda.',
     NOT_FOUND_FOR_PRODUCTORA: 'No se encontraron ISRCs para la productora especificada.',
     ALREADY_EXISTS: 'Ya existe un ISRC con este código para la productora especificada.',
+    NO_ISRC_CODES_AVAILABLE: 'No hay códigos ISRC disponibles.',
     CREATION_FAILED: 'No se pudo crear el ISRC.',
   },
   REGLA: {

@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.100 - 14-01-2025
+## 🐛 Fixes
+
+- fix: change auth and usuarios controllers
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.97
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.97 - 14-01-2025
 ## 🐛 Fixes
 

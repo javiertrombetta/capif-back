@@ -68,8 +68,8 @@ router.post(
  * @swagger
  * /auth/registro/secundario:
  *   post:
- *     summary: PENDIENTE Registro de usuario secundario
- *     description: PENDIENTE Registra un nuevo usuario secundario en el sistema.
+ *     summary: Registro de usuario secundario
+ *     description: Registra un nuevo usuario secundario en el sistema.
  *     tags: [Autenticación]
  *     requestBody:
  *       required: true
@@ -167,7 +167,7 @@ router.post(
  * @swagger
  * /auth/productora:
  *   get:
- *     summary: PENDIENTE Obtener todas las productoras asociadas al usuario
+ *     summary: Obtener todas las productoras asociadas al usuario
  *     tags: [Autenticación]
  *     security:
  *       - bearerAuth: []

@@ -21,6 +21,7 @@ import Productora from './Productora';
 import ProductoraDocumento from './ProductoraDocumento';
 import ProductoraDocumentoTipo from './ProductoraDocumentoTipo';
 import ProductoraISRC from './ProductoraISRC';
+import ProductoraMensaje from './ProductoraMensaje';
 import ProductoraPremio from './ProductoraPremio';
 import Usuario from './Usuario';
 import UsuarioMaestro from './UsuarioMaestro';
@@ -423,8 +424,11 @@ FonogramaTerritorio.hasMany(FonogramaTerritorioMaestro, {
 
 
 
-// Productora (NA)
-
+// Productora
+Productora.hasMany(ProductoraMensaje, {
+    foreignKey: 'productora_id',
+    as: 'mensajesDeLaProductora',
+  });
 
 
 // ProductoraDocumento
@@ -475,6 +479,22 @@ Productora.hasMany(ProductoraISRC, {
 
 
 
+// ProductoraMensaje
+ProductoraMensaje.belongsTo(Usuario, {
+    foreignKey: 'usuario_id',
+    as: 'usuarioDelMensaje',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+
+ProductoraMensaje.belongsTo(Productora, {
+    foreignKey: 'productora_id',
+    as: 'productoraDelMensaje',
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  });
+
+
 // ProductoraPremio
 
 ProductoraPremio.belongsTo(Productora, {
@@ -504,6 +524,11 @@ UsuarioRol.hasMany(Usuario, {
   as: 'roles',
   onDelete: 'SET NULL',
 });
+
+Usuario.hasMany(ProductoraMensaje, {
+    foreignKey: 'usuario_id',
+    as: 'mensajesDelUsuario',
+  });
 
 
 

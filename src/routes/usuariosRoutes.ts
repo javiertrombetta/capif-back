@@ -328,8 +328,8 @@ router.get(
  * @swagger
  * /usuarios/aplicaciones/autorizar:
  *   post:
- *     summary: PENDIENTE Aprobar la solicitud de aplicación de un usuario.
- *     description: PENDIENTE Autoriza la solicitud de un usuario, asigna una productora y actualiza los registros asociados.
+ *     summary: Aprobar la solicitud de aplicación de un usuario.
+ *     description: Autoriza la solicitud de un usuario, asigna una productora y actualiza los registros asociados.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []

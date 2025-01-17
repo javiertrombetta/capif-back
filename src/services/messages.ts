@@ -28,6 +28,7 @@ export const SUCCESS = {
     UPDATED:
       'Aplicación actualizada y pendiente de evaluación, para la autorización definitiva del usuario.',
     REJECTED: 'Aplicación rechazada y se ha enviado el correo con los comentarios al usuario.',
+    FOUND: 'La búsqueda de registros pendientes fue completada.',
   },
   CONFLICTO: {
     CONFLICTO_CREATED: 'Conflicto creado exitosamente.',
@@ -138,6 +139,7 @@ export const ERROR = {
   },
   USER: {
     NOT_FOUND: 'Usuario no encontrado.',
+    NOT_SINGLE_USER: 'Se encontró más de un usuario en la búsqueda realizada.',
     NO_MAESTRO_RECORD: 'Usuario sin registro en la tabla maestro.',
     MULTIPLE_MASTERS_FOR_PRINCIPAL: 'El usuario principal tiene más de una productora vinculada.',
     MULTIPLE_MAESTRO_RECORDS: 'EL usuario tiene múltiples registros para una misma productora.',
@@ -153,6 +155,10 @@ export const ERROR = {
     NO_ASSOCIATED_PRODUCTORAS: 'Productoras no asociadas al usuario.',
     CANNOT_DELETE_SELF: 'No podés eliminar tu propia cuenta.',
     ROLE_NOT_ASSIGNED: 'El usuario autenticado no tiene un rol asignado.',
+  },
+  ADMIN: {
+    NOT_FOUND: 'Administrador no encontrado.',
+    NOT_SINGLE_USER: 'Se encontró más de un administrador en la búsqueda realizada.',
   },
   DATABASE: {
     CONNECTION: 'Error de conexión con la base de datos.',

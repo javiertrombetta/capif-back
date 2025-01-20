@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.118 - 20-01-2025
+## 🐛 Fixes
+
+- fix: remove public in Dockerfile
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.115
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.115 - 20-01-2025
 ## 🐛 Fixes
 

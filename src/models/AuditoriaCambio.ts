@@ -2,7 +2,7 @@ import { Model, DataTypes, Association } from "sequelize";
 import sequelize from "../config/database/sequelize";
 import Usuario from "./Usuario";
 
-const ENTIDADES_PERMITIDAS = [
+export const ENTIDADES_PERMITIDAS = [
   "AuditoriaCambio",
   "AuditoriaRepertorio",
   "AuditoriaSesion",
@@ -24,12 +24,13 @@ const ENTIDADES_PERMITIDAS = [
   "ProductoraDocumento",
   "ProductoraDocumentoTipo",
   "ProductoraISRC",
+  "ProductoraMensaje",
   "ProductoraPremio",
   "Usuario",
   "UsuarioMaestro",
   "UsuarioRol",
-  "UsuarioAcceso",
-  "UsuarioAccesoMaestro",
+  "UsuarioVista",
+  "UsuarioVistaMaestro",
 ];
 
 class AuditoriaCambio extends Model {

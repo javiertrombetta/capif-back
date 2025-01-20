@@ -2,7 +2,7 @@ import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Fonograma from './Fonograma';
 import Productora from './Productora';
-import { updatePorcentajeTitularidad } from '../services/checkModels';
+import { updatePorcentajeTitularidad } from '../utils/checkModels';
 
 class FonogramaParticipacion extends Model {
   public id_participacion!: string;

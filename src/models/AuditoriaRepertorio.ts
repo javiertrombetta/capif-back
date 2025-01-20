@@ -5,19 +5,20 @@ import Fonograma from "./Fonograma";
 
 class AuditoriaRepertorio extends Model {
   public id_auditoria!: string;
-  public fonograma_id!: string;
+  public usuario_registrante_id!: string | null;
+  public fonograma_id!: string;  
   public tipo_auditoria!: string;
   public detalle!: string;
-  public usuario_registrante_id!: string | null;
+  
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public fonogramaAuditado?: Fonograma;
   public registranteDeRepertorio?: Usuario;
+  public fonogramaAuditado?: Fonograma;  
 
   public static associations: {
-    fonogramaAuditado: Association<AuditoriaRepertorio, Fonograma>;
     registranteDeRepertorio: Association<AuditoriaRepertorio, Usuario>;
+    fonogramaAuditado: Association<AuditoriaRepertorio, Fonograma>;    
   };
 }
 
@@ -32,6 +33,20 @@ AuditoriaRepertorio.init(
         isUUID: {
           args: 4,
           msg: "El ID de auditoría debe ser un UUID válido.",
+        },
+      },
+    },
+    usuario_registrante_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: Usuario,
+        key: "id_usuario",
+      },
+      validate: {
+        isUUID: {
+          args: 4,
+          msg: "El ID del usuario registrante debe ser un UUID válido.",
         },
       },
     },
@@ -69,20 +84,6 @@ AuditoriaRepertorio.init(
         },
       },
     },
-    usuario_registrante_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: Usuario,
-        key: "id_usuario",
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: "El ID del usuario registrante debe ser un UUID válido.",
-        },
-      },
-    },
   },
   {
     sequelize,
@@ -91,12 +92,12 @@ AuditoriaRepertorio.init(
     timestamps: true,
     indexes: [
       {
-        fields: ["fonograma_id"],
-        name: "idx_auditoria_repertorio_fonograma",
-      },
-      {
         fields: ["usuario_registrante_id"],
         name: "idx_auditoria_repertorio_usuario",
+      },
+      {
+        fields: ["fonograma_id"],
+        name: "idx_auditoria_repertorio_fonograma",
       },
     ],
   }

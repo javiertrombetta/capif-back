@@ -1,6 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import { validateCUIT, validateCBU } from '../services/checkModels';
+import { validateCUIT, validateCBU } from '../utils/checkModels';
 
 const TIPO_PERSONA = ['FISICA', 'JURIDICA'] as const;
 

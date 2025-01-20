@@ -1,6 +1,6 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import { calculateLoteAndOrdenPago } from '../services/checkModels';
+import { calculateLoteAndOrdenPago } from '../utils/checkModels';
 import Cashflow from './Cashflow';
 
 const TIPO_PAGO = ['PAGO POR ISRC', 'PAGO GENERAL'] as const;

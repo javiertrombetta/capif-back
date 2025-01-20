@@ -3,157 +3,136 @@ import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import logger from "../config/logger";
 
-import { AuthenticatedRequest } from "../interfaces/AuthenticatedRequest";
 import { verifyToken } from "../middlewares/auth";
+import { AuthenticatedRequest } from "../interfaces/AuthenticatedRequest";
+import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 
-import * as MESSAGES from "../services/messages";
-import { sendEmail } from "../services/emailService";
+import { sendEmailWithErrorHandling } from "../services/emailService";
 import {
-  createUsuario,
-  createUsuarioMaestro,
-  updateUsuarioMaestro,
-  findUsuario,
-  findRolByNombre,
+  createUser,
+  createUsuarioMaestro,  
   assignVistasToUser,
+  findExistingUsuario,
 } from "../services/userService";
-import { actualizarFechaFinSesion } from "../services/sesionService";
+import { getAuthenticatedUser, getTargetUser } from "../services/authService";
+import { getLastRejectionMessage } from "../services/productoraService";
+import { handleGeneralError } from "../services/errorService";
 import {
   hashPassword,
   verifyPassword,
   handleTokenVerification,
-} from "../services/validationsService";
-import * as Err from "../services/customErrors";
+} from "../utils/validationsService";
+import { actualizarFechaFinSesion, registrarAuditoria, registrarSesion } from "../services/auditService";
 
-import { AuditoriaCambio, AuditoriaSesion } from "../models";
+import * as Err from "../utils/customErrors";
+import * as MESSAGES from "../utils/messages";
+
 
 // REGISTER PRODUCTOR 'PRIMARIO'
 export const registerPrimaryProductor = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para registrar un nuevo productor principal`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para registrar un nuevo productor principal`);
 
     const { email, password } = req.body;
 
-    // Verifica si el usuario ya existe
-    const existingUser = await findUsuario({ email });
+    // Verificar si existe el usuario
+    const existingUser = await findExistingUsuario({ email });
     if (existingUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario ya registrado: ${email}`
-      );
-      throw new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED);
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario ya registrado: ${existingUser.email}`);
+      return next(new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED));
     }
-
-    // Cifra la contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Busca el rol "productor_principal"
-    const userRol = await findRolByNombre("productor_principal");
-    if (!userRol) {
-      throw new Err.NotFoundError(
-        "No se encontró el rol 'productor_principal'."
-      );
-    }
-
-    // Crea un nuevo usuario con el estado 'NUEVO'
-    const newUsuario = await createUsuario({
+    
+    // Crear el nuevo usuario
+    const { newUser } = await createUser({
       email,
-      clave: hashedPassword,
-      tipo_registro: "NUEVO",
-      rol_id: userRol.id_rol,
+      rolNombre: "productor_principal",
+      tipoRegistro: "NUEVO",
+      clave: password,
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Usuario registrado exitosamente: ${email}`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Usuario creado exitosamente: ${email}`);
 
     // Crear relaciones en UsuarioVistasMaestro
-    await assignVistasToUser(newUsuario.id_usuario, userRol.id_rol);
+    await assignVistasToUser(newUser.id_usuario, newUser.rol_id);
 
     logger.info(
       `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Productor Principal: ${email}`
     );
 
-    // Configuración del token de verificación de email
+    // Generar token de verificación
     const tokenExpiration = process.env.EMAIL_TOKEN_EXPIRATION || "1d";
-    if (!process.env.JWT_SECRET)
-      throw new Error("Falta JWT_SECRET en el archivo de configuración");
+    const secret = process.env.JWT_SECRET;
+
+    if (!secret) {
+      logger.error("JWT_SECRET no está configurado en las variables de entorno.");
+      throw new Error("Configuración del sistema incompleta: JWT_SECRET faltante.");
+    }
+
     const emailToken = jwt.sign(
-      { id_usuario: newUsuario.id_usuario },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: tokenExpiration,
-      }
+      { id_usuario: newUser.id_usuario },
+      secret,
+      { expiresIn: tokenExpiration }
     );
 
-    try {
-      const decoded = handleTokenVerification(
-        emailToken,
-        process.env.JWT_SECRET!
-      ) as JwtPayload;
-      newUsuario.email_verification_token = emailToken;
-      newUsuario.email_verification_token_expires = new Date(
-        decoded.exp! * 1000
-      );
-    } catch (err) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Error al verificar el token de email para ${newUsuario.email}`,
-        err
-      );
+    // Decodificar y verificar el token
+    const decoded = jwt.decode(emailToken);
+    if (decoded && typeof decoded !== "string" && decoded.exp) {
+      newUser.email_verification_token = emailToken;
+      newUser.email_verification_token_expires = new Date(decoded.exp * 1000);
+    } else {
+      logger.error(`${req.method} ${req.originalUrl} - Error al decodificar el token de email para ${newUser.email}`);
       throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
     }
 
-    await newUsuario.save();
-
-    logger.debug(
-      `${req.method} ${req.originalUrl} - Token de verificación generado para: ${email}`
-    );
+    await newUser.save();
 
     // Enviar correo de verificación
-    /*
     const validationLink = `${emailToken}`;
     const emailBody = MESSAGES.EMAIL_BODY.VALIDATE_ACCOUNT(validationLink);
-    await sendEmail({
-      to: newUsuario.email,
-      subject: "Confirmá tu cuenta para ingresar al sistema",
-      html: emailBody,
-    });
- 
+
+    await sendEmailWithErrorHandling(
+      {
+        to: newUser.email,
+        subject: "Confirmá tu cuenta para ingresar al sistema",
+        html: emailBody,
+        successLog: `Correo enviado a ${newUser.email} con el token de verificación.`,
+        errorLog: `Error al enviar el correo al Productor Principal: ${newUser.email}.`,
+      }, req, res, next);
+
     logger.info(
       `${req.method} ${req.originalUrl} - Correo de validación enviado a: ${email}`
     );
-    
-    */
 
-    // Registra la acción en AuditoriaCambio
-
-    await AuditoriaCambio.create({
-      usuario_originario_id: null,
-      usuario_destino_id: newUsuario.id_usuario,
+    // Registrar auditoría
+    await registrarAuditoria({
+      usuario_originario_id: newUser.id_usuario,
+      usuario_destino_id: newUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "ALTA",
-      detalle: `Registro en Usuario (${newUsuario.id_usuario})`,
+      detalle: `Registro en Usuario con ID: (${newUser.id_usuario})`,
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Auditoría registrada para el usuario: ${email}`
-    );
+    await registrarAuditoria({
+      usuario_originario_id: newUser.id_usuario,
+      usuario_destino_id: newUser.id_usuario,
+      modelo: "UsuarioVistaMaestro",
+      tipo_auditoria: "ALTA",
+      detalle: `Generación de vistas para el usuario con ID: (${newUser.id_usuario})`,
+    });
 
-    // Retorno de mensaje al usuario con código
-    res
-      .status(201)
-      .json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_PRIMARY_FIRST, token: newUsuario.email_verification_token });
+    logger.info(`${req.method} ${req.originalUrl} - Auditoría registrada para el usuario: ${email}`);
+
+    // Responder con éxito
+    res.status(201).json({
+      message: MESSAGES.SUCCESS.AUTH.REGISTER_PRIMARY_FIRST,
+      token: newUser.email_verification_token,
+    });
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error en el registro: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, "Error en el registro de nuevo productor principal");
   }
 };
 
@@ -162,196 +141,94 @@ export const registerSecondaryProductor = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para registrar un usuario secundario`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para registrar un usuario secundario`);
 
     const { email, nombre, apellido, telefono } = req.body;
 
-    // Obtener el ID del usuario autenticado desde el token
-    const primaryUserAuthId = req.userId as string;
-    const primaryProductoraAuthId = req.productoraId;
-
-    if (!primaryUserAuthId || !primaryProductoraAuthId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no autenticado o sin datos válidos.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+    // Verificar si existe el usuario
+    const existingUser = await findExistingUsuario({ email });
+    if (existingUser) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario ya registrado: ${existingUser.email}`);
+      return next(new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED));
     }
 
     // Verificar el usuario autenticado
-    const primaryUserData = await findUsuario({
-      userId: primaryUserAuthId,
-      productoraNombre: primaryProductoraAuthId,
-    });
+    const { user: authUser, maestros: authMaestros, hasSingleMaestro: hasAuthSingleMaestro }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    // Error si se comprueba que no es igual lo buscado a lo pasado por el body
-    if (!primaryUserData || !primaryUserData.user.rol) {
+    if (!hasAuthSingleMaestro || authMaestros.length !== 1) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario principal no encontrado o sin acceso válido.`
+        `${req.method} ${req.originalUrl} - Usuario autenticado no tiene una única asociación de maestro.`
       );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+      throw new Err.ConflictError(MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL);
     }
 
-    // Error si tiene más de un maestro asociado porque el principal solo puede tener una asociación
-    if (primaryUserData.maestros.length !== 1) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Usuario principal tiene múltiples maestros asociados.`
-      );
-      throw new Err.ConflictError(
-        MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
-      );
-    }
+    const productora = authMaestros[0].productora;
 
-    if (
-      !primaryUserData.maestros[0].productora ||
-      !primaryUserData.maestros[0].productora.nombre_productora
-    ) {
+    if (!productora || !productora.id_productora) {
       logger.error(
-        `${req.method} ${req.originalUrl} - Productora asociada no tiene un nombre válido.`
+        `${req.method} ${req.originalUrl} - Usuario autenticado no tiene una productora asociada válida.`
       );
       throw new Err.BadRequestError(MESSAGES.ERROR.PRODUCTORA.INVALID_NAME);
-    }
-
-    const primaryUser = primaryUserData.user;
-    const primaryUserRoleName = primaryUserData.user.rol.nombre_rol;
-    const primaryProductoraId = primaryUserData.maestros[0].productora.id_productora;
-
-    if (
-      !primaryUser ||
-      primaryUser.tipo_registro !== "HABILITADO" ||
-      (primaryUserRoleName !== "admin_principal" &&
-        primaryUserRoleName !== "productor_principal")
-    ) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no autorizado para registrar secundarios.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    // Verificar que el usuario primario tiene una productora asignada
-    if (!primaryProductoraId) {
-      throw new Error("El usuario principal no tiene una productora asociada.");
-    }
-
-    // Verifica si el usuario a crear ya existe
-    const existingUser = await findUsuario({ email });
-    if (!existingUser || !existingUser.user) {
-      throw new Error("El usuario principal no tiene una productora asociada.");
-    }
-
-    if (existingUser) {
-      const existingUserData = existingUser.user;
-
-      // Si el usuario ya existe y tiene tipo_registro NUEVO o CONFIRMADO, actualizar en lugar de crear uno nuevo
-      if (
-        existingUserData.tipo_registro === "NUEVO" ||
-        existingUserData.tipo_registro === "CONFIRMADO"
-      ) {
-        await existingUserData.update({
-          tipo_registro: "HABILITADO",
-        });
-
-        // Llamar a updateUsuarioMaestro desde userService para actualizar el registro en UsuarioMaestro
-        await updateUsuarioMaestro(existingUserData.id_usuario, {
-          productora_id: primaryProductoraId,
-        });
-
-        // Crear relaciones de vistas
-        const rolObj = await findRolByNombre('productor_secundario');
-        await assignVistasToUser(existingUser.user.id_usuario, rolObj.id_rol);
-
-        logger.info(
-          `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Productor Secundario: ${existingUser.user.email}`
-        );
-
-        // Auditoría de actualización
-        await AuditoriaCambio.create({
-          usuario_originario_id: primaryUser.id_usuario,
-          usuario_destino_id: existingUserData.id_usuario,
-          modelo: "UsuarioMaestro",
-          tipo_auditoria: "CAMBIO",
-          detalle: `Actualización en UsuarioMaestro (${existingUser.maestros})`,
-        });
-
-        logger.info(
-          `${req.method} ${req.originalUrl} - Usuario secundario existente actualizado: ${email}`
-        );
-        return res
-          .status(200)
-          .json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_SECONDARY });
-      } else {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Usuario ya registrado: ${email}`
-        );
-        throw new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED);
-      }
-    }
+    }    
 
     // Genera una clave temporal
-    const { nanoid } = await import("nanoid");
-    const temporaryPassword = nanoid(10);
+    const generateTemporaryPassword = (length = 10) => {
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+      return Array.from({ length }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+    };
+
+    const temporaryPassword = generateTemporaryPassword();
     const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
 
-    // Crea el nuevo usuario con tipo_registro SECUNDARIO
-    const newUsuario = await createUsuario({
-      rol_id: (await findRolByNombre('productor_secundario')).id_rol,
+    // Crear el usuario secundario
+    const { newUser } = await createUser({
       email,
-      clave: hashedPassword,
-      tipo_registro: "HABILITADO",
       nombre,
       apellido,
       telefono,
-      fecha_ultimo_cambio_rol: new Date(),
+      rolNombre: "productor_secundario",
+      tipoRegistro: "HABILITADO",
+      clave: hashedPassword,
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Usuario secundario registrado exitosamente: ${email}`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Usuario secundario registrado exitosamente: ${email}`);
 
-    // Crear el registro en UsuarioMaestro para el usuario secundario con el rol asignado
+    // Crear el registro en UsuarioMaestro
     const newUsuarioMaestro = await createUsuarioMaestro({
-      usuario_registrante_id: newUsuario.id_usuario,
-      productora_id: primaryProductoraId,
+      usuario_registrante_id: newUser.id_usuario,
+      productora_id: productora.id_productora,
     });
 
-    // Configuración del token de verificación de email
+    logger.info(`${req.method} ${req.originalUrl} - UsuarioMaestro registrado para el usuario secundario: ${email}`);
+
+    // Generar y asignar el token de verificación
     const tokenExpiration = process.env.EMAIL_TOKEN_EXPIRATION || "1d";
-    if (!process.env.JWT_SECRET)
-      throw new Error("Falta JWT_SECRET en el archivo de configuración");
+    const secret = process.env.JWT_SECRET;
+
+    if (!secret) {
+      logger.error("JWT_SECRET no está configurado en las variables de entorno.");
+      throw new Error("Configuración del sistema incompleta: JWT_SECRET faltante.");
+    }
+
     const emailToken = jwt.sign(
-      { id_usuario: newUsuario.id_usuario },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: tokenExpiration,
-      }
+      { id_usuario: newUser.id_usuario },
+      secret,
+      { expiresIn: tokenExpiration }
     );
 
-    // Guarda el token de verificación en el usuario
-    try {
-      const decoded = handleTokenVerification(
-        emailToken,
-        process.env.JWT_SECRET!
-      ) as JwtPayload;
-      newUsuario.email_verification_token = emailToken;
-      newUsuario.email_verification_token_expires = new Date(
-        decoded.exp! * 1000
-      );
-    } catch (err) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Error al verificar el token de email para el usuario secundario ${newUsuario.email}`,
-        err
-      );
+    // Decodificar y verificar el token
+    const decoded = jwt.decode(emailToken);
+    if (decoded && typeof decoded !== "string" && decoded.exp) {
+      newUser.email_verification_token = emailToken;
+      newUser.email_verification_token_expires = new Date(decoded.exp * 1000);
+    } else {
+      logger.error(`${req.method} ${req.originalUrl} - Error al decodificar el token de email para ${newUser.email}`);
       throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
     }
 
-    await newUsuario.save();
-
-    logger.debug(
-      `${req.method} ${req.originalUrl} - Token de verificación generado para el usuario secundario: ${email}`
-    );
+    await newUser.save();  
 
     // Enviar correo de verificación con clave temporal
     const validationLink = `${emailToken}`;
@@ -359,49 +236,50 @@ export const registerSecondaryProductor = async (
       validationLink,
       temporaryPassword
     );
-    await sendEmail({
-      to: newUsuario.email,
-      subject: "Confirmá tu cuenta secundaria para ingresar al sistema",
-      html: emailBody,
-    });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Correo de verificación enviado a: ${email}`
-    );
+    await sendEmailWithErrorHandling(
+      {
+        to: newUser.email,
+        subject: "Confirmá tu cuenta secundaria para ingresar al sistema",
+        html: emailBody,
+        successLog: `Correo enviado a ${newUser.email} con la clave temporal.`,
+        errorLog: `Error al enviar el correo al Productor Secundario: ${newUser.email}.`,
+      }, req, res, next);
 
-    // Registrar acción en AuditoriaCambio
-    const auditoriaDetalle = `Registro en Usuario (${newUsuario.id_usuario})`;
-    await AuditoriaCambio.create({
-      usuario_originario_id: primaryUser.id_usuario,
-      usuario_destino_id: newUsuario.id_usuario,
+    logger.info(`${req.method} ${req.originalUrl} - Correo de verificación enviado a: ${email}`);
+
+    // Registrar auditorías
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: newUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "ALTA",
-      detalle: auditoriaDetalle,
+      detalle: `Registro en Usuario (${newUser.id_usuario})`,
     });
 
-    await AuditoriaCambio.create({
-      usuario_originario_id: primaryUser.id_usuario,
-      usuario_destino_id: newUsuario.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: newUser.id_usuario,
       modelo: "UsuarioMaestro",
-      tipo_auditoria: "CAMBIO",
+      tipo_auditoria: "ALTA",
       detalle: `Registro de usuario secundario en UsuarioMaestro (${newUsuarioMaestro.id_usuario_maestro})`,
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Auditoría registrada para el usuario secundario: ${email}`
-    );
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: newUser.id_usuario,
+      modelo: "UsuarioVistaMaestro",
+      tipo_auditoria: "ALTA",
+      detalle: `Generación de vistas para el usuario con ID: (${newUser.id_usuario})`,
+    });
 
-    // Retorno de mensaje de éxito
+    logger.info(`${req.method} ${req.originalUrl} - Auditorías registradas para el usuario secundario: ${email}`);
+
+    // Responder con éxito
     res.status(201).json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_SECONDARY });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error en el registro de usuario secundario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, "Error en el registro de usuario secundario");    
   }
 };
 
@@ -412,67 +290,51 @@ export const login = async (
   next: NextFunction
 ) => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para iniciar sesión`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para iniciar sesión`);
 
     const { email, password } = req.body;
 
     // Consulta para obtener el usuario y los maestros asociados
-    const userData = await findUsuario({ email });
-    if (!userData || !userData.user || !userData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Usuario no encontrado: ${email}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-    const user = userData.user;
-    const maestros = userData.maestros;
-
+    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ email }, req);    
+    
     // Verificación de sesión existente
     const existingToken = req.cookies["auth_token"];
     const decodedToken = verifyToken(existingToken, process.env.JWT_SECRET!);
 
-    if (decodedToken && decodedToken.id === user.id_usuario) {
+    if (decodedToken && decodedToken.id === targetUser.id_usuario) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario ${email} ya ha iniciado sesión previamente.`
+        `${req.method} ${req.originalUrl} - El usuario ${email} se encuentra con una sesión activa.`
       );
-      return res
-        .status(400)
-        .json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
+      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
     }
 
     // Verificación de confirmación de cuenta
-    if (user.tipo_registro === "NUEVO") {
+    if (targetUser.tipo_registro === "NUEVO") {
       logger.warn(
         `${req.method} ${req.originalUrl} - El usuario ${email} no está confirmado.`
       );
-      return res
-        .status(403)
-        .json({ message: MESSAGES.ERROR.REGISTER.USER_NOT_CONFIRMED });
+      return res.status(403).json({ message: MESSAGES.ERROR.REGISTER.USER_NOT_CONFIRMED });
     }
 
     // Validación de contraseña
-    const isPasswordValid = await verifyPassword(password, user.clave);
-    const MAX_LOGIN_ATTEMPTS = parseInt(
-      process.env.MAX_LOGIN_ATTEMPTS || "5",
-      10
-    );
+    const isPasswordValid = await verifyPassword(password, targetUser.clave);
+    const MAX_LOGIN_ATTEMPTS = parseInt( process.env.MAX_LOGIN_ATTEMPTS || "5", 10);
 
     if (!isPasswordValid) {
       // Incrementa intentos fallidos
-      user.intentos_fallidos += 1;
+      targetUser.intentos_fallidos += 1;
 
       // Si los intentos fallidos alcanzan el límite, bloquea el usuario
-      if (user.intentos_fallidos >= MAX_LOGIN_ATTEMPTS) {
-        user.is_bloqueado = true;
+      if (targetUser.intentos_fallidos >= MAX_LOGIN_ATTEMPTS) {
+        targetUser.is_bloqueado = true;
         logger.warn(
           `${req.method} ${req.originalUrl} - El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos`
         );
 
         // Registro en auditoría de bloqueo de usuario
-        await AuditoriaCambio.create({
-          usuario_originario_id: user.id_usuario,
+        await registrarAuditoria({
+          usuario_originario_id: targetUser.id_usuario,
+          usuario_destino_id: targetUser.id_usuario,
           modelo: "Usuario",
           tipo_auditoria: "ERROR",
           detalle: `Bloqueo después de ${MAX_LOGIN_ATTEMPTS} intentos fallidos`,
@@ -480,36 +342,34 @@ export const login = async (
       }
 
       // Guardar cambios en intentos fallidos y estado de habilitación del usuario
-      await user.save();
+      await targetUser.save();
 
       // Registro de auditoría para intento de inicio de sesión fallido
-
-      if (!user.is_bloqueado) {
-        await AuditoriaCambio.create({
-          usuario_originario_id: user.id_usuario,
+      if (!targetUser.is_bloqueado) {
+        await registrarAuditoria({
+          usuario_originario_id: targetUser.id_usuario,
+          usuario_destino_id: targetUser.id_usuario,
           modelo: "Usuario",
           tipo_auditoria: "ERROR",
-          detalle: `Intento ${user.intentos_fallidos} fallido de inicio de sesión.`,
+          detalle: `Intento ${targetUser.intentos_fallidos} fallido de inicio de sesión.`,
         });
       }
 
       // Registra en el log y lanza un error de autenticación
       logger.warn(
-        `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Contraseña incorrecta para el usuario: ${email}. Intentos fallidos: ${user.intentos_fallidos}`
+        `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Contraseña incorrecta para el usuario: ${email}. Intentos fallidos: ${targetUser.intentos_fallidos}`
       );
 
-      throw new Err.UnauthorizedError(
-        MESSAGES.ERROR.VALIDATION.PASSWORD_INCORRECT
-      );
+      throw new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.PASSWORD_INCORRECT);
     }
 
-    user.intentos_fallidos = 0;
-    await user.save();
+    targetUser.intentos_fallidos = 0;
+    await targetUser.save();
 
     // Preparar los datos de las productoras
     const productoras: { id: string; nombre: string }[] = [];
 
-    maestros.forEach((maestro) => {
+    targetMaestros.forEach((maestro) => {
       if (maestro.productora && maestro.productora.nombre_productora) {
         productoras.push({
           id: maestro.productora.id_productora,
@@ -520,11 +380,9 @@ export const login = async (
 
     // Generar un token básico con `userId`
     const token = jwt.sign(
-      { id: user.id_usuario },
+      { id: targetUser.id_usuario },
       process.env.JWT_SECRET!,
-      {
-        expiresIn: process.env.JWT_EXPIRATION || "1h",
-      }
+      { expiresIn: process.env.JWT_EXPIRATION || "1h" }
     );
 
     res.cookie("auth_token", token, {
@@ -535,37 +393,30 @@ export const login = async (
     });
 
     // Registro de auditoría para acceso exitoso
-
-    await AuditoriaCambio.create({
-      usuario_originario_id: user.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: targetUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "AUTH",
-      detalle: `Inicio de sesión exitoso`,
+      detalle: "Inicio de sesión exitoso",
     });
 
     // Registro de sesión
-
-    await AuditoriaSesion.create({
-      usuario_registrante_id: user.id_usuario,
-      fecha_inicio_sesion: new Date(),
-      ip_origen: req.ip,
-      navegador: req.headers["user-agent"] || null,
+    await registrarSesion({
+      usuarioRegistranteId: targetUser.id_usuario,
+      ipOrigen: req.ip || "IP desconocida",
+      navegador: req.headers["user-agent"] || "Navegador desconocido",
+      fechaInicioSesion: new Date(),
     });
 
     logger.info(
       `${req.method} ${req.originalUrl} - Inicio de sesión exitoso para el usuario: ${email}`
     );
 
-    return res
-      .status(200)
-      .json({ message: MESSAGES.SUCCESS.AUTH.LOGIN, productoras });
+    return res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGIN, productoras });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error en el inicio de sesión: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error en el inicio de sesión');    
   }
 };
 
@@ -576,126 +427,83 @@ export const getRole = async (
   next: NextFunction
 ) => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud para obtener el rol del usuario`
-    );
-
-    // Verificar que el usuario esté autenticado
-    const userId = req.userId as string;
-
-    if (!userId) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no autenticado.`);
-      return res
-        .status(401)
-        .json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
-    }
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud para obtener el rol del usuario`);
 
     // Buscar información del usuario autenticado usando su id_usuario
-    const userData = await findUsuario({ userId });
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    if (!userData || !userData.user.rol) {
+    // Comprobar que el rol esté presente
+    if (!authUser.rol) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró información del usuario con ID: ${userId}`
+        `${req.method} ${req.originalUrl} - Usuario sin rol asignado`
       );
-      return res.status(404).json({ message: MESSAGES.ERROR.USER.NOT_FOUND });
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED)
+      );
     }
 
-    const roleName = userData.user.rol.nombre_rol;
-
-    if (!roleName) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario con ID ${userId} no tiene un rol asignado.`
-      );
-      return res
-        .status(404)
-        .json({ message: MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED });
-    }
+    const roleName = authUser.rol.nombre_rol;   
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Rol del usuario con ID ${userId}: ${roleName}`
+      `${req.method} ${req.originalUrl} - Se obtuvo el rol del usuario ID ${authUser.id_usuario}: ${roleName}`
     );
 
     res.status(200).json({ role: roleName });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener el rol del usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener el rol del usuario');    
   }
 };
 
 // SELECCIONAR PRODUCTORA ACTIVA Y CARGAR LA COOKIE CORRESPONDIENTE
-export const selectProductora = async (
+export const selectAuthProductora = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const { productoraId } = req.body;
 
-    if (!productoraId) {
+    // Verifica el usuario autenticado y obtiene sus datos
+    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    // Comprobar que el usuario tenga maestros asociados
+    if (!authMaestros || authMaestros.length === 0) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Falta el productoraId en la solicitud.`
+        `${req.method} ${req.originalUrl} - El usuario autenticado no tiene productoras asociadas.`
       );
-      return res
-        .status(400)
-        .json({ message: MESSAGES.ERROR.VALIDATION.PRODUCTORA_ID_REQUIRED });
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS));
     }
 
-    const primaryUserAuthId = req.userId as string;
-
-    if (!primaryUserAuthId) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no autenticado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    // Buscar el UsuarioMaestro asociado al usuarioId y productoraId
-    const userData = await findUsuario({
-      userId: primaryUserAuthId,
-      productoraId,
-    });
-
-    if (
-      !userData ||
-      !userData.maestros ||
-      !userData ||
-      userData.maestros.length === 0
-    ) {
+    // Comprobar que el rol esté presente
+    if (!authUser.rol) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró un maestro asociado con la productora ${productoraId}.`
+        `${req.method} ${req.originalUrl} - Usuario sin rol asignado`
       );
-      return res
-        .status(403)
-        .json({ message: MESSAGES.ERROR.VALIDATION.PRODUCTORA_NOT_ALLOWED });
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED)
+      );
     }
 
-    const selectedMaestro = userData.maestros.find(
+    // Buscar el maestro asociado a la productora seleccionada
+    const selectedMaestro = authMaestros.find(
       (maestro) =>
         maestro.productora &&
-        maestro.productora.id_productora &&
         maestro.productora.id_productora === productoraId
     );
 
     if (!selectedMaestro || !selectedMaestro.productora) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Productora no asociada al usuario.`
+        `${req.method} ${req.originalUrl} - Productora ${productoraId} no asociada al usuario.`
       );
-      return res
-        .status(403)
-        .json({ message: MESSAGES.ERROR.VALIDATION.PRODUCTORA_NOT_ALLOWED });
+      return next(
+        new Err.ForbiddenError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS)
+      );
     }
 
     // Crear cookie `active_sesion` con los datos de la productora seleccionada
     res.cookie(
       "active_sesion",
       JSON.stringify({
-        maestroId: selectedMaestro.maestroId,
         productoraId: selectedMaestro.productora.id_productora,
-        rolId: userData.user.rol?.id_rol,
       }),
       {
         httpOnly: true,
@@ -705,91 +513,58 @@ export const selectProductora = async (
       }
     );
 
-    // Registro en auditoría de selección de productora
-    await AuditoriaCambio.create({
-      usuario_originario_id: primaryUserAuthId,
-      modelo: "UsuarioMaestro",
-      tipo_auditoria: "Cambio",
-      detalle: `Cookie de productora activa (${productoraId})`,
-    });
-
     logger.info(
       `${req.method} ${req.originalUrl} - Productora activa asignada: ${selectedMaestro.productora.nombre_productora}`
     );
 
-    res
-      .status(200)
-      .json({ message: MESSAGES.SUCCESS.AUTH.PRODUCTORA_SELECTED });
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PRODUCTORA_SELECTED });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al seleccionar productora: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al seleccionar productora');    
   }
 };
 
 // OBTENER LAS PRODUCTORAS ASOCIADAS AL USUARIO
-export const getProductoras = async (
+export const getAuthProductoras = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
-    const userId = req.userId as string;
+    // Verifica el usuario autenticado
+    const { maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    if (!userId) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no autenticado.`);
-      return next(
-        new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED)
-      );
-    }
-
-    // Buscar las productoras asociadas al usuario actual
-    const userData = await findUsuario({ userId });
-    if (!userData) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    if (!userData.maestros.length) {
+    // Comprobar que el usuario tenga maestros asociados
+    if (!authMaestros || authMaestros.length === 0) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontraron productoras asociadas para el usuario.`
+        `${req.method} ${req.originalUrl} - El usuario autenticado no tiene productoras asociadas.`
       );
-      return res
-        .status(404)
-        .json({ message: MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS });
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS));
     }
 
     // Filtrar y mapear las productoras válidas
-    const productoras = userData.maestros
-      .map((maestro) => maestro.productora)
-      .filter((productora) => productora && productora.nombre_productora)
-      .map((productora) => ({
-        id: productora!.id_productora,
-        nombre: productora!.nombre_productora,
+    const productoras = authMaestros
+      .filter((maestro) => maestro.productora && maestro.productora.nombre_productora)
+      .map((maestro) => ({
+        id: maestro.productora!.id_productora,
+        nombre: maestro.productora!.nombre_productora,
       }));
 
-    if (!productoras.length) {
+    if (productoras.length === 0) {
       logger.warn(
         `${req.method} ${req.originalUrl} - No se encontraron productoras válidas asociadas para el usuario.`
       );
-      return res
-        .status(404)
-        .json({ message: MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS });
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS));
     }
 
     logger.info(
       `${req.method} ${req.originalUrl} - Productoras asociadas obtenidas correctamente.`
     );
-    return res.status(200).json({ productoras });
+
+    res.status(200).json({ productoras });
+
   } catch (err) {
-    const error = err as Error;
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al obtener productoras: ${error.message}`
-    );
-    next(error);
+    handleGeneralError(err, req, res, next, "Error al obtener las productoras del usuario");
   }
 };
 
@@ -800,22 +575,12 @@ export const requestPasswordReset = async (
   next: NextFunction
 ) => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para restablecer la contraseña`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para restablecer la contraseña`);
 
     const { email } = req.body;
 
-    // Verifica si el usuario existe
-    const result = await findUsuario({ email });
-    if (!result || !result.user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Solicitud de restablecimiento de contraseña fallida. Usuario no encontrado: ${email}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    const user = result.user;
+    // Buscar el usuario pasado por parámetro
+    const { user: targetUser }: UsuarioResponse = await getTargetUser({ email }, req);
 
     // Configuración de expiración del token de restablecimiento
     const tokenExpiration = process.env.RESET_TOKEN_EXPIRATION || "1h";
@@ -825,13 +590,13 @@ export const requestPasswordReset = async (
 
     // Genera el token de restablecimiento
     const resetToken = jwt.sign(
-      { id_usuario: user.id_usuario },
+      { id_usuario: targetUser.id_usuario },
       process.env.JWT_SECRET,
       {
         expiresIn: tokenExpiration,
       }
     );
-    user.reset_password_token = resetToken;
+    targetUser.reset_password_token = resetToken;
 
     // Calcula la fecha de expiración del token de restablecimiento
     try {
@@ -839,7 +604,7 @@ export const requestPasswordReset = async (
         resetToken,
         process.env.JWT_SECRET!
       ) as JwtPayload;
-      user.reset_password_token_expires = new Date(decoded.exp! * 1000);
+      targetUser.reset_password_token_expires = new Date(decoded.exp! * 1000);
     } catch (err) {
       logger.error(
         `${req.method} ${req.originalUrl} - Error al verificar el token de restablecimiento de contraseña para el usuario: ${email}`,
@@ -848,15 +613,12 @@ export const requestPasswordReset = async (
       throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
     }
 
-    await user.save();
-
-    logger.debug(
-      `${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña generado para el usuario: ${email}`
-    );
+    await targetUser.save();   
 
     // Registro en auditoría para la solicitud de restablecimiento de contraseña
-    await AuditoriaCambio.create({
-      usuario_originario_id: user.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: targetUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
       detalle: `Solicitud de cambio de clave.`,
@@ -865,27 +627,19 @@ export const requestPasswordReset = async (
     // Genera el enlace de restablecimiento y envía el correo electrónico
     const resetLink = `${resetToken}`;
     const emailBody = MESSAGES.EMAIL_BODY.PASSWORD_RECOVERY(resetLink);
-    await sendEmail({
-      to: user.email,
-      subject: "Solicitud de restablecimiento de contraseña",
-      html: emailBody,
-    });
+    await sendEmailWithErrorHandling(
+      {
+        to: targetUser.email,
+        subject: "Solicitud de restablecimiento de contraseña",
+        html: emailBody,
+        successLog: `Correo de restablecimiento de contraseña enviado a: ${targetUser.email}`,
+        errorLog: `Error al enviar el correo de restablecimiento de contraseña a: ${targetUser.email}.`,
+      }, req, res, next);
+    
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET_REQUESTED });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Correo de restablecimiento de contraseña enviado a: ${email}`
-    );
-    res
-      .status(200)
-      .json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET_REQUESTED });
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error en la solicitud de restablecimiento de contraseña: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error en la solicitud de restablecimiento de contraseña');    
   }
 };
 
@@ -896,11 +650,10 @@ export const validateEmail = async (
   next: NextFunction
 ) => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para validar el email`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para validar el email`);
 
     const { token } = req.params;
+    
     // Verificar el token usando handleTokenVerification
     let decoded: JwtPayload;
     try {
@@ -909,63 +662,42 @@ export const validateEmail = async (
         process.env.JWT_SECRET!
       ) as JwtPayload;
     } catch (err) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Token de verificación inválido o expirado.`
-      );
+      logger.warn(`${req.method} ${req.originalUrl} - Token de verificación inválido o expirado.`);
       throw new Err.UnauthorizedError(MESSAGES.ERROR.JWT.INVALID);
     }
+    
+    // Busca al usuario decodificado
+    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: decoded.id_usuario }, req);
 
-    // Busca al usuario usando el ID decodificado y verifica el token y su expiración
-    const result = await findUsuario({ userId: decoded.id_usuario });
-    if (!result) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-    const user = result.user;
-
-    if(!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado.`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    if (      
-      user.email_verification_token !== token ||
-      user.email_verification_token_expires! < new Date()
-    ) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Token inválido o expirado.`
-      );
+    // Verificar que el token no esté expirado
+    if (targetUser.email_verification_token !== token || targetUser.email_verification_token_expires! < new Date()) {
+      logger.warn(`${req.method} ${req.originalUrl} - Token inválido o expirado.`);
       throw new Err.NotFoundError(MESSAGES.ERROR.VALIDATION.INVALID_TOKEN);
     }
 
     // Actualiza el tipo_registro del usuario a "CONFIRMADO" y limpia el token de verificación
-    user.tipo_registro = "CONFIRMADO";
-    user.email_verification_token = null;
-    user.email_verification_token_expires = null;
-    await user.save();
+    targetUser.tipo_registro = "CONFIRMADO";
+    targetUser.email_verification_token = null;
+    targetUser.email_verification_token_expires = null;
+    await targetUser.save();
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Email validado correctamente para el usuario ${user.email}`
+      `${req.method} ${req.originalUrl} - Email validado correctamente para el usuario ${targetUser.email}`
     );
 
     // Registrar en la auditoría el cambio de estado a "CONFIRMADO"
-    await AuditoriaCambio.create({
-      usuario_originario_id: user.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: targetUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
-      detalle: `${user.email} confirmado`,
+      detalle: `${targetUser.email} confirmado`,
     });
 
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.EMAIL_CONFIRMED });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error en la validación del email: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error en la validación del email');    
   }
 };
 
@@ -976,68 +708,44 @@ export const completeProfile = async (
   next: NextFunction
 ) => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud para completar el perfil del usuario`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud para completar el perfil del usuario`);
 
     const { nombre, apellido, telefono } = req.body;
-    const userId = req.userId as string;
+    
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    // Validar datos obligatorios
-    if (!nombre || !apellido) {
+    if (!authUser || authUser.tipo_registro !== "CONFIRMADO") {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Datos incompletos para completar el perfil.`
+        `${req.method} ${req.originalUrl} - Usuario no verificado: ${authUser.id_usuario}`
       );
-      return res
-        .status(400)
-        .json({ message: MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS });
-    }
-
-    // Buscar el usuario
-    const userData = await findUsuario({ userId });
-
-    if (!userData) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    const user = userData.user;
-
-    if (!user || user.tipo_registro !== "CONFIRMADO") {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado o no verificado: ${userId}`
+      return next(
+        new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.STATE_INVALID)
       );
-      return res.status(404).json({ message: MESSAGES.ERROR.USER.NOT_FOUND });
     }
 
     // Actualizar perfil
-    user.nombre = nombre;
-    user.apellido = apellido;
-    user.telefono = telefono || null;
-    user.tipo_registro = "HABILITADO";
-    await user.save();
+    authUser.nombre = nombre;
+    authUser.apellido = apellido;
+    authUser.telefono = telefono || null;
+    authUser.tipo_registro = "HABILITADO";
+    await authUser.save();
 
     // Registrar auditoría
-    await AuditoriaCambio.create({
-      usuario_originario_id: userId,
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: authUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
-      detalle: `Perfil completado para el usuario con ID ${userId}`,
+      detalle: `Perfil completado para el usuario con ID ${authUser.id_usuario}`,
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Perfil completado exitosamente para el usuario: ${user.email}`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Perfil completado exitosamente para el usuario: ${authUser.email}`);
     res
       .status(200)
       .json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_PRIMARY_SECOND });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error en la validación del email: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al completar el perfil del usuario');   
   }
 };
 
@@ -1063,40 +771,30 @@ export const resetPassword = async (
       ) as JwtPayload;
     } catch (err) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Token de restablecimiento inválido o expirado.`
+        `${req.method} ${req.originalUrl} - Token de restablecimiento inválido o expirado: ${
+          err instanceof Error ? err.message : 'Error desconocido'
+        }`
       );
       throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
     }
+    
+    // Buscar el usuario usando el id del token
+    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: decoded.id_usuario }, req);
 
-    // Buscar el usuario usando el id del token y verificar el token y su expiración
-    const result = await findUsuario({ userId: decoded.id_usuario });
-
-    if (!result) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    const user = result.user;
-
-    if (
-      !user ||
-      user.reset_password_token !== token ||
-      user.reset_password_token_expires! < new Date()
-    ) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña inválido o expirado.`
-      );
+    // Verificar si existe el token
+    if (!targetUser || targetUser.reset_password_token !== token || targetUser.reset_password_token_expires! < new Date()) {
+      logger.warn(`${req.method} ${req.originalUrl} - Token de restablecimiento de contraseña inválido o expirado.`);
       throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
     }
 
     // Cifra la nueva contraseña
     const hashedPassword = await hashPassword(newPassword);
-    user.clave = hashedPassword;
+    targetUser.clave = hashedPassword;
 
     // Limpia el token de restablecimiento y su fecha de expiración
-    user.reset_password_token = null;
-    user.reset_password_token_expires = null;
-    await user.save();
+    targetUser.reset_password_token = null;
+    targetUser.reset_password_token_expires = null;
+    await targetUser.save();
 
     // Limpia la cookie de autenticación para cerrar sesión
     res.clearCookie("auth_token", {
@@ -1106,31 +804,26 @@ export const resetPassword = async (
     });
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Contraseña restablecida exitosamente para el usuario ${user.email}. Sesión cerrada.`
+      `${req.method} ${req.originalUrl} - Contraseña restablecida exitosamente para el usuario ${targetUser.email}. Sesión cerrada.`
     );
 
     // Registro en auditoría para el restablecimiento de la contraseña
-    await AuditoriaCambio.create({
-      usuario_originario_id: user.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: targetUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
-      detalle: `Clave modificada por mail`,
+      detalle: `Solicitud de cambio de clave por email: ${targetUser.email}`,
     });
 
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });
+    
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
       logger.warn("El token de restablecimiento de contraseña ha expirado.");
       return next(new Err.BadRequestError(MESSAGES.ERROR.JWT.EXPIRED));
     }
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error en el restablecimiento de contraseña: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error en el restablecimiento de contraseña');    
   }
 };
 
@@ -1141,50 +834,68 @@ export const getUser = async (
   next: NextFunction
 ) => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para obtener los datos del usuario`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para obtener los datos del usuario`);
 
-    const userId = req.userId as string;
+    // Verifica el usuario autenticado
+    const { user: authUser, maestros: authMaestros, vistas: authVistas }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    if (!userId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no autenticado o ID no válido.`
-      );
-      return res
-        .status(401)
-        .json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
-    }
-
-    // Buscar el usuario y sus maestros asociados
-    const result = await findUsuario({ userId });
-
-    if (!result || !result.user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró un usuario con el ID: ${userId}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Datos del usuario obtenidos correctamente para el usuario con ID: ${userId}`
-    );
-
-    // Devuelve el usuario y sus maestros asociados
+    // Devuelve el usuario, sus maestros y vistas
     res.status(200).json({
-      user: result.user,
-      maestros: result.maestros,
-      vistas: result.vistas,
+      user: authUser,
+      maestros: authMaestros,
+      vistas: authVistas,
     });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener los datos del usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener los datos del usuario');    
+  }
+};
+
+// OBTENER EL TIPO DE REGISTRO DE UN USUARIO
+export const getAuthTipoRegistro = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para obtener el tipo_registro de un usuario.`);
+
+    // Buscar el usuario pasado como parámetro
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    const response: any = {
+      id_usuario: authUser.id_usuario,
+      tipo_registro: authUser.tipo_registro,
+    };
+
+    // Si el tipo_registro es RECHAZADO, buscar el último mensaje de rechazo
+    if (authUser.tipo_registro === "RECHAZADO") {
+      logger.info(`${req.method} ${req.originalUrl} - Usuario con tipo_registro RECHAZADO. Buscando último mensaje.`);
+
+      const ultimoMensajeRechazo = await getLastRejectionMessage(authUser.id_usuario);
+
+      if (!ultimoMensajeRechazo) {
+        logger.info(
+          `${req.method} ${req.originalUrl} - No se encontraron mensajes de rechazo para el usuario.`
+        );
+        return next(new Err.NotFoundError(MESSAGES.ERROR.MESSAGE.NO_REJECT));
+      }
+
+      response.mensaje_rechazo = {
+        mensaje: ultimoMensajeRechazo.mensaje,
+        fecha: ultimoMensajeRechazo.createdAt,
+      };
+
+      logger.info(`${req.method} ${req.originalUrl} - Último mensaje de rechazo encontrado: ${ultimoMensajeRechazo.mensaje}`);
+    }
+
+    return res.status(200).json({
+      message: MESSAGES.SUCCESS.USUARIO.TYPE_REGISTER_FOUND,
+      data: response,
+    });
+
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al obtener el tipo_registro del usuario');
   }
 };
 
@@ -1193,105 +904,68 @@ export const changeUserPassword = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para cambiar la clave del usuario`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para cambiar la clave del usuario`);
 
     const { id_usuario, newPassword, confirmPassword } = req.body;
-    const userIdFromToken = req.userId as string;
 
-    if (!userIdFromToken) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no autenticado.`);
-      return res
-        .status(401)
-        .json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
-    }
-
+    // Validar contraseñas
     if (!newPassword || !confirmPassword || newPassword !== confirmPassword) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Las contraseñas no coinciden.`
-      );
-      return res
-        .status(400)
-        .json({ message: MESSAGES.ERROR.PASSWORD.CONFIRMATION_MISMATCH });
+      logger.warn(`${req.method} ${req.originalUrl} - Las contraseñas no coinciden.`);
+      return next(new Err.ConflictError(MESSAGES.ERROR.PASSWORD.CONFIRMATION_MISMATCH));
     }
 
-    // Buscar información del usuario autenticado
-    const authenticatedUserData = await findUsuario({
-      userId: userIdFromToken,
-    });
+    // Obtener información del usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    if (!authenticatedUserData) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+    if (!authUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado.`);
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED));
     }
 
-    const authenticatedUser = authenticatedUserData.user;
-    const authenticatedRole = authenticatedUserData.user.rol_id;
-
-    if (!authenticatedUser || !authenticatedRole) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario autenticado no válido.`
-      );
-      return res
-        .status(403)
-        .json({ message: MESSAGES.ERROR.USER.NOT_AUTHORIZED });
-    }
-
-    // Verificar si el usuario autenticado está cambiando su propia clave
-    const isSelfUpdate = !id_usuario || userIdFromToken === id_usuario;
+    // Determinar si el cambio es para el propio usuario o para otro
+    const isSelfUpdate = !id_usuario || req.userId === id_usuario;
 
     if (!isSelfUpdate) {
-      // Solo admin_principal o admin_secundario pueden cambiar la clave de otros usuarios
-      if (
-        authenticatedRole !== "admin_principal" &&
-        authenticatedRole !== "admin_secundario"
-      ) {
+      // Validar que el usuario tenga permisos para cambiar la clave de otros
+      if (!["admin_principal", "admin_secundario"].includes(authUser.rol.nombre_rol)) {
         logger.warn(
-          `${req.method} ${req.originalUrl} - Usuario con rol ${authenticatedRole} no autorizado para cambiar la clave de otro usuario.`
+          `${req.method} ${req.originalUrl} - Usuario con rol no autorizado para cambiar la clave de otro usuario: ${authUser.rol.nombre_rol}.`
         );
-        return res.status(403).json({
-          message: MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_PASSWORD,
-        });
+        return next(new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_PASSWORD));
       }
     }
 
-    // Buscar el usuario objetivo
-    const targetUserId = isSelfUpdate ? userIdFromToken : id_usuario;
-    const targetUserData = await findUsuario({ userId: targetUserId });
+    // Determinar el usuario objetivo
+    const targetUserId = isSelfUpdate ? req.userId : id_usuario;
 
-    if (!targetUserData) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    const targetUser = targetUserData.user;
+    // Buscar al usuario objetivo
+    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: targetUserId }, req);
 
     if (!targetUser) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario objetivo no encontrado con ID: ${targetUserId}`
+        `${req.method} ${req.originalUrl} - Usuario objetivo no encontrado: ${targetUserId}`
       );
-      return res.status(404).json({ message: MESSAGES.ERROR.USER.NOT_FOUND });
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
 
     // Cifrar la nueva contraseña
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Actualizar la clave
+    // Actualizar la clave del usuario
     targetUser.clave = hashedPassword;
     await targetUser.save();
 
-    // Auditar la acción
-    await AuditoriaCambio.create({
-      usuario_originario_id: userIdFromToken,
-      usuario_destino_id: isSelfUpdate ? undefined : targetUser.id_usuario,
+    // Registrar auditoría
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
       detalle: isSelfUpdate
         ? `Clave actualizada por el propio usuario.`
-        : `Clave actualizada para el usuario con ID ${targetUser.id_usuario} por ${authenticatedRole}.`,
+        : `Clave actualizada para el usuario con ID ${targetUser.id_usuario} por ${authUser.id_usuario}.`,
     });
 
     logger.info(
@@ -1300,14 +974,7 @@ export const changeUserPassword = async (
 
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al cambiar la clave del usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, "Error al cambiar la clave del usuario");
   }
 };
 
@@ -1316,7 +983,7 @@ export const logout = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const authToken = req.cookies["auth_token"];
     const activeSesion = req.cookies["active_sesion"];
@@ -1325,19 +992,17 @@ export const logout = async (
       logger.warn(
         `${req.method} ${req.originalUrl} - No se encontró cookie de autenticación.`
       );
-      return res
-        .status(400)
-        .json({ message: MESSAGES.ERROR.VALIDATION.NO_COOKIE_FOUND });
+      return next(new Err.NotFoundError(MESSAGES.ERROR.VALIDATION.NO_COOKIE_FOUND));
     }
 
-    // Limpia la cookie de autenticación para cerrar sesión
+    // Limpiar la cookie de autenticación
     res.clearCookie("auth_token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
 
-    // Limpia la cookie de sesión activa
+    // Limpiar la cookie de sesión activa
     if (activeSesion) {
       res.clearCookie("active_sesion", {
         httpOnly: true,
@@ -1350,31 +1015,27 @@ export const logout = async (
       );
     }
 
-    // Verifica si `req.user` es un JwtPayload y extrae el id
-    const primaryUserAuthId = req.userId as string;
+    // Obtener el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Logout exitoso para el usuario ID ${primaryUserAuthId}`
+      `${req.method} ${req.originalUrl} - Logout exitoso para el usuario ID ${authUser.id_usuario}`
     );
 
-    // Registro de auditoría para el cierre de sesión en AuditoriaCambio
-    await AuditoriaCambio.create({
-      usuario_originario_id: primaryUserAuthId,
+    // Registrar auditoría para el cierre de sesión
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: authUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "AUTH",
       detalle: "Logout exitoso",
     });
 
-    // Llama al servicio para actualizar la fecha de fin de sesión
-    await actualizarFechaFinSesion(primaryUserAuthId);
+    // Actualizar la fecha de fin de sesión
+    await actualizarFechaFinSesion(authUser.id_usuario);
 
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGOUT });
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error durante el proceso de logout: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, "Error durante el proceso de logout");
   }
 };

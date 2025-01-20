@@ -3,19 +3,24 @@ import sequelize from '../config/database/sequelize';
 import Usuario from './Usuario';
 import Productora from './Productora';
 
+const OPERACIONES_PERMITIDAS = [
+  "RECHAZO",
+] as const;
+
 class ProductoraMensaje extends Model {
   public id_comentario!: string;
   public usuario_id!: string;
   public productora_id!: string;
-  public mensaje!: string;
+  public tipo_mensaje!: string;
+  public mensaje!: string;  
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
-  
-  public usuarioDelMensaje?: Usuario;
-  public productoraDelMensaje?: Productora;
 
-  public static associations: {    
+  public usuarioDelMensaje?: Usuario;
+  public productoraDelMensaje?: Productora; 
+
+  public static associations: {
     usuarioDelMensaje: Association<ProductoraMensaje, Usuario>;
     productoraDelMensaje: Association<ProductoraMensaje, Productora>;
   };
@@ -63,6 +68,16 @@ ProductoraMensaje.init(
         },
       },
     },
+    tipo_mensaje: {
+      type: DataTypes.ENUM(...OPERACIONES_PERMITIDAS),
+      allowNull: false,
+      validate: {
+        isIn: {
+          args: [OPERACIONES_PERMITIDAS],
+          msg: 'El tipo de mensaje debe ser una operación permitida.',
+        },
+      },
+    },
     mensaje: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -81,11 +96,11 @@ ProductoraMensaje.init(
     indexes: [
       {
         fields: ['usuario_id'],
-        name: 'idx_comentario_usuario',
+        name: 'idx_mensaje_usuario',
       },
       {
         fields: ['productora_id'],
-        name: 'idx_comentario_productora',
+        name: 'idx_mensaje_productora',
       },
     ],
   }

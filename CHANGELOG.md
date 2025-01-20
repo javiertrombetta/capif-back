@@ -1,4 +1,17 @@
 # Changelog
+## v0.1.115 - 20-01-2025
+## 🐛 Fixes
+
+- fix: vistas in usuariosController and userService
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.110
+- chore(docs): update CHANGELOG.MD
+- chore: staged fix errors
+- chore: refactor authController and usuariosController
+
+
 ## v0.1.110 - 14-01-2025
 ## 🐛 Fixes
 

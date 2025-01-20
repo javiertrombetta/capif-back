@@ -521,41 +521,38 @@ export const deleteUserSchema = Joi.object({
 });
 
 // Schema for updating user's views
-export const updateUserViewsSchema = Joi.object({
-  id_usuario: uuidSchema.required().messages({
-    'any.required': 'El campo id_usuario es obligatorio.',
-    'string.guid': 'El campo id_usuario debe ser un UUID válido.',
-  }),
-  vistas: Joi.array()
-    .items(
-      Joi.string()
-        .uuid()
-        .messages({
-          'string.guid': 'Cada elemento en vistas debe ser un UUID válido.',
-        })
-    )
-    .required()
-    .messages({
-      'array.base': 'El campo vistas debe ser un arreglo.',
-      'any.required': 'El campo vistas es obligatorio.',
+export const updateUserViewsSchema = {
+  body: Joi.object({
+    id_usuario: Joi.string().uuid().required().messages({
+      "string.base": "El ID de usuario debe ser un string.",
+      "string.guid": "El ID de usuario debe ser un UUID válido.",
+      "any.required": "El ID de usuario es obligatorio.",
     }),
-});
+    roleName: Joi.string().required().messages({
+      "string.base": "El nombre del rol debe ser un string.",
+      "any.required": "El nombre del rol es obligatorio.",
+    }),
+  }),
+};
 
 // Schema for updating status of user's views
 export const toggleUserViewStatusSchema = Joi.object({
-  id_usuario: uuidSchema.required().messages({
-    'any.required': 'El campo id_usuario es obligatorio.',
-    'string.guid': 'El campo id_usuario debe ser un UUID válido.',
-  }),
+  id_usuario: Joi.string()
+    .uuid()
+    .required()
+    .messages({
+      'any.required': 'El campo id_usuario es obligatorio.',
+      'string.guid': 'El campo id_usuario debe ser un UUID válido.',
+      'string.base': 'El campo id_usuario debe ser una cadena.',
+    }),
   vistas: Joi.array()
     .items(
       Joi.object({
-        id_vista: Joi.string()
-          .uuid()
+        nombre_vista: Joi.string()
           .required()
           .messages({
-            'any.required': 'El campo id_vista es obligatorio.',
-            'string.guid': 'El campo id_vista debe ser un UUID válido.',
+            'any.required': 'El campo nombre_vista es obligatorio.',
+            'string.base': 'El campo nombre_vista debe ser una cadena.',
           }),
         is_habilitado: Joi.boolean()
           .required()

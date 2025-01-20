@@ -333,7 +333,7 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
       {
         model: UsuarioVista,
         as: "vista",
-        attributes: ["id_vista", "nombre_vista"],
+        attributes: ["id_vista", "nombre_vista", "nombre_vista_superior"],
       },
     ],
   });
@@ -375,89 +375,121 @@ export const findRolByNombre = async (nombre_rol: string) => {
   return rol;
 };
 
-export const findVistasforUsuario = async (
-  usuarioId: string
-): Promise<string[]> => {
+export const findVistasByRol = async (roleName: string) => {
+  if (!roleName) {
+    throw new Error("Debe proporcionar el nombre del rol.");
+  }
+
+  // Buscar el ID del rol por su nombre
+  const rol = await UsuarioRol.findOne({
+    where: { nombre_rol: roleName },
+    attributes: ["id_rol"],
+  });
+
+  if (!rol) {
+    throw new Error(`No se encontró un rol con el nombre: ${roleName}`);
+  }
+
+  // Buscar todas las vistas asociadas al rol
+  const vistas = await UsuarioVista.findAll({
+    where: { rol_id: rol.id_rol },
+    attributes: ["id_vista", "nombre_vista", "nombre_vista_superior"],
+  });
+
+  return vistas;
+};
+
+export const findVistasByUsuario = async (idUsuario: string) => {
+  if (!idUsuario) {
+    throw new Error("Debe proporcionar un ID de usuario.");
+  }
+
+  // Buscar las vistas habilitadas del usuario
   const vistas = await UsuarioVistaMaestro.findAll({
-    where: { usuario_id: usuarioId, is_habilitado: true },
+    where: { usuario_id: idUsuario },
     include: [
-      { model: UsuarioVista, as: "vista", attributes: ["nombre_vista"] },
+      {
+        model: UsuarioVista,
+        as: "vista",
+        attributes: ["id_vista", "nombre_vista", "nombre_vista_superior"],
+      },
     ],
   });
 
-  return vistas.map((vista) => {
-    if (!vista.vista) {
-      throw new Error("Vista no definida en UsuarioAccesoMaestro.");
-    }
-    return vista.vista.nombre_vista;
-  });
+  // Extraer solo las vistas
+  return vistas.map((vistaMaestro) => vistaMaestro.vista);
 };
 
 export const assignVistasToUser = async (
   usuarioId: string,
-  rolId: string
+  rolId?: string,
+  nombreRol?: string,
+  isHabilitado: boolean = true
 ): Promise<void> => {
-  if (!usuarioId || !rolId) {
-    throw new Error("UsuarioId y RolId son obligatorios para asignar vistas.");
+  if (!usuarioId || (!rolId && !nombreRol)) {
+    throw new Error("UsuarioId y RolId o nombreRol son obligatorios.");
   }
 
-  // Buscar vistas asociadas al rol y crear relaciones para el usuario
-  const vistas = await UsuarioVista.findAll({
-    where: { rol_id: rolId },
-    attributes: ["id_vista", "nombre_vista"],
+  // Buscar el rolId si solo se pasa el nombre del rol
+  let rolIdToUse = rolId;
+  if (!rolId && nombreRol) {
+    const rol = await UsuarioRol.findOne({
+      where: { nombre_rol: nombreRol },
+      attributes: ["id_rol"],
+    });
+
+    if (!rol) {
+      throw new Error(`No se encontró un rol con el nombre: ${nombreRol}`);
+    }
+    rolIdToUse = rol.id_rol;
+  }
+
+  // Obtener las vistas asociadas al rol
+  const vistasToAssign = await UsuarioVista.findAll({
+    where: { rol_id: rolIdToUse },
+    attributes: ["id_vista"],
   });
 
-  if (!vistas || vistas.length === 0) {
-    throw new Error(`No se encontraron vistas para el rol con ID: ${rolId}`);
+  if (!vistasToAssign || vistasToAssign.length === 0) {
+    throw new Error(`No se encontraron vistas para el rol con ID: ${rolIdToUse}`);
   }
 
-  const vistasMaestroData = vistas.map((vista) => ({
-    usuario_id: usuarioId,
-    vista_id: vista.id_vista,
-    is_habilitado: true,
-  }));
-
-  await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
-
-  console.log(
-    `Se asignaron ${vistasMaestroData.length} vistas al usuario con ID: ${usuarioId}`
-  );
-};
-
-export const updateUserViewsService = async (
-  usuarioId: string,
-  vistas: string[]
-): Promise<void> => {
-  if (!vistas || !Array.isArray(vistas)) {
-    throw new Error("Debe proporcionar un array de vistas.");
-  }
-
-  // Eliminar todas las vistas actuales del usuario
+  // Eliminar todas las vistas actuales del usuario antes de asignar las nuevas
   await UsuarioVistaMaestro.destroy({
     where: { usuario_id: usuarioId },
   });
 
-  // Crear nuevas vistas para el usuario
-  const vistasMaestroData = vistas.map((vistaId) => ({
+  // Crear relaciones para el usuario con el estado de habilitación
+  const vistasMaestroData = vistasToAssign.map((vista) => ({
     usuario_id: usuarioId,
-    vista_id: vistaId,
-    is_habilitado: true,
+    vista_id: vista.id_vista,
+    is_habilitado: isHabilitado,
   }));
 
-  await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);
+  await UsuarioVistaMaestro.bulkCreate(vistasMaestroData);  
 };
 
 export const toggleUserViewStatusService = async (
   usuarioId: string,
-  vistas: { id_vista: string; is_habilitado: boolean }[]
+  vistas: { nombre_vista: string; is_habilitado: boolean }[]
 ): Promise<void> => {
   if (!vistas || !Array.isArray(vistas)) {
     throw new Error("Debe proporcionar un array de vistas.");
   }
 
   for (const vista of vistas) {
-    if (!vista.id_vista || typeof vista.is_habilitado !== "boolean") {
+    if (!vista.nombre_vista || typeof vista.is_habilitado !== "boolean") {
       throw new Error("El formato de las vistas es incorrecto.");
+    }
+
+    // Buscar el ID de la vista basada en el nombre
+    const vistaData = await UsuarioVista.findOne({
+      where: { nombre_vista: vista.nombre_vista },
+      attributes: ["id_vista"],
+    });
+
+    if (!vistaData) {
+      throw new Error(`No se encontró una vista con el nombre: ${vista.nombre_vista}`);
     }
 
     // Actualizar el estado de la vista
@@ -466,7 +498,7 @@ export const toggleUserViewStatusService = async (
       {
         where: {
           usuario_id: usuarioId,
-          vista_id: vista.id_vista,
+          vista_id: vistaData.id_vista,
         },
       }
     );

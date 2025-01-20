@@ -5,6 +5,7 @@ import UsuarioRol from './UsuarioRol';
 class UsuarioVista extends Model {
   public id_vista!: string;
   public rol_id!: string;
+  public nombre_vista_superior!: string | null;
   public nombre_vista!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -45,6 +46,16 @@ UsuarioVista.init(
         },
       },
     },
+    nombre_vista_superior: {
+      type: DataTypes.STRING,      
+      allowNull: true,
+      validate: {
+        len: {
+          args: [3, 50],
+          msg: 'El nombre de la vista superior debe tener entre 3 y 50 caracteres.',
+        },
+      },
+    },
     nombre_vista: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -63,8 +74,12 @@ UsuarioVista.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['rol_id', 'nombre_vista'],
+        fields: ['rol_id', 'nombre_vista_superior'],
         name: 'idx_rol_nombre_vista',
+      },
+      {
+        fields: ['nombre_vista', 'nombre_vista_superior'],
+        name: 'idx_nombre_vista_superior',
       },
     ],
   }

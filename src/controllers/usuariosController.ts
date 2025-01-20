@@ -7,7 +7,6 @@ import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 import {
   findUsuarios,
   assignVistasToUser,
-  updateUserViewsService,
   toggleUserViewStatusService,
   updateUserStatusById,
   createUser,
@@ -18,6 +17,8 @@ import {
   deleteUserRelations,
   deleteUsuarioById,
   findExistingUsuario,
+  findVistasByRol,
+  findVistasByUsuario,
 } from "../services/userService";
 import { createOrUpdateProductora, createProductoraMessage, generarCodigosISRC, processDocuments } from "../services/productoraService";
 import { getAuthenticatedUser, getTargetUser } from "../services/authService";
@@ -224,7 +225,7 @@ export const createSecondaryAdminUser = async (
 
     if (!tempPassword) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - No se creó la clave temporal para el administrador secundario: ${newUser.id_usuario}`
+        `${req.method} ${req.originalUrl} - No se creó la clave temporal para el Administrador Secundario: ${newUser.id_usuario}`
       );
       return next(new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_TEMP_PASSWORD));
     }
@@ -428,7 +429,14 @@ export const approveApplication = async (
     const isrcs = await generarCodigosISRC(productoraId);
 
     // Actualizar el tipo_registro del usuario a HABILITADO
-    await targetUser.update({ tipo_registro: "HABILITADO" });    
+    await targetUser.update({ tipo_registro: "HABILITADO" });
+    
+    // Crear relaciones en UsuarioVistasMaestro  
+    await assignVistasToUser(targetUser.id_usuario, targetUser.rol_id);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Relaciones de vistas completas creadas para el Productor Principal: ${targetUser.email}`
+    );
 
     // Crear las auditorías correspondientes
     await registrarAuditoria({
@@ -791,8 +799,8 @@ export const deleteUser = async (
     logger.info(`${req.method} ${req.originalUrl} - Solicitud para eliminar usuario`);
 
     // Paso 1: Buscar usuarios
-    const { user: authUser, maestros: authMaestros, hasSingleMaestro: hasAuthSingleMaestro }: UsuarioResponse = await getAuthenticatedUser(req);
-    const { user: targetUser, maestros: targetMaestros, hasSingleMaestro: hasTargetSingleMaestro }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
 
     // Paso 2: Validar que no se elimine la cuenta propia
     if (authUser === targetUser) {
@@ -839,25 +847,70 @@ export const deleteUser = async (
   }
 };
 
-export const updateUserViews = async (
+export const getVistasByRol = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { id_usuario, vistas } = req.body;
+    const { roleName } = req.params;
+    const vistas = await findVistasByRol(roleName);
+    res.status(200).json(vistas);
+  } catch (err) {
+    handleGeneralError(err, req, res, next, "Error al obtener vistas por rol");
+  }
+};
 
-    if (!id_usuario) {
-      throw new Err.BadRequestError("Debe proporcionar un ID de usuario.");
+export const getVistasByUsuario = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id_usuario } = req.params;
+    const vistas = await findVistasByUsuario(id_usuario);
+    res.status(200).json(vistas);
+  } catch (err) {
+    handleGeneralError(err, req, res, next, "Error al obtener vistas del usuario");
+  }
+};
+
+export const updateUserViews = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id_usuario, roleName } = req.body;
+
+    // Buscar usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
+
+    if (!targetUser.rol) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Usuario sin rol asignado`
+      );
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED)
+      );
     }
 
-    await updateUserViewsService(id_usuario, vistas);
+    await assignVistasToUser(targetUser.id_usuario, undefined, roleName);
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Vistas actualizadas correctamente para el usuario: ${id_usuario}`
+      `${req.method} ${req.originalUrl} - Vistas actualizadas correctamente para el usuario: ${targetUser.id_usuario}`
     );
 
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
+      modelo: "Usuario",
+      tipo_auditoria: "CAMBIO",
+      detalle: `Actualizadas las vistas al rol ${targetUser.rol.nombre_rol} del usuario ID: ${targetUser.id_usuario}`,
+    });
+
     res.status(200).json({ message: "Vistas actualizadas exitosamente" });
+
   } catch (err) {
     handleGeneralError(err, req, res, next, 'Error al actualizar vistas del usuario');    
   }
@@ -881,9 +934,7 @@ export const toggleUserViewStatus = async (
       `${req.method} ${req.originalUrl} - Estado de vistas actualizado correctamente para el usuario: ${id_usuario}`
     );
 
-    res
-      .status(200)
-      .json({ message: "Estado de vistas actualizado exitosamente" });
+    res.status(200).json({ message: "Estado de vistas actualizado exitosamente" });
 
   } catch (err) {
     handleGeneralError(err, req, res, next, 'Error al cambiar el estado de vistas del usuario')    

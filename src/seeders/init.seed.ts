@@ -45,9 +45,10 @@ const paisesData = [
 type VistaData = {
   nombre_vista: string;
   rol_id: string;
+  nombre_vista_superior?: string | null;
 };
 
-const vistasData = async (): Promise<VistaData[]> => {
+ const vistasData = async (): Promise<VistaData[]> => {
   const roles = await UsuarioRol.findAll({
     attributes: ["id_rol", "nombre_rol"],
   });
@@ -56,92 +57,117 @@ const vistasData = async (): Promise<VistaData[]> => {
 
   const agregarVistasPorRol = (
     nombreRol: string,
-    vistasParaRol: string[]
+    vistasParaRol: { nombreVista: string; vistaSuperior?: string }[]
   ): void => {
     const rolId = roles.find((rol) => rol.nombre_rol === nombreRol)?.id_rol;
-    if (!rolId) return;
+    if (!rolId) {
+      throw new Error(`El rol '${nombreRol}' no fue encontrado.`);
+    }
 
-    vistasParaRol.forEach((nombreVista: string) => {
-      vistas.push({ nombre_vista: nombreVista, rol_id: rolId });
+    vistasParaRol.forEach(({ nombreVista, vistaSuperior }) => {
+      vistas.push({
+        nombre_vista: nombreVista,
+        nombre_vista_superior: vistaSuperior || null,
+        rol_id: rolId,
+      });
     });
   };
 
+  agregarVistasPorRol("usuario", [
+    { nombreVista: "Nueva productora" },
+  ]);
+
   agregarVistasPorRol("admin_principal", [
-    "REPERTORIO",
-    "BUSCAR REPERTORIO",
-    "DECLARACION REPERTORIO",
-    "CONFLICTOS",
-    "ENVIO ARCHIVO AUDIO",
-    "TERRITORIALIDAD",
-    "PRODUCTORES",
-    "BUSCAR PRODUCTORES",
-    "PREMIOS GARDEL",
-    "USUARIOS",
-    "BUSCAR USUARIOS",
-    "ALTAS USUARIOS",
-    "CUENTAS CORRIENTES",
-    "LIQUIDACIONES",
-    "PAGOS",
-    "TRASPASOS",
-    "PAGOS RECHAZADOS",
-    "ESTADO DE CUENTA",
-    "AUDITORIA",
-    "HISTORIAL DE CAMBIOS",
-    "CAMBIOS EN REPERTORIOS",
-    "SESIONES",
+    { nombreVista: "Repertorio" },
+    { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
+    { nombreVista: "Envío Archivo Audio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Territorialidad", vistaSuperior: "Repertorio" },
+
+    { nombreVista: "Productoras" },
+    { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
+    { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
+
+    { nombreVista: "Usuarios" },
+    { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
+    { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
+
+    { nombreVista: "Cuentas Corrientes" },
+    { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Pagos", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Traspasos", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Rechazos", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
+
+    { nombreVista: "Auditoría" },
+    { nombreVista: "Historial de Cambios", vistaSuperior: "Auditoría" },
+    { nombreVista: "Cambios en Repertorios", vistaSuperior: "Auditoría" },
+    { nombreVista: "Sesiones", vistaSuperior: "Auditoría" },
   ]);
 
   agregarVistasPorRol("admin_secundario", [
-    "REPERTORIO",
-    "BUSCAR REPERTORIO",
-    "DECLARACION REPERTORIO",
-    "CONFLICTOS",
-    "ENVIO ARCHIVO AUDIO",
-    "TERRITORIALIDAD",
-    "PRODUCTORES",
-    "BUSCAR PRODUCTORES",
-    "PREMIOS GARDEL",
-    "USUARIOS",
-    "BUSCAR USUARIOS",
-    "CUENTAS CORRIENTES",
-    "LIQUIDACIONES",
-    "PAGOS",
-    "TRASPASOS",
-    "PAGOS RECHAZADOS",
-    "ESTADO DE CUENTA",
-    "AUDITORIA",
-    "HISTORIAL DE CAMBIOS",
-    "CAMBIOS EN REPERTORIOS",
-    "SESIONES",
+    { nombreVista: "Repertorio" },
+    { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
+    { nombreVista: "Envío Archivo Audio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Territorialidad", vistaSuperior: "Repertorio" },
+
+    { nombreVista: "Productoras" },
+    { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
+    { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
+
+    { nombreVista: "Usuarios" },
+    { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
+    { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
+
+    { nombreVista: "Cuentas Corrientes" },
+    { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Pagos", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Traspasos", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Rechazos", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
+
+    { nombreVista: "Auditoría" },
+    { nombreVista: "Historial de Cambios", vistaSuperior: "Auditoría" },
+    { nombreVista: "Cambios en Repertorios", vistaSuperior: "Auditoría" },
+    { nombreVista: "Sesiones", vistaSuperior: "Auditoría" },
   ]);
 
   agregarVistasPorRol("productor_principal", [
-    "REPERTORIO",
-    "BUSCAR REPERTORIO",
-    "DECLARACION REPERTORIO",
-    "CONFLICTOS",
-    "PRODUCTORES",
-    "BUSCAR PRODUCTORES",
-    "PREMIOS GARDEL",
-    "USUARIOS",
-    "BUSCAR USUARIOS",
-    "ALTAS USUARIOS",
-    "CUENTAS CORRIENTES",
-    "ESTADO DE CUENTA",
+    { nombreVista: "Repertorio" },
+    { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
+
+    { nombreVista: "Productoras" },
+    { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
+    { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
+
+    { nombreVista: "Usuarios" },
+    { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
+    { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
+
+    { nombreVista: "Cuentas Corrientes" },
+    { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
   ]);
 
   agregarVistasPorRol("productor_secundario", [
-    "REPERTORIO",
-    "BUSCAR REPERTORIO",
-    "DECLARACION REPERTORIO",
-    "CONFLICTOS",
-    "PRODUCTORES",
-    "BUSCAR PRODUCTORES",
-    "PREMIOS GARDEL",
-    "USUARIOS",
-    "BUSCAR USUARIOS",
-    "CUENTAS CORRIENTES",
-    "ESTADO DE CUENTA",
+    { nombreVista: "Repertorio" },
+    { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
+
+    { nombreVista: "Productoras" },
+    { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
+    { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
+
+    { nombreVista: "Usuarios" },
+    { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
+
+    { nombreVista: "Cuentas Corrientes" },
+    { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
   ]);
 
   return vistas;
@@ -151,6 +177,7 @@ const initSeed = async () => {
   try {
     console.log("Ejecutando seeders...");
 
+    // Insertar datos principales
     await UsuarioRol.bulkCreate(rolesData, { ignoreDuplicates: true });
     await ProductoraDocumentoTipo.bulkCreate(documentosData, {
       ignoreDuplicates: true,

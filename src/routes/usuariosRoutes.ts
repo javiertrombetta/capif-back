@@ -11,6 +11,8 @@ import {
   updateApplication,
   updateUser,
   deleteUser,
+  getVistasByRol,
+  getVistasByUsuario,
   updateUserViews,
   toggleUserViewStatus,
 } from "../controllers/usuariosController";
@@ -247,6 +249,7 @@ router.post(
   createSecondaryAdminUser
 );
 
+// [GET] Obtener todas las aplicaciones pendientes o de un usuario
 /**
  * @swagger
  * /usuarios/aplicaciones/pendientes:
@@ -287,6 +290,7 @@ router.get(
   getRegistrosPendientes
 );
 
+// [POST] Autorizar a un usuario pendiente
 /**
  * @swagger
  * /usuarios/aplicaciones/autorizar:
@@ -326,6 +330,7 @@ router.post(
   approveApplication
 );
 
+// [POST] Rechazar la aplicación de un usuario pendiente
 /**
  * @swagger
  * /usuarios/aplicaciones/rechazar:
@@ -372,6 +377,7 @@ router.post(
   rejectApplication
 );
 
+// [POST] Enviar la aplicación de un usuario
 /**
  * @swagger
  * /usuarios/aplicaciones/enviar:
@@ -410,6 +416,7 @@ router.post(
   sendApplication
 );
 
+// [PUT] Actualizar la aplicación de un usuario
 /**
  * @swagger
  * /usuarios/aplicaciones/actualizar:
@@ -448,6 +455,7 @@ router.put(
   updateApplication
 );
 
+// [PUT] Actualizar la información de un usuario
 /**
  * @swagger
  * /usuarios/cambiar:
@@ -485,6 +493,8 @@ router.put(
   celebrate({ [Segments.BODY]: updateUserSchema }),
   updateUser
 );
+
+// [DELETE] Eliminar un usuario
 /**
  * @swagger
  * /usuarios/eliminar:
@@ -525,12 +535,87 @@ router.delete(
   deleteUser
 );
 
-// [PUT] Actualizar vistas de un usuario
+// [GET] Obtener las vistas de un rol
+/**
+ * @swagger
+ * /usuarios/vistas/rol/{roleName}:
+ *   get:
+ *     summary: Obtener vistas asociadas a un rol.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: roleName
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Nombre del rol para obtener las vistas asociadas.
+ *     responses:
+ *       200:
+ *         description: Vistas obtenidas exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado.
+ *       404:
+ *         description: Rol no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get(
+  "/vistas/rol/:roleName",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  getVistasByRol
+);
+
+// [GET] Obtener las vistas de un usuario
+/**
+ * @swagger
+ * /usuarios/vistas/usuario/{id_usuario}:
+ *   get:
+ *     summary: Obtener todas las vistas de un usuario.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id_usuario
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del usuario a buscar.
+ *     responses:
+ *       200:
+ *         description: Vistas obtenidas exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get(
+  "/vistas/usuario/:id_usuario",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  getVistasByUsuario
+);
+
+// [PUT] Actualizar vistas de un usuario según un rol
 /**
  * @swagger
  * /usuarios/vistas:
  *   put:
- *     summary: PENDIENTE Actualizar las vistas de un usuario.
+ *     summary: Actualizar las vistas de un usuario.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
@@ -567,7 +652,7 @@ router.put(
  * @swagger
  * /usuarios/vistas/estado:
  *   put:
- *     summary: PENDIENTE Cambiar el estado de habilitación de las vistas de un usuario.
+ *     summary: Cambiar el estado de habilitación de las vistas de un usuario.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []

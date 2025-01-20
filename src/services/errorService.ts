@@ -13,8 +13,13 @@ export function handleGeneralError(
   const errorMessage =
     err instanceof Error ? err.message : 'Error desconocido';
 
-  logger.error(`${req.method} ${req.originalUrl} - ${customMessage}: ${errorMessage}`);
-  next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
+  if (err instanceof Err.CustomError) {
+    logger.warn(`${req.method} ${req.originalUrl} - ${customMessage}: ${errorMessage}`);
+    res.status(err.statusCode).json({ error: err.message });
+  } else {
+    logger.error(`${req.method} ${req.originalUrl} - ${customMessage}: ${errorMessage}`);
+    res.status(500).json({ error: MESSAGES.ERROR.GENERAL.UNKNOWN });
+  }
 }
 
 export function handleEmailError(
@@ -27,6 +32,11 @@ export function handleEmailError(
   const errorMessage =
     err instanceof Error ? err.message : 'Error desconocido';
 
-  logger.error(`${req.method} ${req.originalUrl} - ${customMessage}: ${errorMessage}`);
-  next(new Err.InternalServerError(MESSAGES.ERROR.EMAIL.TEMP_FAILED));
+  if (err instanceof Err.CustomError) {
+    logger.warn(`${req.method} ${req.originalUrl} - ${customMessage}: ${errorMessage}`);
+    res.status(err.statusCode).json({ error: err.message });
+  } else {
+    logger.error(`${req.method} ${req.originalUrl} - ${customMessage}: ${errorMessage}`);
+    res.status(500).json({ error: MESSAGES.ERROR.EMAIL.TEMP_FAILED });
+  }
 }

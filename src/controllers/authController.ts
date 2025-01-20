@@ -56,11 +56,11 @@ export const registerPrimaryProductor = async (
 
     logger.info(`${req.method} ${req.originalUrl} - Usuario creado exitosamente: ${email}`);
 
-    // Crear relaciones en UsuarioVistasMaestro
-    await assignVistasToUser(newUser.id_usuario, newUser.rol_id);
+    // Crear relaciones en UsuarioVistasMaestro pero solo con vista de usuario para carga de datos
+    await assignVistasToUser(newUser.id_usuario, undefined, 'usuario');
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Productor Principal: ${email}`
+      `${req.method} ${req.originalUrl} - Relaciones de vistas reducidas creadas para el Productor Principal: ${email}`
     );
 
     // Generar token de verificación
@@ -202,6 +202,13 @@ export const registerSecondaryProductor = async (
     });
 
     logger.info(`${req.method} ${req.originalUrl} - UsuarioMaestro registrado para el usuario secundario: ${email}`);
+
+    // Crear relaciones en UsuarioVistasMaestro  
+    await assignVistasToUser(newUser.id_usuario, newUser.rol_id);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Productor Secundario: ${email}`
+    );
 
     // Generar y asignar el token de verificación
     const tokenExpiration = process.env.EMAIL_TOKEN_EXPIRATION || "1d";
@@ -672,7 +679,7 @@ export const validateEmail = async (
     // Verificar que el token no esté expirado
     if (targetUser.email_verification_token !== token || targetUser.email_verification_token_expires! < new Date()) {
       logger.warn(`${req.method} ${req.originalUrl} - Token inválido o expirado.`);
-      throw new Err.NotFoundError(MESSAGES.ERROR.VALIDATION.INVALID_TOKEN);
+      throw new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.INVALID_TOKEN);
     }
 
     // Actualiza el tipo_registro del usuario a "CONFIRMADO" y limpia el token de verificación
@@ -839,15 +846,31 @@ export const getUser = async (
     // Verifica el usuario autenticado
     const { user: authUser, maestros: authMaestros, vistas: authVistas }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    // Devuelve el usuario, sus maestros y vistas
-    res.status(200).json({
-      user: authUser,
-      maestros: authMaestros,
-      vistas: authVistas,
-    });
+    // Filtrar los datos sensibles del usuario
+    const filteredUser = {
+      id_usuario: authUser.id_usuario,
+      rol: authUser.rol?.nombre_rol || null,
+      tipo_registro: authUser.tipo_registro,
+      email: authUser.email,
+      nombre: authUser.nombre,
+      apellido: authUser.apellido,
+      telefono: authUser.telefono,
+    };
 
+    // Filtrar los datos de las vistas (sin id_vista)
+    const filteredVistas = authVistas.map((vistaMaestro) => ({
+      nombre_vista: vistaMaestro.vista?.nombre_vista || null,
+      nombre_vista_superior: vistaMaestro.vista?.nombre_vista_superior || null,
+    }));
+
+    // Respuesta filtrada
+    res.status(200).json({
+      user: filteredUser,
+      maestros: authMaestros, // Si no necesitas filtrar los maestros, se pasa completo
+      vistas: filteredVistas,
+    });
   } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error al obtener los datos del usuario');    
+    handleGeneralError(err, req, res, next, "Error al obtener los datos del usuario");
   }
 };
 

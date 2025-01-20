@@ -731,40 +731,34 @@ export const userSchemas = {
         description: 'ID del usuario cuyas vistas serán actualizadas.',
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
-      vistas: {
-        type: 'array',
-        description: 'Lista de IDs de vistas que se asignarán al usuario.',
-        items: {
-          type: 'string',
-          format: 'uuid',
-          description: 'ID de la vista.',
-          example: '123e4567-e89b-12d3-a456-426614174001',
-        },
+      roleName: {
+        type: 'string',
+        description: 'Nombre del rol asociado a las vistas que se asignarán al usuario.',
+        example: 'admin_principal',
       },
     },
-    required: ['id_usuario', 'vistas'],
+    required: ['id_usuario', 'roleName'],
   },
   ToggleUserViewStatus: {
-    title: 'Usuarios - Cambiar Estado de Vistas',
+    title: 'Usuarios - Cambiar estado de vistas',
     type: 'object',
     properties: {
       id_usuario: {
         type: 'string',
         format: 'uuid',
-        description: 'ID del usuario cuyas vistas serán modificadas.',
+        description: 'ID del usuario cuyas vistas serán actualizadas.',
         example: '123e4567-e89b-12d3-a456-426614174000',
       },
       vistas: {
         type: 'array',
-        description: 'Lista de vistas con su estado de habilitación.',
+        description: 'Lista de vistas con sus estados a actualizar.',
         items: {
           type: 'object',
           properties: {
-            id_vista: {
+            nombre_vista: {
               type: 'string',
-              format: 'uuid',
-              description: 'ID de la vista.',
-              example: '123e4567-e89b-12d3-a456-426614174001',
+              description: 'Nombre de la vista.',
+              example: 'Usuarios',
             },
             is_habilitado: {
               type: 'boolean',
@@ -772,7 +766,7 @@ export const userSchemas = {
               example: true,
             },
           },
-          required: ['id_vista', 'is_habilitado'],
+          required: ['nombre_vista', 'is_habilitado'],
         },
       },
     },

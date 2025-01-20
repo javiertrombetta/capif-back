@@ -2,6 +2,8 @@ import js from '@eslint/js';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import globals from 'globals';
+import prettier from 'eslint-config-prettier';
+import prettierPlugin from 'eslint-plugin-prettier';
 
 export default [
   {
@@ -16,6 +18,7 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
+      prettier: prettierPlugin,
     },
     rules: {
       'no-console': 'warn',
@@ -30,6 +33,7 @@ export default [
       ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+      'prettier/prettier': 'error',
     },
   },
   {
@@ -41,10 +45,14 @@ export default [
         ...globals.node,
       },
     },
+    plugins: {
+      prettier: prettierPlugin,
+    },
     rules: {
       'no-console': 'warn',
       semi: ['error', 'always'],
       quotes: ['error', 'single'],
+      'prettier/prettier': 'error',
     },
   },
   {
@@ -57,6 +65,7 @@ export default [
   {
     rules: {
       ...js.configs.recommended.rules,
+      ...prettier.rules,
     },
   },
   {
@@ -65,9 +74,10 @@ export default [
     },
     rules: {
       ...tsPlugin.configs.recommended.rules,
+      
     },
-  },
+  },  
   {
-    ignorePatterns: ['dist/**/*', 'config/**/*'],
+    ignores: ['dist/**/*', 'config/**/*'],
   },
 ];

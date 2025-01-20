@@ -73,14 +73,7 @@ export const authenticate = async (
       try {
         const activeData = JSON.parse(activeSesion);
 
-        // Validar maestroId y productoraId
-        if (!activeData.maestroId) {
-          logger.warn("La cookie active_sesion no contiene un maestroId válido.");
-          return res.status(400).json({
-            error: "Cookie de sesión activa inválida: falta el maestroId.",
-          });
-        }
-
+        // Validar productoraId
         if (!activeData.productoraId) {
           logger.warn("La cookie active_sesion no contiene un productoraId válido.");
           return res.status(400).json({
@@ -88,8 +81,7 @@ export const authenticate = async (
           });
         }
 
-        // Asignar valores si son válidos
-        req.maestroId = activeData.maestroId;
+        // Asignar valores si son válidos 
         req.productoraId = activeData.productoraId;
       } catch (err) {
         logger.error("Error parseando la cookie active_sesion:", err);

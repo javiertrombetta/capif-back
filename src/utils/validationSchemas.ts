@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { VALIDATION_AUTH } from './messages';
+import { VALIDATION_AUTH } from '../utils/messages';
 
 export const uuidSchema = Joi.string()
   .guid({ version: ['uuidv4'] })

@@ -1,6 +1,6 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import { updateConflictosActivos } from '../services/checkModels';
+import { updateConflictosActivos } from '../utils/checkModels';
 import Fonograma from './Fonograma';
 import Productora from './Productora';
 

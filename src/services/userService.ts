@@ -1,6 +1,9 @@
 import { Op } from "sequelize";
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 import {
+  AuditoriaCambio,
   Productora,
   Usuario,
   UsuarioMaestro,
@@ -8,9 +11,55 @@ import {
   UsuarioVista,
   UsuarioVistaMaestro,
 } from "../models";
+import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 
-export const createUsuario = async (userData: any) => {
-  return await Usuario.create(userData);
+export const createUser = async ({
+  email,
+  nombre,
+  apellido,
+  telefono,
+  rolNombre,
+  tipoRegistro = "HABILITADO",
+  clave,
+}: {
+  email: string;
+  nombre?: string;
+  apellido?: string;
+  telefono?: string;
+  rolNombre: string;
+  tipoRegistro?: string;
+  clave?: string;
+}) => {
+  // Verificar si el usuario ya existe
+  const existingUser = await Usuario.findOne({ where: { email } });
+  if (existingUser) {
+    throw new Error("El usuario ya está registrado.");
+  }
+
+  // Verificar si el rol existe
+  const rol = await UsuarioRol.findOne({ where: { nombre_rol: rolNombre } });
+  if (!rol) {
+    throw new Error(`El rol ${rolNombre} no existe.`);
+  }
+
+  // Generar clave temporal o usar la proporcionada
+  const tempPassword = clave || crypto.randomBytes(8).toString("hex");
+  const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+  // Crear el usuario
+  const newUser = await Usuario.create({
+    email,
+    nombre: nombre || null,
+    apellido: apellido || null,
+    telefono: telefono || null,
+    rol_id: rol.id_rol,
+    tipo_registro: tipoRegistro,
+    clave: hashedPassword,
+    fecha_ultimo_cambio_rol: new Date(),
+    fecha_ultimo_cambio_registro: new Date(),
+  });
+
+  return { newUser, tempPassword: clave ? null : tempPassword };
 };
 
 export const createUsuarioMaestro = async (usuarioMaestroData: any) => {
@@ -24,6 +73,13 @@ export const updateUsuarioMaestro = async (
   return await UsuarioMaestro.update(updateData, {
     where: { usuario_registrante_id: usuarioRegistranteId },
   });
+};
+
+export const updateUserData = async (
+  user: Usuario,
+  data: { nombre: string; apellido: string; telefono: string }
+): Promise<void> => {
+  await user.update(data);
 };
 
 export const updateUsuarioById = async (userId: string, updateData: any) => {
@@ -70,37 +126,111 @@ export const updateUsuarioById = async (userId: string, updateData: any) => {
   return usuario;
 };
 
-export const deleteUsuarioById = async (userId: string) => {
-  // Verificar si el usuario existe
-  const usuario = await Usuario.findOne({
-    where: { id_usuario: userId },
-  });
+export const updateUserRegistrationState = async (
+  user: Usuario,
+  newState: string
+): Promise<void> => {
+  await user.update({ tipo_registro: newState });
+};
+
+export const updateUserStatusById = async (userId: string, nuevoEstado: string) => {
+  const updated = await Usuario.update(
+    { tipo_registro: nuevoEstado },
+    { where: { id_usuario: userId } }
+  );
+
+  if (updated[0] === 0) {
+    throw new Error("Usuario no encontrado o no se pudo actualizar.");
+  }
+
+  return `Estado actualizado a '${nuevoEstado}' para el usuario con ID: ${userId}`;
+};
+
+
+export const deleteUsuarioById = async (userId: string): Promise<void> => {
+  const usuario = await Usuario.findOne({ where: { id_usuario: userId } });
 
   if (!usuario) {
     throw new Error("Usuario no encontrado");
   }
 
-  // Eliminar registros relacionados en UsuarioMaestro
-  const deletedMaestros = await UsuarioMaestro.destroy({
-    where: { usuario_registrante_id: userId },
-  });
-
-  // Eliminar el usuario
   await usuario.destroy();
-
-  return {
-    message: "Usuario y relaciones eliminados correctamente",
-    details: {
-      deletedUsuario: userId,
-      deletedMaestros,
-    },
-  };
 };
 
 export const deleteUsuarioMaestrosByUserId = async (userId: string) => {
   await UsuarioMaestro.destroy({
     where: { usuario_registrante_id: userId },
   });
+};
+
+export const deleteUserRelations = async (
+  userId: string,
+  userAuthId: string,
+  maestros: UsuarioMaestro[]
+): Promise<void> => {
+  for (const maestro of maestros) {
+    await AuditoriaCambio.create({
+      usuario_originario_id: userAuthId,
+      usuario_destino_id: userId,
+      modelo: "UsuarioMaestro",
+      tipo_auditoria: "ELIMINACION",
+      detalle: `Registro de UsuarioMaestro eliminado por ${userAuthId}`,
+    });
+  }
+
+  await UsuarioMaestro.destroy({
+    where: { usuario_registrante_id: userId },
+  });
+};
+
+/**
+ * Busca un usuario en la base de datos según los filtros proporcionados.
+ * @param filters - Filtros opcionales para buscar usuarios.
+ * @returns Usuario encontrado o `null` si no existe.
+ * @throws Error si ocurre algún problema al buscar.
+ */
+export const findExistingUsuario = async (filters: {
+  id_usuario?: string;
+  email?: string;
+  nombre?: string;
+  apellido?: string;
+  tipo_registro?: string | string[];
+}): Promise<Usuario | null> => {
+  try {
+    // Construir la consulta según los filtros proporcionados
+    const whereClause: any = {};
+
+    if (filters.id_usuario) {
+      whereClause.id_usuario = filters.id_usuario;
+    }
+    if (filters.email) {
+      whereClause.email = filters.email;
+    }
+    if (filters.nombre) {
+      whereClause.nombre = { [Op.like]: `%${filters.nombre}%` };
+    }
+    if (filters.apellido) {
+      whereClause.apellido = { [Op.like]: `%${filters.apellido}%` };
+    }
+    if (filters.tipo_registro) {
+      whereClause.tipo_registro = Array.isArray(filters.tipo_registro)
+        ? { [Op.in]: filters.tipo_registro }
+        : filters.tipo_registro;
+    }
+
+    // Buscar el usuario en la base de datos
+    const user = await Usuario.findOne({
+      where: whereClause,
+    });
+
+    return user;
+  } catch (error) {
+    throw new Error(
+      `Error al buscar usuario: ${
+        error instanceof Error ? error.message : "Error desconocido"
+      }`
+    );
+  }
 };
 
 // BUSQUEDA DE UN USUARIO SEGUN UNO O VARIOS FILTROS
@@ -116,21 +246,6 @@ interface Filters {
   productoraNombre?: string;
   limit?: number;
   offset?: number;
-}
-
-interface UsuarioMaestroConProductora extends UsuarioMaestro {
-  productora?: Productora;
-}
-
-interface UsuarioVistaMaestroConVistas extends UsuarioVistaMaestro {
-  vista?: UsuarioVista;
-}
-
-interface UsuarioResponse {
-  user: Usuario;
-  maestros: UsuarioMaestroConProductora[];
-  vistas: UsuarioVistaMaestroConVistas[];
-  isSingleMaestro: boolean;
 }
 
 export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioResponse[]; isSingleUser: boolean }> => {
@@ -206,10 +321,10 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
 
     acc[usuario.id_usuario] = {
       maestros,
-      isSingleMaestro: maestros.length === 1,
+      hasSingleMaestro: maestros.length === 1,
     };
     return acc;
-  }, {} as Record<string, { maestros: UsuarioMaestro[]; isSingleMaestro: boolean }>);
+  }, {} as Record<string, { maestros: UsuarioMaestro[]; hasSingleMaestro: boolean }>);
 
   // Buscar vistas asociadas para todos los usuarios de forma optimizada
   const vistasAsociadas = await UsuarioVistaMaestro.findAll({
@@ -236,12 +351,12 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
   // Formatear la respuesta final
   return {
     users: usuarios.map((usuario) => {
-      const usuarioMaestroData = maestrosPorUsuario[usuario.id_usuario] || { maestros: [], isSingleMaestro: false };
+      const usuarioMaestroData = maestrosPorUsuario[usuario.id_usuario] || { maestros: [], hasSingleMaestro: false };
       return {
         user: usuario,
         maestros: usuarioMaestroData.maestros,
         vistas: vistasPorUsuario[usuario.id_usuario] || [],
-        isSingleMaestro: usuarioMaestroData.isSingleMaestro,
+        hasSingleMaestro: usuarioMaestroData.hasSingleMaestro,
       };
     }),
     isSingleUser,
@@ -254,7 +369,7 @@ export const findRolByNombre = async (nombre_rol: string) => {
   });
 
   if (!rol) {
-    throw new Error(`No se encontró un rol con la descripción: ${nombre_rol}`);
+    throw new Error(`No se encontró el rol: ${nombre_rol}`);
   }
 
   return rol;
@@ -356,4 +471,41 @@ export const toggleUserViewStatusService = async (
       }
     );
   }
+};
+
+export const validateUserRegistrationState = (tipoRegistro: string): void => {
+  if (!["CONFIRMADO", "PENDIENTE", "RECHAZADO"].includes(tipoRegistro)) {
+    throw new Error(`El usuario tiene un estado de registro no permitido: ${tipoRegistro}.`);
+  }
+};
+
+export const linkUserToProductora = async (
+  userId: string,
+  productoraId: string
+): Promise<void> => {
+  // Verificar si la relación ya existe
+  const existingRelation = await UsuarioMaestro.findOne({
+    where: {
+      usuario_registrante_id: userId,
+      productora_id: productoraId,
+    },
+  });
+
+  if (existingRelation) {
+    // Si la relación ya existe, no es necesario crearla nuevamente
+    console.info(
+      `Relación existente encontrada: usuario_registrante_id=${userId}, productora_id=${productoraId}`
+    );
+    return;
+  }
+
+  // Crear una nueva relación
+  await UsuarioMaestro.create({
+    usuario_registrante_id: userId,
+    productora_id: productoraId,
+  });
+
+  console.info(
+    `Relación Usuario-Productora creada exitosamente: usuario_registrante_id=${userId}, productora_id=${productoraId}`
+  );
 };

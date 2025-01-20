@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { isCelebrateError } from 'celebrate';
-import { CustomError } from '../services/customErrors';
+import { CustomError } from '../utils/customErrors';
 import logger from '../config/logger';
 
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {

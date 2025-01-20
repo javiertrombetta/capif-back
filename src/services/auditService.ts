@@ -1,26 +1,195 @@
-import { Model } from 'sequelize';
-import AuditoriaCambio from '../models/AuditoriaCambio';
+import { AuditoriaCambio, AuditoriaRepertorio, AuditoriaSesion }  from "../models";
+import { ENTIDADES_PERMITIDAS } from "../models/AuditoriaCambio";
+import logger from "../config/logger";
 
 /**
- * Registra un cambio de auditoría en la base de datos para cualquier cambio en una entidad.
- *
- * @param modelo - La instancia del modelo afectado.
- * @param tipoAuditoria - El tipo de auditoría: 'ALTA', 'BAJA' o 'CAMBIO'.
- * @param usuarioId - El ID del usuario que realiza la acción.
- * @param entidad - La entidad afectada, que debe estar entre las entidades permitidas.
+ * Crea un registro de auditoría genérico.
+ * @param usuario_originario_id ID del usuario que realiza la acción (opcional).
+ * @param usuario_destino_id ID del usuario afectado por la acción (opcional).
+ * @param modelo Modelo afectado (debe estar en ENTIDADES_PERMITIDAS).
+ * @param tipo_auditoria Tipo de auditoría (ALTA, BAJA, CAMBIO, etc.).
+ * @param detalle Detalle adicional sobre la acción realizada.
+ * @throws Error si los parámetros no son válidos.
  */
-export async function registrarAuditoria(
-  modelo: Model,
-  tipoAuditoria: 'ALTA' | 'BAJA' | 'CAMBIO',
-  usuarioId: string | null,
-  entidad: string
-) {
-  const detalle = JSON.stringify(modelo.get({ plain: true })).slice(0, 30); // Limita el detalle a 30 caracteres
+export const registrarAuditoria = async ({
+  usuario_originario_id = null,
+  usuario_destino_id = null,
+  modelo,
+  tipo_auditoria,
+  detalle,
+}: {
+  usuario_originario_id?: string | null;
+  usuario_destino_id?: string | null;
+  modelo: string;
+  tipo_auditoria: string;
+  detalle: string;
+}): Promise<void> => {
+  try {
+    // Validar que el modelo sea uno de los permitidos
+    if (!ENTIDADES_PERMITIDAS.includes(modelo)) {
+      const validModels = ENTIDADES_PERMITIDAS.join(", ");
+      throw new Error(
+        `El modelo especificado (${modelo}) no es válido. Debe ser uno de: ${validModels}.`
+      );
+    }
 
-  await AuditoriaCambio.create({
-    usuario_registrante_id: usuarioId,
-    modelo: entidad,
-    tipo_auditoria: tipoAuditoria,
-    detalle,
-  });
-}
+    // Validar que los campos obligatorios estén presentes
+    if (!modelo || !tipo_auditoria || !detalle) {
+      throw new Error(
+        "Modelo, tipo de auditoría y detalle son obligatorios para registrar una auditoría."
+      );
+    }
+
+    // Crear el registro de auditoría
+    await AuditoriaCambio.create({
+      usuario_originario_id,
+      usuario_destino_id,
+      modelo,
+      tipo_auditoria,
+      detalle,
+    });
+
+    logger.info(
+      `Auditoría creada: Tipo '${tipo_auditoria}' en modelo '${modelo}' con detalle: '${detalle}'`
+    );
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Error desconocido";
+    logger.error(`Error al crear auditoría: ${errorMessage}`);
+    throw error; // Re-lanzar el error para que sea manejado aguas arriba
+  }
+};
+
+/**
+ * Crea un registro de auditoría en la tabla AuditoriaRepertorio.
+ * @param params - Objeto con los parámetros requeridos para crear la auditoría.
+ * @param params.usuario_registrante_id - ID del usuario que realiza la acción (opcional).
+ * @param params.fonograma_id - ID del fonograma auditado.
+ * @param params.tipo_auditoria - Tipo de auditoría (ALTA, BAJA, CAMBIO, etc.).
+ * @param params.detalle - Detalle adicional sobre la acción realizada.
+ * @throws Error - Lanza un error si los parámetros no son válidos.
+ */
+export const registrarRepertorio = async ({
+  usuario_registrante_id = null,
+  fonograma_id,
+  tipo_auditoria,
+  detalle,
+}: {
+  usuario_registrante_id?: string | null;
+  fonograma_id: string;
+  tipo_auditoria: string;
+  detalle: string;
+}): Promise<void> => {
+  try {
+    // Validar que los parámetros obligatorios sean proporcionados
+    if (!fonograma_id) {
+      throw new Error("El ID del fonograma es obligatorio.");
+    }
+    if (!tipo_auditoria) {
+      throw new Error("El tipo de auditoría es obligatorio.");
+    }
+    if (!detalle) {
+      throw new Error("El detalle de la auditoría es obligatorio.");
+    }
+
+    // Crear el registro de auditoría
+    await AuditoriaRepertorio.create({
+      fonograma_id,
+      usuario_registrante_id,
+      tipo_auditoria,
+      detalle,
+    });
+
+    logger.info(
+      `Auditoría de repertorio creada: ${tipo_auditoria} en fonograma ${fonograma_id} con detalle: ${detalle}`
+    );
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Error desconocido";
+    logger.error(`Error al crear auditoría de repertorio: ${errorMessage}`);
+    throw error;
+  }
+};
+
+/**
+ * Registra una nueva sesión para un usuario, incluyendo los detalles de inicio de sesión
+ * y opcionalmente la fecha de fin de sesión.
+ *
+ * @param params - Objeto con los detalles de la sesión.
+ * @param params.usuarioRegistranteId - ID del usuario que inicia la sesión.
+ * @param params.ipOrigen - Dirección IP de origen de la sesión.
+ * @param params.navegador - Información del navegador utilizado.
+ * @param params.fechaInicioSesion - Fecha y hora de inicio de la sesión. Si no se proporciona, se usará la fecha actual.
+ * @param params.fechaFinSesion - Fecha y hora de fin de la sesión. Es opcional y puede ser null.
+ * @returns La instancia de la sesión registrada en la base de datos.
+ * @throws Error - Lanza un error si ocurre algún problema al registrar la sesión.
+ */
+export const registrarSesion = async ({
+  usuarioRegistranteId,
+  ipOrigen,
+  navegador,
+  fechaInicioSesion,
+  fechaFinSesion,
+}: {
+  usuarioRegistranteId: string;
+  ipOrigen: string;
+  navegador: string;
+  fechaInicioSesion: Date;
+  fechaFinSesion?: Date | null;
+}) => {
+  try {
+    const sesion = await AuditoriaSesion.create({
+      usuario_registrante_id: usuarioRegistranteId,
+      ip_origen: ipOrigen,
+      navegador,
+      fecha_inicio_sesion: fechaInicioSesion,
+      fecha_fin_sesion: fechaFinSesion || null,
+    });
+
+    return sesion;
+  } catch (error) {
+    throw new Error(
+      `Error al registrar la auditoría de sesión: ${error instanceof Error ? error.message : "Error desconocido"}`
+    );
+  }
+};
+
+
+/**
+ * Actualiza la fecha de fin de sesión para la sesión más reciente de un usuario.
+ * @param usuarioRegistranteId - ID del usuario cuya sesión será actualizada.
+ * @returns La instancia actualizada de AuditoriaSesion.
+ * @throws Error - Lanza un error si ocurre algún problema durante la actualización.
+ */
+export const actualizarFechaFinSesion = async (
+  usuarioRegistranteId: string
+): Promise<AuditoriaSesion | null> => {
+  try {
+    // Obtener la sesión más reciente del usuario
+    const sesion = await AuditoriaSesion.findOne({
+      where: { usuario_registrante_id: usuarioRegistranteId },
+      order: [["fecha_inicio_sesion", "DESC"]],
+    });
+
+    if (!sesion) {
+      throw new Error(
+        `No se encontró una sesión activa para el usuario con ID: ${usuarioRegistranteId}.`
+      );
+    }
+
+    // Actualizar la fecha de fin de sesión
+    sesion.fecha_fin_sesion = new Date();
+    await sesion.save();
+
+    logger.info(
+      `Fecha de fin de sesión actualizada correctamente para la sesión con ID: ${sesion.id_sesion}`
+    );
+
+    return sesion;
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Error desconocido";
+    logger.error(`Error al actualizar la fecha de fin de sesión: ${errorMessage}`);
+    throw error;
+  }
+};

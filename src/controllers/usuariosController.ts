@@ -1,36 +1,35 @@
 import { Request, Response, NextFunction } from "express";
 import logger from "../config/logger";
-import crypto from "crypto";
-import bcrypt from "bcrypt";
 
 import { AuthenticatedRequest } from "../interfaces/AuthenticatedRequest";
-
-import * as MESSAGES from "../services/messages";
-import * as Err from "../services/customErrors";
-import { sendEmail } from "../services/emailService";
+import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 
 import {
   findUsuarios,
-  findRolByNombre,
   assignVistasToUser,
   updateUserViewsService,
   toggleUserViewStatusService,
-  deleteUsuarioMaestrosByUserId,
-  updateUsuarioById,
+  updateUserStatusById,
+  createUser,
+  validateUserRegistrationState,
+  updateUserData,
+  linkUserToProductora,
+  updateUserRegistrationState,
+  deleteUserRelations,
+  deleteUsuarioById,
+  findExistingUsuario,
 } from "../services/userService";
+import { createOrUpdateProductora, createProductoraMessage, generarCodigosISRC, processDocuments } from "../services/productoraService";
+import { getAuthenticatedUser, getTargetUser } from "../services/authService";
+import { sendEmailWithErrorHandling } from "../services/emailService";
+import { registrarAuditoria } from "../services/auditService";
+import { handleGeneralError } from "../services/errorService";
 
-import { generarCodigosISRC } from "../services/productoraService";
+import * as MESSAGES from "../utils/messages";
+import * as Err from "../utils/customErrors";
 
-import {
-  Usuario,
-  UsuarioMaestro,
-  Productora,
-  ProductoraDocumento,
-  AuditoriaCambio,
-  ProductoraDocumentoTipo,
-} from "../models";
 
-// HABILITAR O DESHABILITAR EL REGISTRO DE UN USUARIO
+// HABILITAR O DESHABILITAR EL TIPO REGISTRO DE UN USUARIO
 export const availableDisableUser = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -39,78 +38,20 @@ export const availableDisableUser = async (
   try {
     const { id_usuario } = req.body;
 
-    // Verificar que los parámetros necesarios estén en el body
-    if (!id_usuario) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Falta uno o más parámetros obligatorios.`
-      );
-      throw new Err.BadRequestError(
-        MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS
-      );
-    }
-
     // Verifica el usuario autenticado
-    const userAuthId = req.userId as string;
-
-    if (!userAuthId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - ID de usuario autenticado no encontrado en el token.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    // Buscar el administrador para validar los datos
-    const authData = await findUsuarios({ userId: userAuthId });
-
-    if (!authData || !authData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Administrador no encontrado: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_FOUND));
-    }
-
-    if (!authData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_SINGLE_USER));
-    }
-
-    // Extraer el primer usuario de la respuesta
-    const admin = authData.users[0].user;
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
     // Buscar el usuario al que se le cambiará el estado mediante findUsuario
-    const userData = await findUsuarios({ userId: id_usuario });
-    
-    if (!userData || !userData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
-
-    if (!userData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_SINGLE_USER));
-    }
-
-    // Extraer el primer usuario de la respuesta
-    const user = userData.users[0].user;
+    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
 
     // Alternar el tipo_registro entre HABILITADO y DESHABILITADO
-    const nuevoEstado =
-      user.tipo_registro === "HABILITADO" ? "DESHABILITADO" : "HABILITADO";
-    await Usuario.update(
-      { tipo_registro: nuevoEstado },
-      { where: { id_usuario: user.id_usuario } }
-    );
+    const nuevoEstado = targetUser.tipo_registro === "HABILITADO" ? "DESHABILITADO" : "HABILITADO";
+    await updateUserStatusById(targetUser.id_usuario, nuevoEstado);
 
-    // Crear una auditoría de la acción
-    await AuditoriaCambio.create({
-      usuario_originario_id: admin.id_usuario,
-      usuario_destino_id: user.id_usuario,
+    // Crear una auditoría
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
       detalle: `Cambio de estado a ${nuevoEstado}`,
@@ -119,21 +60,14 @@ export const availableDisableUser = async (
     logger.info(
       `${req.method} ${req.originalUrl} - Usuario ${nuevoEstado} exitosamente: ${id_usuario}`
     );
-    res.status(200).json({ message: `Usuario ${nuevoEstado} exitosamente` });
+    res.status(200).json({ message: `Usuario ${nuevoEstado} exitosamente.` });
 
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al cambiar estado del usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
+    handleGeneralError(err, req, res, next, 'Error al cambiar estado del usuario');
   }
 };
 
-// BLOQUEAR O DESBLOQUEAR USUARIO
+// BLOQUEAR O DESBLOQUEAR USUARIO PARA SU LOGIN
 export const blockOrUnblockUser = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -142,16 +76,6 @@ export const blockOrUnblockUser = async (
   try {
     const { id_usuario, isBlocked } = req.body;
 
-    // Verificar que los parámetros necesarios estén en el body
-    if (!id_usuario || !isBlocked) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Falta uno o más parámetros obligatorios.`
-      );
-      throw new Err.BadRequestError(
-        MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS
-      );
-    }
-
     logger.info(
       `${req.method} ${req.originalUrl} - Solicitud recibida para ${
         isBlocked ? "bloquear" : "desbloquear"
@@ -159,69 +83,24 @@ export const blockOrUnblockUser = async (
     );
 
     // Verifica el usuario autenticado
-    const userAuthId = req.userId as string;
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    if (!userAuthId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - ID de usuario autenticado no encontrado en el token.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    // Buscar el administrador para validar los datos
-    const authData = await findUsuarios({ userId: userAuthId });
-
-    if (!authData || !authData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Administrador no encontrado: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_FOUND));
-    }
-
-    if (!authData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_SINGLE_USER));
-    }
-
-    // Extraer el primer usuario de la respuesta
-    const admin = authData.users[0].user;
-
-    // Realiza la consulta para obtener el usuario
-    const userData = await findUsuarios({ userId: id_usuario });
-
-    if (!userData || !userData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
-
-    if (!userData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_SINGLE_USER));
-    }
-
-    const user = userData.users[0].user;   
+    // Buscar el usuario al que se le cambiará el estado mediante findUsuario
+    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
 
     // Verificar si el usuario está DESHABILITADO
-    if (user.tipo_registro === "DESHABILITADO") {
+    if (targetUser.tipo_registro === "DESHABILITADO") {
       logger.warn(
         `${req.method} ${req.originalUrl} - No se puede ${
           isBlocked ? "bloquear" : "desbloquear"
         } al usuario con ID ${id_usuario} porque está DESHABILITADO.`
       );
-      return next(
-        new Err.ForbiddenError(MESSAGES.ERROR.USER.CANNOT_MODIFY_DISABLED_USER)
-      );
+      return next(new Err.ForbiddenError(MESSAGES.ERROR.USER.CANNOT_MODIFY_DISABLED_USER));
     }
 
     // Actualiza el estado de habilitación del usuario
-    user.is_bloqueado = !isBlocked;
-    await user.save();
+    targetUser.is_bloqueado = !isBlocked;
+    await targetUser.save();
 
     // Mensaje de éxito según la acción realizada
     const message = isBlocked
@@ -234,10 +113,10 @@ export const blockOrUnblockUser = async (
       } correctamente.`
     );
 
-    // Registrar en auditoría el cambio de estado de bloqueo
-    await AuditoriaCambio.create({
-      usuario_originario_id: admin.id_usuario,
-      usuario_destino_id: user.id_usuario,
+    // Registrar en auditoría el cambio de estado de bloqueo  
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
       detalle: `Usuario ${isBlocked ? "bloqueado" : "desbloqueado"}`,
@@ -246,128 +125,7 @@ export const blockOrUnblockUser = async (
     res.status(200).json({ message });
 
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al bloquear/desbloquear usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
-  }
-};
-
-// CAMBIAR EL ROL A UN USUARIO
-export const changeUserRole = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { id_usuario, newRole } = req.body;
-
-    // Validar parámetros
-    if (!id_usuario || !newRole) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Faltan uno o más parámetros obligatorios.`
-      );
-      return res
-        .status(400)
-        .json({ message: MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS });
-    }
-
-    // Verifica el usuario autenticado
-    const userAuthId = req.userId as string;
-
-    if (!userAuthId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - ID de usuario autenticado no encontrado en el token.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    // Buscar el administrador para validar los datos
-    const authData = await findUsuarios({ userId: userAuthId });
-
-    if (!authData || !authData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Administrador no encontrado: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_FOUND));
-    }
-
-    if (!authData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_SINGLE_USER));
-    }
-
-    // Extraer el primer usuario de la respuesta
-    const admin = authData.users[0].user;
-
-    // Verificar que el usuario existe
-    const userData = await findUsuarios({ userId: id_usuario });
-
-    if (!userData || !userData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado con ID: ${id_usuario}`
-      );
-      return res.status(404).json({ message: MESSAGES.ERROR.USER.NOT_FOUND });
-    }
-
-    if (!userData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_SINGLE_USER));
-    }
-
-    const user = userData.users[0].user;
-
-    // Buscar el nuevo rol
-    const rol = await findRolByNombre(newRole);
-    if (!rol) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Rol no válido: ${newRole}.`
-      );
-      return res
-        .status(400)
-        .json({ message: MESSAGES.ERROR.VALIDATION.ROLE_INVALID });
-    }
-
-    // Eliminar relaciones de UsuarioMaestro asociadas al usuario
-    await deleteUsuarioMaestrosByUserId(user.id_usuario);
-
-    // Actualizar el rol del usuario
-    const updatedUser = await updateUsuarioById(user.id_usuario, {
-      newRole,
-    });
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Rol del usuario con ID ${user.id_usuario} actualizado a ${newRole}.`
-    );
-
-    // Registrar en Auditoría
-    await AuditoriaCambio.create({
-      usuario_originario_id: admin.id_usuario,
-      usuario_destino_id: user.id_usuario,
-      modelo: "Usuario",
-      tipo_auditoria: "CAMBIO",
-      detalle: `Rol cambiado a ${newRole}.`,
-    });
-
-    res.status(200).json({
-      message: MESSAGES.SUCCESS.AUTH.ROLE_UPDATED,
-      user: updatedUser,
-    });
-  } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al cambiar el rol del usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al bloquear/desbloquear el usuario');
   }
 };
 
@@ -385,28 +143,13 @@ export const getUsers = async (
         `${req.method} ${req.originalUrl} - Solicitud recibida para obtener un usuario con ID: ${id_usuario}`
       );
 
-      const userData = await findUsuarios({ userId: id_usuario });
-
-      if (!userData || !userData.users.length) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-        );
-        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-      }
-
-      if (!userData.isSingleUser) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${id_usuario}`
-        );
-        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_SINGLE_USER));
-      }
-
-      const user = userData.users[0].user;
+      // Buscar el usuario pasado por parámetro
+      const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
 
       logger.info(
-        `${req.method} ${req.originalUrl} - Usuario encontrado con éxito con ID: ${user.id_usuario}`
+        `${req.method} ${req.originalUrl} - Usuario encontrado con éxito con ID: ${targetUser.id_usuario}`
       );
-      res.status(200).json(user);
+      res.status(200).json(targetUser);
       return;
     }
 
@@ -446,18 +189,13 @@ export const getUsers = async (
     // Devolver todos los usuarios encontrados
     res.status(200).json(userData.users);
 
-  } catch (error) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error: ${
-        error instanceof Error ? error.message : "Error desconocido."
-      }`
-    );
-    next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al buscar el o los usuarios');    
   }
 };
 
 // CREAR UN USUARIO ADMIN
-export const createAdminUser = async (
+export const createSecondaryAdminUser = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
@@ -465,164 +203,78 @@ export const createAdminUser = async (
   try {
     const { email, nombre, apellido, telefono } = req.body;
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para crear un usuario`);
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para crear un usuario`);
 
-    // Verificar que se proporcionen los datos requeridos
-    if (!email || !nombre || !apellido) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Faltan uno o más parámetros obligatorios.`
-      );
-      return next(
-        new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS)
-      );
-    }
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    // Verifica el usuario autenticado
-    const userAuthId = req.userId as string;
-
-    if (!userAuthId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - ID de usuario autenticado no encontrado en el token.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    // Buscar el administrador para validar los datos
-    const authData = await findUsuarios({ userId: userAuthId });
-
-    if (!authData || !authData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Administrador no encontrado: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_FOUND));
-    }
-
-    if (!authData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_SINGLE_USER));
-    }
-
-    // Extraer el primer usuario de la respuesta
-    const admin = authData.users[0].user;
-
-    // Verificar si el usuario ya existe
-    const userData = await findUsuarios({ email });
-
-    if (!userData || !userData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${email}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
-
-    if (!userData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con el email: ${email}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_SINGLE_USER));
-    }
-
-    // Extraer el primer usuario de la respuesta
-    const existingUser = userData.users[0].user;
-
+    // Verificar si existe el usuario
+    const existingUser = await findExistingUsuario({ email });
     if (existingUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario ya registrado: ${email}`
-      );
-      return next(
-        new Err.BadRequestError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED)
-      );
-    }
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario ya registrado: ${existingUser.email}`);
+      return next(new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED));
+    }    
 
-    // Verificar si el rol admin_secundario
-    const secondaryRole = await findRolByNombre('admin_secundario');
-    if (!secondaryRole) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Rol no encontrado en la base de datos: ${secondaryRole}`
-      );
-      return next(
-        new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID)
-      );
-    }
-
-    // Generación de clave temporal y su cifrado
-    const tempPassword = crypto.randomBytes(8).toString("hex");
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
-    // Crear el usuario con tipo_registro "HABILITADO" y la fecha actual
-    const newUser = await Usuario.create({
-      rol_id: secondaryRole.id_rol,
+    const { newUser, tempPassword } = await createUser({
       email,
-      clave: hashedPassword,
-      tipo_registro: "HABILITADO",
       nombre,
       apellido,
-      telefono: telefono || null,
-      fecha_ultimo_cambio_rol: new Date(),
-      fecha_ultimo_cambio_registro: new Date(),
+      telefono,
+      rolNombre: 'admin_secundario',
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Usuario creado exitosamente: ${newUser.id_usuario}`
-    );   
+    if (!tempPassword) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - No se creó la clave temporal para el administrador secundario: ${newUser.id_usuario}`
+      );
+      return next(new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_TEMP_PASSWORD));
+    }
 
     // Crear relaciones en UsuarioAccesoMaestro
-    await assignVistasToUser(newUser.id_usuario, secondaryRole.id_rol);
+    await assignVistasToUser(newUser.id_usuario, newUser.rol_id);
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para ${secondaryRole.nombre_rol}: ${newUser.email}`
+      `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el rol admin_secundario: ${newUser.email}`
     );
 
-    // Registrar en Auditoría
-    await AuditoriaCambio.create({
-      usuario_originario_id: admin.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
       usuario_destino_id: newUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "ALTA",
-      detalle: `Creación de administrador secundario.`,
+      detalle: "Creación de administrador secundario.",
     });
 
-    // Envío de contraseña temporal por correo
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: newUser.id_usuario,
+      modelo: "UsuarioVistaMaestro",
+      tipo_auditoria: "ALTA",
+      detalle: `Generación de vistas para el usuario con ID: (${newUser.id_usuario})`,
+    });
+
+    // Enviar correo con contraseña temporal
     const emailBody = MESSAGES.EMAIL_BODY.TEMP_PASSWORD(tempPassword);
-    try {
-      await sendEmail({
+    await sendEmailWithErrorHandling(
+      {
         to: newUser.email,
         subject: "Registro exitoso - Contraseña temporal",
         html: emailBody,
-      });
+        successLog: `Correo enviado a ${newUser.email} con la contraseña temporal.`,
+        errorLog: `Error al enviar el correo al nuevo administrador secundario: ${newUser.email}.`,
+      }, req, res, next);
 
-      logger.info(
-        `${req.method} ${req.originalUrl} - Correo enviado a ${newUser.email}`
-      );
-    } catch (emailError) {
-      logger.error(
-        `${req.method} ${req.originalUrl} - Error al enviar correo: ${
-          emailError instanceof Error ? emailError.message : "Error desconocido"
-        }`
-      );
-      return next(
-        new Err.InternalServerError(MESSAGES.ERROR.EMAIL.TEMP_FAILED)
-      );
-    }
-
-    // Respuesta exitosa
+    // Responder con éxito
     res.status(201).json({
       message: MESSAGES.SUCCESS.AUTH.REGISTER_SECONDARY,
       userId: newUser.id_usuario,
+
     });
-  } catch (error) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al crear usuario: ${
-        error instanceof Error ? error.message : "Error desconocido"
-      }`
-    );
-    next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al crear el administrador secundario');
   }
 };
 
+// OBTENER TODOS LOS REGISTROS PENDIENTES O EL DE UN USUARIO
 export const getRegistrosPendientes = async (
   req: Request,
   res: Response,
@@ -633,31 +285,13 @@ export const getRegistrosPendientes = async (
       `${req.method} ${req.originalUrl} - Solicitud recibida para obtener registro(s) pendiente(s).`
     );
 
-    const { id_usuario } = req.body;
+    const { id_usuario } = req.query;;
 
     if (id_usuario) {
-      // Obtener datos de un único usuario
-      const userData = await findUsuarios({ userId: id_usuario });
+      // Obtener datos del usuario pasado como parámetro
+      const { user: targetUser, maestros: targetMaestros, hasSingleMaestro: hasTargetSingleMaestro }: UsuarioResponse = await getTargetUser({ userId: id_usuario as string }, req);
 
-      if (!userData || !userData.users.length) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-        );
-        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-      }
-
-      if (!userData.isSingleUser) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${id_usuario}`
-        );
-        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_SINGLE_USER));
-      }
-
-      // Extraer el primer usuario y maestros asociados de la respuesta
-      const user = userData.users[0].user;
-      const { maestros, isSingleMaestro } = userData.users[0];
-
-      if (user.tipo_registro !== "ENVIADO") {
+      if (targetUser.tipo_registro !== "ENVIADO") {
         logger.warn(
           `${req.method} ${req.originalUrl} - Usuario no tiene registro pendiente.`
         );
@@ -666,7 +300,7 @@ export const getRegistrosPendientes = async (
         );
       }
 
-      if (!isSingleMaestro) {
+      if (!hasTargetSingleMaestro) {
         logger.warn(
           `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
         );
@@ -677,7 +311,7 @@ export const getRegistrosPendientes = async (
         );
       }
 
-      const productoras = maestros
+      const productoras = targetMaestros
         .filter((maestro) => maestro.productora)
         .map((maestro) => maestro.productora);
 
@@ -692,7 +326,7 @@ export const getRegistrosPendientes = async (
 
       return res.status(200).json({
         message: MESSAGES.SUCCESS.APPLICATION.SAVED,
-        data: { user, productoras },
+        data: { targetUser, productoras },
       });
     } else {
       // Obtener datos de todos los usuarios pendientes
@@ -708,7 +342,7 @@ export const getRegistrosPendientes = async (
       }
 
       const usersWithSingleMaestro = pendingUsersData.users.filter(
-        (user) => user.isSingleMaestro
+        (user) => user.hasSingleMaestro
       );
 
       if (usersWithSingleMaestro.length === 0) {
@@ -732,15 +366,11 @@ export const getRegistrosPendientes = async (
       });
     }
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error: ${
-        err instanceof Error ? err.message : "Error desconocido."
-      }`
-    );
-    return next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
+    handleGeneralError(err, req, res, next, 'Error al obtener los registros pendientes');    
   }
 };
 
+// APROBAR UNA APLICACIÓN
 export const approveApplication = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -751,78 +381,18 @@ export const approveApplication = async (
       `${req.method} ${req.originalUrl} - Solicitud para autorizar usuario`
     );
 
-    const { id_usuario } = req.body;
-
-    // Validar parámetros
-    if (!id_usuario) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Faltan uno o más parámetros obligatorios.`
-      );
-      return next(
-        new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS)
-      );
-    }
+    const { id_usuario } = req.body;    
 
     // Verifica el usuario autenticado
-    const userAuthId = req.userId as string;
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    if (!userAuthId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - ID de usuario autenticado no encontrado en el token.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    // Buscar el administrador para validar los datos
-    const authData = await findUsuarios({ userId: userAuthId });
-
-    if (!authData || !authData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Administrador no encontrado: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_FOUND));
-    }
-
-    if (!authData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${userAuthId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.ADMIN.NOT_SINGLE_USER));
-    }
-
-    // Extraer el primer usuario de la respuesta
-    const admin = authData.users[0].user;
-
-    const userData = await findUsuarios({ userId: id_usuario });
-
-    if (!userData || !userData.users.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
-
-    if (!userData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_SINGLE_USER));
-    }
-
-    if (!userData.users[0].maestros.length) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No existen maestros asociados al ID: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NO_MAESTRO_RECORD));
-    }
-
-    // Extraer el primer usuario de la respuesta
-    const { user, maestros, isSingleMaestro } = userData.users[0];  
+    // Verifica el usuario pasado por parámetro
+    const { user: targetUser, maestros: targetMaestros, hasSingleMaestro: hasTargetSingleMaestro }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
 
     // Validar si el usuario ya está aprobado
-    if (user.tipo_registro === "HABILITADO") {
+    if (targetUser.tipo_registro === "HABILITADO") {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario ya aprobado: ${user.email}`
+        `${req.method} ${req.originalUrl} - Usuario ya aprobado: ${targetUser.email}`
       );
       return next(
         new Err.ConflictError(
@@ -831,7 +401,7 @@ export const approveApplication = async (
       );
     }
 
-    if (!isSingleMaestro) {
+    if (!hasTargetSingleMaestro) {
         logger.warn(
           `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
         );
@@ -842,7 +412,7 @@ export const approveApplication = async (
         );
       }
 
-    const productora = maestros[0].productora;
+    const productora = targetMaestros[0].productora;
 
     if (!productora) {
       logger.error(
@@ -858,40 +428,39 @@ export const approveApplication = async (
     const isrcs = await generarCodigosISRC(productoraId);
 
     // Actualizar el tipo_registro del usuario a HABILITADO
-    await user.update({ tipo_registro: "HABILITADO" });    
+    await targetUser.update({ tipo_registro: "HABILITADO" });    
 
     // Crear las auditorías correspondientes
-    await AuditoriaCambio.create({
-      usuario_originario_id: admin.id_usuario,
-      usuario_destino_id: user.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Productora",
       tipo_auditoria: "CAMBIO",
       detalle: `Autorización de ${productora.nombre_productora} en Productora (${productora.id_productora})`,
     });
 
-    await AuditoriaCambio.create({
-      usuario_originario_id: admin.id_usuario,
-      usuario_destino_id: user.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "ProductoraISRC",
       tipo_auditoria: "ALTA",
       detalle: `Generación de códigos ISRC para la Productora: (${productora.id_productora})`,
     });
 
     // Enviar el correo de notificación al usuario
-    // await sendEmail({
-    //   to: userData.user.email,
-    //   subject: "Registro Exitoso como Productor Principal",
-    //   html: MESSAGES.EMAIL_BODY.PRODUCTOR_PRINCIPAL_NOTIFICATION(
-    //     productora.nombre_productora,
-    //     productora.cuit_cuil,
-    //     productora.cbu,
-    //     productora.alias_cbu
-    //   ),
-    // });
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Usuario autorizado y correo enviado exitosamente.`
-    );
+    await sendEmailWithErrorHandling(
+      {
+        to: targetUser.email,
+        subject: "Registro Exitoso como Productor Principal",
+        html: MESSAGES.EMAIL_BODY.PRODUCTOR_PRINCIPAL_NOTIFICATION(
+          productora.nombre_productora,
+          productora.cuit_cuil,
+          productora.cbu,
+          productora.alias_cbu
+        ),
+        successLog: `Usuario autorizado y correo de notificación enviado a ${targetUser.email}.`,
+        errorLog: `Error al enviar el correo de aprobación de aplicación a ${targetUser.email}.`,
+      }, req, res, next);
 
     // Enviar respuesta exitosa al cliente
     return res.status(200).json({
@@ -899,12 +468,7 @@ export const approveApplication = async (
       data: isrcs,
     });
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al autorizar usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al autorizar usuario');    
   }
 };
 
@@ -921,49 +485,11 @@ export const rejectApplication = async (
 
     const { id_usuario, comentario } = req.body;
 
-    // Validar parámetros
-    if (!id_usuario || !comentario) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Faltan parámetros obligatorios.`
-      );
-      return next(
-        new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS)
-      );
-    }
+    // Verifica el usuario autenticado
+    const { user: authUser } = await getAuthenticatedUser(req);
 
-    // Verificar el usuario autenticado desde AuthenticatedRequest
-    const userAuthId = req.userId as string;
-    const authenticatedUserData = await findUsuarios({ userId: userAuthId });
-
-    if (!authenticatedUserData || !authenticatedUserData.users.length) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
-
-    if (!authenticatedUserData.isSingleUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Más de un usuario encontrado con ID: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_SINGLE_USER));
-    }
-
-    // Buscar el usuario mediante findUsuario
-    const userData = await findUsuarios({ userId: id_usuario });
-    if (!userData) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
-
-    const { user } = userData;
-
-    if (!user) {
-      logger.error(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      return res.status(404).json({
-        message: MESSAGES.ERROR.USER.NOT_FOUND,
-      });
-    }
+    // Buscar el usuario pasado por parámetro
+    const { user: targetUser, maestros: targetMaestros, hasSingleMaestro: hasTargetSingleMaestro }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
 
     // Verificar que el comentario está presente en el body
     if (!comentario || comentario.trim() === "") {
@@ -976,30 +502,61 @@ export const rejectApplication = async (
     }
 
     // Crear registro de auditoría
-    await AuditoriaCambio.create({
-      usuario_originario_id: userAuthId,
-      usuario_destino_id: user.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
       detalle: `Rechazo de aplicación con comentario: ${comentario}`,
     });
 
-    // Enviar correo de notificación de rechazo
+    // Actualizar el tipo_registro del usuario a RECHAZADO
+    await targetUser.update({ tipo_registro: "RECHAZADO" });
 
-    // Actualizar el tipo_registro del usuario a PENDIENTE
-    await user.update({ tipo_registro: "RECHAZADO" });
+    if (!hasTargetSingleMaestro) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
+      );
+      return next(
+        new Err.NotFoundError(
+          MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
+        )
+      );
+    }
 
-    await sendEmail({
-      to: user.email,
-      subject: "Rechazo de su Aplicación",
-      html: MESSAGES.EMAIL_BODY.REJECTION_NOTIFICATION(user.email, comentario),
+    const productora = targetMaestros[0].productora;
+
+    if (!productora) {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - El usuario no tiene una productora asociada.`
+        );
+        return next(
+          new Err.NotFoundError(
+            MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS
+          )
+        );
+      }
+
+    // Crear mensaje asociado al rechazo
+    await createProductoraMessage({
+      usuarioId: authUser.id_usuario,
+      productoraId: productora.id_productora,
+      tipoMensaje: "RECHAZO",
+      mensaje: comentario,
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Aplicación rechazada y correo de notificación enviado.`
-    );
+    // Enviar correo de notificación de rechazo
+    await sendEmailWithErrorHandling(
+      {
+        to: targetUser.email,
+        subject: "Rechazo de su Aplicación",
+        html: MESSAGES.EMAIL_BODY.REJECTION_NOTIFICATION(targetUser.email, comentario),
+        successLog: `Aplicación rechazada y correo de notificación enviado a ${targetUser.email}.`,
+        errorLog: `Error al enviar el correo de rechazo a ${targetUser.email}.`,
+      }, req, res, next);
 
     res.status(200).json({ message: MESSAGES.SUCCESS.APPLICATION.REJECTED });
+
   } catch (err) {
     logger.error(
       `${req.method} ${req.originalUrl} - Error al rechazar aplicación: ${
@@ -1015,7 +572,7 @@ export const sendApplication = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<Response | void> => {
   try {
     logger.info(
       `${req.method} ${req.originalUrl} - Enviando solicitud de aplicación`
@@ -1030,211 +587,85 @@ export const sendApplication = async (
       telefono,
     } = req.body;
 
-    // Validar parámetros
-    if (!id_usuario || !productoraData || !nombre || !apellido || !telefono) {
+    // Verifica el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    // Buscar el usuario pasado por parámetro
+    const { user: targetUser, hasSingleMaestro: hasTargetSingleMaestro }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
+    
+    if (!hasTargetSingleMaestro) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Faltan parámetros obligatorios.`
+        `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
       );
       return next(
-        new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.MISSING_PARAMETERS)
+        new Err.NotFoundError(MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL)
       );
     }
 
-    // Verificar el usuario autenticado desde AuthenticatedRequest
-    const userAuthId = req.userId as string;
-    if (!userAuthId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - ID de usuario activo no encontrado en el token.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
+    // Validar el estado del usuario
+    validateUserRegistrationState(targetUser.tipo_registro);
 
-    logger.debug(
-      `${req.method} ${req.originalUrl} - ID de usuario autenticado: ${userAuthId}`
-    );
-
-    // Buscar al usuario mediante findUsuario
-    const userData = await findUsuario({ userId: id_usuario });
-    if (!userData || !userData.user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado con ID: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }   
-    
-    const user = userData.user;
-    
-    if (userData.user.tipo_registro === "CONFIRMADO") {
-      logger.info(
-        `${req.method} ${req.originalUrl} - Usuario con estado CONFIRMADO encontrado: ${userData.user.email}`
-      );
-    } else if (userData.user.tipo_registro === "PENDIENTE") {
-      logger.info(
-        `${req.method} ${req.originalUrl} - Usuario con estado PENDIENTE encontrado: ${userData.user.email}`
-      );
-    } else if (userData.user.tipo_registro === "RECHAZADO") {
-      logger.info(
-        `${req.method} ${req.originalUrl} - Usuario con estado RECHAZADO encontrado: ${userData.user.email}`
-      );
-    } else {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario con un estado inesperado: ${userData.user.tipo_registro}`
-      );
-
-      return next(
-        new Err.BadRequestError(
-          `El usuario tiene un estado de registro no permitido: ${userData.user.tipo_registro}. Solo se permiten los estados CONFIRMADO, PENDIENTE o RECHAZADO.`
-        )
-      );
-    }
-
-    if (!user) {
-      logger.error(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      return res.status(404).json({
-        message: MESSAGES.ERROR.USER.NOT_FOUND,
-      });
-    }
-
-    await user.update({ nombre, apellido, telefono });
+    // Actualizar los datos básicos del usuario
+    await updateUserData(targetUser, { nombre, apellido, telefono });
     logger.info(
-      `${req.method} ${req.originalUrl} - Datos del usuario actualizados: nombre=${nombre}, apellido=${apellido}, telefono=${telefono}`
+      `${req.method} ${req.originalUrl} - Datos del usuario actualizados.`
     );
 
-    let productora = null;
-
-    // Verificar si existe una relación en UsuarioMaestro con la productora
-    const existingRelation = userData.maestros.find(
-      (maestro) => maestro.productora?.id_productora === productoraData.id_productora
+    // Manejar la productora
+    const productora = await createOrUpdateProductora(productoraData);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Productora procesada exitosamente.`
     );
 
-    // Validar el tipo de persona (FÍSICA o JURÍDICA)
-    const tipoPersonaValida = ["FISICA", "JURIDICA"].includes(
-      productoraData.tipo_persona
+    // Manejar relación de Usuario y Productora en UsuarioMaestro
+    await linkUserToProductora(targetUser.id_usuario, productora.id_productora);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Relación Usuario-Productora creada en UsuarioMaestro.`
     );
-    if (!tipoPersonaValida) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Tipo de persona inválido: ${productoraData.tipo_persona}`
-      );
-      throw new Err.BadRequestError(
-        "El tipo de persona debe ser FISICA o JURIDICA."
-      );
-    }
 
-    // Manejar creación o actualización de la productora
-    if (productoraData.id_productora) {
-      // Buscar productora existente por ID
-      productora = await Productora.findOne({
-        where: { id_productora: productoraData.id_productora },
-      });
-
-      if (productora) {
-        // Actualizar datos de la productora existente
-        await productora.update(productoraData);
-        logger.info(
-          `${req.method} ${req.originalUrl} - Productora actualizada con ID: ${productora.id_productora}`
-        );
-      } else {
-        // Crear una nueva productora si no existe
-        productora = await Productora.create({ ...productoraData, fecha_alta: null });
-        logger.info(
-          `${req.method} ${req.originalUrl} - Nueva productora creada con ID: ${productora.id_productora}`
-        );
-      }
-    } else {
-      // Crear nueva productora si no se proporciona un ID
-      productora = await Productora.create({ ...productoraData, fecha_alta: null });
+    // Manejar documentos
+    if (documentos?.length) {
+      await processDocuments(
+        targetUser.id_usuario,
+        productora.id_productora,
+        documentos
+      );
       logger.info(
-        `${req.method} ${req.originalUrl} - Nueva productora creada sin ID proporcionado. ID asignado: ${productora.id_productora}`
-      );
-    }
-
-    // Verificar si existe una relación UsuarioMaestro para esta productora
-    if (!existingRelation) {
-      await UsuarioMaestro.create({
-        usuario_registrante_id: id_usuario,
-        productora_id: productora.id_productora,
-      });
-      logger.info(
-        `${req.method} ${req.originalUrl} - Relación UsuarioMaestro creada para la productora con ID: ${productora.id_productora}`
-      );
-    }
-
-    // Manejar documentos de forma opcional
-    if (documentos && documentos.length > 0) {
-
-      logger.info(
-        `${req.method} ${req.originalUrl} - Procesando documentos. Cantidad: ${documentos.length}`
-      );
-
-      const tiposDocumentos = await ProductoraDocumentoTipo.findAll({
-        where: {
-          nombre_documento: documentos.map((doc: { nombre_documento: string }) => doc.nombre_documento),
-        },
-      });
-
-      await Promise.all(
-        documentos.map(async (doc: { nombre_documento: string; ruta_archivo_documento: string }) => {
-          const tipoDocumento = tiposDocumentos.find((tipo) => tipo.nombre_documento === doc.nombre_documento);
-          if (!tipoDocumento) {
-
-            logger.warn(
-              `${req.method} ${req.originalUrl} - Tipo de documento no válido: ${doc.nombre_documento}`
-            );
-
-            throw new Err.BadRequestError(`Tipo de documento no válido: ${doc.nombre_documento}`);
-          }
-          await ProductoraDocumento.create({
-            usuario_principal_id: id_usuario,
-            productora_id: existingRelation?.productora?.id_productora || productora?.id_productora,
-            tipo_documento_id: tipoDocumento.id_documento_tipo,
-            ruta_archivo_documento: doc.ruta_archivo_documento,
-          });
-
-          logger.info(
-            `${req.method} ${req.originalUrl} - Documento registrado: ${doc.nombre_documento}, ruta: ${doc.ruta_archivo_documento}`
-          );
-
-        })
+        `${req.method} ${req.originalUrl} - Documentos procesados exitosamente.`
       );
     }
 
     // Actualizar el tipo_registro del usuario a ENVIADO
-    await user.update({ tipo_registro: "ENVIADO" });
-
+    await updateUserRegistrationState(targetUser, "ENVIADO");
     logger.info(
-      `${req.method} ${req.originalUrl} - Tipo de registro actualizado a ENVIADO para el usuario: ${user.email}`
+      `${req.method} ${req.originalUrl} - Tipo de registro actualizado a ENVIADO.`
     );
-
-    // Enviar correo de notificación al usuario
-    // await sendEmail({
-    //   to: user.email,
-    //   subject: "Solicitud de Aplicación Enviada",
-    //   html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(user.email),
-    // });
 
     // Registrar auditoría
-    await AuditoriaCambio.create({
-      usuario_originario_id: userAuthId,
-      usuario_destino_id: user.id_usuario,
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Productora",
       tipo_auditoria: "ALTA",
-      detalle: `Solicitud de aplicación enviada por ${user.email} para la productora ${productora.id_productora}`,
+      detalle: `Solicitud de aplicación enviada por ${targetUser.email} para la productora ${productora.id_productora}`,
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Auditoría registrada exitosamente.`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Auditoría registrada.`);
+
+    // Enviar correo de notificación al usuario
+    await sendEmailWithErrorHandling(
+      {
+        to: targetUser.email,
+        subject: "Solicitud de Aplicación Enviada",
+        html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(targetUser.email),
+        successLog: `Correo de aplicación enviado a ${targetUser.email}`,
+        errorLog: `Error al enviar el correo de aplicación a ${targetUser.email}`,
+      }, req, res, next);
 
     res.status(200).json({ message: MESSAGES.SUCCESS.APPLICATION.SAVED });
 
   } catch (err) {
-    
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al enviar aplicación: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, "Error al enviar la aplicación");
   }
 };
 
@@ -1243,7 +674,7 @@ export const updateApplication = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<Response | void> => {
   try {
     logger.info(
       `${req.method} ${req.originalUrl} - Solicitud para actualizar la aplicación`
@@ -1262,136 +693,53 @@ export const updateApplication = async (
     }
 
     // Verifica el usuario autenticado
-    const usuarioRegistranteId = req.userId;
-    if (!usuarioRegistranteId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - ID de usuario activo no encontrado en el token.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    // Buscar al usuario mediante findUsuario
-    const userData = await findUsuario({ userId: id_usuario });
-    if (!userData) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
-
-    const { user } = userData;
-
-    if (!user) {
-      logger.error(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      return res.status(404).json({
-        message: MESSAGES.ERROR.USER.NOT_FOUND,
-      });
-    }
-
-    // Obtener los datos de la Productora asociada al usuario
-    const productora = await Productora.findOne({
-      where: { cuit_cuil: productoraData.cuit_cuil },
-    });
-
-    if (!productora) {
-      logger.error(`${req.method} ${req.originalUrl} - Paroductora no encontrada.`);
-      return res.status(404).json({
-        message: MESSAGES.ERROR.PRODUCTORA.NOT_FOUND,
-      });
-    }
+    // Buscar el usuario pasado por parámetro
+    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
 
     const cambios: string[] = [];
 
-    // Paso 1: Modificar o crear los datos de la Productora, en caso de que no esté ya dada de alta
-    if (productoraData && !productora.fecha_alta) {
-      if (productora) {
-        await productora.update(productoraData);
-        cambios.push("Productora actualizada");
-      } else {
-        const nuevaProductora = await Productora.create({
-          ...productoraData,
-        });
-        cambios.push(
-          `Productora creada con ID: ${nuevaProductora.id_productora}`
-        );
-      }
+    // Paso 1: Actualizar o crear la productora
+    if (productoraData) {
+      const productora = await createOrUpdateProductora(productoraData);
+      cambios.push("Productora actualizada o creada");
+      logger.info(`${req.method} ${req.originalUrl} - Productora procesada: ID=${productora.id_productora}`);
     }
 
-    // Paso 2: Actualizar o crear documentos específicos en ProductoraDocumento
+    // Paso 2: Actualizar o crear documentos
     if (documentos && documentos.length > 0) {
-      for (const documento of documentos) {
-        const documentoExistente = await ProductoraDocumento.findOne({
-          where: {
-            usuario_principal_id: id_usuario,
-            tipo_documento_id: documento.tipo_documento_id,
-          },
-        });
-
-        if (documentoExistente) {
-          await documentoExistente.update({
-            ruta_archivo_documento: documento.ruta_archivo_documento,
-          });
-          cambios.push(
-            `Documento actualizado: tipo_documento_id = ${documento.tipo_documento_id}`
-          );
-        } else {
-          await ProductoraDocumento.create({
-            usuario_principal_id: id_usuario,
-            productora_id: productora ? productora.id_productora : null,
-            tipo_documento_id: documento.tipo_documento_id,
-            ruta_archivo_documento: documento.ruta_archivo_documento,
-          });
-          cambios.push(
-            `Documento creado: tipo_documento_id = ${documento.tipo_documento_id}`
-          );
-        }
-      }
+      await processDocuments(targetUser.id_usuario, productoraData.id_productora, documentos);
+      cambios.push("Documentos actualizados o creados");
+      logger.info(`${req.method} ${req.originalUrl} - Documentos procesados.`);
     }
 
-    // Paso 3: Auditar la actualización de la aplicación
-    await AuditoriaCambio.create({
-      usuario_originario_id: usuarioRegistranteId,
-      usuario_destino_id: user.id_usuario,
-      modelo: "Productora",
-      tipo_auditoria: "CAMBIO",
-      detalle: `Actualización realizada: ${cambios.join(", ")}`,
-    });
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Auditoría registrada para la aplicación.`
-    );
-
-    // Paso 4: Auditar la actualización de la aplicación
-    await AuditoriaCambio.create({
-      usuario_originario_id: usuarioRegistranteId,
-      usuario_destino_id: user.id_usuario,
+    // Paso 3: Registrar auditoría 
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Aplicación",
       tipo_auditoria: "CAMBIO",
       detalle: `Actualización realizada: ${cambios.join(", ")}`,
     });
 
-    // Paso 5: Enviar el correo de notificación al usuario
-    await sendEmail({
-      to: user.email,
-      subject: "Actualización de Aplicación Enviada",
-      html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(user.email),
-    });
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Aplicación actualizada y correo enviado exitosamente.`
-    );
+    // Paso 4: Enviar correo de notificación
+    await sendEmailWithErrorHandling(
+      {
+        to: targetUser.email,
+        subject: "Solicitud de Aplicación Enviada",
+        html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(targetUser.email),
+        successLog: `Correo de actualización enviado a ${targetUser.email}`,
+        errorLog: `Error al enviar el correo de actualización a ${targetUser.email}`,
+      }, req, res, next);
 
     res.status(200).json({
       message: MESSAGES.SUCCESS.APPLICATION.UPDATED,
       cambios,
     });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al actualizar la aplicación: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al actualizar la aplicación');    
   }
 };
 
@@ -1400,64 +748,34 @@ export const updateUser = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud para actualizar usuario`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud para actualizar usuario`);
 
     const { id_usuario, datosUsuario } = req.body;
 
-    // Verifica el usuario autenticado
-    const userAuthId = req.userId as string;
-    if (!userAuthId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - ID de usuario activo no encontrado en el token.`
-      );
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
+   // Paso 1: Buscar usuarios
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);   
+    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
 
-    // Paso 1: Buscar al usuario mediante findUsuario
-    const userData = await findUsuario({ userId: id_usuario });
-    if (!userData) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
+    // Paso 2: Actualizar los datos del usuario mediante el servicio
+    await updateUserData(targetUser, datosUsuario);
 
-    const { user } = userData;
-
-    if (!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    // Paso 2: Actualizar los datos de Usuario
-    await user.update(datosUsuario);
-
-    // Auditar la actualización del usuario
-    await AuditoriaCambio.create({
-      usuario_originario_id: userAuthId,
-      usuario_destino_id: user.id_usuario,
+    // Paso 3: Registrar auditoría mediante el servicio
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
-      detalle: `Actualización de datos del usuario`,
+      detalle: "Actualización de datos del usuario",
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Usuario actualizado exitosamente.`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Usuario actualizado exitosamente.`);
+
     res.status(200).json({ message: MESSAGES.SUCCESS.USUARIO.USUARIO_UPDATED });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al actualizar el usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al actualizar el usuario');
   }
 };
 
@@ -1470,98 +788,54 @@ export const deleteUser = async (
   try {
     const { id_usuario } = req.params;
 
-    // Verificar el usuario autenticado desde AuthenticatedRequest
-    const userAuthId = req.userId as string;
-    const authenticatedUserData = await findUsuario({ userId: userAuthId });
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud para eliminar usuario`);
 
-    if (!authenticatedUserData) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario no encontrado.`);
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
-    }
+    // Paso 1: Buscar usuarios
+    const { user: authUser, maestros: authMaestros, hasSingleMaestro: hasAuthSingleMaestro }: UsuarioResponse = await getAuthenticatedUser(req);
+    const { user: targetUser, maestros: targetMaestros, hasSingleMaestro: hasTargetSingleMaestro }: UsuarioResponse = await getTargetUser({ userId: id_usuario }, req);
 
-    const authenticatedRole = authenticatedUserData.user.rol?.nombre_rol;
-
-    if (
-      !authenticatedRole ||
-      (authenticatedRole !== "admin_principal" &&
-        authenticatedRole !== "admin_secundario")
-    ) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario autenticado no autorizado para realizar esta acción.`
+    // Paso 2: Validar que no se elimine la cuenta propia
+    if (authUser === targetUser) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario no puede eliminar su propia cuenta.`);
+      return next(
+        new Err.ForbiddenError(MESSAGES.ERROR.USER.CANNOT_DELETE_SELF)
       );
-      res.status(403).json({
-        message: MESSAGES.ERROR.USER.NOT_AUTHORIZED,
-      });
     }
 
-    // Evitar que el usuario autenticado elimine su propia cuenta
-    if (id_usuario === userAuthId) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario autenticado no puede eliminar su propia cuenta.`
+    // Paso 3: Validar si es productor_principal con productoras asociadas
+    if (!targetUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - El usuario autenticado no tiene un rol asignado`);
+      return next(
+        new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED)
       );
-      res.status(400).json({
-        message: MESSAGES.ERROR.USER.CANNOT_DELETE_SELF,
-      });
+    }
+        
+    const hasAssociatedProductoras = targetMaestros.some((maestro) => maestro.productora);
+    if (targetUser.rol.nombre_rol === "productor_principal" && hasAssociatedProductoras) {
+      logger.warn(`${req.method} ${req.originalUrl} - El usuario tiene productoras asociadas y no puede ser eliminado.`);
+      return next(new Err.ConflictError(MESSAGES.ERROR.USER.CANNOT_DELETE_PRINCIPAL_WITH_PRODUCTORA));
     }
 
-    // Buscar el usuario mediante findUsuario
-    const userData = await findUsuario({ userId: id_usuario });
-    if (!userData) {
-      console.warn(
-        `${req.method} ${req.originalUrl} - Usuario no encontrado: ${id_usuario}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
-    }
+    // Paso 4: Eliminar relaciones y registros asociados
+    await deleteUserRelations(targetUser.id_usuario, authUser.id_usuario, targetMaestros);
 
-    const { user, maestros } = userData;
+    // Paso 5: Eliminar el usuario
+    await deleteUsuarioById(targetUser.id_usuario);
 
-    if (!user) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró al usuario con ID: ${id_usuario}`
-      );
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    // Eliminar todos los registros de UsuarioMaestro asociados
-    for (const maestro of maestros) {
-      await AuditoriaCambio.create({
-        usuario_originario_id: userAuthId,
-        usuario_destino_id: user.id_usuario,
-        modelo: "UsuarioMaestro",
-        tipo_auditoria: "ELIMINACION",
-        detalle: `Registro de UsuarioMaestro eliminado`,
-      });
-    }
-
-    await UsuarioMaestro.destroy({
-      where: { usuario_registrante_id: id_usuario },
-    });
-
-    // Auditar la eliminación del usuario
-    await AuditoriaCambio.create({
-      usuario_originario_id: userAuthId,
-      usuario_destino_id: user.id_usuario,
+    // Paso 5: Registrar auditoría
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
-      tipo_auditoria: "ELIMINACION",
-      detalle: `Usuario eliminado`,
+      tipo_auditoria: "BAJA",
+      detalle: "Eliminación de usuario",
     });
 
-    // Eliminar el registro de Usuario
-    await Usuario.destroy({
-      where: { id_usuario },
-    });
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Usuario eliminado exitosamente: ${id_usuario}`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Usuario eliminado exitosamente: ${targetUser.id_usuario}`);    
     res.status(200).json({ message: MESSAGES.SUCCESS.USUARIO.USUARIO_DELETED });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${req.originalUrl} - Error al eliminar usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(new Err.InternalServerError(MESSAGES.ERROR.GENERAL.UNKNOWN));
+    handleGeneralError(err, req, res, next, 'Error al eliminar usuario');  
   }
 };
 
@@ -1585,14 +859,7 @@ export const updateUserViews = async (
 
     res.status(200).json({ message: "Vistas actualizadas exitosamente" });
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al actualizar vistas del usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al actualizar vistas del usuario');    
   }
 };
 
@@ -1617,14 +884,8 @@ export const toggleUserViewStatus = async (
     res
       .status(200)
       .json({ message: "Estado de vistas actualizado exitosamente" });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al cambiar el estado de vistas del usuario: ${
-        err instanceof Error ? err.message : "Error desconocido"
-      }`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al cambiar el estado de vistas del usuario')    
   }
 };

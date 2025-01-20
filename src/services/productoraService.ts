@@ -1,20 +1,26 @@
 import { Op } from 'sequelize';
-import Productora from '../models/Productora';
-import ProductoraDocumento from '../models/ProductoraDocumento';
-import ProductoraISRC from '../models/ProductoraISRC';
-import ProductoraPremio from '../models/ProductoraPremio';
-import * as MESSAGES from '../services/messages';
-import * as Err from '../services/customErrors';
+import { Productora, ProductoraDocumento, ProductoraDocumentoTipo, ProductoraISRC, ProductoraMensaje, ProductoraPremio} from '../models'
 
-interface DateRange {
-  fechaInicio?: string;
-  fechaFin?: string;
-}
+import * as MESSAGES from '../utils/messages';
+import * as Err from '../utils/customErrors';
 
 type ProductoraISRCData = {
   productora_id: string;
   tipo: string;
   codigo_productora?: string;
+};
+
+// Servicio para crear o actualizar una productora
+export const createOrUpdateProductora = async (productoraData: any): Promise<Productora> => {
+  let productora = await Productora.findOne({ where: { cuit_cuil: productoraData.cuit_cuil } });
+
+  if (productora) {
+    await productora.update(productoraData);
+  } else {
+    productora = await Productora.create(productoraData);
+  }
+
+  return productora;
 };
 
 // Servicio para obtener todas las productoras
@@ -382,4 +388,59 @@ export const generarCodigosISRC = async (productoraId: string) => {
   }
 
   return productoraISRCs;
+};
+
+export const createProductoraMessage = async ({
+  usuarioId,
+  productoraId,
+  tipoMensaje,
+  mensaje,
+}: {
+  usuarioId: string;
+  productoraId: string;
+  tipoMensaje: string;
+  mensaje: string;
+}) => {
+  return ProductoraMensaje.create({
+    usuario_id: usuarioId,
+    productora_id: productoraId,
+    tipo_mensaje: tipoMensaje,
+    mensaje: mensaje,
+  });
+};
+
+export const getLastRejectionMessage = async (usuarioId: string) => {
+  return ProductoraMensaje.findOne({
+    where: {
+      usuario_id: usuarioId,
+      tipo_mensaje: "RECHAZO",
+    },
+    attributes: ["mensaje", "createdAt"],
+    order: [["createdAt", "DESC"]],
+  });
+};
+
+export const processDocuments = async (
+  userId: string,
+  productoraId: string,
+  documentos: any[]
+): Promise<void> => {
+  const tiposDocumentos = await ProductoraDocumentoTipo.findAll({
+    where: {
+      nombre_documento: documentos.map((doc) => doc.nombre_documento),
+    },
+  });
+
+  for (const doc of documentos) {
+    const tipoDocumento = tiposDocumentos.find((tipo) => tipo.nombre_documento === doc.nombre_documento);
+    if (!tipoDocumento) {
+      throw new Err.BadRequestError(`Tipo de documento no válido: ${doc.nombre_documento}`);
+    }
+    await ProductoraDocumento.create({
+      usuario_principal_id: userId,
+      productora_id: productoraId,
+      tipo_documento_id: tipoDocumento.id_documento_tipo,
+      ruta_archivo_documento: doc.ruta_archivo_documento,
+    });
+  }
 };

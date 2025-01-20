@@ -2,9 +2,8 @@ import { Router } from "express";
 import {
   availableDisableUser,
   blockOrUnblockUser,
-  changeUserRole,
   getUsers,
-  createAdminUser,
+  createSecondaryAdminUser,
   getRegistrosPendientes,
   approveApplication,
   rejectApplication,
@@ -20,7 +19,6 @@ import { celebrate, Segments } from "celebrate";
 import {
   availableDisableSchema,
   blockOrUnblockSchema,
-  changeRoleSchema,
   createAdminSchema,
   getRegistrosPendientesSchema,
   approveApplicationSchema,
@@ -32,7 +30,7 @@ import {
   updateUserViewsSchema,
   toggleUserViewStatusSchema,
   getUsuariosQuerySchema,
-} from "../services/validationSchemas";
+} from "../utils/validationSchemas";
 
 const router = Router();
 
@@ -111,41 +109,6 @@ router.put(
   authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.BODY]: blockOrUnblockSchema }),
   blockOrUnblockUser
-);
-
-// [PUT] Cambiar Rol de Usuario
-/**
- * @swagger
- * /usuarios/rol:
- *   put:
- *     summary: Cambiar el rol de un usuario.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ChangeUserRole'
- *     responses:
- *       200:
- *         description: Rol cambiado exitosamente.
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado para realizar esta acción.
- *       404:
- *         description: Usuario no encontrado.
- */
-router.put(
-  "/rol",
-  authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: changeRoleSchema }),
-  changeUserRole
 );
 
 // [GET] Obtener los usuarios según filtros
@@ -281,7 +244,7 @@ router.post(
   authenticate,
   authorizeRoles(["admin_principal", "productor_principal"]),
   celebrate({ [Segments.BODY]: createAdminSchema }),
-  createAdminUser
+  createSecondaryAdminUser
 );
 
 /**
@@ -320,7 +283,7 @@ router.get(
   "/aplicaciones/pendientes",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: getRegistrosPendientesSchema }),
+  celebrate({ [Segments.QUERY]: getRegistrosPendientesSchema }),
   getRegistrosPendientes
 );
 

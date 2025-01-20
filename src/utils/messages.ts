@@ -21,6 +21,7 @@ export const SUCCESS = {
   USUARIO: {
     USUARIO_UPDATED: 'Los datos del usuario fueron actualizados exitosamente.',
     USUARIO_DELETED: 'El usuario fue eliminado exitosamente.',
+    TYPE_REGISTER_FOUND: 'El tipo de registro fue encontrado existosamente.'
   },
   APPLICATION: {
     SAVED:
@@ -136,6 +137,7 @@ export const ERROR = {
     NO_PENDING_USERS: 'No hay registros pendientes de autorización',
     USER_NOT_CONFIRMED:
       'El mail está pendiente de verificación. Por favor, revise la Bandeja de Entrada y siga los pasos.',
+    NO_TEMP_PASSWORD: 'EL usuario creado no tiene una clave temporal asignada.'
   },
   USER: {
     NOT_FOUND: 'Usuario no encontrado.',
@@ -154,12 +156,13 @@ export const ERROR = {
       'EL usuario está deshabilitado. No se puede cambiar el estado de inicio de sesión.',
     NO_ASSOCIATED_PRODUCTORAS: 'Productoras no asociadas al usuario.',
     CANNOT_DELETE_SELF: 'No podés eliminar tu propia cuenta.',
+    CANNOT_DELETE_PRINCIPAL_WITH_PRODUCTORA: 'El usuario tiene productoras asociadas y no puede ser eliminado.',
     ROLE_NOT_ASSIGNED: 'El usuario autenticado no tiene un rol asignado.',
   },
-  ADMIN: {
-    NOT_FOUND: 'Administrador no encontrado.',
-    NOT_SINGLE_USER: 'Se encontró más de un administrador en la búsqueda realizada.',
-  },
+  MESSAGE: {
+    NO_SINGLE_FOUND: 'No se encontraron mensajes para el usuario solicitado.',
+    NO_REJECT: 'No se encontraron mensajes de rechazo para el usuario.',
+  },  
   DATABASE: {
     CONNECTION: 'Error de conexión con la base de datos.',
     GENERAL: 'Error de base de datos.',

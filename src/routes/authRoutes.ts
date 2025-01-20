@@ -5,13 +5,14 @@ import {
   registerSecondaryProductor,
   login,
   getRole,
-  selectProductora,
-  getProductoras,
+  selectAuthProductora,
+  getAuthProductoras,
   requestPasswordReset,
   validateEmail,
   completeProfile,
   resetPassword,
   getUser,
+  getAuthTipoRegistro,
   changeUserPassword,
   logout,
 } from "../controllers/authController";
@@ -25,7 +26,7 @@ import {
   completeProfileSchema,
   resetPasswordSchema,
   changePasswordSchema,
-} from "../services/validationSchemas";
+} from "../utils/validationSchemas";
 import { authenticate, authorizeRoles } from "../middlewares/auth";
 
 const router = express.Router();
@@ -159,7 +160,7 @@ router.post(
   "/productora/activa",
   authenticate,
   celebrate({ [Segments.BODY]: selectProductoraSchema }),
-  selectProductora
+  selectAuthProductora
 );
 
 // [GET] OBTENER TODAS LAS PRODUCTORAS
@@ -175,7 +176,7 @@ router.post(
  *       200:
  *         description: Productoras obtenidas exitosamente
  */
-router.get("/productora", authenticate, getProductoras);
+router.get("/productora", authenticate, getAuthProductoras);
 
 // [POST] SOLICITAR RESETEO DE CLAVE
 /**
@@ -300,6 +301,33 @@ router.post(
  *         description: Información del usuario obtenida exitosamente
  */
 router.get("/me", authenticate, getUser);
+
+/**
+ * @swagger
+ * /auth/registro/estado:
+ *   get:
+ *     summary: Obtener el tipo de registro del usuario autenticado.
+ *     description: Devuelve el tipo de registro actual del usuario autenticado y, si corresponde, el último mensaje de rechazo.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Tipo de registro obtenido exitosamente.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado.
+ *       404:
+ *         description: Usuario no encontrado o sin mensajes de rechazo.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.get(
+  "/registro/estado",
+  authenticate,
+  getAuthTipoRegistro
+);
 
 /**
  * @swagger

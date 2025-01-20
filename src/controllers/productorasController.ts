@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
-import * as MESSAGES from '../services/messages';
+import * as MESSAGES from '../utils/messages';
 import * as productoraService from '../services/productoraService';
 
 // Obtener una productora por ID

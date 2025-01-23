@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.127 - 23-01-2025
+## 🐛 Fixes
+
+- fix: already login
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.124
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.124 - 23-01-2025
 ## 🐛 Fixes
 

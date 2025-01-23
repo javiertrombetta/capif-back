@@ -55,7 +55,7 @@ export const login = async (
       logger.warn(
         `${req.method} ${req.originalUrl} - El usuario ${email} se encuentra con una sesión activa.`
       );
-      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
+      return next(new Err.ConflictError(MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN));
     }
 
     // Verificación de confirmación de cuenta
@@ -63,7 +63,7 @@ export const login = async (
       logger.warn(
         `${req.method} ${req.originalUrl} - El usuario ${email} no está confirmado.`
       );
-      return res.status(403).json({ message: MESSAGES.ERROR.REGISTER.USER_NOT_CONFIRMED });
+      return res.status(200).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
     }
 
     // Validación de contraseña

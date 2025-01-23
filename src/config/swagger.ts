@@ -62,7 +62,22 @@ export const setupSwagger = (app: Express) => {
       swaggerOptions: {
         docExpansion: 'none',
         tagsSorter: 'alpha',
-        operationsSorter: 'alpha',
+        operationsSorter: (a: any, b: any) => {
+          // Orden de los métodos HTTP
+          const order = ['post', 'get', 'put', 'delete'];
+          
+          // Obtener los índices de los métodos
+          const aMethodIndex = order.indexOf(a.get('method'));
+          const bMethodIndex = order.indexOf(b.get('method'));
+
+          // Si los métodos son diferentes, ordenar por el índice del método
+          if (aMethodIndex !== bMethodIndex) {
+            return aMethodIndex - bMethodIndex;
+          }
+
+          // Si los métodos son iguales, invertir el orden alfabético por ruta
+          return b.get('path').localeCompare(a.get('path'));
+        },
         requestInterceptor: (request: any) => {
           const token = localStorage.getItem('jwtToken');
           if (token) {

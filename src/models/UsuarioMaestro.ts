@@ -5,7 +5,7 @@ import Productora from './Productora';
 
 class UsuarioMaestro extends Model {
   public id_usuario_maestro!: string;
-  public usuario_registrante_id!: string;  
+  public usuario_id!: string;  
   public productora_id!: string | null;
   
   public readonly createdAt!: Date;
@@ -34,7 +34,7 @@ UsuarioMaestro.init(
         },
       },
     },
-    usuario_registrante_id: {
+    usuario_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
@@ -70,8 +70,8 @@ UsuarioMaestro.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['usuario_registrante_id'],
-        name: 'idx_usuario_maestro_registrante_id',
+        fields: ['usuario_id'],
+        name: 'idx_usuario_maestro_usuario_id',
       },
       {
         fields: ['productora_id'],

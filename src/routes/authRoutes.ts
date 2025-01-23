@@ -1,47 +1,125 @@
 import express from "express";
 import { celebrate, Segments } from "celebrate";
-import {
-  registerPrimaryProductor,
-  registerSecondaryProductor,
-  login,
-  getRole,
-  selectAuthProductora,
-  getAuthProductoras,
-  requestPasswordReset,
-  validateEmail,
-  completeProfile,
-  resetPassword,
-  getUser,
-  getAuthTipoRegistro,
-  changeUserPassword,
-  logout,
-} from "../controllers/authController";
-import {
-  registerPrimarySchema,
-  registerSecondarySchema,
-  loginSchema,
-  selectProductoraSchema,
-  requestPasswordSchema,
-  validateEmailSchema,
-  completeProfileSchema,
-  resetPasswordSchema,
-  changePasswordSchema,
-} from "../utils/validationSchemas";
 import { authenticate, authorizeRoles } from "../middlewares/auth";
 
+import {
+  registerSecondaryProductor,
+  sendApplication,
+  registerPrimaryProductor,
+  rejectApplication,
+  approveApplication,
+  selectAuthProductora,
+  logout,
+  login,
+  createSecondaryAdminUser,
+  getRegistrosPendientes,
+  validateEmail,
+  resetPassword,
+  requestPasswordReset,
+  deleteApplication,
+} from "../controllers/authController";
+
+import {
+  registerSecondarySchema,
+  sendApplicationSchema,
+  registerPrimarySchema,
+  rejectApplicationParamsSchema,
+  rejectApplicationBodySchema,
+  approveApplicationSchema,
+  selectProductoraSchema,
+  loginSchema,
+  createAdminSchema,
+  getRegistrosPendientesSchema,
+  validateEmailSchema,
+  resetPasswordSchema,
+  requestPasswordSchema,
+  deleteApplicationSchema,
+} from "../utils/validationSchemas";
+
 const router = express.Router();
+
 
 /**
  * @swagger
  * tags:
  *   name: Autenticación
- *   description: Gestión de la autenticación de los usuarios
+ *   description: Gestión de la autenticación de los usuarios y registros.
  */
 
-// [POST] REGISTRO PRIMARIO
+
+// [POST] CREAR PRODUCTOR SECUNDARIO
 /**
  * @swagger
- * /auth/registro/primario:
+ * /auth/prods/secondary:
+ *   post:
+ *     summary: Registro de usuario secundario
+ *     description: Registra un nuevo usuario secundario en el sistema.
+ *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterSecondary'
+ *     responses:
+ *       201:
+ *         description: Usuario registrado exitosamente
+ *       400:
+ *         description: Error en los datos proporcionados
+ */
+router.post(
+  "/prods/secondary",
+  authenticate,
+  authorizeRoles(["productor_principal"]),
+  celebrate({ [Segments.BODY]: registerSecondarySchema }),
+  registerSecondaryProductor
+);
+
+// [POST] Enviar la aplicación de un usuario
+/**
+ * @swagger
+ * /auth/prods/primary/step-two:
+ *   post:
+ *     summary: Enviar solicitud de aplicación.
+ *     description: Permite a un usuario enviar una solicitud de aplicación con sus datos y documentos asociados.
+ *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Datos de la solicitud de aplicación.
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SendApplication'
+ *     responses:
+ *       200:
+ *         description: Solicitud enviada exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado para realizar esta acción.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.post(
+  "/prods/primary/step-two",
+  authenticate,
+  authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.BODY]: sendApplicationSchema }),
+  sendApplication
+);
+
+// [POST] CREAR PRODUCTOR PRINCIPAL
+/**
+ * @swagger
+ * /auth/prods/primary/step-one:
  *   post:
  *     summary: Registro de un usuario primario
  *     description: Registra un nuevo usuario primario en el sistema.
@@ -59,38 +137,154 @@ const router = express.Router();
  *         description: Error en los datos proporcionados
  */
 router.post(
-  "/registro/primario",
+  "/prods/primary/step-one",
   celebrate({ [Segments.BODY]: registerPrimarySchema }),
   registerPrimaryProductor
 );
 
-// [POST] REGISTRO SECUNDARIO
+// [POST] Rechazar la aplicación de un usuario pendiente
 /**
  * @swagger
- * /auth/registro/secundario:
+ * /auth/prods/primary/{usuarioId}/reject:
  *   post:
- *     summary: Registro de usuario secundario
- *     description: Registra un nuevo usuario secundario en el sistema.
+ *     summary: Rechazar la solicitud de aplicación de un usuario.
+ *     description: Rechaza la solicitud de un usuario especificando el motivo del rechazo.
  *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: usuarioId
+ *         in: path
+ *         required: true
+ *         description: ID del usuario cuya solicitud de aplicación será rechazada
+ *         schema:
+ *           type: string
+ *           format: uuid
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/RegisterSecondary'
+ *             $ref: '#/components/schemas/RejectApplication'
  *     responses:
- *       201:
- *         description: Usuario registrado exitosamente
+ *       200:
+ *         description: Solicitud rechazada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Mensaje de éxito.
+ *                   example: 'Solicitud rechazada exitosamente.'
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado para realizar esta acción.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.post(
+  "/auth/prods/primary/:usuarioId/reject",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: rejectApplicationParamsSchema,
+    [Segments.BODY]: rejectApplicationBodySchema,
+  }),
+  rejectApplication
+);
+
+// [POST] Autorizar a un usuario pendiente
+/**
+ * @swagger
+ * /auth/prods/primary/{usuarioId}/authorize:
+ *   post:
+ *     summary: Aprobar la solicitud de aplicación de un usuario.
+ *     description: Autoriza la solicitud de un usuario, asigna una productora y actualiza los registros asociados.
+ *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: usuarioId
+ *         in: path
+ *         required: true
+ *         description: ID del usuario cuya aplicación será aprobada
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Aplicación aprobada exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado para realizar esta acción.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       409:
+ *         description: Productora ya existente para este usuario.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.post(
+  "/auth/prods/primary/:usuarioId/authorize",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.PARAMS]: approveApplicationSchema }),
+  approveApplication
+);
+
+// [POST] SELECCIONAR PRODUCTORA ACTIVA
+/**
+ * @swagger
+ * /auth/me/{productoraId}:
+ *   post:
+ *     summary: Seleccionar productora activa
+ *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: productoraId
+ *         in: path
+ *         required: true
+ *         description: ID de la productora activa
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Productora activa seleccionada exitosamente
  *       400:
  *         description: Error en los datos proporcionados
  */
 router.post(
-  "/registro/secundario",
+  "/auth/me/:productoraId",
   authenticate,
-  authorizeRoles(["admin_principal", "productor_principal"]),
-  celebrate({ [Segments.BODY]: registerSecondarySchema }),
-  registerSecondaryProductor
+  celebrate({ [Segments.PARAMS]: selectProductoraSchema }),
+  selectAuthProductora
 );
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Cerrar sesión
+ *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sesión cerrada exitosamente
+ */
+router.post("/logout", authenticate, logout);
 
 // [POST] LOGIN
 /**
@@ -114,100 +308,88 @@ router.post(
  */
 router.post("/login", celebrate({ [Segments.BODY]: loginSchema }), login);
 
-// [GET] OBTENER ROL DEL USUARIO
+// [POST] CREAR ADMINISTRADOR SECUNDARIO
 /**
  * @swagger
- * /auth/rol:
+ * /auth/admins/secondary:
+ *   post:
+ *     summary: Crear un nuevo usuario administrador.
+ *     tags: [Autenticación]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       description: Datos del administrador a crear.
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateAdminUser'
+ *     responses:
+ *       201:
+ *         description: Usuario administrador creado exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.post(
+  "/admins/secondary",
+  authenticate,
+  authorizeRoles(["admin_principal"]),
+  celebrate({ [Segments.BODY]: createAdminSchema }),
+  createSecondaryAdminUser
+);
+
+// [GET] Obtener todas las aplicaciones pendientes o de un usuario
+/**
+ * @swagger
+ * /auth/pending:
  *   get:
- *     summary: Obtener rol del usuario autenticado
+ *     summary: Obtener registros pendientes de uno o todos los usuarios.
+ *     description: Devuelve la información del registro pendiente para un usuario especificado o todos los usuarios con registro pendiente.
  *     tags: [Autenticación]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: productora_id
+ *         name: usuarioId
+ *         required: false
  *         schema:
  *           type: string
- *         description: ID de la productora activa (opcional para administradores)
+ *           format: uuid
+ *           description: ID del usuario. Si no se especifica, devuelve todos los usuarios pendientes.
+ *           example: '123e4567-e89b-12d3-a456-426614174000'
  *     responses:
  *       200:
- *         description: Rol obtenido exitosamente
+ *         description: Registros pendientes obtenidos exitosamente.
  *       400:
- *         description: Error en los datos proporcionados
+ *         description: Parámetros inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado para acceder a este recurso.
+ *       404:
+ *         description: Registro pendiente no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
  */
-router.get("/rol", authenticate, getRole);
-
-// [POST] SELECCIONAR PRODUCTORA ACTIVA
-/**
- * @swagger
- * /auth/productora/activa:
- *   post:
- *     summary: PENDIENTE Seleccionar productora activa
- *     tags: [Autenticación]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/SelectProductora'
- *     responses:
- *       200:
- *         description: Productora activa seleccionada exitosamente
- *       400:
- *         description: Error en los datos proporcionados
- */
-router.post(
-  "/productora/activa",
+router.get(
+  "/pending",
   authenticate,
-  celebrate({ [Segments.BODY]: selectProductoraSchema }),
-  selectAuthProductora
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.QUERY]: getRegistrosPendientesSchema }),
+  getRegistrosPendientes
 );
 
-// [GET] OBTENER TODAS LAS PRODUCTORAS
+// [PUT] VALIDAR EL TOKEN ENVIADO POR MAIL
 /**
  * @swagger
- * /auth/productora:
- *   get:
- *     summary: Obtener todas las productoras asociadas al usuario
- *     tags: [Autenticación]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Productoras obtenidas exitosamente
- */
-router.get("/productora", authenticate, getAuthProductoras);
-
-// [POST] SOLICITAR RESETEO DE CLAVE
-/**
- * @swagger
- * /auth/clave/mail/reseteo:
- *   post:
- *     summary: Solicitar restablecimiento de contraseña
- *     tags: [Autenticación]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/RequestPassword'
- *     responses:
- *       200:
- *         description: Solicitud de restablecimiento enviada exitosamente
- *       400:
- *         description: Datos inválidos
- */
-router.post(
-  "/clave/mail/reseteo",
-  celebrate({ [Segments.BODY]: requestPasswordSchema }),
-  requestPasswordReset
-);
-
-// [GET] VERIFICA QUE EL TOKEN SEA VALIDO
-/**
- * @swagger
- * /auth/clave/mail/validacion/{token}:
- *   get:
+ * /auth/validate/{token}:
+ *   put:
  *     summary: Validar correo electrónico
  *     tags: [Autenticación]
  *     parameters:
@@ -222,51 +404,16 @@ router.post(
  *         description: Correo validado exitosamente
  */
 router.put(
-  "/clave/mail/validacion/:token",
+  "/validate/:token",
   celebrate({ [Segments.PARAMS]: validateEmailSchema }),
   validateEmail
 );
 
-// [POST] COMPLETAR PERFIL
+// [PUT] CAMBIAR LA CLAVE A PARTIR DEL TOKEN RECIBIDO
 /**
  * @swagger
- * /auth/registro/completar:
- *   post:
- *     summary: Completar perfil del usuario autenticado
- *     description: Permite a un usuario autenticado completar su perfil con nombre, apellido y teléfono opcional.
- *     tags: [Autenticación]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CompleteProfile'
- *     responses:
- *       200:
- *         description: Perfil completado exitosamente. 
- *       400:
- *         description: Error en los datos proporcionados.
- *       401:
- *         description: Usuario no autenticado. 
- *       404:
- *         description: Usuario no encontrado o no verificado. 
- *       500:
- *         description: Error interno del servidor.
- */
-router.post(
-  "/registro/completar",
-  authenticate,
-  celebrate({ [Segments.BODY]: completeProfileSchema }),
-  completeProfile
-);
-
-// [POST] CAMBIAR LA CLAVE A PARTIR DEL TOKEN RECIBIDO
-/**
- * @swagger
- * /auth/clave/mail/cambio:
- *   post:
+ * /auth/password/reset:
+ *   put:
  *     summary: Restablecer contraseña
  *     tags: [Autenticación]
  *     requestBody:
@@ -281,92 +428,75 @@ router.post(
  *       400:
  *         description: Error en los datos proporcionados
  */
-router.post(
-  "/clave/mail/cambio",
+router.put(
+  "/password/reset",
   celebrate({ [Segments.BODY]: resetPasswordSchema }),
   resetPassword
 );
 
-// [GET] OBTENER DATOS DEL USUARIO Y SUS MAESTROS
+// [PUT] GENERAR TOKEN Y ENVIARLO POR EMAIL
 /**
  * @swagger
- * /auth/me:
- *   get:
- *     summary: Obtener información del usuario autenticado
+ * /auth/password/request-reset:
+ *   put:
+ *     summary: Solicitar restablecimiento de contraseña
  *     tags: [Autenticación]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Información del usuario obtenida exitosamente
- */
-router.get("/me", authenticate, getUser);
-
-/**
- * @swagger
- * /auth/registro/estado:
- *   get:
- *     summary: Obtener el tipo de registro del usuario autenticado.
- *     description: Devuelve el tipo de registro actual del usuario autenticado y, si corresponde, el último mensaje de rechazo.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Tipo de registro obtenido exitosamente.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado.
- *       404:
- *         description: Usuario no encontrado o sin mensajes de rechazo.
- *       500:
- *         description: Error interno del servidor.
- */
-router.get(
-  "/registro/estado",
-  authenticate,
-  getAuthTipoRegistro
-);
-
-/**
- * @swagger
- * /auth/clave/cambio:
- *   post:
- *     summary: Cambiar contraseña del usuario autenticado
- *     tags: [Autenticación]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ChangePassword'
+ *             $ref: '#/components/schemas/RequestPassword'
  *     responses:
  *       200:
- *         description: Contraseña cambiada exitosamente
+ *         description: Solicitud de restablecimiento enviada exitosamente
+ *       400:
+ *         description: Datos inválidos
  */
-router.post(
-  "/clave/cambio",
-  authenticate,
-  authorizeRoles(["admin", "productor"]),
-  celebrate({ [Segments.BODY]: changePasswordSchema }),
-  changeUserPassword
+router.put(
+  "/password/request-reset",
+  celebrate({ [Segments.BODY]: requestPasswordSchema }),
+  requestPasswordReset
 );
 
+// [DELETE] ELIMINAR UNA APLICACIÓN QUE NO SEA HABILITADO O DESHABILITADO
 /**
  * @swagger
- * /auth/logout:
- *   post:
- *     summary: Cerrar sesión
+ * /auth/pending/{usuarioId}:
+ *   delete:
+ *     summary: Eliminar una aplicación pendiente.
+ *     description: Elimina una aplicación con tipo_registro distinto a HABILITADO o DESHABILITADO, solo si el usuario es productor_principal. También elimina todas las entidades relacionadas como Productora, ProductoraDocumentos, ProductoraMensaje, UsuarioVistaMaestro, AuditoriaCambio y AuditoriaSesion.
  *     tags: [Autenticación]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: usuarioId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID del usuario cuya aplicación se eliminará.
  *     responses:
  *       200:
- *         description: Sesión cerrada exitosamente
+ *         description: Aplicación eliminada exitosamente.
+ *       400:
+ *         description: Parámetros inválidos o condiciones no cumplidas.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       404:
+ *         description: Aplicación o datos relacionados no encontrados.
+ *       500:
+ *         description: Error interno del servidor.
  */
-router.post("/logout", authenticate, logout);
+router.delete(
+  "/pending/:usuarioId",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: deleteApplicationSchema,
+  }),
+  deleteApplication
+);
 
 export default router;

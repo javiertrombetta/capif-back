@@ -19,7 +19,7 @@ class Productora extends Model {
   public telefono!: string;
   public nacionalidad!: string;
   public alias_cbu!: string;
-  public cbu!: string; 
+  public cbu!: string;
   public denominacion_sello!: string | null;
   public datos_adicionales!: string | null;  
   public fecha_alta!: Date | null;

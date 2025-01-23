@@ -5,6 +5,8 @@ import { findUsuarios } from './userService';
 import * as MESSAGES from "../utils/messages";
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { UsuarioResponse } from '../interfaces/UsuarioResponse';
+import { AuditoriaCambio, AuditoriaSesion, Productora, ProductoraDocumento, ProductoraMensaje, UsuarioVistaMaestro } from '../models';
+import { Op } from 'sequelize';
 
 /**
  * Obtiene y valida al usuario autenticado basado en el token.
@@ -92,5 +94,82 @@ export const getTargetUser = async (
   return userData.users[0];
 };
 
+// Eliminar la productora por ID
+export const deleteProductoraById = async (productoraId: string) => {
+  if (!productoraId) {
+    throw new Error("El ID de la productora es obligatorio.");
+  }
+
+  await Productora.destroy({
+    where: { id_productora: productoraId },
+  });
+
+  console.log(`Productora con ID ${productoraId} eliminada.`);
+};
+
+// Eliminar documentos asociados a la productora
+export const deleteProductoraDocumentos = async (productoraId: string) => {
+  if (!productoraId) {
+    throw new Error("El ID de la productora es obligatorio.");
+  }
+
+  await ProductoraDocumento.destroy({
+    where: { productora_id: productoraId },
+  });
+
+  console.log(
+    `Documentos asociados a la productora con ID ${productoraId} eliminados.`
+  );
+};
+
+// Eliminar mensajes asociados a la productora
+export const deleteProductoraMensajes = async (productoraId: string) => {
+  if (!productoraId) {
+    throw new Error("El ID de la productora es obligatorio.");
+  }
+
+  await ProductoraMensaje.destroy({
+    where: { productora_id: productoraId },
+  });
+
+  console.log(
+    `Mensajes asociados a la productora con ID ${productoraId} eliminados.`
+  );
+};
+
+// Eliminar vistas asociadas al usuario
+export const deleteUsuarioVistaMaestro = async (usuarioId: string) => {
+  if (!usuarioId) {
+    throw new Error("El ID del usuario es obligatorio.");
+  }
+
+  await UsuarioVistaMaestro.destroy({
+    where: { usuario_id: usuarioId },
+  });
+
+  console.log(`Vistas asociadas al usuario con ID ${usuarioId} eliminadas.`);
+};
+
+// Eliminar registros de auditoría asociados al usuario
+export const deleteAuditoriasByUsuario = async (usuarioId: string) => {
+  if (!usuarioId) {
+    throw new Error("El ID del usuario es obligatorio.");
+  }
+
+  await AuditoriaCambio.destroy({
+    where: {
+      [Op.or]: [
+        { usuario_originario_id: usuarioId },
+        { usuario_destino_id: usuarioId },
+      ],
+    },
+  });
+
+  await AuditoriaSesion.destroy({
+    where: { usuario_registrante_id: usuarioId },
+  });
+
+  console.log(`Auditorías asociadas al usuario con ID ${usuarioId} eliminadas.`);
+};
   
   

@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.130 - 23-01-2025
+## 🐛 Fixes
+
+- fix: getUser
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.127
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.127 - 23-01-2025
 ## 🐛 Fixes
 

@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.124 - 23-01-2025
+## 🐛 Fixes
+
+- fix: index of routes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.121
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.121 - 23-01-2025
 ## 🐛 Fixes
 

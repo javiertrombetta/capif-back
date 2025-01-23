@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.121 - 23-01-2025
+## 🐛 Fixes
+
+- fix: major changes in auth and usuarios
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.118
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.118 - 20-01-2025
 ## 🐛 Fixes
 

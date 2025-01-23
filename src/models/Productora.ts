@@ -81,12 +81,12 @@ Productora.init(
         isNumeric: {
           msg: 'El CUIT/CUIL debe contener solo números.',
         },
-        isValidCUIT(value: string) {
-          const validationResult = validateCUIT(value);
-          if (validationResult !== true) {
-            throw new Error(validationResult as string);
-          }
-        },
+        // isValidCUIT(value: string) {
+        //   const validationResult = validateCUIT(value);
+        //   if (validationResult !== true) {
+        //     throw new Error(validationResult as string);
+        //   }
+        // },
       },
     },
     email: {
@@ -232,13 +232,13 @@ Productora.init(
         isNumeric: {
           msg: 'El CUIT del representante debe contener solo números.',
         },
-        isValidCUIT(value: string | null) {
-          if (value === null || value === undefined) return;
-          const validationResult = validateCUIT(value);
-          if (validationResult !== true) {
-            throw new Error(validationResult as string);
-          }
-        },
+        // isValidCUIT(value: string | null) {
+        //   if (value === null || value === undefined) return;
+        //   const validationResult = validateCUIT(value);
+        //   if (validationResult !== true) {
+        //     throw new Error(validationResult as string);
+        //   }
+        // },
       },
     },
   },

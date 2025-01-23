@@ -446,16 +446,26 @@ export const getUser = async (
       isBloqueado: authUser.is_bloqueado,
     };
 
-    // Filtrar los datos de las vistas (sin id_vista)
-    const filteredVistas = authVistas.map((vistaMaestro) => ({
-      vista: vistaMaestro.vista?.nombre_vista || null,
-      vista_superior: vistaMaestro.vista?.nombre_vista_superior || null,
-    }));
+    // Filtrar los datos de los maestros eliminando los elementos sin datos válidos
+    const filteredMaestros = authMaestros
+      .filter(authMaestro => authMaestro.productora)
+      .map(authMaestro => ({
+        id: authMaestro.productora!.id_productora,
+        productora: authMaestro.productora!.nombre_productora,
+      }));
+
+    // Filtrar los datos de las vistas eliminando los elementos sin datos válidos
+    const filteredVistas = authVistas
+      .filter(vistaMaestro => vistaMaestro.vista)
+      .map(vistaMaestro => ({
+        vista: vistaMaestro.vista!.nombre_vista,
+        vista_superior: vistaMaestro.vista!.nombre_vista_superior,
+      }));
 
     // Respuesta filtrada
     res.status(200).json({
       usuario: filteredUser,
-      productoras: authMaestros,
+      productoras: filteredMaestros,
       vistas: filteredVistas,
     });
   } catch (err) {

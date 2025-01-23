@@ -21,6 +21,7 @@ if (env === 'development') {
 import { exec } from 'child_process';
 import sequelize from './sequelize';
 import initSeed from '../../seeders/init.seed';
+import usersSeed from '../../seeders/usuarios.seed';
 import logger from '../logger';
 
 const runSpecificMigration = (migrationFile: string): Promise<void> => {
@@ -70,7 +71,9 @@ const runSeeders = async () => {
   try {
     console.log('Ejecutando seeders...');
     await initSeed();
-    logger.info('Seeders ejecutados con éxito.');
+    logger.info('Seeder de carga de tablas tipo ejecutado con éxito.');
+    await usersSeed();
+    logger.info('Seeder de carga de usuarios ejecutado con éxito.');
   } catch (error) {
     logger.error('Error al ejecutar los seeders:', error);
     throw error;
@@ -82,11 +85,11 @@ const initDatabase = async () => {
     await sequelize.authenticate();
     logger.info('Conexión exitosa a la base de datos');
 
-    if (env === 'development') {      
+    if (env === 'development') {
       await sequelize.sync();
       console.log('Tablas sincronizadas en desarrollo.');
       await runSeeders();
-      console.log('Seed ejecutado correctamente.');      
+      console.log('Seed ejecutado correctamente.');
     } else if (env === 'production') {
       const tablesExist = await checkIfTablesExist();
       if (!tablesExist) {
@@ -96,13 +99,15 @@ const initDatabase = async () => {
         console.log('Migraciones ya aplicadas. No se requieren nuevas migraciones.');
       }
     }
+
   } catch (err) {
     logger.error('Error al inicializar la base de datos:', err);
-    process.exit(1);
+    return;
+    
   } finally {
     await sequelize.close();
-    logger.info('Conexión cerrada en la inicialización de Postgres.');
-    process.exit(0);
+    logger.info('Conexión cerrada correctamente en la inicialización de Postgres.');
+    return;
   }
 };
 

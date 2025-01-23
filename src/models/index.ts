@@ -535,13 +535,13 @@ Usuario.hasMany(ProductoraMensaje, {
 // UsuarioMaestro
 
 UsuarioMaestro.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
+  foreignKey: 'usuario_id',
   as: 'usuarioRegistrante',
   onDelete: 'CASCADE',
 });
 
 Usuario.hasMany(UsuarioMaestro, {
-  foreignKey: 'usuario_registrante_id',
+  foreignKey: 'usuario_id',
   as: 'usuariosRegistrantes',
   onDelete: 'CASCADE',
 });

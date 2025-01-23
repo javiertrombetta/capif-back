@@ -10,12 +10,17 @@ import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 import { sendEmailWithErrorHandling } from "../services/emailService";
 import {
   createUser,
-  createUsuarioMaestro,  
+  createUsuarioMaestro,
   assignVistasToUser,
   findExistingUsuario,
+  findUsuarios,
+  validateUserRegistrationState,
+  updateUserData,
+  linkUserToProductora,
+  updateUserRegistrationState,
 } from "../services/userService";
-import { getAuthenticatedUser, getTargetUser } from "../services/authService";
-import { getLastRejectionMessage } from "../services/productoraService";
+import { deleteAuditoriasByUsuario, deleteProductoraById, deleteProductoraDocumentos, deleteProductoraMensajes, deleteUsuarioVistaMaestro, getAuthenticatedUser, getTargetUser } from "../services/authService";
+import { createOrUpdateProductora, createProductoraMessage, generarCodigosISRC, getLastRejectionMessage, processDocuments } from "../services/productoraService";
 import { handleGeneralError } from "../services/errorService";
 import {
   hashPassword,
@@ -27,6 +32,205 @@ import { actualizarFechaFinSesion, registrarAuditoria, registrarSesion } from ".
 import * as Err from "../utils/customErrors";
 import * as MESSAGES from "../utils/messages";
 
+
+// LOGIN
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para iniciar sesión`);
+
+    const { email, password } = req.body;
+
+    // Consulta para obtener el usuario y los maestros asociados
+    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ email }, req);    
+    
+    // Verificación de sesión existente
+    const existingToken = req.cookies["auth_token"];
+    const decodedToken = verifyToken(existingToken, process.env.JWT_SECRET!);
+
+    if (decodedToken && decodedToken.id === targetUser.id_usuario) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario ${email} se encuentra con una sesión activa.`
+      );
+      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
+    }
+
+    // Verificación de confirmación de cuenta
+    if (targetUser.tipo_registro === "NUEVO") {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario ${email} no está confirmado.`
+      );
+      return res.status(403).json({ message: MESSAGES.ERROR.REGISTER.USER_NOT_CONFIRMED });
+    }
+
+    // Validación de contraseña
+    const isPasswordValid = await verifyPassword(password, targetUser.clave);
+    const MAX_LOGIN_ATTEMPTS = parseInt( process.env.MAX_LOGIN_ATTEMPTS || "5", 10);
+
+    if (!isPasswordValid) {
+      // Incrementa intentos fallidos
+      targetUser.intentos_fallidos += 1;
+
+      // Si los intentos fallidos alcanzan el límite, bloquea el usuario
+      if (targetUser.intentos_fallidos >= MAX_LOGIN_ATTEMPTS) {
+        targetUser.is_bloqueado = true;
+        logger.warn(
+          `${req.method} ${req.originalUrl} - El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos`
+        );
+
+        // Registro en auditoría de bloqueo de usuario
+        await registrarAuditoria({
+          usuario_originario_id: targetUser.id_usuario,
+          usuario_destino_id: targetUser.id_usuario,
+          modelo: "Usuario",
+          tipo_auditoria: "ERROR",
+          detalle: `Bloqueo después de ${MAX_LOGIN_ATTEMPTS} intentos fallidos`,
+        });
+      }
+
+      // Guardar cambios en intentos fallidos y estado de habilitación del usuario
+      await targetUser.save();
+
+      // Registro de auditoría para intento de inicio de sesión fallido
+      if (!targetUser.is_bloqueado) {
+        await registrarAuditoria({
+          usuario_originario_id: targetUser.id_usuario,
+          usuario_destino_id: targetUser.id_usuario,
+          modelo: "Usuario",
+          tipo_auditoria: "ERROR",
+          detalle: `Intento ${targetUser.intentos_fallidos} fallido de inicio de sesión.`,
+        });
+      }
+
+      // Registra en el log y lanza un error de autenticación
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Contraseña incorrecta para el usuario: ${email}. Intentos fallidos: ${targetUser.intentos_fallidos}`
+      );
+
+      throw new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.PASSWORD_INCORRECT);
+    }
+
+    targetUser.intentos_fallidos = 0;
+    await targetUser.save();
+
+    // Preparar los datos de las productoras
+    const productoras: { id: string; nombre: string }[] = [];
+
+    targetMaestros.forEach((maestro) => {
+      if (maestro.productora && maestro.productora.nombre_productora) {
+        productoras.push({
+          id: maestro.productora.id_productora,
+          nombre: maestro.productora.nombre_productora,
+        });
+      }
+    });
+
+    // Generar un token básico con `userId`
+    const token = jwt.sign(
+      { id: targetUser.id_usuario },
+      process.env.JWT_SECRET!,
+      { expiresIn: process.env.JWT_EXPIRATION || "1h" }
+    );
+
+    res.cookie("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000", 10),
+    });
+
+    // Registro de auditoría para acceso exitoso
+    await registrarAuditoria({
+      usuario_originario_id: targetUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
+      modelo: "Usuario",
+      tipo_auditoria: "AUTH",
+      detalle: "Inicio de sesión exitoso",
+    });
+
+    // Registro de sesión
+    await registrarSesion({
+      usuarioRegistranteId: targetUser.id_usuario,
+      ipOrigen: req.ip || "IP desconocida",
+      navegador: req.headers["user-agent"] || "Navegador desconocido",
+      fechaInicioSesion: new Date(),
+    });
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Inicio de sesión exitoso para el usuario: ${email}`
+    );
+
+    return res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGIN, productoras });
+
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error en el inicio de sesión');    
+  }
+};
+
+// CERRAR SESIÓN
+export const logout = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const authToken = req.cookies["auth_token"];
+    const activeSesion = req.cookies["active_sesion"];
+
+    if (!authToken) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - No se encontró cookie de autenticación.`
+      );
+      return next(new Err.NotFoundError(MESSAGES.ERROR.VALIDATION.NO_COOKIE_FOUND));
+    }
+
+    // Limpiar la cookie de autenticación
+    res.clearCookie("auth_token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    // Limpiar la cookie de sesión activa
+    if (activeSesion) {
+      res.clearCookie("active_sesion", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
+      logger.info(
+        `${req.method} ${req.originalUrl} - Cookie 'active_sesion' eliminada correctamente.`
+      );
+    }
+
+    // Obtener el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Logout exitoso para el usuario ID ${authUser.id_usuario}`
+    );
+
+    // Registrar auditoría para el cierre de sesión
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: authUser.id_usuario,
+      modelo: "Usuario",
+      tipo_auditoria: "AUTH",
+      detalle: "Logout exitoso",
+    });
+
+    // Actualizar la fecha de fin de sesión
+    await actualizarFechaFinSesion(authUser.id_usuario);
+
+    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGOUT });
+  } catch (err) {
+    handleGeneralError(err, req, res, next, "Error durante el proceso de logout");
+  }
+};
 
 // REGISTER PRODUCTOR 'PRIMARIO'
 export const registerPrimaryProductor = async (
@@ -197,7 +401,7 @@ export const registerSecondaryProductor = async (
 
     // Crear el registro en UsuarioMaestro
     const newUsuarioMaestro = await createUsuarioMaestro({
-      usuario_registrante_id: newUser.id_usuario,
+      usuario_id: newUser.id_usuario,
       productora_id: productora.id_productora,
     });
 
@@ -290,177 +494,6 @@ export const registerSecondaryProductor = async (
   }
 };
 
-// LOGIN
-export const login = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para iniciar sesión`);
-
-    const { email, password } = req.body;
-
-    // Consulta para obtener el usuario y los maestros asociados
-    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ email }, req);    
-    
-    // Verificación de sesión existente
-    const existingToken = req.cookies["auth_token"];
-    const decodedToken = verifyToken(existingToken, process.env.JWT_SECRET!);
-
-    if (decodedToken && decodedToken.id === targetUser.id_usuario) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario ${email} se encuentra con una sesión activa.`
-      );
-      return res.status(400).json({ message: MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN });
-    }
-
-    // Verificación de confirmación de cuenta
-    if (targetUser.tipo_registro === "NUEVO") {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - El usuario ${email} no está confirmado.`
-      );
-      return res.status(403).json({ message: MESSAGES.ERROR.REGISTER.USER_NOT_CONFIRMED });
-    }
-
-    // Validación de contraseña
-    const isPasswordValid = await verifyPassword(password, targetUser.clave);
-    const MAX_LOGIN_ATTEMPTS = parseInt( process.env.MAX_LOGIN_ATTEMPTS || "5", 10);
-
-    if (!isPasswordValid) {
-      // Incrementa intentos fallidos
-      targetUser.intentos_fallidos += 1;
-
-      // Si los intentos fallidos alcanzan el límite, bloquea el usuario
-      if (targetUser.intentos_fallidos >= MAX_LOGIN_ATTEMPTS) {
-        targetUser.is_bloqueado = true;
-        logger.warn(
-          `${req.method} ${req.originalUrl} - El usuario ${email} ha sido bloqueado por superar el máximo de intentos fallidos`
-        );
-
-        // Registro en auditoría de bloqueo de usuario
-        await registrarAuditoria({
-          usuario_originario_id: targetUser.id_usuario,
-          usuario_destino_id: targetUser.id_usuario,
-          modelo: "Usuario",
-          tipo_auditoria: "ERROR",
-          detalle: `Bloqueo después de ${MAX_LOGIN_ATTEMPTS} intentos fallidos`,
-        });
-      }
-
-      // Guardar cambios en intentos fallidos y estado de habilitación del usuario
-      await targetUser.save();
-
-      // Registro de auditoría para intento de inicio de sesión fallido
-      if (!targetUser.is_bloqueado) {
-        await registrarAuditoria({
-          usuario_originario_id: targetUser.id_usuario,
-          usuario_destino_id: targetUser.id_usuario,
-          modelo: "Usuario",
-          tipo_auditoria: "ERROR",
-          detalle: `Intento ${targetUser.intentos_fallidos} fallido de inicio de sesión.`,
-        });
-      }
-
-      // Registra en el log y lanza un error de autenticación
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Intento de inicio de sesión fallido. Contraseña incorrecta para el usuario: ${email}. Intentos fallidos: ${targetUser.intentos_fallidos}`
-      );
-
-      throw new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.PASSWORD_INCORRECT);
-    }
-
-    targetUser.intentos_fallidos = 0;
-    await targetUser.save();
-
-    // Preparar los datos de las productoras
-    const productoras: { id: string; nombre: string }[] = [];
-
-    targetMaestros.forEach((maestro) => {
-      if (maestro.productora && maestro.productora.nombre_productora) {
-        productoras.push({
-          id: maestro.productora.id_productora,
-          nombre: maestro.productora.nombre_productora,
-        });
-      }
-    });
-
-    // Generar un token básico con `userId`
-    const token = jwt.sign(
-      { id: targetUser.id_usuario },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRATION || "1h" }
-    );
-
-    res.cookie("auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000", 10),
-    });
-
-    // Registro de auditoría para acceso exitoso
-    await registrarAuditoria({
-      usuario_originario_id: targetUser.id_usuario,
-      usuario_destino_id: targetUser.id_usuario,
-      modelo: "Usuario",
-      tipo_auditoria: "AUTH",
-      detalle: "Inicio de sesión exitoso",
-    });
-
-    // Registro de sesión
-    await registrarSesion({
-      usuarioRegistranteId: targetUser.id_usuario,
-      ipOrigen: req.ip || "IP desconocida",
-      navegador: req.headers["user-agent"] || "Navegador desconocido",
-      fechaInicioSesion: new Date(),
-    });
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Inicio de sesión exitoso para el usuario: ${email}`
-    );
-
-    return res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGIN, productoras });
-
-  } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error en el inicio de sesión');    
-  }
-};
-
-// OBTENER EL ROL DEL USUARIO AUTENTICADO
-export const getRole = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    logger.info(`${req.method} ${req.originalUrl} - Solicitud para obtener el rol del usuario`);
-
-    // Buscar información del usuario autenticado usando su id_usuario
-    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
-
-    // Comprobar que el rol esté presente
-    if (!authUser.rol) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario sin rol asignado`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED)
-      );
-    }
-
-    const roleName = authUser.rol.nombre_rol;   
-
-    logger.info(
-      `${req.method} ${req.originalUrl} - Se obtuvo el rol del usuario ID ${authUser.id_usuario}: ${roleName}`
-    );
-
-    res.status(200).json({ role: roleName });
-
-  } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error al obtener el rol del usuario');    
-  }
-};
-
 // SELECCIONAR PRODUCTORA ACTIVA Y CARGAR LA COOKIE CORRESPONDIENTE
 export const selectAuthProductora = async (
   req: AuthenticatedRequest,
@@ -468,7 +501,7 @@ export const selectAuthProductora = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { productoraId } = req.body;
+    const { productoraId } = req.params;
 
     // Verifica el usuario autenticado y obtiene sus datos
     const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
@@ -708,54 +741,6 @@ export const validateEmail = async (
   }
 };
 
-// COMPLETAR EL PERFIL LUEGO DE VERIFICADO EL MAIL
-export const completeProfile = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    logger.info(`${req.method} ${req.originalUrl} - Solicitud para completar el perfil del usuario`);
-
-    const { nombre, apellido, telefono } = req.body;
-    
-    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
-
-    if (!authUser || authUser.tipo_registro !== "CONFIRMADO") {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario no verificado: ${authUser.id_usuario}`
-      );
-      return next(
-        new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.STATE_INVALID)
-      );
-    }
-
-    // Actualizar perfil
-    authUser.nombre = nombre;
-    authUser.apellido = apellido;
-    authUser.telefono = telefono || null;
-    authUser.tipo_registro = "HABILITADO";
-    await authUser.save();
-
-    // Registrar auditoría
-    await registrarAuditoria({
-      usuario_originario_id: authUser.id_usuario,
-      usuario_destino_id: authUser.id_usuario,
-      modelo: "Usuario",
-      tipo_auditoria: "CAMBIO",
-      detalle: `Perfil completado para el usuario con ID ${authUser.id_usuario}`,
-    });
-
-    logger.info(`${req.method} ${req.originalUrl} - Perfil completado exitosamente para el usuario: ${authUser.email}`);
-    res
-      .status(200)
-      .json({ message: MESSAGES.SUCCESS.AUTH.REGISTER_PRIMARY_SECOND });
-
-  } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error al completar el perfil del usuario');   
-  }
-};
-
 // CAMBIAR CLAVE UNA VEZ VALIDADO EL MAIL
 export const resetPassword = async (
   req: Request,
@@ -834,46 +819,6 @@ export const resetPassword = async (
   }
 };
 
-// OBTENER LOS DATOS DEL USUARIO
-export const getUser = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para obtener los datos del usuario`);
-
-    // Verifica el usuario autenticado
-    const { user: authUser, maestros: authMaestros, vistas: authVistas }: UsuarioResponse = await getAuthenticatedUser(req);
-
-    // Filtrar los datos sensibles del usuario
-    const filteredUser = {
-      id_usuario: authUser.id_usuario,
-      rol: authUser.rol?.nombre_rol || null,
-      tipo_registro: authUser.tipo_registro,
-      email: authUser.email,
-      nombre: authUser.nombre,
-      apellido: authUser.apellido,
-      telefono: authUser.telefono,
-    };
-
-    // Filtrar los datos de las vistas (sin id_vista)
-    const filteredVistas = authVistas.map((vistaMaestro) => ({
-      nombre_vista: vistaMaestro.vista?.nombre_vista || null,
-      nombre_vista_superior: vistaMaestro.vista?.nombre_vista_superior || null,
-    }));
-
-    // Respuesta filtrada
-    res.status(200).json({
-      user: filteredUser,
-      maestros: authMaestros, // Si no necesitas filtrar los maestros, se pasa completo
-      vistas: filteredVistas,
-    });
-  } catch (err) {
-    handleGeneralError(err, req, res, next, "Error al obtener los datos del usuario");
-  }
-};
-
 // OBTENER EL TIPO DE REGISTRO DE UN USUARIO
 export const getAuthTipoRegistro = async (
   req: Request,
@@ -922,143 +867,610 @@ export const getAuthTipoRegistro = async (
   }
 };
 
-// CAMBIAR LA CLAVE DE UN USUARIO
-export const changeUserPassword = async (
+
+
+// OBTENER TODOS LOS REGISTROS PENDIENTES O EL DE UN USUARIO
+export const getRegistrosPendientes = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud recibida para obtener registro(s) pendiente(s).`
+    );
+
+    const { usuarioId } = req.query;;
+
+    if (usuarioId) {
+      // Obtener datos del usuario pasado como parámetro
+      const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ userId: usuarioId as string }, req);
+
+      if (targetUser.tipo_registro !== "ENVIADO") {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - Usuario no tiene registro pendiente.`
+        );
+        return next(
+          new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS)
+        );
+      }
+
+      if (targetMaestros.length > 0) {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
+        );
+        return next(
+          new Err.NotFoundError(
+            MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
+          )
+        );
+      }
+
+      const productoras = targetMaestros
+        .filter((maestro) => maestro.productora)
+        .map((maestro) => maestro.productora);
+
+      if (productoras.length === 0) {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - No se encontraron productoras asociadas para el usuario.`
+        );
+        return next(
+          new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS)
+        );
+      }
+
+      return res.status(200).json({
+        message: MESSAGES.SUCCESS.APPLICATION.SAVED,
+        data: { targetUser, productoras },
+      });
+    } else {
+      // Obtener datos de todos los usuarios pendientes
+      const pendingUsersData = await findUsuarios({ tipo_registro: "ENVIADO" });
+
+      if (!pendingUsersData || !pendingUsersData.users.length) {
+        logger.info(
+          `${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes.`
+        );
+        return next(
+          new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS)
+        );
+      }
+
+      const usersWithSingleMaestro = pendingUsersData.users.filter(
+        (user) => user.hasSingleMaestro
+      );
+
+      if (usersWithSingleMaestro.length === 0) {
+        logger.info(
+          `${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes con un único maestro asociado.`
+        );
+        return next(
+          new Err.NotFoundError(
+            MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
+          )
+        );
+      }
+
+      logger.info(
+        `${req.method} ${req.originalUrl} - ${usersWithSingleMaestro.length} usuarios pendientes encontrados.`
+      );
+
+      return res.status(200).json({
+        message: MESSAGES.SUCCESS.APPLICATION.FOUND,
+        data: usersWithSingleMaestro,
+      });
+    }
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al obtener los registros pendientes');    
+  }
+};
+
+// APROBAR UNA APLICACIÓN
+export const approveApplication = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud para autorizar usuario`
+    );
+
+    const { usuarioId } = req.params;
+
+    // Verifica el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    // Verifica el usuario pasado por parámetro
+    const { user: targetUser, maestros: targetMaestros, hasSingleMaestro: hasTargetSingleMaestro }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);
+
+    // Validar si el usuario ya está aprobado
+    if (targetUser.tipo_registro === "HABILITADO") {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Usuario ya aprobado: ${targetUser.email}`
+      );
+      return next(
+        new Err.ConflictError(
+          `El usuario con ID: ${usuarioId} ya está aprobado y no puede ser procesado nuevamente.`
+        )
+      );
+    }
+
+    if (!hasTargetSingleMaestro) {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
+        );
+        return next(
+          new Err.NotFoundError(
+            MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
+          )
+        );
+      }
+
+    const productora = targetMaestros[0].productora;
+
+    if (!productora) {
+      logger.error(
+        `${req.method} ${req.originalUrl} - Datos de productora no encontrados.`
+      );
+      return next(new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND));
+    }
+    // Establecer la fecha de hoy para fecha_alta en Productora
+    productora.fecha_alta = new Date();
+
+    // Llamar al servicio para generar códigos ISRC
+    const productoraId = productora.id_productora;
+    const isrcs = await generarCodigosISRC(productoraId);
+
+    // Actualizar el tipo_registro del usuario a HABILITADO
+    await targetUser.update({ tipo_registro: "HABILITADO" });
+    
+    // Crear relaciones en UsuarioVistasMaestro  
+    await assignVistasToUser(targetUser.id_usuario, targetUser.rol_id);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Relaciones de vistas completas creadas para el Productor Principal: ${targetUser.email}`
+    );
+
+    // Crear las auditorías correspondientes
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
+      modelo: "Productora",
+      tipo_auditoria: "CAMBIO",
+      detalle: `Autorización de ${productora.nombre_productora} en Productora (${productora.id_productora})`,
+    });
+
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
+      modelo: "ProductoraISRC",
+      tipo_auditoria: "ALTA",
+      detalle: `Generación de códigos ISRC para la Productora: (${productora.id_productora})`,
+    });
+
+    // Enviar el correo de notificación al usuario
+    await sendEmailWithErrorHandling(
+      {
+        to: targetUser.email,
+        subject: "Registro Exitoso como Productor Principal",
+        html: MESSAGES.EMAIL_BODY.PRODUCTOR_PRINCIPAL_NOTIFICATION(
+          productora.nombre_productora,
+          productora.cuit_cuil,
+          productora.cbu,
+          productora.alias_cbu
+        ),
+        successLog: `Usuario autorizado y correo de notificación enviado a ${targetUser.email}.`,
+        errorLog: `Error al enviar el correo de aprobación de aplicación a ${targetUser.email}.`,
+      }, req, res, next);
+
+    // Enviar respuesta exitosa al cliente
+    return res.status(200).json({
+      message: MESSAGES.SUCCESS.AUTH.AUTHORIZED,
+      data: isrcs,
+    });
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al autorizar usuario');    
+  }
+};
+
+// CREAR UN USUARIO ADMIN
+export const createSecondaryAdminUser = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para cambiar la clave del usuario`);
+    const { email, nombre, apellido, telefono } = req.body;
 
-    const { id_usuario, newPassword, confirmPassword } = req.body;
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para crear un usuario`);
 
-    // Validar contraseñas
-    if (!newPassword || !confirmPassword || newPassword !== confirmPassword) {
-      logger.warn(`${req.method} ${req.originalUrl} - Las contraseñas no coinciden.`);
-      return next(new Err.ConflictError(MESSAGES.ERROR.PASSWORD.CONFIRMATION_MISMATCH));
-    }
-
-    // Obtener información del usuario autenticado
     const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    if (!authUser.rol) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado.`);
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED));
-    }
+    // Verificar si existe el usuario
+    const existingUser = await findExistingUsuario({ email });
+    if (existingUser) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario ya registrado: ${existingUser.email}`);
+      return next(new Err.ConflictError(MESSAGES.ERROR.REGISTER.ALREADY_REGISTERED));
+    }    
 
-    // Determinar si el cambio es para el propio usuario o para otro
-    const isSelfUpdate = !id_usuario || req.userId === id_usuario;
+    const { newUser, tempPassword } = await createUser({
+      email,
+      nombre,
+      apellido,
+      telefono,
+      rolNombre: 'admin_secundario',
+    });
 
-    if (!isSelfUpdate) {
-      // Validar que el usuario tenga permisos para cambiar la clave de otros
-      if (!["admin_principal", "admin_secundario"].includes(authUser.rol.nombre_rol)) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Usuario con rol no autorizado para cambiar la clave de otro usuario: ${authUser.rol.nombre_rol}.`
-        );
-        return next(new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_PASSWORD));
-      }
-    }
-
-    // Determinar el usuario objetivo
-    const targetUserId = isSelfUpdate ? req.userId : id_usuario;
-
-    // Buscar al usuario objetivo
-    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: targetUserId }, req);
-
-    if (!targetUser) {
+    if (!tempPassword) {
       logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario objetivo no encontrado: ${targetUserId}`
+        `${req.method} ${req.originalUrl} - No se creó la clave temporal para el Administrador Secundario: ${newUser.id_usuario}`
       );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
+      return next(new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_TEMP_PASSWORD));
     }
 
-    // Cifrar la nueva contraseña
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    // Crear relaciones en UsuarioAccesoMaestro
+    await assignVistasToUser(newUser.id_usuario, newUser.rol_id);
 
-    // Actualizar la clave del usuario
-    targetUser.clave = hashedPassword;
-    await targetUser.save();
+    logger.info(
+      `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el rol admin_secundario: ${newUser.email}`
+    );
 
-    // Registrar auditoría
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: newUser.id_usuario,
+      modelo: "Usuario",
+      tipo_auditoria: "ALTA",
+      detalle: "Creación de administrador secundario.",
+    });
+
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: newUser.id_usuario,
+      modelo: "UsuarioVistaMaestro",
+      tipo_auditoria: "ALTA",
+      detalle: `Generación de vistas para el usuario con ID: (${newUser.id_usuario})`,
+    });
+
+    // Enviar correo con contraseña temporal
+    const emailBody = MESSAGES.EMAIL_BODY.TEMP_PASSWORD(tempPassword);
+    await sendEmailWithErrorHandling(
+      {
+        to: newUser.email,
+        subject: "Registro exitoso - Contraseña temporal",
+        html: emailBody,
+        successLog: `Correo enviado a ${newUser.email} con la contraseña temporal.`,
+        errorLog: `Error al enviar el correo al nuevo administrador secundario: ${newUser.email}.`,
+      }, req, res, next);
+
+    // Responder con éxito
+    res.status(201).json({
+      message: MESSAGES.SUCCESS.AUTH.REGISTER_SECONDARY,
+      userId: newUser.id_usuario,
+
+    });
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al crear el administrador secundario');
+  }
+};
+
+export const getUserBlockStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud recibida para verificar el estado de bloqueo del usuario autenticado.`
+    );
+
+    // Verifica el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);   
+
+    // Respuesta con el estado de bloqueo
+    res.status(200).json({ isBlocked: authUser.is_bloqueado });
+
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al obtener el estado de bloqueo del usuario');    
+  }
+};
+
+export const deleteApplication = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { usuarioId } = req.params;
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud para eliminar una aplicación con ID: ${usuarioId}.`
+    );
+
+    // Buscar el usuario al que se le cambiará el estado mediante findUsuario
+    const { user: targetUser, maestros: targetMaestros, hasSingleMaestro: targetHasSingleMaestros }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);
+
+    // Verificar condiciones
+    if (targetUser.tipo_registro === "HABILITADO" || targetUser.tipo_registro === "DESHABILITADO") {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Usuario con tipo_registro no permitido para eliminar: ${targetUser.tipo_registro}.`
+      );
+      throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.STATE_INVALID);
+    }
+
+    if (!targetHasSingleMaestros) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario tiene más de un maestro asociado.`
+      );
+      throw new Err.ConflictError(MESSAGES.ERROR.USER.MULTIPLE_MAESTRO_RECORDS);
+    }
+
+    if (!targetMaestros[0].productora_id) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Productora no encontrada.`
+      );
+      throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.PRODUCTORA_ID_REQUIRED);
+    }
+
+    if (!targetUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - El usuario no tiene un rol asignado`);
+      return next(
+        new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED)
+      );
+    }
+
+    if (targetUser.rol.nombre_rol !== "productor_principal") {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario no tiene el rol requerido para esta acción: ${targetUser.rol.nombre_rol}.`
+      );
+      throw new Err.ForbiddenError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
+    }
+
+    // Eliminar entidades relacionadas
+    await deleteProductoraById(targetMaestros[0].productora_id);
+    await deleteProductoraDocumentos(targetMaestros[0].productora_id);
+    await deleteProductoraMensajes(targetMaestros[0].productora_id);
+    await deleteUsuarioVistaMaestro(targetUser.id_usuario);
+    await deleteAuditoriasByUsuario(targetUser.id_usuario);
+
+    // Eliminar el usuario
+    await targetUser.destroy();
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Aplicación eliminada exitosamente para el usuario con ID: ${targetUser.id_usuario}.`
+    );
+
+    res.status(200).json({ message: "Aplicación eliminada exitosamente." });
+
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al eliminar la aplicación de un productor principal');
+  }
+};
+
+// RECHAZAR UNA APLICACION
+export const rejectApplication = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    logger.info(
+      `${req.method} ${req.originalUrl} - Solicitud para rechazar aplicación`
+    );
+
+    const { usuarioId } = req.params;
+    const { comentario } = req.body;
+
+    // Verifica el usuario autenticado
+    const { user: authUser } = await getAuthenticatedUser(req);
+
+    // Buscar el usuario pasado por parámetro
+    const { user: targetUser, maestros: targetMaestros, hasSingleMaestro: hasTargetSingleMaestro }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);
+
+    // Verificar que el comentario está presente en el body
+    if (!comentario || comentario.trim() === "") {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Comentario de rechazo no proporcionado.`
+      );
+      return next(
+        new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.COMMENT_REQUIRED)
+      );
+    }
+
+    // Crear registro de auditoría
     await registrarAuditoria({
       usuario_originario_id: authUser.id_usuario,
       usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
-      detalle: isSelfUpdate
-        ? `Clave actualizada por el propio usuario.`
-        : `Clave actualizada para el usuario con ID ${targetUser.id_usuario} por ${authUser.id_usuario}.`,
+      detalle: `Rechazo de aplicación con comentario: ${comentario}`,
     });
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Clave actualizada correctamente para el usuario con ID ${targetUserId}.`
-    );
+    // Actualizar el tipo_registro del usuario a RECHAZADO
+    await targetUser.update({ tipo_registro: "RECHAZADO" });
 
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });
+    if (!hasTargetSingleMaestro) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
+      );
+      return next(
+        new Err.NotFoundError(
+          MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
+        )
+      );
+    }
+
+    const productora = targetMaestros[0].productora;
+
+    if (!productora) {
+        logger.warn(
+          `${req.method} ${req.originalUrl} - El usuario no tiene una productora asociada.`
+        );
+        return next(
+          new Err.NotFoundError(
+            MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS
+          )
+        );
+      }
+
+    // Crear mensaje asociado al rechazo
+    await createProductoraMessage({
+      usuarioId: authUser.id_usuario,
+      productoraId: productora.id_productora,
+      tipoMensaje: "RECHAZO",
+      mensaje: comentario,
+    });
+
+    // Enviar correo de notificación de rechazo
+    await sendEmailWithErrorHandling(
+      {
+        to: targetUser.email,
+        subject: "Rechazo de su Aplicación",
+        html: MESSAGES.EMAIL_BODY.REJECTION_NOTIFICATION(targetUser.email, comentario),
+        successLog: `Aplicación rechazada y correo de notificación enviado a ${targetUser.email}.`,
+        errorLog: `Error al enviar el correo de rechazo a ${targetUser.email}.`,
+      }, req, res, next);
+
+    res.status(200).json({ message: MESSAGES.SUCCESS.APPLICATION.REJECTED });
+
   } catch (err) {
-    handleGeneralError(err, req, res, next, "Error al cambiar la clave del usuario");
+    logger.error(
+      `${req.method} ${req.originalUrl} - Error al rechazar aplicación: ${
+        err instanceof Error ? err.message : "Error desconocido"
+      }`
+    );
+    next(err);
   }
 };
 
-// CERRAR SESIÓN
-export const logout = async (
+// ENVIAR UNA APLICACION PARA SER APROBADA
+export const sendApplication = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-): Promise<void> => {
+): Promise<Response | void> => {
   try {
-    const authToken = req.cookies["auth_token"];
-    const activeSesion = req.cookies["active_sesion"];
-
-    if (!authToken) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - No se encontró cookie de autenticación.`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.VALIDATION.NO_COOKIE_FOUND));
-    }
-
-    // Limpiar la cookie de autenticación
-    res.clearCookie("auth_token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-
-    // Limpiar la cookie de sesión activa
-    if (activeSesion) {
-      res.clearCookie("active_sesion", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
-
-      logger.info(
-        `${req.method} ${req.originalUrl} - Cookie 'active_sesion' eliminada correctamente.`
-      );
-    }
-
-    // Obtener el usuario autenticado
-    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
-
     logger.info(
-      `${req.method} ${req.originalUrl} - Logout exitoso para el usuario ID ${authUser.id_usuario}`
+      `${req.method} ${req.originalUrl} - Enviando solicitud de aplicación`
     );
 
-    // Registrar auditoría para el cierre de sesión
+    const {
+      productoraData,
+      documentos,
+      nombre,
+      apellido,
+      telefono,
+    } = req.body;
+
+    // Verifica el usuario autenticado
+    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+    
+    if (authMaestros.length > 0) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
+      );
+      return next(
+        new Err.NotFoundError(MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL)
+      );
+    }
+
+    // Validar el estado del usuario
+    validateUserRegistrationState(authUser.tipo_registro);
+
+    // Actualizar los datos básicos del usuario
+    await updateUserData(authUser, { nombre, apellido, telefono });
+    logger.info(
+      `${req.method} ${req.originalUrl} - Datos del usuario actualizados.`
+    );
+
+    // Manejar la productora
+    const productora = await createOrUpdateProductora(productoraData);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Productora procesada exitosamente.`
+    );
+
+    // Manejar relación de Usuario y Productora en UsuarioMaestro
+    await linkUserToProductora(authUser.id_usuario, productora.id_productora);
+    logger.info(
+      `${req.method} ${req.originalUrl} - Relación Usuario-Productora creada en UsuarioMaestro.`
+    );
+
+    // Manejar documentos
+    if (documentos?.length) {
+      await processDocuments(
+        authUser.id_usuario,
+        productora.id_productora,
+        documentos
+      );
+      logger.info(
+        `${req.method} ${req.originalUrl} - Documentos procesados exitosamente.`
+      );
+    }
+
+    // Actualizar el tipo_registro del usuario a ENVIADO
+    await updateUserRegistrationState(authUser, "ENVIADO");
+    logger.info(
+      `${req.method} ${req.originalUrl} - Tipo de registro actualizado a ENVIADO.`
+    );
+
+    // Registrar auditoría
     await registrarAuditoria({
       usuario_originario_id: authUser.id_usuario,
       usuario_destino_id: authUser.id_usuario,
-      modelo: "Usuario",
-      tipo_auditoria: "AUTH",
-      detalle: "Logout exitoso",
+      modelo: "Productora",
+      tipo_auditoria: "ALTA",
+      detalle: `Solicitud de aplicación enviada por ${authUser.email} para la productora ${productora.id_productora}`,
     });
 
-    // Actualizar la fecha de fin de sesión
-    await actualizarFechaFinSesion(authUser.id_usuario);
+    logger.info(`${req.method} ${req.originalUrl} - Auditoría registrada.`);
 
-    res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGOUT });
+    // Enviar correo de notificación al usuario
+    await sendEmailWithErrorHandling(
+      {
+        to: authUser.email,
+        subject: "Solicitud de Aplicación Enviada",
+        html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(authUser.email),
+        successLog: `Correo de aplicación enviado a ${authUser.email}`,
+        errorLog: `Error al enviar el correo de aplicación a ${authUser.email}`,
+      }, req, res, next);
+
+    res.status(200).json({ message: MESSAGES.SUCCESS.APPLICATION.SAVED });
+
   } catch (err) {
-    handleGeneralError(err, req, res, next, "Error durante el proceso de logout");
+    handleGeneralError(err, req, res, next, "Error al enviar la aplicación");
+  }
+};
+
+// OBTENER EL ROL DEL USUARIO AUTENTICADO
+export const getRole = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud para obtener el rol del usuario`);
+
+    // Buscar información del usuario autenticado usando su id_usuario
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    // Comprobar que el rol esté presente
+    if (!authUser.rol) {
+      logger.warn(
+        `${req.method} ${req.originalUrl} - Usuario sin rol asignado`
+      );
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED)
+      );
+    }
+
+    const roleName = authUser.rol.nombre_rol;   
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Se obtuvo el rol del usuario ID ${authUser.id_usuario}: ${roleName}`
+    );
+
+    res.status(200).json({ role: roleName });
+
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al obtener el rol del usuario');    
   }
 };

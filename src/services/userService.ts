@@ -71,7 +71,7 @@ export const updateUsuarioMaestro = async (
   updateData: any
 ) => {
   return await UsuarioMaestro.update(updateData, {
-    where: { usuario_registrante_id: usuarioRegistranteId },
+    where: { usuario_id: usuarioRegistranteId },
   });
 };
 
@@ -159,7 +159,7 @@ export const deleteUsuarioById = async (userId: string): Promise<void> => {
 
 export const deleteUsuarioMaestrosByUserId = async (userId: string) => {
   await UsuarioMaestro.destroy({
-    where: { usuario_registrante_id: userId },
+    where: { usuario_id: userId },
   });
 };
 
@@ -179,7 +179,7 @@ export const deleteUserRelations = async (
   }
 
   await UsuarioMaestro.destroy({
-    where: { usuario_registrante_id: userId },
+    where: { usuario_id: userId },
   });
 };
 
@@ -311,13 +311,13 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
 
   // Buscar UsuariosMaestro relacionados para todos los usuarios encontrados
   const usuariosMaestro = await UsuarioMaestro.findAll({
-    where: { usuario_registrante_id: { [Op.in]: usuarios.map((u) => u.id_usuario) } },
+    where: { usuario_id: { [Op.in]: usuarios.map((u) => u.id_usuario) } },
     include: includeMaestro,
   });
 
   const maestrosPorUsuario = usuarios.reduce((acc, usuario) => {
     const maestros = usuariosMaestro
-      .filter((maestro) => maestro.usuario_registrante_id === usuario.id_usuario);
+      .filter((maestro) => maestro.usuario_id === usuario.id_usuario);
 
     acc[usuario.id_usuario] = {
       maestros,
@@ -373,30 +373,6 @@ export const findRolByNombre = async (nombre_rol: string) => {
   }
 
   return rol;
-};
-
-export const findVistasByRol = async (roleName: string) => {
-  if (!roleName) {
-    throw new Error("Debe proporcionar el nombre del rol.");
-  }
-
-  // Buscar el ID del rol por su nombre
-  const rol = await UsuarioRol.findOne({
-    where: { nombre_rol: roleName },
-    attributes: ["id_rol"],
-  });
-
-  if (!rol) {
-    throw new Error(`No se encontró un rol con el nombre: ${roleName}`);
-  }
-
-  // Buscar todas las vistas asociadas al rol
-  const vistas = await UsuarioVista.findAll({
-    where: { rol_id: rol.id_rol },
-    attributes: ["id_vista", "nombre_vista", "nombre_vista_superior"],
-  });
-
-  return vistas;
 };
 
 export const findVistasByUsuario = async (idUsuario: string) => {
@@ -518,7 +494,7 @@ export const linkUserToProductora = async (
   // Verificar si la relación ya existe
   const existingRelation = await UsuarioMaestro.findOne({
     where: {
-      usuario_registrante_id: userId,
+      usuario_id: userId,
       productora_id: productoraId,
     },
   });
@@ -526,18 +502,18 @@ export const linkUserToProductora = async (
   if (existingRelation) {
     // Si la relación ya existe, no es necesario crearla nuevamente
     console.info(
-      `Relación existente encontrada: usuario_registrante_id=${userId}, productora_id=${productoraId}`
+      `Relación existente encontrada: usuario_id=${userId}, productora_id=${productoraId}`
     );
     return;
   }
 
   // Crear una nueva relación
   await UsuarioMaestro.create({
-    usuario_registrante_id: userId,
+    usuario_id: userId,
     productora_id: productoraId,
   });
 
   console.info(
-    `Relación Usuario-Productora creada exitosamente: usuario_registrante_id=${userId}, productora_id=${productoraId}`
+    `Relación Usuario-Productora creada exitosamente: usuario_id=${userId}, productora_id=${productoraId}`
   );
 };

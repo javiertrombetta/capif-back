@@ -1,122 +1,106 @@
 import { Router } from "express";
+import { celebrate, Segments } from "celebrate";
+import { authenticate, authorizeRoles } from "../middlewares/auth";
+
 import {
-  availableDisableUser,
-  blockOrUnblockUser,
+  getUser,
+  getVistasByUsuario,
   getUsers,
-  createSecondaryAdminUser,
-  getRegistrosPendientes,
-  approveApplication,
-  rejectApplication,
-  sendApplication,
-  updateApplication,
+  toggleUserViewStatus,
+  updateUserViews,
+  blockOrUnblockUser,
+  availableDisableUser,
+  changeUserPassword,
   updateUser,
   deleteUser,
-  getVistasByRol,
-  getVistasByUsuario,
-  updateUserViews,
-  toggleUserViewStatus,
 } from "../controllers/usuariosController";
-import { authenticate, authorizeRoles } from "../middlewares/auth";
-import { celebrate, Segments } from "celebrate";
+
 import {
-  availableDisableSchema,
-  blockOrUnblockSchema,
-  createAdminSchema,
-  getRegistrosPendientesSchema,
-  approveApplicationSchema,
-  rejectApplicationSchema,
-  sendApplicationSchema,
-  updateApplicationSchema,
-  updateUserSchema,
-  deleteUserSchema,
-  updateUserViewsSchema,
-  toggleUserViewStatusSchema,
+  getVistasByUsuarioSchema,
   getUsuariosQuerySchema,
+  toggleUserViewStatusParamsSchema,
+  toggleUserViewStatusBodySchema,
+  updateUserViewsParamsSchema,
+  updateUserViewsBodySchema,
+  blockOrUnblockParamsSchema,
+  blockOrUnblockBodySchema,
+  availableDisableSchema,
+  changePasswordParamsSchema,
+  changePasswordBodySchema,
+  updateUserBodySchema,
+  updateUserParamsSchema,
+  deleteUserSchema,
 } from "../utils/validationSchemas";
 
 const router = Router();
+
 
 /**
  * @swagger
  * tags:
  *   name: Usuarios
- *   description: Gestión de usuarios y registros.
+ *   description: Gestión de los usuarios.
  */
 
-// [PUT] Habilitar/Deshabilitar Usuario
+
+// [GET] OBTENER DATOS DEL USUARIO Y SUS MAESTROS
 /**
  * @swagger
- * /usuarios/estado/habilitacion:
- *   put:
- *     summary: Habilitar o deshabilitar un usuario.
+ * /users/me:
+ *   get:
+ *     summary: Obtener información del usuario autenticado
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/AvailableDisableUser'
  *     responses:
  *       200:
- *         description: Usuario habilitado o deshabilitado exitosamente.
+ *         description: Información del usuario obtenida exitosamente
+ */
+router.get("/me", authenticate, getUser);
+
+// [GET] Obtener las vistas de un usuario
+/**
+ * @swagger
+ * /users/{usuarioId}/views:
+ *   get:
+ *     summary: Obtener todas las vistas de un usuario.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: usuarioId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del usuario a buscar.
+ *     responses:
+ *       200:
+ *         description: Vistas obtenidas exitosamente.
  *       400:
  *         description: Datos inválidos.
  *       401:
  *         description: Usuario no autenticado.
  *       403:
- *         description: Usuario no autorizado para realizar esta acción.
+ *         description: Usuario no autorizado.
  *       404:
  *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
  */
-router.put(
-  "/estado/habilitacion",
+router.get(
+  "/:usuarioId/views",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: availableDisableSchema }),
-  availableDisableUser
-);
-
-// [PUT] Bloquear/Desbloquear Usuario
-/**
- * @swagger
- * /usuarios/estado/sesion:
- *   put:
- *     summary: PENDIENTE Bloquear o desbloquear un usuario.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/BlockOrUnblockUser'
- *     responses:
- *       200:
- *         description: Usuario bloqueado o desbloqueado exitosamente.
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado para realizar esta acción.
- *       404:
- *         description: Usuario no encontrado.
- */
-router.put(
-  "/estado/sesion",
-  authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: blockOrUnblockSchema }),
-  blockOrUnblockUser
+  celebrate({ [Segments.PARAMS]: getVistasByUsuarioSchema }),
+  getVistasByUsuario
 );
 
 // [GET] Obtener los usuarios según filtros
 /**
  * @swagger
- * /usuarios:
+ * /users:
  *   get:
  *     summary: Obtener usuarios filtrados.
  *     description: Permite obtener una lista de usuarios aplicando filtros en los parámetros de consulta.
@@ -125,7 +109,7 @@ router.put(
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
- *         name: id_usuario
+ *         name: usuarioId
  *         required: false
  *         schema:
  *           type: string
@@ -148,7 +132,7 @@ router.put(
  *           type: string
  *         description: Apellido del usuario.
  *       - in: query
- *         name: tipo_registro
+ *         name: estado
  *         schema:
  *           type: string
  *           enum: [DEPURAR, NUEVO, CONFIRMADO, PENDIENTE, ENVIADO, HABILITADO, DESHABILITADO]
@@ -160,7 +144,7 @@ router.put(
  *           format: uuid
  *         description: ID del rol asignado al usuario.
  *       - in: query
- *         name: nombre_rol
+ *         name: rolNombre
  *         schema:
  *           type: string
  *         description: Nombre del rol asignado al usuario.
@@ -213,258 +197,251 @@ router.get(
   getUsers
 );
 
-// [POST] Crear un usuario manualmente
+// [PUT] Cambiar el estado de las vistas de un usuario
 /**
  * @swagger
- * /usuarios/admin/nuevo:
- *   post:
- *     summary: PENDIENTE Crear un nuevo usuario administrador.
+ * /users/{usuarioId}/views/status:
+ *   put:
+ *     summary: Cambiar el estado de habilitación de las vistas de un usuario.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: usuarioId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del usuario cuyas vistas se van a actualizar.
  *     requestBody:
- *       description: Datos del administrador a crear.
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateAdminUser'
+ *             $ref: '#/components/schemas/ToggleUserViewStatus'
  *     responses:
- *       201:
- *         description: Usuario administrador creado exitosamente.
+ *       200:
+ *         description: Estado de vistas actualizado exitosamente.
  *       400:
  *         description: Datos inválidos.
  *       401:
  *         description: Usuario no autenticado.
  *       403:
  *         description: Usuario no autorizado.
- *       500:
- *         description: Error interno del servidor.
- */
-router.post(
-  "/admin/nuevo",
-  authenticate,
-  authorizeRoles(["admin_principal", "productor_principal"]),
-  celebrate({ [Segments.BODY]: createAdminSchema }),
-  createSecondaryAdminUser
-);
-
-// [GET] Obtener todas las aplicaciones pendientes o de un usuario
-/**
- * @swagger
- * /usuarios/aplicaciones/pendientes:
- *   get:
- *     summary: Obtener registros pendientes de uno o todos los usuarios.
- *     description: Devuelve la información del registro pendiente para un usuario especificado o todos los usuarios con registro pendiente.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: id_usuario
- *         required: false
- *         schema:
- *           type: string
- *           format: uuid
- *           description: ID del usuario. Si no se especifica, devuelve todos los usuarios pendientes.
- *           example: '123e4567-e89b-12d3-a456-426614174000'
- *     responses:
- *       200:
- *         description: Registros pendientes obtenidos exitosamente.
- *       400:
- *         description: Parámetros inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado para acceder a este recurso.
- *       404:
- *         description: Registro pendiente no encontrado.
- *       500:
- *         description: Error interno del servidor.
- */
-router.get(
-  "/aplicaciones/pendientes",
-  authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.QUERY]: getRegistrosPendientesSchema }),
-  getRegistrosPendientes
-);
-
-// [POST] Autorizar a un usuario pendiente
-/**
- * @swagger
- * /usuarios/aplicaciones/autorizar:
- *   post:
- *     summary: Aprobar la solicitud de aplicación de un usuario.
- *     description: Autoriza la solicitud de un usuario, asigna una productora y actualiza los registros asociados.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ApproveApplication'
- *     responses:
- *       200:
- *         description: Aplicación aprobada exitosamente.
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado para realizar esta acción.
- *       404:
- *         description: Usuario no encontrado.
- *       409:
- *         description: Productora ya existente para este usuario.
- *       500:
- *         description: Error interno del servidor.
- */
-router.post(
-  "/aplicaciones/autorizar",
-  authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: approveApplicationSchema }),
-  approveApplication
-);
-
-// [POST] Rechazar la aplicación de un usuario pendiente
-/**
- * @swagger
- * /usuarios/aplicaciones/rechazar:
- *   post:
- *     summary: Rechazar la solicitud de aplicación de un usuario.
- *     description: Rechaza la solicitud de un usuario especificando el motivo del rechazo.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/RejectApplication'
- *     responses:
- *       200:
- *         description: Solicitud rechazada exitosamente.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   description: Mensaje de éxito.
- *                   example: 'Solicitud rechazada exitosamente.'
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado para realizar esta acción.
- *       404:
- *         description: Usuario no encontrado.
- *       500:
- *         description: Error interno del servidor.
- */
-router.post(
-  "/aplicaciones/rechazar",
-  authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: rejectApplicationSchema }),
-  rejectApplication
-);
-
-// [POST] Enviar la aplicación de un usuario
-/**
- * @swagger
- * /usuarios/aplicaciones/enviar:
- *   post:
- *     summary: Enviar solicitud de aplicación.
- *     description: Permite a un usuario enviar una solicitud de aplicación con sus datos y documentos asociados.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       description: Datos de la solicitud de aplicación.
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/SendApplication'
- *     responses:
- *       200:
- *         description: Solicitud enviada exitosamente.
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado para realizar esta acción.
- *       404:
- *         description: Usuario no encontrado.
- *       500:
- *         description: Error interno del servidor.
- */
-router.post(
-  "/aplicaciones/enviar",
-  authenticate,
-  authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: sendApplicationSchema }),
-  sendApplication
-);
-
-// [PUT] Actualizar la aplicación de un usuario
-/**
- * @swagger
- * /usuarios/aplicaciones/actualizar:
- *   put:
- *     summary: PENDIENTE Actualizar solicitud de aplicación.
- *     description: PENDIENTE Permite actualizar los datos de la solicitud de aplicación de un usuario, incluyendo datos físicos, datos jurídicos y documentos asociados.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       description: Datos de la solicitud de aplicación que se desea actualizar.
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateApplication'
- *     responses:
- *       200:
- *         description: Solicitud actualizada exitosamente.
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado para realizar esta acción.
  *       404:
  *         description: Usuario no encontrado.
  *       500:
  *         description: Error interno del servidor.
  */
 router.put(
-  "/aplicaciones/actualizar",
+  "/:usuarioId/views/status",
   authenticate,
-  authorizeRoles(["productor_principal"]),
-  celebrate({ [Segments.BODY]: updateApplicationSchema }),
-  updateApplication
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: toggleUserViewStatusParamsSchema,
+    [Segments.BODY]: toggleUserViewStatusBodySchema,
+  }),
+  toggleUserViewStatus
 );
 
-// [PUT] Actualizar la información de un usuario
+// [PUT] Actualizar vistas de un usuario según un rol
 /**
  * @swagger
- * /usuarios/cambiar:
+ * /users/{usuarioId}/views:
+ *   put:
+ *     summary: Actualizar las vistas de un usuario.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: usuarioId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del usuario al que se le actualizarán las vistas.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateUserViews'
+ *     responses:
+ *       200:
+ *         description: Vistas actualizadas exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.put(
+  "/:usuarioId/views",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: updateUserViewsParamsSchema,
+    [Segments.BODY]: updateUserViewsBodySchema,
+  }),
+  updateUserViews
+);
+
+// [PUT] Bloquear/Desbloquear Usuario
+/**
+ * @swagger
+ * /users/{usuarioId}/status/login:
+ *   put:
+ *     summary: Bloquear o desbloquear el login de un usuario.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: usuarioId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID del usuario que se desea bloquear o desbloquear
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/BlockOrUnblockUser'
+ *     responses:
+ *       200:
+ *         description: Usuario bloqueado o desbloqueado exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado para realizar esta acción.
+ *       404:
+ *         description: Usuario no encontrado.
+ */
+router.put(
+  "/:usuarioId/status/login",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: blockOrUnblockParamsSchema,
+    [Segments.BODY]: blockOrUnblockBodySchema,
+  }),
+  blockOrUnblockUser
+);
+
+// [PUT] Habilitar/Deshabilitar Usuario
+/**
+ * @swagger
+ * /users/{usuarioId}/status:
+ *   put:
+ *     summary: Habilitar o deshabilitar un usuario para su posterior depuración.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: usuarioId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID del usuario que se desea habilitar o deshabilitar
+ *     responses:
+ *       200:
+ *         description: Usuario habilitado o deshabilitado exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado para realizar esta acción.
+ *       404:
+ *         description: Usuario no encontrado.
+ */
+router.put(
+  "/:usuarioId/status",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.PARAMS]: availableDisableSchema }),
+  availableDisableUser
+);
+
+// [PUT] CAMBIAR LA CLAVE DEL USUARIO AUTENTICADO
+/**
+ * @swagger
+ * /users/{usuarioId}/password:
+ *   put:
+ *     summary: Cambiar contraseña de un usuario.
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: usuarioId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: UUID del usuario cuya contraseña será cambiada.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ChangePassword'
+ *     responses:
+ *       200:
+ *         description: Contraseña cambiada exitosamente.
+ *       400:
+ *         description: Datos inválidos.
+ *       401:
+ *         description: Usuario no autenticado.
+ *       403:
+ *         description: Usuario no autorizado.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error interno del servidor.
+ */
+router.put(
+  "/:usuarioId/password",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor"]),
+  celebrate({
+    [Segments.PARAMS]: changePasswordParamsSchema,
+    [Segments.BODY]: changePasswordBodySchema,
+  }),
+  changeUserPassword
+);
+
+// [PUT] Actualizar datos del usuario
+/**
+ * @swagger
+ * /users/{usuarioId}:
  *   put:
  *     summary: Actualizar información del usuario.
  *     description: Permite actualizar los datos personales, rol y estado de un usuario existente.
  *     tags: [Usuarios]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: usuarioId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID del usuario que será actualizado.
  *     requestBody:
  *       description: Datos del usuario que se desea actualizar.
  *       required: true
@@ -487,17 +464,20 @@ router.put(
  *         description: Error interno del servidor.
  */
 router.put(
-  "/cambiar",
+  "/:usuarioId",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: updateUserSchema }),
+  celebrate({
+    [Segments.PARAMS]: updateUserParamsSchema,
+    [Segments.BODY]: updateUserBodySchema,
+  }),
   updateUser
 );
 
 // [DELETE] Eliminar un usuario
 /**
  * @swagger
- * /usuarios/eliminar:
+ * /users/{usuarioId}:
  *   delete:
  *     summary: Eliminar un usuario.
  *     description: Permite a los administradores eliminar un usuario específico del sistema.
@@ -505,8 +485,8 @@ router.put(
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: query
- *         name: id_usuario
+ *       - in: path
+ *         name: usuarioId
  *         required: true
  *         schema:
  *           type: string
@@ -528,160 +508,11 @@ router.put(
  *         description: Error interno del servidor.
  */
 router.delete(
-  "/eliminar",
+  "/:usuarioId",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.QUERY]: deleteUserSchema }),
+  celebrate({ [Segments.PARAMS]: deleteUserSchema }),
   deleteUser
-);
-
-// [GET] Obtener las vistas de un rol
-/**
- * @swagger
- * /usuarios/vistas/rol/{roleName}:
- *   get:
- *     summary: Obtener vistas asociadas a un rol.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: roleName
- *         required: true
- *         schema:
- *           type: string
- *         description: Nombre del rol para obtener las vistas asociadas.
- *     responses:
- *       200:
- *         description: Vistas obtenidas exitosamente.
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado.
- *       404:
- *         description: Rol no encontrado.
- *       500:
- *         description: Error interno del servidor.
- */
-router.get(
-  "/vistas/rol/:roleName",
-  authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  getVistasByRol
-);
-
-// [GET] Obtener las vistas de un usuario
-/**
- * @swagger
- * /usuarios/vistas/usuario/{id_usuario}:
- *   get:
- *     summary: Obtener todas las vistas de un usuario.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id_usuario
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: UUID del usuario a buscar.
- *     responses:
- *       200:
- *         description: Vistas obtenidas exitosamente.
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado.
- *       404:
- *         description: Usuario no encontrado.
- *       500:
- *         description: Error interno del servidor.
- */
-router.get(
-  "/vistas/usuario/:id_usuario",
-  authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  getVistasByUsuario
-);
-
-// [PUT] Actualizar vistas de un usuario según un rol
-/**
- * @swagger
- * /usuarios/vistas:
- *   put:
- *     summary: Actualizar las vistas de un usuario.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/UpdateUserViews'
- *     responses:
- *       200:
- *         description: Vistas actualizadas exitosamente.
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado.
- *       404:
- *         description: Usuario no encontrado.
- *       500:
- *         description: Error interno del servidor.
- */
-router.put(
-  "/vistas",
-  authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: updateUserViewsSchema }),
-  updateUserViews
-);
-
-// [PUT] Cambiar el estado de las vistas de un usuario
-/**
- * @swagger
- * /usuarios/vistas/estado:
- *   put:
- *     summary: Cambiar el estado de habilitación de las vistas de un usuario.
- *     tags: [Usuarios]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/ToggleUserViewStatus'
- *     responses:
- *       200:
- *         description: Estado de vistas actualizado exitosamente.
- *       400:
- *         description: Datos inválidos.
- *       401:
- *         description: Usuario no autenticado.
- *       403:
- *         description: Usuario no autorizado.
- *       404:
- *         description: Usuario no encontrado.
- *       500:
- *         description: Error interno del servidor.
- */
-router.put(
-  "/vistas/estado",
-  authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
-  celebrate({ [Segments.BODY]: toggleUserViewStatusSchema }),
-  toggleUserViewStatus
 );
 
 export default router;

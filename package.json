@@ -17,6 +17,7 @@
     "prod.local:restart": "npm run prod.local:down && npm run prod.local:up",
     "init": "NODE_ENV=development npm run dev.local:down && npm run clean:dist && npm run dev.local:up && npm run build && npm run postgres:init",
     "dev": "NODE_ENV=development nodemon --watch src --exec ts-node src/app.ts",
+    "debug": "NODE_ENV=development nodemon --watch src --exec node --inspect -r ts-node/register src/app.ts",
     "test": "echo \"No tests defined yet\""
   },
   "keywords": [],

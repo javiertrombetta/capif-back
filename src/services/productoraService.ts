@@ -25,7 +25,14 @@ export const createOrUpdateProductora = async (productoraData: any): Promise<Pro
 
 // Servicio para obtener todas las productoras
 export const findAllProductoras = async () => {
-  const productoras = await Productora.findAll();
+  const productoras = await Productora.findAll({
+    include: [
+      {
+        model: ProductoraISRC,
+        as: 'codigosDeLaProductora',
+      },
+    ],
+  });
 
   if (!productoras || productoras.length === 0) {
     throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);

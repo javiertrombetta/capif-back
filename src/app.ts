@@ -17,7 +17,7 @@ if (env === 'development') {
   );
   dotenv.config();
 }
-import './config/cron';
+import * as Cron from './config/cron';
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -76,7 +76,6 @@ const connectToDatabase = async () => {
     await sequelize.authenticate();
     logger.info('Conexión exitosa a la base de datos');
 
-    // await sequelize.sync({ alter: false });
     await sequelize.sync();
     logger.info('Modelos sincronizados con la base de datos');
   } catch (err) {
@@ -91,14 +90,27 @@ const startServer = () => {
     logger.info(`Servidor corriendo en el puerto ${port}`);
   });
 
-  const gracefulShutdown = () => {
+  const gracefulShutdown = async () => {
     logger.info('Apagado del servidor en curso...');
-    server.close(() => {
-      sequelize.close().then(() => {
-        logger.info('Conexiones cerradas correctamente');
-        process.exit(0);
+    Cron.stopCronTasks();
+
+    // Cierra el servidor y espera a que todas las solicitudes se completen
+    await new Promise<void>((resolve) => {
+      server.close(() => {
+        logger.info('Servidor cerrado.');
+        resolve();
       });
     });
+
+    // Cierra Sequelize y otros recursos
+    try {
+      await sequelize.close();
+      logger.info('Conexiones cerradas correctamente');
+      return;
+    } catch (error) {
+      logger.error('Error cerrando conexiones:', error);
+      return;
+    }
   };
 
   process.on('SIGTERM', gracefulShutdown);
@@ -108,6 +120,7 @@ const startServer = () => {
 (async () => {
   try {
     await connectToDatabase();
+    Cron.startCronTasks();
     startServer();
   } catch (_error) {
     logger.error(`Fallo crítico: No se pudo conectar a la base de datos. Detalles: ${_error}`);

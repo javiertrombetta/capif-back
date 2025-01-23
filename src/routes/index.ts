@@ -17,6 +17,6 @@ router.use('/cashflow', authenticate, authorizeRoles(['admin_principal','admin_s
 router.use('/conflictos', authenticate, authorizeRoles(['admin_principal','admin_secundario','productor_principal','productor_secundario']), conflictosRoutes);
 router.use('/productoras', authenticate, authorizeRoles(['admin_principal','admin_secundario','productor_principal','productor_secundario']), productorasRoutes);
 router.use('/repertorios', authenticate, authorizeRoles(['admin_principal','admin_secundario','productor_principal','productor_secundario']), repertoriosRoutes);
-router.use('/usuarios', authenticate, authorizeRoles(['admin_principal','admin_secundario','productor_principal','productor_secundario']), usersRoutes);
+router.use('/usuarios', authenticate, usersRoutes);
 
 export default router;

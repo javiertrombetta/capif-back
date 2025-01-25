@@ -260,12 +260,16 @@ export const getPostulacionById = async (productoraId: string) => {
 export const getAllPostulaciones = async (filters: { startDate?: string; endDate?: string }) => {
   const where: any = {};
 
-  if (filters.startDate) {
-    where.fecha_asignacion = { ...where.fecha_asignacion, [Op.gte]: new Date(filters.startDate) };
-  }
+  if (filters.startDate || filters.endDate) {
+    where.fecha_asignacion = {};
 
-  if (filters.endDate) {
-    where.fecha_asignacion = { ...where.fecha_asignacion, [Op.lte]: new Date(filters.endDate) };
+    if (filters.startDate) {
+      where.fecha_asignacion[Op.gte] = new Date(filters.startDate);
+    }
+
+    if (filters.endDate) {
+      where.fecha_asignacion[Op.lte] = new Date(filters.endDate);
+    }
   }
 
   const postulaciones = await ProductoraPremio.findAll({ where });

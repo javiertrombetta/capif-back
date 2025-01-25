@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.154 - 25-01-2025
+## 🐛 Fixes
+
+- fix: getAllPostulaciones serice
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.151
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.151 - 25-01-2025
 ## 🚀 Features
 

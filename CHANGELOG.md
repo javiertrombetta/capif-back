@@ -1,4 +1,19 @@
 # Changelog
+## v0.1.144 - 25-01-2025
+## 🐛 Fixes
+
+- fix: productorasRoutes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.140
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.1.140 - 25-01-2025
 ## 🐛 Fixes
 

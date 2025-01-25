@@ -1,4 +1,19 @@
 # Changelog
+## v0.1.134 - 25-01-2025
+## 🐛 Fixes
+
+- fix: postulaciones in productoraController
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.130
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch fix_auth of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.1.130 - 23-01-2025
 ## 🐛 Fixes
 

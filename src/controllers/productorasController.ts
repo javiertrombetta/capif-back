@@ -372,8 +372,8 @@ export const getPostulacionById = async (req: Request, res: Response, next: Next
 // Obtener todas las postulaciones y OPCIONAL entre fechas definidas
 export const getAllPostulaciones = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { startDate, endDate } = req.query;
-    
+    const { startDate, endDate, productoraName } = req.query;
+
     const start = startDate ? parseISO(startDate as string) : undefined;
     const end = endDate ? parseISO(endDate as string) : undefined;
 
@@ -387,13 +387,18 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
 
     logger.info(
       `${req.method} ${req.originalUrl} - Obteniendo todas las postulaciones ${
-        start || end ? `entre ${start?.toISOString() || 'inicio'} y ${end?.toISOString() || 'hoy'}` : 'sin filtros de fecha'
+        start || end || productoraName
+          ? `con filtros ${start ? `desde ${start.toISOString()}` : ''} ${
+              end ? `hasta ${end.toISOString()}` : ''
+            } ${productoraName ? `por nombre de productora: ${productoraName}` : ''}`
+          : 'sin filtros'
       }.`
     );
 
     const postulaciones = await productoraService.getAllPostulaciones({
       startDate: start?.toISOString(),
       endDate: end?.toISOString(),
+      productoraName: productoraName as string | undefined,
     });
 
     logger.info(`${req.method} ${req.originalUrl} - Total de postulaciones encontradas: ${postulaciones.length}.`);
@@ -409,22 +414,35 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
 };
 
 // Crear la postulación para una productora por ID
-export const createPostulacion = async (req: Request, res: Response, next: NextFunction) => {
+// Crear postulaciones masivamente
+export const createPostulaciones = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
-    const postulacionData = req.body;
+    const { startDate, endDate } = req.body;
 
-    logger.info(`${req.method} ${req.originalUrl} - Creando una nueva postulación para la productora con ID: ${id}.`);
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'Las fechas startDate y endDate son obligatorias.' });
+    }
 
-    const newPostulacion = await productoraService.createPostulacion(id, postulacionData);
+    const start = parseISO(startDate as string);
+    const end = parseISO(endDate as string);
 
-    logger.info(`${req.method} ${req.originalUrl} - Postulación creada exitosamente: ${newPostulacion.id_premio}`);
-    res.status(201).json({ message: MESSAGES.SUCCESS.POSTULACION.CREATED, postulacion: newPostulacion });
+    if (!isValid(start) || !isValid(end)) {
+      return res.status(400).json({ error: 'Las fechas proporcionadas no son válidas.' });
+    }
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Creando postulaciones para productoras entre ${start.toISOString()} y ${end.toISOString()}.`
+    );
+
+    const createdPostulaciones = await productoraService.createPostulacionesMassively(start, end);
+
+    logger.info(`${req.method} ${req.originalUrl} - Total de postulaciones creadas: ${createdPostulaciones.length}.`);
+    res.status(201).json({ message: 'Postulaciones creadas exitosamente.', total: createdPostulaciones.length });
   } catch (err) {
     logger.error(
       `${req.method} ${
         req.originalUrl
-      } - Error al crear la postulación: ${err instanceof Error ? err.message : 'Error desconocido'}.`
+      } - Error al crear postulaciones masivamente: ${err instanceof Error ? err.message : 'Error desconocido'}.`
     );
     next(err);
   }

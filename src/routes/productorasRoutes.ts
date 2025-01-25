@@ -18,7 +18,7 @@ import {
   deleteISRC,
   getAllPostulaciones,
   getPostulacionById,
-  createPostulacion,
+  createPostulaciones,
   updatePostulacion,
   deletePostulacion,
   deleteAllPostulaciones
@@ -47,18 +47,18 @@ router.put('/:id/isrc', authenticate, authorizeRoles(manageRoles), updateISRC);
 router.delete('/:id/isrc', authenticate, authorizeRoles(manageRoles), deleteISRC);
 
 // Rutas para Postulaciones de Premios
-router.get('/:id/postulaciones', authenticate, authorizeRoles(viewRoles), getPostulacionById);
+// router.get('/:id/postulaciones', authenticate, authorizeRoles(viewRoles), getPostulacionById);
 router.get('/postulaciones', authenticate, authorizeRoles(viewRoles), getAllPostulaciones);
-router.post('/:id/postulaciones', authenticate, authorizeRoles(manageRoles), createPostulacion);
-router.put('/:id/postulaciones', authenticate, authorizeRoles(manageRoles), updatePostulacion);
-router.delete('/:id/postulaciones', authenticate, authorizeRoles(manageRoles), deletePostulacion);
+router.post('/postulaciones', authenticate, authorizeRoles(manageRoles), createPostulaciones);
+// router.put('/:id/postulaciones', authenticate, authorizeRoles(manageRoles), updatePostulacion);
+// router.delete('/:id/postulaciones', authenticate, authorizeRoles(manageRoles), deletePostulacion);
 router.delete('/postulaciones', authenticate, authorizeRoles(manageRoles), deleteAllPostulaciones);
 
 // Rutas para Datos de Productoras
 router.get('/:id', authenticate, authorizeRoles(viewRoles), getProductoraById);
 router.get('/', authenticate, authorizeRoles(viewRoles), getAllProductoras);
-router.post('/', authenticate, authorizeRoles(manageRoles), createProductora);
+// router.post('/', authenticate, authorizeRoles(manageRoles), createProductora);
 router.put('/:id', authenticate, authorizeRoles(manageRoles), updateProductora);
-router.delete('/:id', authenticate, authorizeRoles(manageRoles), deleteProductora);
+// router.delete('/:id', authenticate, authorizeRoles(manageRoles), deleteProductora);
 
 export default router;

@@ -257,9 +257,10 @@ export const getPostulacionById = async (productoraId: string) => {
 };
 
 // Servicio para obtener todas las postulaciones y OPCIONAL entre fechas definidas
-export const getAllPostulaciones = async (filters: { startDate?: string; endDate?: string }) => {
+export const getAllPostulaciones = async (filters: { startDate?: string; endDate?: string; productoraName?: string }) => {
   const where: any = {};
 
+  // Filtro por fechas
   if (filters.startDate || filters.endDate) {
     const fechaAsignacion: any = {};
 
@@ -284,28 +285,55 @@ export const getAllPostulaciones = async (filters: { startDate?: string; endDate
     }
   }
 
-  const postulaciones = await ProductoraPremio.findAll({ where });
+  // Filtro por nombre de productora
+  const include: any[] = [];
+  if (filters.productoraName) {
+    include.push({
+      model: Productora,
+      as: 'productoraDelPremio',
+      where: {
+        nombre_productora: {
+          [Op.iLike]: `%${filters.productoraName}%`,
+        },
+      },
+    });
+  }
+
+  const postulaciones = await ProductoraPremio.findAll({
+    where,
+    include,
+  });
 
   return postulaciones || [];
 };
 
 // Servicio para crear una postulación a una productora
-export const createPostulacion = async (productoraId: string, data: any) => {
-  const existingPostulacion = await ProductoraPremio.findOne({
-    where: { productora_id: productoraId, codigo_postulacion: data.codigo_postulacion },
+export const createPostulacionesMassively = async (startDate: Date, endDate: Date) => {
+
+  const productoras = await Productora.findAll({
+    where: {
+      fecha_ultimo_fonograma: {
+        [Op.between]: [startDate, endDate],
+      },
+    },
   });
 
-  if (existingPostulacion) {
-    throw new Err.ConflictError(MESSAGES.ERROR.POSTULACIONES.ALREADY_EXISTS);
+  if (productoras.length === 0) {
+    return [];
   }
 
-  const newPostulacion = await ProductoraPremio.create({ ...data, productora_id: productoraId });
+  const postulaciones = await Promise.all(
+    productoras.map(async (productora) => {
+      const newPostulacion = await ProductoraPremio.create({
+        productora_id: productora.id_productora,
+        codigo_postulacion: `POST-${productora.id_productora}-${Date.now()}`,
+        fecha_asignacion: new Date(),
+      });
+      return newPostulacion;
+    })
+  );
 
-  if (!newPostulacion) {
-    throw new Err.InternalServerError(MESSAGES.ERROR.POSTULACIONES.CREATION_FAILED);
-  }
-
-  return newPostulacion;
+  return postulaciones;
 };
 
 // Servicio para actualizar la postulación de una productora
@@ -340,14 +368,16 @@ export const deletePostulacion = async (productoraId: string) => {
 
 // Servicio para eliminar todas las postulaciones
 export const deleteAllPostulaciones = async () => {
-  const count = await ProductoraPremio.destroy({
-    where: {},
-    truncate: true, // Borra todas las filas sin restricciones
-  });
+  const count = await ProductoraPremio.count();
 
   if (count === 0) {
     throw new Err.NotFoundError(MESSAGES.ERROR.POSTULACIONES.NOT_FOUND);
   }
+
+  await ProductoraPremio.destroy({
+    where: {},
+    truncate: true,
+  });
 };
 
 // Servicio para crear los códigos ISRC al aprobar una solicitud

@@ -374,21 +374,16 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
   try {
     const { startDate, endDate } = req.query;
 
-    let start: Date | undefined;
-    let end: Date | undefined;
+    // Validación de fechas
+    const start = startDate ? parseISO(startDate as string) : undefined;
+    const end = endDate ? parseISO(endDate as string) : undefined;
 
-    if (startDate) {
-      start = parseISO(startDate as string);
-      if (!isValid(start)) {
-        return res.status(400).json({ error: 'La fecha de inicio (startDate) no es válida.' });
-      }
+    if (startDate && !isValid(start)) {
+      return res.status(400).json({ error: 'La fecha de inicio (startDate) no es válida.' });
     }
 
-    if (endDate) {
-      end = parseISO(endDate as string);
-      if (!isValid(end)) {
-        return res.status(400).json({ error: 'La fecha de fin (endDate) no es válida.' });
-      }
+    if (endDate && !isValid(end)) {
+      return res.status(400).json({ error: 'La fecha de fin (endDate) no es válida.' });
     }
 
     logger.info(

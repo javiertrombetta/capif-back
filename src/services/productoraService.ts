@@ -261,21 +261,33 @@ export const getAllPostulaciones = async (filters: { startDate?: string; endDate
   const where: any = {};
 
   if (filters.startDate || filters.endDate) {
-    where.fecha_asignacion = {};
+    const fechaAsignacion: any = {};
 
     if (filters.startDate) {
-      where.fecha_asignacion[Op.gte] = new Date(filters.startDate);
+      const startDate = new Date(filters.startDate);
+      if (isNaN(startDate.getTime())) {
+        throw new Error('La fecha de inicio (startDate) no es válida.');
+      }
+      fechaAsignacion[Op.gte] = startDate;
     }
 
     if (filters.endDate) {
-      where.fecha_asignacion[Op.lte] = new Date(filters.endDate);
+      const endDate = new Date(filters.endDate);
+      if (isNaN(endDate.getTime())) {
+        throw new Error('La fecha de fin (endDate) no es válida.');
+      }
+      fechaAsignacion[Op.lte] = endDate;
+    }
+
+    if (Object.keys(fechaAsignacion).length > 0) {
+      where.fecha_asignacion = fechaAsignacion;
     }
   }
 
   const postulaciones = await ProductoraPremio.findAll({ where });
 
   if (!postulaciones || postulaciones.length === 0) {
-    throw new Err.NotFoundError(MESSAGES.ERROR.POSTULACIONES.NOT_FOUND);
+    throw new Error('No se encontraron postulaciones.');
   }
 
   return postulaciones;

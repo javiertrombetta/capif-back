@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.137 - 25-01-2025
+## 🐛 Fixes
+
+- fix: getAllPostulaciones
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.134
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.134 - 25-01-2025
 ## 🐛 Fixes
 

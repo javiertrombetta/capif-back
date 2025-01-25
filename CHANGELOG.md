@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.157 - 25-01-2025
+## 🚀 Features
+
+- feat: add docs for swagger
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.154
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.154 - 25-01-2025
 ## 🐛 Fixes
 

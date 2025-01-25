@@ -416,7 +416,7 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
 // Crear postulaciones masivamente
 export const createPostulaciones = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { startDate, endDate } = req.body;
+    const { startDate, endDate } = req.query;
 
     if (!startDate || !endDate) {
       return res.status(400).json({ error: 'Las fechas startDate y endDate son obligatorias.' });

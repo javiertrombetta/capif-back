@@ -291,6 +291,7 @@ export const getAllPostulaciones = async (filters: { startDate?: string; endDate
     include.push({
       model: Productora,
       as: 'productoraDelPremio',
+      required: true,
       where: {
         nombre_productora: {
           [Op.iLike]: `%${filters.productoraName}%`,

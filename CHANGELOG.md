@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.140 - 25-01-2025
+## 🐛 Fixes
+
+- fix: productorasRoutes with middleware
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.137
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.137 - 25-01-2025
 ## 🐛 Fixes
 

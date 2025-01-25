@@ -326,7 +326,41 @@ export const toggleUserViewStatus = async (
     const { usuarioId } = req.params;
     const { vistas } = req.body;
 
-    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);
+    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);
+
+    // Validar que las propiedades necesarias existen
+    if (!authUser.rol || !authUser.rol.nombre_rol) {
+      throw new Err.InternalServerError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
+    }
+
+    if (!targetUser.rol || !targetUser.rol.nombre_rol) {
+      throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
+    }
+
+    if (!authMaestros.length) {
+      throw new Err.InternalServerError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS);
+    }
+
+    if (!targetMaestros.length) {
+      throw new Err.BadRequestError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS);
+    }
+
+    // Validar permisos según el rol
+    if (authUser.rol.nombre_rol === "productor_principal") {
+      if (targetUser.rol.nombre_rol !== "productor_secundario") {
+        throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+      }
+      if (authMaestros[0].productora_id !== targetMaestros[0].productora_id) {
+        throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+      }
+    } else if (authUser.rol.nombre_rol === "admin_secundario") {
+      if (targetUser.rol.nombre_rol === "admin_principal") {
+        throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+      }
+    } else if (authUser.rol.nombre_rol !== "admin_principal") {
+      throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+    }
 
     await toggleUserViewStatusService(usuarioId, vistas);
 
@@ -337,7 +371,7 @@ export const toggleUserViewStatus = async (
     res.status(200).json({ message: "Estado de vistas actualizado exitosamente" });
 
   } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error al cambiar el estado de vistas del usuario')    
+    handleGeneralError(err, req, res, next, "Error al cambiar el estado de vistas del usuario");
   }
 };
 

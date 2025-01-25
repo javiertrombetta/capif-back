@@ -8,6 +8,9 @@ import {
 } from './schemas';
 import packageJson from '../../package.json';
 
+import { authSwaggerDocs } from '../docs/authSwagger';
+import { usuariosSwaggerDocs } from '../docs/usuariosSwagger';
+
 const DOMAIN = process.env.FRONTEND_URL;
 const PORT = process.env.PORT;
 const GLOBAL_PREFIX = process.env.GLOBAL_PREFIX;
@@ -46,6 +49,14 @@ const swaggerOptions = {
         url: `${DOMAIN}:${PORT}/${GLOBAL_PREFIX}`,
       },
     ],
+    tags: [
+      ...authSwaggerDocs.tags,
+      ...usuariosSwaggerDocs.tags,      
+    ],
+    paths: {
+      ...authSwaggerDocs.paths,
+      ...usuariosSwaggerDocs.paths,
+    },
   },
   apis: ['./src/routes/*.ts'],
 };

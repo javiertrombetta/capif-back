@@ -413,7 +413,6 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
   }
 };
 
-// Crear la postulación para una productora por ID
 // Crear postulaciones masivamente
 export const createPostulaciones = async (req: Request, res: Response, next: NextFunction) => {
   try {

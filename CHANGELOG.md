@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.151 - 25-01-2025
+## 🚀 Features
+
+- feat: seed for producers
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.148
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.148 - 25-01-2025
 ## 🐛 Fixes
 

@@ -22,6 +22,7 @@ import { exec } from 'child_process';
 import sequelize from './sequelize';
 import initSeed from '../../seeders/init.seed';
 import usersSeed from '../../seeders/usuarios.seed';
+import producersSeed from '../../seeders/productoras.seed';
 import logger from '../logger';
 
 const runSpecificMigration = (migrationFile: string): Promise<void> => {
@@ -74,6 +75,8 @@ const runSeeders = async () => {
     logger.info('Seeder de carga de tablas tipo ejecutado con éxito.');
     await usersSeed();
     logger.info('Seeder de carga de usuarios ejecutado con éxito.');
+    await producersSeed();
+    logger.info('Seeder de carga de productoras ejecutado con éxito.');
   } catch (error) {
     logger.error('Error al ejecutar los seeders:', error);
     throw error;

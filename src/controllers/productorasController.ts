@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
+import { parseISO, isValid } from 'date-fns';
 import * as MESSAGES from '../utils/messages';
 import * as productoraService from '../services/productoraService';
 
@@ -373,11 +374,32 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
   try {
     const { startDate, endDate } = req.query;
 
-    logger.info(`${req.method} ${req.originalUrl} - Obteniendo todas las postulaciones con filtros de fecha.`);
+    let start: Date | undefined;
+    let end: Date | undefined;
+
+    if (startDate) {
+      start = parseISO(startDate as string);
+      if (!isValid(start)) {
+        return res.status(400).json({ error: 'La fecha de inicio (startDate) no es válida.' });
+      }
+    }
+
+    if (endDate) {
+      end = parseISO(endDate as string);
+      if (!isValid(end)) {
+        return res.status(400).json({ error: 'La fecha de fin (endDate) no es válida.' });
+      }
+    }
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Obteniendo todas las postulaciones ${
+        start || end ? `entre ${start?.toISOString() || 'inicio'} y ${end?.toISOString() || 'hoy'}` : 'sin filtros de fecha'
+      }.`
+    );
 
     const postulaciones = await productoraService.getAllPostulaciones({
-      startDate: startDate as string,
-      endDate: endDate as string,
+      startDate: start?.toISOString(),
+      endDate: end?.toISOString(),
     });
 
     logger.info(`${req.method} ${req.originalUrl} - Total de postulaciones encontradas: ${postulaciones.length}.`);

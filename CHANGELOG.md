@@ -1,4 +1,19 @@
 # Changelog
+## v0.1.148 - 25-01-2025
+## 🐛 Fixes
+
+- fix: getAllProductoras
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.144
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.1.144 - 25-01-2025
 ## 🐛 Fixes
 

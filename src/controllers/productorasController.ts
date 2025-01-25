@@ -373,8 +373,7 @@ export const getPostulacionById = async (req: Request, res: Response, next: Next
 export const getAllPostulaciones = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { startDate, endDate } = req.query;
-
-    // Validación de fechas
+    
     const start = startDate ? parseISO(startDate as string) : undefined;
     const end = endDate ? parseISO(endDate as string) : undefined;
 

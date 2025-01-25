@@ -286,11 +286,7 @@ export const getAllPostulaciones = async (filters: { startDate?: string; endDate
 
   const postulaciones = await ProductoraPremio.findAll({ where });
 
-  if (!postulaciones || postulaciones.length === 0) {
-    throw new Error('No se encontraron postulaciones.');
-  }
-
-  return postulaciones;
+  return postulaciones || [];
 };
 
 // Servicio para crear una postulación a una productora

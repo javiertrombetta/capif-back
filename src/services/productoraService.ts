@@ -437,22 +437,21 @@ export const generarCodigosISRC = async (productoraId: string) => {
     assignedCodes.map((entry) => entry.codigo_productora)
   );
 
-  // Generar los próximos dos códigos disponibles
-  const availableCodes: string[] = [];
+  // Generar y asignar los códigos a los ISRC de la productora
   let indice = 0;
-
-  while (availableCodes.length < 2) {
-    const codigo = generarCodigoProgresivo(indice);
-    if (!usedCodes.has(codigo)) {
-      availableCodes.push(codigo);
-    }
-    indice++;
-  }
-
-  // Asignar los códigos generados a los ISRC de la productora
   for (let i = 0; i < productoraISRCs.length; i++) {
-    productoraISRCs[i].codigo_productora = availableCodes[i];
-    await ProductoraISRC.create(productoraISRCs[i]);
+    let codigoGenerado: string;
+
+    // Buscar el próximo código disponible
+    do {
+      codigoGenerado = generarCodigoProgresivo(indice);
+      indice++;
+    } while (usedCodes.has(codigoGenerado)); // Asegurarse de que el código no esté en uso
+
+    // Asignar y registrar el código
+    productoraISRCs[i].codigo_productora = codigoGenerado;
+    usedCodes.add(codigoGenerado); // Marcar el código como usado
+    await ProductoraISRC.create(productoraISRCs[i]); // Insertar en la base de datos
   }
 
   return productoraISRCs;

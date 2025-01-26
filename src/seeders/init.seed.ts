@@ -175,23 +175,17 @@ type VistaData = {
 
 const initSeed = async () => {
   try {
-    console.log("Ejecutando seeders...");
-
     // Insertar datos principales
-    await UsuarioRol.bulkCreate(rolesData, { ignoreDuplicates: true });
-    await ProductoraDocumentoTipo.bulkCreate(documentosData, {
-      ignoreDuplicates: true,
-    });
-    await FonogramaTerritorio.bulkCreate(paisesData, {
-      ignoreDuplicates: true,
-    });
+    await UsuarioRol.bulkCreate(rolesData);
+    await ProductoraDocumentoTipo.bulkCreate(documentosData);
+    await FonogramaTerritorio.bulkCreate(paisesData);
 
     const vistas = await vistasData();
-    await UsuarioVista.bulkCreate(vistas, { ignoreDuplicates: true });
+    await UsuarioVista.bulkCreate(vistas);
 
-    console.log("Seed completado con éxito.");
+    console.log("init.seed completado con éxito.");
   } catch (error) {
-    console.error("Error al realizar el seed:", error);
+    console.error("Error al ejecutar init.seed:", error);
     throw error;
   }
 };

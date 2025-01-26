@@ -2,8 +2,6 @@ import { Productora, ProductoraDocumento, ProductoraDocumentoTipo, ProductoraPre
 
 const seedProductoraData = async () => {
   try {
-    console.log('Seeding datos para ProductoraDocumento y ProductoraPremio...');
-
     // Obtener una productora existente
     const productora = await Productora.findOne({
       where: { nombre_productora: 'WARNER MUSIC ARGENTINA SA' },
@@ -42,8 +40,6 @@ const seedProductoraData = async () => {
       },
     ]);
 
-    console.log('Documentos creados para la productora.');
-
     // Crear postulaciones para la productora
     const fechaAsignacion = new Date();
 
@@ -58,13 +54,12 @@ const seedProductoraData = async () => {
         codigo_postulacion: 'POST002',
         fecha_asignacion: fechaAsignacion,
       },
-    ]);
+    ]); 
 
-    console.log('Postulaciones creadas para la productora.');
+    console.log('productoras.seed completado con éxito.');
 
-    console.log('Seeding completado.');
   } catch (error) {
-    console.error('Error durante el seeding de ProductoraDocumento y ProductoraPremio:', error);
+    console.error('Error durante el seeding de productoras.seed: ', error);
   }
 };
 

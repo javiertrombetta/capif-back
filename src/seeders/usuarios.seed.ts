@@ -1,17 +1,45 @@
 import bcrypt from 'bcrypt';
-import { Usuario, Productora, UsuarioMaestro, UsuarioVista, UsuarioVistaMaestro, UsuarioRol } from '../models';
 import { generarCodigosISRC } from '../services/productoraService';
+import { Usuario, Productora, UsuarioMaestro, UsuarioVista, UsuarioVistaMaestro, UsuarioRol } from '../models';
+
+// Datos iniciales
+const usuariosData = [
+  {
+    nombreRol: 'productor_principal',
+    email: 'principal@productor.com',
+    clave: 'productorprincipal',
+    nombre: 'Productor',
+    apellido: 'Principal',
+    telefono: '1123456789',
+  },
+  {
+    nombreRol: 'productor_secundario',
+    email: 'secundario@productor.com',
+    clave: 'productorsecundario',
+    nombre: 'Productor',
+    apellido: 'Secundario',
+    telefono: '1123456789',
+  },
+  {
+    nombreRol: 'admin_principal',
+    email: 'principal@admin.com',
+    clave: 'adminprincipal',
+    nombre: 'Admin',
+    apellido: 'Principal',
+    telefono: '1123456789',
+  },
+  {
+    nombreRol: 'admin_secundario',
+    email: 'secundario@admin.com',
+    clave: 'adminsecundario',
+    nombre: 'Admin',
+    apellido: 'Secundario',
+    telefono: '1123456789',
+  },
+];
 
 const seedUsuarios = async () => {
   try {
-    console.log('Seeding usuarios...');
-
-    // Encriptar claves
-    const hashClave = async (clave: string): Promise<string> => {
-      const saltRounds = 10;
-      return await bcrypt.hash(clave, saltRounds);
-    };
-
     // Crear Productora para productor_principal
     const productoraPrincipal = await Productora.create({
       nombre_productora: 'WARNER MUSIC ARGENTINA SA',
@@ -28,137 +56,60 @@ const seedUsuarios = async () => {
       alias_cbu: 'principalcbu',
       cbu: '1123456789123456789012',
       email: 'contacto@warnermusic.com.ar',
-    });
+    });    
 
     // Generar códigos ISRC para la productora
-    const isrcCodes = await generarCodigosISRC(productoraPrincipal.id_productora);
-    console.log(`Códigos ISRC generados para la productora:`, isrcCodes);
+    // const isrcCodes = await generarCodigosISRC(productoraPrincipal.id_productora);
+    // console.log('Códigos ISRC generados para la productora:', isrcCodes);
 
-    // Crear productor_principal
-    const productorPrincipalRol = await UsuarioRol.findOne({ where: { nombre_rol: 'productor_principal' } });
-    if (!productorPrincipalRol) throw new Error("Rol 'productor_principal' no encontrado");
+    // Procesar usuarios
+    for (const usuario of usuariosData) {
+      const { nombreRol, email, clave, nombre, apellido, telefono } = usuario;
 
-    const claveProductorPrincipal = await hashClave('productorprincipal');
-    const productorPrincipal = await Usuario.create({
-      email: 'principal@productor.com',
-      clave: claveProductorPrincipal,
-      nombre: 'Productor',
-      apellido: 'Principal',
-      telefono: '1123456789',
-      tipo_registro: 'HABILITADO',
-      rol_id: productorPrincipalRol.id_rol,
-      fecha_ultimo_cambio_rol: new Date(),
-    });
+      // Buscar el rol asociado
+      const rol = await UsuarioRol.findOne({ where: { nombre_rol: nombreRol } });
+      if (!rol) throw new Error(`Rol '${nombreRol}' no encontrado`);
 
-    await UsuarioMaestro.create({
-      usuario_id: productorPrincipal.id_usuario,
-      productora_id: productoraPrincipal.id_productora,
-    });
+      // Encriptar clave
+      const claveHash = await bcrypt.hash(clave, 10);
 
-    const vistasProductorPrincipal = await UsuarioVista.findAll({
-      where: { rol_id: productorPrincipal.rol_id },
-    });
+      // Crear usuario
+      const nuevoUsuario = await Usuario.create({
+        email,
+        clave: claveHash,
+        nombre,
+        apellido,
+        telefono,
+        tipo_registro: 'HABILITADO',
+        rol_id: rol.id_rol,
+        fecha_ultimo_cambio_rol: new Date(),
+      });
 
-    await UsuarioVistaMaestro.bulkCreate(
-      vistasProductorPrincipal.map((vista) => ({
-        usuario_id: productorPrincipal.id_usuario,
-        vista_id: vista.id_vista,
-        is_habilitado: true,
-      }))
-    );
+      console.log(`Usuario creado: ${email} con clave ${clave}`);
 
-    // Crear productor_secundario asociado
-    const productorSecundarioRol = await UsuarioRol.findOne({ where: { nombre_rol: 'productor_secundario' } });
-    if (!productorSecundarioRol) throw new Error("Rol 'productor_secundario' no encontrado");
+      // Asociar con la productora principal
+      await UsuarioMaestro.create({
+        usuario_id: nuevoUsuario.id_usuario,
+        productora_id: productoraPrincipal.id_productora,
+      });
 
-    const claveProductorSecundario = await hashClave('productorsecundario');
-    const productorSecundario = await Usuario.create({
-      email: 'secundario@productor.com',
-      clave: claveProductorSecundario,
-      nombre: 'Productor',
-      apellido: 'Secundario',
-      telefono: '1123456789',
-      tipo_registro: 'HABILITADO',
-      rol_id: productorSecundarioRol.id_rol,
-      fecha_ultimo_cambio_rol: new Date(),
-    });
+      // Buscar vistas asociadas al rol del usuario
+      const vistas = await UsuarioVista.findAll({ where: { rol_id: rol.id_rol } });
 
-    await UsuarioMaestro.create({
-      usuario_id: productorSecundario.id_usuario,
-      productora_id: productoraPrincipal.id_productora,
-    });
+      // Asociar vistas al usuario
+      await UsuarioVistaMaestro.bulkCreate(
+        vistas.map((vista) => ({
+          usuario_id: nuevoUsuario.id_usuario,
+          vista_id: vista.id_vista,
+          is_habilitado: true,
+        }))
+      );      
+    }
 
-    const vistasProductorSecundario = await UsuarioVista.findAll({
-      where: { rol_id: productorSecundario.rol_id },
-    });
-
-    await UsuarioVistaMaestro.bulkCreate(
-      vistasProductorSecundario.map((vista) => ({
-        usuario_id: productorSecundario.id_usuario,
-        vista_id: vista.id_vista,
-        is_habilitado: true,
-      }))
-    );
-
-    // Crear admin_principal
-    const adminPrincipalRol = await UsuarioRol.findOne({ where: { nombre_rol: 'admin_principal' } });
-    if (!adminPrincipalRol) throw new Error("Rol 'admin_principal' no encontrado");
-
-    const claveAdminPrincipal = await hashClave('adminprincipal');
-    const adminPrincipal = await Usuario.create({
-      email: 'principal@admin.com',
-      clave: claveAdminPrincipal,
-      nombre: 'Admin',
-      apellido: 'Principal',
-      telefono: '1123456789',
-      tipo_registro: 'HABILITADO',
-      rol_id: adminPrincipalRol.id_rol,
-      fecha_ultimo_cambio_rol: new Date(),
-    });
-
-    const vistasAdminPrincipal = await UsuarioVista.findAll({
-      where: { rol_id: adminPrincipal.rol_id },
-    });
-
-    await UsuarioVistaMaestro.bulkCreate(
-      vistasAdminPrincipal.map((vista) => ({
-        usuario_id: adminPrincipal.id_usuario,
-        vista_id: vista.id_vista,
-        is_habilitado: true,
-      }))
-    );
-
-    // Crear admin_secundario
-    const adminSecundarioRol = await UsuarioRol.findOne({ where: { nombre_rol: 'admin_secundario' } });
-    if (!adminSecundarioRol) throw new Error("Rol 'admin_secundario' no encontrado");
-
-    const claveAdminSecundario = await hashClave('adminsecundario');
-    const adminSecundario = await Usuario.create({
-      email: 'secundario@admin.com',
-      clave: claveAdminSecundario,
-      nombre: 'Admin',
-      apellido: 'Secundario',
-      telefono: '1123456789',
-      tipo_registro: 'HABILITADO',
-      rol_id: adminSecundarioRol.id_rol,
-      fecha_ultimo_cambio_rol: new Date(),
-    });
-
-    const vistasAdminSecundario = await UsuarioVista.findAll({
-      where: { rol_id: adminSecundario.rol_id },
-    });
-
-    await UsuarioVistaMaestro.bulkCreate(
-      vistasAdminSecundario.map((vista) => ({
-        usuario_id: adminSecundario.id_usuario,
-        vista_id: vista.id_vista,
-        is_habilitado: true,
-      }))
-    );
-
-    console.log('Usuarios creados correctamente.');
+    console.log('usuarios.seed completado con éxito.');
   } catch (error) {
-    console.error('Error creando usuarios:', error);
+    console.error('Error al ejecutar usuarios.seed:', error);
+    throw error;
   }
 };
 

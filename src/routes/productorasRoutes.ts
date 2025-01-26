@@ -24,6 +24,7 @@ import {
   deleteAllPostulaciones
 } from '../controllers/productorasController';
 import { authenticate, authorizeRoles } from '../middlewares/auth';
+import { upload } from '../middlewares/upload';
 
 const router = Router();
 
@@ -34,7 +35,7 @@ const manageRoles = ['admin_principal', 'admin_secundario'];
 // Rutas para Documentos de Productoras
 router.get('/:id/documentos/:docId', authenticate, authorizeRoles(viewRoles), getDocumentoById);
 router.get('/:id/documentos', authenticate, authorizeRoles(viewRoles), getAllDocumentos);
-router.post('/:id/documentos', authenticate, authorizeRoles(manageRoles), createDocumento);
+router.post('/:id/documentos', authenticate, authorizeRoles(manageRoles), upload.single('documento'), createDocumento);
 router.put('/:id/documentos/:docId', authenticate, authorizeRoles(manageRoles), updateDocumento);
 router.delete('/:id/documentos/:docId', authenticate, authorizeRoles(manageRoles), deleteDocumento);
 router.delete('/:id/documentos', authenticate, authorizeRoles(manageRoles), deleteAllDocumentos);

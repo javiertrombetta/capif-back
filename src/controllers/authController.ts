@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
+import { UPLOAD_DIR } from '../app';
+import path from "path";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import logger from "../config/logger";
 
@@ -166,7 +168,7 @@ export const login = async (
     return res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.LOGIN, productoras });
 
   } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error en el inicio de sesión');    
+    handleGeneralError(err, req, res, next, 'Error en el inicio de sesión');
   }
 };
 
@@ -1356,7 +1358,6 @@ export const sendApplication = async (
 
     const {
       productoraData,
-      documentos,
       nombre,
       apellido,
       telefono,
@@ -1396,15 +1397,28 @@ export const sendApplication = async (
     );
 
     // Manejar documentos
-    if (documentos?.length) {
-      await processDocuments(
-        authUser.id_usuario,
-        productora.id_productora,
-        documentos
-      );
-      logger.info(
-        `${req.method} ${req.originalUrl} - Documentos procesados exitosamente.`
-      );
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      const archivos = req.files as Express.Multer.File[];
+
+      try {
+        const documentosProcesados = archivos.map((archivo) => {
+          const partesNombre = archivo.filename.split('_');
+          if (partesNombre.length < 2) {
+            throw new Error(`El nombre del archivo no está en el formato esperado: ${archivo.filename}`);
+          }
+
+          return {
+            nombre_documento: partesNombre[1],
+            ruta_archivo_documento: path.join(UPLOAD_DIR, archivo.filename),
+          };
+        });
+
+        await processDocuments(authUser.id_usuario, productora.id_productora, documentosProcesados, productoraData.cuit_cuil);
+
+        logger.info(`${req.method} ${req.originalUrl} - Documentos procesados exitosamente.`);
+      } catch (err) {
+        handleGeneralError(err, req, res, next, "Error procesando documentos");
+      }
     }
 
     // Actualizar el tipo_registro del usuario a ENVIADO

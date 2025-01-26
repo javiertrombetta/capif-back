@@ -29,10 +29,21 @@ import router from './routes';
 import sequelize from './config/database/sequelize';
 import logger from './config/logger';
 import { setupSwagger } from './config/swagger';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const app = express();
 const globalPrefix = process.env.GLOBAL_PREFIX || 'api/v1';
+
+// Definir y verificar UPLOAD_DIR
+export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || './uploads');
+
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  console.log(`Directorio creado en ${UPLOAD_DIR}`);
+} else {
+  console.log(`Directorio existente en ${UPLOAD_DIR}`);
+}
 
 app.use(cookieParser());
 

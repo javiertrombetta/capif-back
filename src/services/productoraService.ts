@@ -3,6 +3,9 @@ import { Productora, ProductoraDocumento, ProductoraDocumentoTipo, ProductoraISR
 
 import * as MESSAGES from '../utils/messages';
 import * as Err from '../utils/customErrors';
+import path from 'path';
+import { promises as fsPromises } from 'fs';
+import { UPLOAD_DIR } from '../app';
 
 type ProductoraISRCData = {
   productora_id: string;
@@ -153,8 +156,16 @@ export const deleteDocumento = async (productoraId: string, docId: string) => {
     throw new Err.NotFoundError(MESSAGES.ERROR.DOCUMENTOS.NOT_FOUND_BY_ID);
   }
 
+  const filePath = documento.ruta_archivo_documento;
+
+  // Elimina el archivo del sistema de archivos
+  await fsPromises.unlink(filePath);
+
+  // Elimina el registro en la base de datos
   await documento.destroy();
 };
+
+import * as fs from 'fs/promises';
 
 // Servicio para eliminar todos los documentos de una productora
 export const deleteAllDocumentos = async (productoraId: string) => {
@@ -166,6 +177,13 @@ export const deleteAllDocumentos = async (productoraId: string) => {
     throw new Err.NotFoundError(MESSAGES.ERROR.DOCUMENTOS.NOT_FOUND_BY_ID);
   }
 
+  // Elimina cada archivo del sistema de archivos
+  for (const documento of documentos) {
+    const filePath = documento.ruta_archivo_documento;
+    await fs.unlink(filePath);
+  }
+
+  // Elimina los registros de la base de datos
   await ProductoraDocumento.destroy({
     where: { productora_id: productoraId },
   });
@@ -473,7 +491,8 @@ export const getLastRejectionMessage = async (usuarioId: string) => {
 export const processDocuments = async (
   userId: string,
   productoraId: string,
-  documentos: any[]
+  documentos: any[],
+  cuit: string
 ): Promise<void> => {
   const tiposDocumentos = await ProductoraDocumentoTipo.findAll({
     where: {
@@ -486,11 +505,20 @@ export const processDocuments = async (
     if (!tipoDocumento) {
       throw new Err.BadRequestError(`Tipo de documento no válido: ${doc.nombre_documento}`);
     }
+
+    const archivoNormalizado = `${cuit}_${doc.nombre_documento}${path.extname(doc.ruta_archivo_documento)}`;
+    const nuevaRuta = path.join(UPLOAD_DIR, archivoNormalizado);
+
+    // Verifica que el archivo existe y luego lo renombra
+    await fsPromises.access(doc.ruta_archivo_documento);
+    await fsPromises.rename(doc.ruta_archivo_documento, nuevaRuta);
+
+    // Registra el documento en la base de datos
     await ProductoraDocumento.create({
       usuario_principal_id: userId,
       productora_id: productoraId,
       tipo_documento_id: tipoDocumento.id_documento_tipo,
-      ruta_archivo_documento: doc.ruta_archivo_documento,
+      ruta_archivo_documento: nuevaRuta,
     });
   }
 };

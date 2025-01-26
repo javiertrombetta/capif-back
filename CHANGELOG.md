@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.163 - 26-01-2025
+## 🚀 Features
+
+- feat: add count of repertoires in Productora
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.160
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.160 - 26-01-2025
 ## 🚀 Features
 

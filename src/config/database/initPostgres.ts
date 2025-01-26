@@ -72,11 +72,8 @@ const runSeeders = async () => {
   try {
     console.log('Ejecutando seeders...');
     await initSeed();
-    logger.info('Seeder de carga de tablas tipo ejecutado con éxito.');
     await usersSeed();
-    logger.info('Seeder de carga de usuarios ejecutado con éxito.');
     await producersSeed();
-    logger.info('Seeder de carga de productoras ejecutado con éxito.');
   } catch (error) {
     logger.error('Error al ejecutar los seeders:', error);
     throw error;
@@ -92,7 +89,7 @@ const initDatabase = async () => {
       await sequelize.sync();
       console.log('Tablas sincronizadas en desarrollo.');
       await runSeeders();
-      console.log('Seed ejecutado correctamente.');
+      console.log('Todos los seed fueron ejecutados correctamente.');
     } else if (env === 'production') {
       const tablesExist = await checkIfTablesExist();
       if (!tablesExist) {

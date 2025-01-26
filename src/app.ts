@@ -17,20 +17,25 @@ if (env === 'development') {
   );
   dotenv.config();
 }
-import * as Cron from './config/cron';
+
 import express, { Request, Response, NextFunction } from 'express';
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
-import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
-import { errorHandler } from './middlewares/errorHandler';
-import router from './routes';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as Cron from './config/cron';
+
 import sequelize from './config/database/sequelize';
 import logger from './config/logger';
 import { setupSwagger } from './config/swagger';
-import * as fs from 'fs';
-import * as path from 'path';
+
+import { errorHandler } from './middlewares/errorHandler';
+import { transactionMiddleware } from "./middlewares/transaction";
+
+import router from './routes';
 
 const app = express();
 const globalPrefix = process.env.GLOBAL_PREFIX || 'api/v1';
@@ -76,18 +81,18 @@ app.use(
 //   setupSwagger(app); // Swagger solo disponible en entorno de desarrollo
 // }
 
+app.use(transactionMiddleware);
+
 setupSwagger(app);
 
 app.use(`/${globalPrefix}`, router);
-
-app.use(errorHandler);
 
 const connectToDatabase = async () => {
   try {
     await sequelize.authenticate();
     logger.info('Conexión exitosa a la base de datos');
 
-    await sequelize.sync();
+    await sequelize.sync({ alter: true });
     logger.info('Modelos sincronizados con la base de datos');
   } catch (err) {
     logger.error('Error de conexión o sincronización con la base de datos:', err);
@@ -138,13 +143,15 @@ const startServer = () => {
   }
 })();
 
-app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-  logger.error(err.stack || 'Error sin stack');
-  res.status(500).send({ error: 'Algo salió mal, por favor intente de nuevo más tarde.' });
-});
+app.use(errorHandler);
 
-app.use((req: Request, res: Response) => {
-  res.status(404).send({ error: 'Recurso no encontrado' });
-});
+// app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+//   logger.error(err.stack || 'Error sin stack');
+//   res.status(500).send({ error: 'Algo salió mal, por favor intente de nuevo más tarde.' });
+// });
+
+// app.use((req: Request, res: Response) => {
+//   res.status(404).send({ error: 'Recurso no encontrado' });
+// });
 
 export default app;

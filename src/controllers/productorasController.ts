@@ -1,8 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import logger from '../config/logger';
 import { parseISO, isValid } from 'date-fns';
+import archiver from 'archiver';
+import fs from 'fs';
 import * as MESSAGES from '../utils/messages';
 import * as productoraService from '../services/productoraService';
+import * as path from 'path';
+import { handleGeneralError } from '../services/errorService';
+import { UPLOAD_DIR } from '../app';
 
 // Obtener una productora por ID
 export const getProductoraById = async (req: Request, res: Response, next: NextFunction) => {
@@ -11,22 +16,13 @@ export const getProductoraById = async (req: Request, res: Response, next: NextF
 
     logger.info(`${req.method} ${req.originalUrl} - Solicitud para obtener la productora con ID: ${id}.`);
 
-    if (!id) {
-      logger.warn(`${req.method} ${req.originalUrl} - El ID de la productora es requerido.`);
-      return res.status(400).json({ message: MESSAGES.ERROR.PRODUCTORA.ID_REQUIRED });
-    }
-
     const productora = await productoraService.findProductoraById(id);
 
     logger.info(`${req.method} ${req.originalUrl} - Productora encontrada: ${productora.nombre_productora}.`);
     res.status(200).json({ productora });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener la productora por ID: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener la productora por ID');
   }
 };
 
@@ -39,13 +35,9 @@ export const getAllProductoras = async (req: Request, res: Response, next: NextF
 
     logger.info(`${req.method} ${req.originalUrl} - Se encontraron ${productoras.length} productoras.`);
     res.status(200).json({ productoras });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener todas las productoras: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener todas las productoras');
   }
 };
 
@@ -60,13 +52,9 @@ export const createProductora = async (req: Request, res: Response, next: NextFu
 
     logger.info(`${req.method} ${req.originalUrl} - Productora creada exitosamente: ${newProductora.id_productora}`);
     res.status(201).json({ message: MESSAGES.SUCCESS.PRODUCTORA.PRODUCTORA_CREATED, productora: newProductora });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al crear productora: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al crear productora');
   }
 };
 
@@ -82,13 +70,9 @@ export const updateProductora = async (req: Request, res: Response, next: NextFu
 
     logger.info(`${req.method} ${req.originalUrl} - Productora actualizada exitosamente: ${id}`);
     res.status(200).json({ message: MESSAGES.SUCCESS.PRODUCTORA.UPDATED, productora: updatedProductora });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al actualizar productora: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al actualizar productora');
   }
 };
 
@@ -103,13 +87,9 @@ export const deleteProductora = async (req: Request, res: Response, next: NextFu
 
     logger.info(`${req.method} ${req.originalUrl} - Productora eliminada exitosamente: ${id}`);
     res.status(200).json({ message: MESSAGES.SUCCESS.PRODUCTORA.DELETED });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al eliminar productora: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al eliminar productora');
   }
 };
 
@@ -120,17 +100,28 @@ export const getDocumentoById = async (req: Request, res: Response, next: NextFu
 
     logger.info(`${req.method} ${req.originalUrl} - Obteniendo documento con ID: ${docId} para la productora con ID: ${id}.`);
 
+    // Obtén los detalles del documento desde la base de datos
     const documento = await productoraService.getDocumentoById(id, docId);
 
-    logger.info(`${req.method} ${req.originalUrl} - Documento encontrado: ${documento.id_documento}`);
-    res.status(200).json({ documento });
+    const rutaArchivo = documento.ruta_archivo_documento;
+
+    // Verifica que el archivo existe antes de enviarlo
+    if (!path.isAbsolute(rutaArchivo)) {
+      throw new Error('La ruta del archivo no es válida o no es absoluta.');
+    }
+
+    logger.info(`${req.method} ${req.originalUrl} - Enviando archivo: ${rutaArchivo}`);
+    res.sendFile(rutaArchivo, (err) => {
+      if (err) {
+        logger.error(
+          `${req.method} ${req.originalUrl} - Error al enviar el archivo: ${err.message}`
+        );
+        next(new Error('Error al enviar el archivo.'));
+      }
+    });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener documento: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener documento');
   }
 };
 
@@ -141,17 +132,37 @@ export const getAllDocumentos = async (req: Request, res: Response, next: NextFu
 
     logger.info(`${req.method} ${req.originalUrl} - Obteniendo documentos para la productora con ID: ${id}.`);
 
+    // Obtén los documentos de la base de datos
     const documentos = await productoraService.getAllDocumentos(id);
 
-    logger.info(`${req.method} ${req.originalUrl} - Documentos encontrados: ${documentos.length}`);
-    res.status(200).json({ documentos });
+    // Configura el nombre del archivo ZIP
+    const productora = await productoraService.findProductoraById(id);    
+    const zipFileName = `documentos_productora_${productora.cuit_cuil}.zip`;
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.on('error', (err: any) => next(err));
+    archive.pipe(res);
+
+    // Agrega cada documento al archivo ZIP
+    documentos.forEach((doc) => {
+      const filePath = doc.ruta_archivo_documento;
+      if (fs.existsSync(filePath)) {
+        const fileName = path.basename(filePath);
+        archive.file(filePath, { name: fileName });
+      } else {
+        logger.warn(`Archivo no encontrado: ${filePath}`);
+      }
+    });
+
+    // Finaliza el archivo ZIP
+    archive.finalize();
+
+    logger.info(`${req.method} ${req.originalUrl} - Archivos comprimidos y enviados exitosamente.`);
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener documentos: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener los documentos de la productora');
   }
 };
 
@@ -159,21 +170,26 @@ export const getAllDocumentos = async (req: Request, res: Response, next: NextFu
 export const createDocumento = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const documentoData = req.body;
 
     logger.info(`${req.method} ${req.originalUrl} - Creando documento para la productora con ID: ${id}.`);
+
+    // Validar que se subió un archivo
+    if (!req.file) {
+      throw new Error('El archivo es obligatorio para crear un documento.');
+    }
+
+    const documentoData = {
+      ...req.body,
+      ruta_archivo_documento: path.join(UPLOAD_DIR, req.file.filename),
+    };
 
     const newDocumento = await productoraService.createDocumento(id, documentoData);
 
     logger.info(`${req.method} ${req.originalUrl} - Documento creado exitosamente: ${newDocumento.id_documento}`);
-    res.status(201).json({ message: MESSAGES.SUCCESS.DOCUMENTO.CREATED, documento: newDocumento });
+    res.status(201).json({ message: 'Documento creado exitosamente.', documento: newDocumento });
+    
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al crear documento: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al crear documento');
   }
 };
 
@@ -191,13 +207,9 @@ export const updateDocumento = async (req: Request, res: Response, next: NextFun
 
     logger.info(`${req.method} ${req.originalUrl} - Documento actualizado exitosamente: ${docId}`);
     res.status(200).json({ message: MESSAGES.SUCCESS.DOCUMENTO.UPDATED, documento: updatedDocumento });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al actualizar documento: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al actualizar el documento');
   }
 };
 
@@ -212,13 +224,9 @@ export const deleteDocumento = async (req: Request, res: Response, next: NextFun
 
     logger.info(`${req.method} ${req.originalUrl} - Documento eliminado exitosamente: ${docId}`);
     res.status(200).json({ message: MESSAGES.SUCCESS.DOCUMENTO.DELETED });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al eliminar documento: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al eliminar documento');
   }
 };
 
@@ -233,13 +241,9 @@ export const deleteAllDocumentos = async (req: Request, res: Response, next: Nex
 
     logger.info(`${req.method} ${req.originalUrl} - Todos los documentos eliminados exitosamente para la productora con ID: ${id}.`);
     res.status(200).json({ message: MESSAGES.SUCCESS.DOCUMENTO.ALL_DELETED });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al eliminar todos los documentos: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al eliminar todos los documentos');
   }
 };
 
@@ -254,13 +258,9 @@ export const getISRCById = async (req: Request, res: Response, next: NextFunctio
 
     logger.info(`${req.method} ${req.originalUrl} - ISRC encontrado para la productora con ID: ${id}.`);
     res.status(200).json({ isrcs });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener ISRC: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener el ISRC');
   }
 };
 
@@ -273,13 +273,9 @@ export const getAllISRCs = async (req: Request, res: Response, next: NextFunctio
 
     logger.info(`${req.method} ${req.originalUrl} - Total de ISRCs encontrados: ${isrcs.length}.`);
     res.status(200).json({ isrcs });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener todos los ISRC: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener todos los ISRC');
   }
 };
 
@@ -295,13 +291,9 @@ export const createISRC = async (req: Request, res: Response, next: NextFunction
 
     logger.info(`${req.method} ${req.originalUrl} - ISRC creado exitosamente: ${newISRC.id_productora_isrc}`);
     res.status(201).json({ message: MESSAGES.SUCCESS.ISRC.CREATED, isrc: newISRC });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al crear ISRC: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al crear el ISRC');
   }
 };
 
@@ -317,13 +309,9 @@ export const updateISRC = async (req: Request, res: Response, next: NextFunction
 
     logger.info(`${req.method} ${req.originalUrl} - ISRC actualizado exitosamente para la productora con ID: ${id}.`);
     res.status(200).json({ message: MESSAGES.SUCCESS.ISRC.UPDATED, isrc: updatedISRC });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al actualizar ISRC: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al actualizar el ISRC');
   }
 };
 
@@ -338,13 +326,9 @@ export const deleteISRC = async (req: Request, res: Response, next: NextFunction
 
     logger.info(`${req.method} ${req.originalUrl} - ISRCs eliminados exitosamente para la productora con ID: ${id}.`);
     res.status(200).json({ message: MESSAGES.SUCCESS.ISRC.DELETED });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al eliminar ISRCs: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al eliminar los ISRC');
   }
 };
 
@@ -359,13 +343,9 @@ export const getPostulacionById = async (req: Request, res: Response, next: Next
 
     logger.info(`${req.method} ${req.originalUrl} - Postulaciones encontradas para la productora con ID: ${id}.`);
     res.status(200).json({ postulaciones });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener postulaciones: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener las postulaciones');
   }
 };
 
@@ -403,13 +383,9 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
 
     logger.info(`${req.method} ${req.originalUrl} - Total de postulaciones encontradas: ${postulaciones.length}.`);
     res.status(200).json({ postulaciones });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al obtener todas las postulaciones: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al obtener todas las postulaciones');
   }
 };
 
@@ -437,13 +413,9 @@ export const createPostulaciones = async (req: Request, res: Response, next: Nex
 
     logger.info(`${req.method} ${req.originalUrl} - Total de postulaciones creadas: ${createdPostulaciones.length}.`);
     res.status(201).json({ message: 'Postulaciones creadas exitosamente.', total: createdPostulaciones.length });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al crear postulaciones masivamente: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al crear postulaciones masivamente');
   }
 };
 
@@ -459,13 +431,9 @@ export const updatePostulacion = async (req: Request, res: Response, next: NextF
 
     logger.info(`${req.method} ${req.originalUrl} - Postulación actualizada exitosamente: ${updatedPostulacion.id_premio}`);
     res.status(200).json({ message: MESSAGES.SUCCESS.POSTULACION.UPDATED, postulacion: updatedPostulacion });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al actualizar la postulación: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al actualizar la postulación');
   }
 };
 
@@ -480,13 +448,9 @@ export const deletePostulacion = async (req: Request, res: Response, next: NextF
 
     logger.info(`${req.method} ${req.originalUrl} - Postulaciones eliminadas exitosamente para la productora con ID: ${id}.`);
     res.status(200).json({ message: MESSAGES.SUCCESS.POSTULACION.DELETED });
+
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al eliminar postulaciones: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al eliminar la postulación');
   }
 };
 
@@ -500,11 +464,6 @@ export const deleteAllPostulaciones = async (req: Request, res: Response, next: 
     logger.info(`${req.method} ${req.originalUrl} - Todas las postulaciones eliminadas exitosamente.`);
     res.status(200).json({ message: MESSAGES.SUCCESS.POSTULACION.ALL_DELETED });
   } catch (err) {
-    logger.error(
-      `${req.method} ${
-        req.originalUrl
-      } - Error al eliminar todas las postulaciones: ${err instanceof Error ? err.message : 'Error desconocido'}.`
-    );
-    next(err);
+    handleGeneralError(err, req, res, next, 'Error al eliminar todas las postulaciones');
   }
 };

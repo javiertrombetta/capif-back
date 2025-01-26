@@ -66,8 +66,8 @@ ProductoraDocumento.init(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        isUrl: {
-          msg: 'La ruta del archivo debe ser una URL válida.',
+        notEmpty: {
+          msg: 'La ruta del archivo no puede estar vacía.',
         },
       },
     },

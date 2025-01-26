@@ -20,10 +20,11 @@ class Productora extends Model {
   public nacionalidad!: string;
   public alias_cbu!: string;
   public cbu!: string;
+  public cantidad_fonogramas!: number;
   public denominacion_sello!: string | null;
   public datos_adicionales!: string | null;  
   public fecha_alta!: Date | null;
-  public fecha_ultimo_fonograma!: Date | null;
+  public fecha_ultimo_fonograma!: Date | null;  
 
   // Campos específicos para Persona Física
   public nombres!: string | null;
@@ -170,6 +171,17 @@ Productora.init(
         //     throw new Error(validationResult as string);
         //   }
         // },
+      },
+    },
+    cantidad_fonogramas: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: {
+        min: {
+          args: [0],
+          msg: 'La cantidad de fonogramas no puede ser negativa.',
+        },
       },
     },
     denominacion_sello: {

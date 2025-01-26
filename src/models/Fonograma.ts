@@ -248,4 +248,18 @@ Fonograma.init(
   }
 );
 
+Fonograma.afterCreate(async (fonograma, options) => {
+  await Productora.increment('cantidad_fonogramas', {
+    where: { id_productora: fonograma.productora_id },
+    transaction: options?.transaction || undefined,
+  });
+});
+
+Fonograma.afterDestroy(async (fonograma, options) => {
+  await Productora.decrement('cantidad_fonogramas', {
+    where: { id_productora: fonograma.productora_id },
+    transaction: options?.transaction || undefined,
+  });
+});
+
 export default Fonograma;

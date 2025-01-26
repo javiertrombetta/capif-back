@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.166 - 26-01-2025
+## 🐛 Fixes
+
+- fix: add google for emails and transactions
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.163
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.163 - 26-01-2025
 ## 🚀 Features
 

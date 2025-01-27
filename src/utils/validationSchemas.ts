@@ -536,15 +536,6 @@ export const createDocumentoSchema = Joi.object({
       "any.only": "El tipo de documento debe ser uno de los siguientes: dni_persona_fisica, dni_representante_legal, comprobante_ISRC, contrato_social.",
       "any.required": "El tipo de documento es obligatorio.",
     }),
-  cuit: Joi.string()
-    .pattern(/^[0-9]{2}-[0-9]{8}-[0-9]{1}$/)
-    .required()
-    .messages({
-      "string.base": "El CUIT debe ser un texto.",
-      "string.empty": "El CUIT no puede estar vacío.",
-      "string.pattern.base": "El CUIT debe tener el formato XX-XXXXXXXX-X.",
-      "any.required": "El CUIT es obligatorio.",
-    }),
 });
 
 export const documentoParamsSchema = Joi.object({

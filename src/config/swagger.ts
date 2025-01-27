@@ -5,11 +5,21 @@ import { Express } from 'express';
 import {  
   authSchemas,  
   userSchemas,
+  producersSchemas,
+  repertoiresSchemas,
+  conflictsSchemas,
+  cashflowSchemas,
+  auditsSchemas,
 } from './schemas';
 import packageJson from '../../package.json';
 
 import { authSwaggerDocs } from '../docs/authSwagger';
-import { usuariosSwaggerDocs } from '../docs/usuariosSwagger';
+import { usersSwaggerDocs } from '../docs/usersSwagger';
+import { producersSwaggerDocs } from '../docs/producersSwagger';
+import { repertoiresSwaggerDocs } from '../docs/repertoiresSwagger';
+import { conflictsSwaggerDocs } from '../docs/conflictsSwagger';
+import { cashflowSwaggerDocs } from '../docs/cashflowSwagger';
+import { auditsSwaggerDocs } from '../docs/auditsSwagger';
 
 const DOMAIN = process.env.FRONTEND_URL;
 const PORT = process.env.PORT;
@@ -42,6 +52,11 @@ const swaggerOptions = {
       schemas: {
         ...authSchemas,
         ...userSchemas,
+        ...producersSchemas,
+        ...repertoiresSchemas,
+        ...conflictsSchemas,
+        ...cashflowSchemas,
+        ...auditsSchemas,
       },
     },
     servers: [
@@ -51,11 +66,21 @@ const swaggerOptions = {
     ],
     tags: [
       ...authSwaggerDocs.tags,
-      ...usuariosSwaggerDocs.tags,      
+      ...usersSwaggerDocs.tags,
+      ...producersSwaggerDocs.tags,
+      ...repertoiresSwaggerDocs.tags,
+      ...conflictsSwaggerDocs.tags,
+      ...cashflowSwaggerDocs.tags,
+      ...auditsSwaggerDocs.tags,
     ],
     paths: {
       ...authSwaggerDocs.paths,
-      ...usuariosSwaggerDocs.paths,
+      ...usersSwaggerDocs.paths,
+      ...producersSwaggerDocs.paths,
+      ...repertoiresSwaggerDocs.paths,
+      ...conflictsSwaggerDocs.paths,
+      ...cashflowSwaggerDocs.paths,
+      ...auditsSwaggerDocs.paths,
     },
   },
   apis: ['./src/routes/*.ts'],

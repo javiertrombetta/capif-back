@@ -33,6 +33,7 @@ import { actualizarFechaFinSesion, registrarAuditoria, registrarSesion } from ".
 
 import * as Err from "../utils/customErrors";
 import * as MESSAGES from "../utils/messages";
+import { ProductoraDocumento } from "../models";
 
 
 // LOGIN
@@ -1023,6 +1024,23 @@ export const approveApplication = async (
     // Llamar al servicio para generar códigos ISRC
     const productoraId = productora.id_productora;
     const isrcs = await generarCodigosISRC(productoraId);
+
+    // Actualizar los documentos asociados con fecha_confirmado
+    const documentos = await ProductoraDocumento.findAll({
+      where: { productora_id: productoraId },
+    });
+
+    if (documentos && documentos.length > 0) {
+      const fechaConfirmacion = new Date();
+      await Promise.all(
+        documentos.map((documento) =>
+          documento.update({ fecha_confirmado: fechaConfirmacion })
+        )
+      );
+      logger.info(
+        `${req.method} ${req.originalUrl} - Documentos confirmados exitosamente para la productora: ${productoraId}`
+      );
+    }
 
     // Actualizar el tipo_registro del usuario a HABILITADO
     await targetUser.update({ tipo_registro: "HABILITADO" });

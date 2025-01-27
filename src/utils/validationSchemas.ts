@@ -66,7 +66,7 @@ export const resetPasswordSchema = Joi.object({
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-// strart of usuariosRoutes
+// strart of usersRoutes
 
 export const availableDisableSchema = Joi.object({
   usuarioId: uuidSchema,  
@@ -477,4 +477,346 @@ export const changePasswordBodySchema = Joi.object({
       "any.only": "La confirmación de contraseña debe coincidir con la nueva contraseña.",
       "any.required": "La confirmación de contraseña es obligatoria.",
     }),
+});
+
+
+//  end of usersRoutes
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// strart of producersRoutes
+
+export const getDocumentoByIdSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+  docId: Joi.string().uuid().required().messages({
+    "string.base": "El ID del documento debe ser un texto.",
+    "string.empty": "El ID del documento no puede estar vacío.",
+    "string.uuid": "El ID del documento debe ser un UUID válido.",
+    "any.required": "El ID del documento es obligatorio.",
+  }),
+});
+
+export const getAllDocumentosSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const getDocumentosMetadataSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const createDocumentoSchema = Joi.object({
+  tipoDocumento: Joi.string()
+    .valid(
+      "dni_persona_fisica",
+      "dni_representante_legal",
+      "comprobante_ISRC",
+      "contrato_social"
+    )
+    .required()
+    .messages({
+      "string.base": "El tipo de documento debe ser un texto.",
+      "string.empty": "El tipo de documento no puede estar vacío.",
+      "any.only": "El tipo de documento debe ser uno de los siguientes: dni_persona_fisica, dni_representante_legal, comprobante_ISRC, contrato_social.",
+      "any.required": "El tipo de documento es obligatorio.",
+    }),
+  cuit: Joi.string()
+    .pattern(/^[0-9]{2}-[0-9]{8}-[0-9]{1}$/)
+    .required()
+    .messages({
+      "string.base": "El CUIT debe ser un texto.",
+      "string.empty": "El CUIT no puede estar vacío.",
+      "string.pattern.base": "El CUIT debe tener el formato XX-XXXXXXXX-X.",
+      "any.required": "El CUIT es obligatorio.",
+    }),
+});
+
+export const documentoParamsSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+  docId: Joi.string().uuid().required().messages({
+    "string.base": "El ID del documento debe ser un texto.",
+    "string.empty": "El ID del documento no puede estar vacío.",
+    "string.uuid": "El ID del documento debe ser un UUID válido.",
+    "any.required": "El ID del documento es obligatorio.",
+  }),
+});
+
+export const updateDocumentoSchema = Joi.object({
+  nombre_documento: Joi.string().required().messages({
+    "string.base": "El nombre del documento debe ser un texto.",
+    "string.empty": "El nombre del documento no puede estar vacío.",
+    "any.required": "El nombre del documento es obligatorio.",
+  }),
+  ruta_archivo_documento: Joi.string().required().messages({
+    "string.base": "La ruta del archivo debe ser un texto.",
+    "string.empty": "La ruta del archivo no puede estar vacía.",
+    "any.required": "La ruta del archivo es obligatoria.",
+  }),
+});
+
+export const deleteAllDocumentosSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const getISRCByIdSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const createISRCBodySchema = Joi.object({
+  codigo_productora: Joi.string().required().messages({
+    "string.base": "El código ISRC debe ser un texto.",
+    "string.empty": "El código ISRC no puede estar vacío.",
+    "any.required": "El código ISRC es obligatorio.",
+  }),
+  descripcion: Joi.string().allow("").optional().messages({
+    "string.base": "La descripción debe ser un texto.",
+  }),
+});
+
+export const createISRCParamsSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const updateISRCBodySchema = Joi.object({
+  id_productora_isrc: Joi.string().uuid().required().messages({
+    "string.base": "El ID del ISRC debe ser un texto.",
+    "string.empty": "El ID del ISRC no puede estar vacío.",
+    "string.uuid": "El ID del ISRC debe ser un UUID válido.",
+    "any.required": "El ID del ISRC es obligatorio.",
+  }),
+  codigo_productora: Joi.string().required().messages({
+    "string.base": "El código ISRC debe ser un texto.",
+    "string.empty": "El código ISRC no puede estar vacío.",
+    "any.required": "El código ISRC es obligatorio.",
+  }),
+  descripcion: Joi.string().allow("").optional().messages({
+    "string.base": "La descripción debe ser un texto.",
+  }),
+});
+
+export const updateISRCParamsSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const deleteISRCParamsSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const getPostulacionesByIdSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const getAllPostulacionesQuerySchema = Joi.object({
+  startDate: Joi.date().iso().optional().messages({
+    "date.base": "La fecha de inicio debe ser válida.",
+    "date.format": "La fecha de inicio debe estar en formato ISO.",
+  }),
+  endDate: Joi.date().iso().optional().messages({
+    "date.base": "La fecha de fin debe ser válida.",
+    "date.format": "La fecha de fin debe estar en formato ISO.",
+  }),
+  productoraName: Joi.string().optional().messages({
+    "string.base": "El nombre de la productora debe ser un texto.",
+  }),
+});
+
+export const createPostulacionesQuerySchema = Joi.object({
+  startDate: Joi.date().iso().required().messages({
+    "date.base": "La fecha de inicio debe ser válida.",
+    "date.format": "La fecha de inicio debe estar en formato ISO.",
+    "any.required": "La fecha de inicio es obligatoria.",
+  }),
+  endDate: Joi.date().iso().required().messages({
+    "date.base": "La fecha de fin debe ser válida.",
+    "date.format": "La fecha de fin debe estar en formato ISO.",
+    "any.required": "La fecha de fin es obligatoria.",
+  }),
+});
+
+export const updatePostulacionBodySchema = Joi.object({
+  id_premio: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la postulación debe ser un texto.",
+    "string.empty": "El ID de la postulación no puede estar vacío.",
+    "string.uuid": "El ID de la postulación debe ser un UUID válido.",
+    "any.required": "El ID de la postulación es obligatorio.",
+  }),
+  nombre_premio: Joi.string().required().messages({
+    "string.base": "El nombre del premio debe ser un texto.",
+    "string.empty": "El nombre del premio no puede estar vacío.",
+    "any.required": "El nombre del premio es obligatorio.",
+  }),
+  fecha_asignacion: Joi.date().iso().optional().messages({
+    "date.base": "La fecha de asignación debe ser válida.",
+    "date.format": "La fecha de asignación debe estar en formato ISO.",
+  }),
+});
+
+export const updatePostulacionParamsSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const deletePostulacionParamsSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const getProductoraByIdParamsSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const createProductoraBodySchema = Joi.object({
+  nombre_productora: Joi.string().required().messages({
+    "string.base": "El nombre de la productora debe ser un texto.",
+    "string.empty": "El nombre de la productora no puede estar vacío.",
+    "any.required": "El nombre de la productora es obligatorio.",
+  }),
+  direccion: Joi.string().required().messages({
+    "string.base": "La dirección debe ser un texto.",
+    "string.empty": "La dirección no puede estar vacía.",
+    "any.required": "La dirección es obligatoria.",
+  }),
+  telefono: Joi.string()
+    .pattern(/^\+?[0-9\s\-]+$/)
+    .required()
+    .messages({
+      "string.base": "El teléfono debe ser un texto.",
+      "string.empty": "El teléfono no puede estar vacío.",
+      "string.pattern.base": "El teléfono tiene un formato inválido.",
+      "any.required": "El teléfono es obligatorio.",
+    }),
+  email: Joi.string().email().required().messages({
+    "string.base": "El correo electrónico debe ser un texto.",
+    "string.empty": "El correo electrónico no puede estar vacío.",
+    "string.email": "El correo electrónico tiene un formato inválido.",
+    "any.required": "El correo electrónico es obligatorio.",
+  }),
+  cuit_cuil: Joi.string()
+    .pattern(/^\d{2}-\d{8}-\d{1}$/)
+    .required()
+    .messages({
+      "string.base": "El CUIT/CUIL debe ser un texto.",
+      "string.empty": "El CUIT/CUIL no puede estar vacío.",
+      "string.pattern.base": "El CUIT/CUIL tiene un formato inválido.",
+      "any.required": "El CUIT/CUIL es obligatorio.",
+    }),
+});
+
+export const updateProductoraBodySchema = Joi.object({
+  nombre_productora: Joi.string().required().messages({
+    "string.base": "El nombre de la productora debe ser un texto.",
+    "string.empty": "El nombre de la productora no puede estar vacío.",
+    "any.required": "El nombre de la productora es obligatorio.",
+  }),
+  direccion: Joi.string().required().messages({
+    "string.base": "La dirección debe ser un texto.",
+    "string.empty": "La dirección no puede estar vacía.",
+    "any.required": "La dirección es obligatoria.",
+  }),
+  telefono: Joi.string()
+    .pattern(/^\+?[0-9\s\-]+$/)
+    .required()
+    .messages({
+      "string.base": "El teléfono debe ser un texto.",
+      "string.empty": "El teléfono no puede estar vacío.",
+      "string.pattern.base": "El teléfono tiene un formato inválido.",
+      "any.required": "El teléfono es obligatorio.",
+    }),
+  email: Joi.string().email().required().messages({
+    "string.base": "El correo electrónico debe ser un texto.",
+    "string.empty": "El correo electrónico no puede estar vacío.",
+    "string.email": "El correo electrónico tiene un formato inválido.",
+    "any.required": "El correo electrónico es obligatorio.",
+  }),
+  cuit_cuil: Joi.string()
+    .pattern(/^\d{2}-\d{8}-\d{1}$/)
+    .required()
+    .messages({
+      "string.base": "El CUIT/CUIL debe ser un texto.",
+      "string.empty": "El CUIT/CUIL no puede estar vacío.",
+      "string.pattern.base": "El CUIT/CUIL tiene un formato inválido.",
+      "any.required": "El CUIT/CUIL es obligatorio.",
+    }),
+});
+
+export const updateProductoraParamsSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
+});
+
+export const deleteProductoraParamsSchema = Joi.object({
+  id: Joi.string().uuid().required().messages({
+    "string.base": "El ID de la productora debe ser un texto.",
+    "string.empty": "El ID de la productora no puede estar vacío.",
+    "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    "any.required": "El ID de la productora es obligatorio.",
+  }),
 });

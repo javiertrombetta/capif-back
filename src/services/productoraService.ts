@@ -96,9 +96,23 @@ export const deleteProductora = async (id: string) => {
   await productora.destroy();
 };
 
-// Servicio para obtener todos los documentos de una productora
+// Servicio para obtener todos los archivos de una productora
 export const getAllDocumentos = async (productoraId: string) => {
   const documentos = await ProductoraDocumento.findAll({ where: { productora_id: productoraId } });
+
+  if (!documentos || documentos.length === 0) {
+    throw new Err.NotFoundError(MESSAGES.ERROR.DOCUMENTOS.NOT_FOUND);
+  }
+
+  return documentos;
+};
+
+// Servicio para obtener todos los metadatos de los archivos de una productora
+export const getDocumentosMetadata = async (productoraId: string) => {
+  const documentos = await ProductoraDocumento.findAll({
+    where: { productora_id: productoraId },
+    attributes: ["id_documento", "ruta_archivo_documento"],
+  });
 
   if (!documentos || documentos.length === 0) {
     throw new Err.NotFoundError(MESSAGES.ERROR.DOCUMENTOS.NOT_FOUND);
@@ -132,7 +146,7 @@ export const createDocumento = async (productoraId: string, data: any) => {
 };
 
 // Servicio para actualizar un documento de una productora
-export const updateDocumento = async (productoraId: string, docId: string, data: any) => {
+export const updateDocumento = async (productoraId: string, docId: string, data: any, userRole: string) => {
   const documento = await ProductoraDocumento.findOne({
     where: { productora_id: productoraId, id_documento: docId },
   });
@@ -141,19 +155,27 @@ export const updateDocumento = async (productoraId: string, docId: string, data:
     throw new Err.NotFoundError(MESSAGES.ERROR.DOCUMENTOS.NOT_FOUND_BY_ID);
   }
 
+  if (documento.fecha_confirmado && userRole === 'productor_principal') {
+    throw new Err.ForbiddenError('El documento ya está confirmado y no puede ser modificado por este rol.');
+  }
+
   await documento.update(data);
 
   return documento;
 };
 
 // Servicio para eliminar un documento de una productora
-export const deleteDocumento = async (productoraId: string, docId: string) => {
+export const deleteDocumento = async (productoraId: string, docId: string, userRole: string) => {
   const documento = await ProductoraDocumento.findOne({
     where: { productora_id: productoraId, id_documento: docId },
   });
 
   if (!documento) {
     throw new Err.NotFoundError(MESSAGES.ERROR.DOCUMENTOS.NOT_FOUND_BY_ID);
+  }
+
+  if (documento.fecha_confirmado && userRole === 'productor_principal') {
+    throw new Err.ForbiddenError('El documento ya está confirmado y no puede ser modificado por este rol.');
   }
 
   const filePath = documento.ruta_archivo_documento;
@@ -178,7 +200,7 @@ export const deleteAllDocumentos = async (productoraId: string) => {
   }
 
   // Elimina cada archivo del sistema de archivos
-  for (const documento of documentos) {
+  for (const documento of documentos) {    
     const filePath = documento.ruta_archivo_documento;
     await fs.unlink(filePath);
   }

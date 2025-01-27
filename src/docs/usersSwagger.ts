@@ -1,4 +1,4 @@
-export const usuariosSwaggerDocs = {
+export const usersSwaggerDocs = {
     tags: [
         {
             name: "Usuarios",

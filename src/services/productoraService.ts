@@ -338,6 +338,12 @@ export const getAllPostulaciones = async (filters: { startDate?: string; endDate
         },
       },
     });
+  } else {
+    include.push({
+      model: Productora,
+      as: 'productoraDelPremio',
+      required: true,
+    });
   }
 
   const postulaciones = await ProductoraPremio.findAll({

@@ -59,8 +59,8 @@ const seedUsuarios = async () => {
     });    
 
     // Generar códigos ISRC para la productora
-    // const isrcCodes = await generarCodigosISRC(productoraPrincipal.id_productora);
-    // console.log('Códigos ISRC generados para la productora:', isrcCodes);
+    const isrcCodes = await generarCodigosISRC(productoraPrincipal.id_productora);
+    console.log('Códigos ISRC generados para la productora:', isrcCodes);
 
     // Procesar usuarios
     for (const usuario of usuariosData) {

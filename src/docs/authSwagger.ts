@@ -2,7 +2,7 @@ export const authSwaggerDocs = {
     tags: [
         {
             name: "Autenticación",
-            description: "Gestión de la autenticación de los usuarios y registros."
+            description: "Gestión de la autenticación de los usuarios y registros nuevos."
         }
     ],
     paths: {

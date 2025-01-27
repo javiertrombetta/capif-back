@@ -1,13 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
-import logger from '../config/logger';
 import { parseISO, isValid } from 'date-fns';
 import archiver from 'archiver';
 import fs from 'fs';
-import * as MESSAGES from '../utils/messages';
-import * as productoraService from '../services/productoraService';
 import * as path from 'path';
-import { handleGeneralError } from '../services/errorService';
+
+import logger from '../config/logger';
 import { UPLOAD_DIR } from '../app';
+
+import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
+import { UsuarioResponse } from '../interfaces/UsuarioResponse';
+
+import * as productoraService from '../services/productoraService';
+import { handleGeneralError } from '../services/errorService';
+import { getAuthenticatedUser } from '../services/authService';
+
+import * as MESSAGES from '../utils/messages';
+import * as Err from "../utils/customErrors";
 
 // Obtener una productora por ID
 export const getProductoraById = async (req: Request, res: Response, next: NextFunction) => {
@@ -125,7 +133,7 @@ export const getDocumentoById = async (req: Request, res: Response, next: NextFu
   }
 };
 
-// Obtener todos los documentos de una productora por ID
+// Obtener todos los archivos de una productora por ID
 export const getAllDocumentos = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
@@ -136,7 +144,7 @@ export const getAllDocumentos = async (req: Request, res: Response, next: NextFu
     const documentos = await productoraService.getAllDocumentos(id);
 
     // Configura el nombre del archivo ZIP
-    const productora = await productoraService.findProductoraById(id);    
+    const productora = await productoraService.findProductoraById(id);
     const zipFileName = `documentos_productora_${productora.cuit_cuil}.zip`;
 
     res.setHeader('Content-Type', 'application/zip');
@@ -163,6 +171,29 @@ export const getAllDocumentos = async (req: Request, res: Response, next: NextFu
     logger.info(`${req.method} ${req.originalUrl} - Archivos comprimidos y enviados exitosamente.`);
   } catch (err) {
     handleGeneralError(err, req, res, next, 'Error al obtener los documentos de la productora');
+  }
+};
+
+// Obtener los metadatos de los archivos de una productora
+export const getDocumentosMetadata = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    logger.info(`${req.method} ${req.originalUrl} - Obteniendo metadatos de documentos para la productora con ID: ${id}.`);
+
+    // Obtén los documentos de la base de datos
+    const documentos = await productoraService.getDocumentosMetadata(id);
+
+    if (!documentos.length) {
+      logger.warn(`${req.method} ${req.originalUrl} - No se encontraron documentos para la productora con ID: ${id}.`);
+    }
+
+    res.status(200).json({
+      message: "Metadatos de documentos obtenidos exitosamente.",
+      documentos,
+    });
+  } catch (err) {
+    handleGeneralError(err, req, res, next, "Error al obtener metadatos de documentos");
   }
 };
 
@@ -194,20 +225,30 @@ export const createDocumento = async (req: Request, res: Response, next: NextFun
 };
 
 // Actualizar un documento de una productora
-export const updateDocumento = async (req: Request, res: Response, next: NextFunction) => {
+export const updateDocumento = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id, docId } = req.params;
     const documentoData = req.body;
 
-    logger.info(
-      `${req.method} ${req.originalUrl} - Actualizando documento con ID: ${docId} para la productora con ID: ${id}.`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Actualizando documento con ID: ${docId} para la productora con ID: ${id}.`);
 
-    const updatedDocumento = await productoraService.updateDocumento(id, docId, documentoData);
+    // Verifica el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    if (!authUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado.`);
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED));
+    }
+
+    const updatedDocumento = await productoraService.updateDocumento(id, docId, documentoData, authUser.rol.nombre_rol);
 
     logger.info(`${req.method} ${req.originalUrl} - Documento actualizado exitosamente: ${docId}`);
-    res.status(200).json({ message: MESSAGES.SUCCESS.DOCUMENTO.UPDATED, documento: updatedDocumento });
 
+    res.status(200).json({ message: MESSAGES.SUCCESS.DOCUMENTO.UPDATED, documento: updatedDocumento });
   } catch (err) {
     handleGeneralError(err, req, res, next, 'Error al actualizar el documento');
   }
@@ -220,7 +261,15 @@ export const deleteDocumento = async (req: Request, res: Response, next: NextFun
 
     logger.info(`${req.method} ${req.originalUrl} - Eliminando documento con ID: ${docId} para la productora con ID: ${id}.`);
 
-    await productoraService.deleteDocumento(id, docId);
+    // Verifica el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    if (!authUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado.`);
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED));
+    }
+
+    await productoraService.deleteDocumento(id, docId, authUser.rol.nombre_rol);
 
     logger.info(`${req.method} ${req.originalUrl} - Documento eliminado exitosamente: ${docId}`);
     res.status(200).json({ message: MESSAGES.SUCCESS.DOCUMENTO.DELETED });
@@ -236,6 +285,9 @@ export const deleteAllDocumentos = async (req: Request, res: Response, next: Nex
     const { id } = req.params;
 
     logger.info(`${req.method} ${req.originalUrl} - Eliminando todos los documentos para la productora con ID: ${id}.`);
+
+    // Verifica el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
     await productoraService.deleteAllDocumentos(id);
 

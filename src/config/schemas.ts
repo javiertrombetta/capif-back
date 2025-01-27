@@ -98,7 +98,7 @@ export const authSchemas = {
           cuit_cuil: {
             type: 'string',
             description: 'CUIT o CUIL de la productora.',
-            example: '30-12345678-9',
+            example: '30123456789',
           },
           email: {
             type: 'string',
@@ -203,7 +203,7 @@ export const authSchemas = {
           cuit_representante: {
             type: 'string',
             description: 'CUIT del representante legal en caso de persona jurídica.',
-            example: '20-12345678-5',
+            example: '20123456785',
             nullable: true,
           },
         },
@@ -446,3 +446,546 @@ export const userSchemas = {
   },
 };
 
+export const producersSchemas = {
+  GetDocumentoById: {
+    title: "Productoras - Obtener Documento por ID",
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        format: "uuid",
+        description: "ID de la productora.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+      docId: {
+        type: "string",
+        format: "uuid",
+        description: "ID del documento asociado a la productora.",
+        example: "987e6543-e21b-11d3-b456-426614174000",
+      },
+    },
+  },
+  GetAllDocumentos: {
+    title: "Productoras - Obtener Todos los Documentos",
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        format: "uuid",
+        description: "ID de la productora.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+    },
+  },
+  CreateDocumento: {
+    title: "Productoras - Crear Documento",
+    type: "object",
+    properties: {
+      tipoDocumento: {
+        type: "string",
+        description: "Tipo de documento que se está subiendo.",
+        example: "dni_persona_fisica",
+        enum: [
+          "dni_persona_fisica",
+          "dni_representante_legal",
+          "comprobante_ISRC",
+          "contrato_social",
+        ],
+      },
+      cuit: {
+        type: "string",
+        description: "CUIT de la productora asociada al documento.",
+        example: "30123456789",
+      },
+    },
+    required: ["tipoDocumento", "cuit"],
+  },
+  UpdateDocumento: {
+    title: "Productoras - Actualizar Documento",
+    type: "object",
+    properties: {
+      nombre_documento: {
+        type: "string",
+        description: "Nombre del documento.",
+        example: "contrato_actualizado.pdf",
+      },
+      ruta_archivo_documento: {
+        type: "string",
+        description: "Ruta del archivo actualizado.",
+        example: "/uploads/contrato_actualizado.pdf",
+      },
+    },
+    required: ["nombre_documento", "ruta_archivo_documento"],
+  },
+  DeleteDocumento: {
+    title: "Productoras - Eliminar Documento",
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        format: "uuid",
+        description: "ID de la productora.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+      docId: {
+        type: "string",
+        format: "uuid",
+        description: "ID del documento asociado a la productora.",
+        example: "987e6543-e21b-11d3-b456-426614174000",
+      },
+    },
+  },
+  DeleteAllDocumentos: {
+    title: "Productoras - Eliminar Todos los Documentos",
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        format: "uuid",
+        description: "ID de la productora.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+    },
+  },
+  GetISRCById: {
+    title: "Productoras - Obtener ISRC",
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        format: "uuid",
+        description: "ID de la productora.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+    },
+  },
+  GetAllISRCs: {
+    title: "Productoras - Obtener Todos los ISRC",
+    type: "object",
+    properties: {
+      isrcs: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              format: "uuid",
+              description: "ID del ISRC.",
+              example: "123e4567-e89b-12d3-a456-426614174001",
+            },
+            codigo: {
+              type: "string",
+              description: "Código ISRC.",
+              example: "US-123-21-12345",
+            },
+            productora_id: {
+              type: "string",
+              format: "uuid",
+              description: "ID de la productora asociada.",
+              example: "123e4567-e89b-12d3-a456-426614174000",
+            },
+          },
+        },
+      },
+    },
+  },
+  CreateISRC: {
+    title: "Productoras - Crear ISRC",
+    type: "object",
+    properties: {
+      codigo_productora: {
+        type: "string",
+        description: "Código ISRC asociado a la productora.",
+        example: "US-123-21-12345",
+      },
+      descripcion: {
+        type: "string",
+        description: "Descripción adicional para el ISRC (opcional).",
+        example: "Código ISRC para el álbum 2023.",
+      },
+    },
+    required: ["codigo_productora"],
+  },
+  UpdateISRC: {
+    title: "Productoras - Actualizar ISRC",
+    type: "object",
+    properties: {
+      id_productora_isrc: {
+        type: "string",
+        format: "uuid",
+        description: "ID único del ISRC que se actualizará.",
+        example: "123e4567-e89b-12d3-a456-426614174001",
+      },
+      codigo_productora: {
+        type: "string",
+        description: "Nuevo código ISRC.",
+        example: "US-123-21-54321",
+      },
+      descripcion: {
+        type: "string",
+        description: "Descripción actualizada para el ISRC (opcional).",
+        example: "Código ISRC actualizado para el álbum 2024.",
+      },
+    },
+    required: ["id_productora_isrc", "codigo_productora"],
+  },
+  DeleteISRC: {
+    title: "Productoras - Eliminar ISRCs",
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        format: "uuid",
+        description: "ID de la productora cuyos ISRCs serán eliminados.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+    },
+  },
+  GetPostulacionesById: {
+    title: "Productoras - Obtener Postulaciones",
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        format: "uuid",
+        description: "ID de la productora.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+      postulaciones: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id_premio: {
+              type: "string",
+              format: "uuid",
+              description: "ID del premio o postulación.",
+              example: "987e6543-e21b-11d3-b456-426614174000",
+            },
+            nombre_premio: {
+              type: "string",
+              description: "Nombre del premio o postulación.",
+              example: "Mejor Álbum del Año",
+            },
+            fecha_postulacion: {
+              type: "string",
+              format: "date-time",
+              description: "Fecha en la que se realizó la postulación.",
+              example: "2023-01-15T10:00:00Z",
+            },
+          },
+        },
+      },
+    },
+  },
+  GetAllPostulaciones: {
+    title: "Productoras - Obtener Todas las Postulaciones",
+    type: "object",
+    properties: {
+      postulaciones: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id_premio: {
+              type: "string",
+              format: "uuid",
+              description: "ID del premio o postulación.",
+              example: "987e6543-e21b-11d3-b456-426614174000",
+            },
+            nombre_premio: {
+              type: "string",
+              description: "Nombre del premio o postulación.",
+              example: "Mejor Álbum del Año",
+            },
+            fecha_asignacion: {
+              type: "string",
+              format: "date-time",
+              description: "Fecha en que se realizó la asignación del premio.",
+              example: "2023-01-15T10:00:00Z",
+            },
+            productora: {
+              type: "object",
+              properties: {
+                id_productora: {
+                  type: "string",
+                  format: "uuid",
+                  description: "ID de la productora.",
+                  example: "123e4567-e89b-12d3-a456-426614174000",
+                },
+                nombre_productora: {
+                  type: "string",
+                  description: "Nombre de la productora asociada.",
+                  example: "Productora Ejemplo",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  CreatePostulaciones: {
+    title: "Productoras - Crear Postulaciones Masivamente",
+    type: "object",
+    properties: {
+      startDate: {
+        type: "string",
+        format: "date-time",
+        description: "Fecha de inicio para el filtro de creación de postulaciones.",
+        example: "2023-01-01T00:00:00Z",
+      },
+      endDate: {
+        type: "string",
+        format: "date-time",
+        description: "Fecha de fin para el filtro de creación de postulaciones.",
+        example: "2023-12-31T23:59:59Z",
+      },
+    },
+    required: ["startDate", "endDate"],
+  },
+  UpdatePostulacion: {
+    title: "Productoras - Actualizar Postulación",
+    type: "object",
+    properties: {
+      id_premio: {
+        type: "string",
+        format: "uuid",
+        description: "ID único de la postulación que se actualizará.",
+        example: "987e6543-e21b-11d3-b456-426614174000",
+      },
+      nombre_premio: {
+        type: "string",
+        description: "Nuevo nombre del premio o postulación.",
+        example: "Mejor Álbum del Año - Actualizado",
+      },
+      fecha_asignacion: {
+        type: "string",
+        format: "date-time",
+        description: "Fecha actualizada de asignación del premio.",
+        example: "2024-01-15T10:00:00Z",
+      },
+    },
+    required: ["id_premio", "nombre_premio"],
+  },
+  DeletePostulacion: {
+    title: "Productoras - Eliminar Postulaciones",
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        format: "uuid",
+        description: "ID de la productora cuyos postulaciones serán eliminadas.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+    },
+  },
+  DeleteAllPostulaciones: {
+    title: "Productoras - Eliminar Todas las Postulaciones",
+    type: "object",
+    properties: {
+      message: {
+        type: "string",
+        description: "Mensaje de éxito.",
+        example: "Todas las postulaciones eliminadas exitosamente.",
+      },
+    },
+  },
+  GetProductoraById: {
+    title: "Productoras - Obtener Productora por ID",
+    type: "object",
+    properties: {
+      id_productora: {
+        type: "string",
+        format: "uuid",
+        description: "ID único de la productora.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+      nombre_productora: {
+        type: "string",
+        description: "Nombre de la productora.",
+        example: "Productora Ejemplo",
+      },
+      direccion: {
+        type: "string",
+        description: "Dirección de la productora.",
+        example: "Av. Siempre Viva 123",
+      },
+      telefono: {
+        type: "string",
+        description: "Teléfono de contacto de la productora.",
+        example: "+54 11 1234-5678",
+      },
+      email: {
+        type: "string",
+        format: "email",
+        description: "Correo electrónico de la productora.",
+        example: "contacto@productora.com",
+      },
+    },
+  },
+  GetAllProductoras: {
+    title: "Productoras - Obtener Todas las Productoras",
+    type: "object",
+    properties: {
+      productoras: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            id_productora: {
+              type: "string",
+              format: "uuid",
+              description: "ID único de la productora.",
+              example: "123e4567-e89b-12d3-a456-426614174000",
+            },
+            nombre_productora: {
+              type: "string",
+              description: "Nombre de la productora.",
+              example: "Productora Ejemplo",
+            },
+            direccion: {
+              type: "string",
+              description: "Dirección de la productora.",
+              example: "Av. Siempre Viva 123",
+            },
+            telefono: {
+              type: "string",
+              description: "Teléfono de contacto de la productora.",
+              example: "+54 11 1234-5678",
+            },
+            email: {
+              type: "string",
+              format: "email",
+              description: "Correo electrónico de la productora.",
+              example: "contacto@productora.com",
+            },
+            codigosDeLaProductora: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id_productora_isrc: {
+                    type: "string",
+                    format: "uuid",
+                    description: "ID del ISRC asociado a la productora.",
+                    example: "123e4567-e89b-12d3-a456-426614174001",
+                  },
+                  codigo_isrc: {
+                    type: "string",
+                    description: "Código ISRC.",
+                    example: "US-123-21-12345",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+  CreateProductora: {
+    title: "Productoras - Crear Productora",
+    type: "object",
+    properties: {
+      nombre_productora: {
+        type: "string",
+        description: "Nombre de la nueva productora.",
+        example: "Productora Ejemplo",
+      },
+      direccion: {
+        type: "string",
+        description: "Dirección de la productora.",
+        example: "Av. Siempre Viva 123",
+      },
+      telefono: {
+        type: "string",
+        description: "Teléfono de contacto de la productora.",
+        example: "+54 11 1234-5678",
+      },
+      email: {
+        type: "string",
+        format: "email",
+        description: "Correo electrónico de la productora.",
+        example: "contacto@productora.com",
+      },
+      cuit_cuil: {
+        type: "string",
+        description: "CUIT o CUIL de la productora.",
+        example: "30-12345678-9",
+      },
+    },
+    required: ["nombre_productora", "direccion", "telefono", "email", "cuit_cuil"],
+  },
+  UpdateProductora: {
+    title: "Productoras - Actualizar Productora",
+    type: "object",
+    properties: {
+      nombre_productora: {
+        type: "string",
+        description: "Nombre actualizado de la productora.",
+        example: "Productora Actualizada",
+      },
+      direccion: {
+        type: "string",
+        description: "Dirección actualizada de la productora.",
+        example: "Av. Siempre Viva 456",
+      },
+      telefono: {
+        type: "string",
+        description: "Teléfono actualizado de la productora.",
+        example: "+54 11 9876-5432",
+      },
+      email: {
+        type: "string",
+        format: "email",
+        description: "Correo electrónico actualizado de la productora.",
+        example: "actualizado@productora.com",
+      },
+      cuit_cuil: {
+        type: "string",
+        description: "CUIT o CUIL actualizado de la productora.",
+        example: "30-87654321-2",
+      },
+    },
+    required: ["nombre_productora", "direccion", "telefono", "email", "cuit_cuil"],
+  },
+  DeleteProductora: {
+    title: "Productoras - Eliminar Productora",
+    type: "object",
+    properties: {
+      id: {
+        type: "string",
+        format: "uuid",
+        description: "ID único de la productora a eliminar.",
+        example: "123e4567-e89b-12d3-a456-426614174000",
+      },
+      message: {
+        type: "string",
+        description: "Mensaje de confirmación de eliminación.",
+        example: "Productora eliminada exitosamente.",
+      },
+    },
+  },
+};
+
+export const repertoiresSchemas = {
+
+  
+}
+
+export const conflictsSchemas = {
+
+  
+}
+
+export const cashflowSchemas = {
+
+  
+}
+
+export const auditsSchemas = {
+
+  
+}

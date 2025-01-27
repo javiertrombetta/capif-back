@@ -1,18 +1,19 @@
 import dotenv from 'dotenv';
+import logger from './config/logger';
 
 const env = process.env.NODE_ENV || 'development';
 
 if (env === 'development') {
-  console.log('Cargando variables de entorno desde .env.dev.local...');
+  logger.info('Cargando variables de entorno desde .env.dev.local...');
   dotenv.config({ path: '.env.dev.local' });
 } else if (env === 'production.local') {
-  console.log('Cargando variables de entorno desde .env.prod.local...');
+  logger.info('Cargando variables de entorno desde .env.prod.local...');
   dotenv.config({ path: '.env.prod.local' });
 } else if (env === 'production.remote') {
-  console.log('Cargando variables de entorno desde .env.prod.remote...');
+  logger.info('Cargando variables de entorno desde .env.prod.remote...');
   dotenv.config({ path: '.env.prod.remote' });
 } else {
-  console.log(
+  logger.warn(
     `El entorno ${env} no está definido. Cargando las variables de entorno por defecto...`
   );
   dotenv.config();
@@ -29,7 +30,6 @@ import * as path from 'path';
 import * as Cron from './config/cron';
 
 import sequelize from './config/database/sequelize';
-import logger from './config/logger';
 import { setupSwagger } from './config/swagger';
 
 import { errorHandler } from './middlewares/errorHandler';
@@ -45,9 +45,9 @@ export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || './uploads');
 
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  console.log(`Directorio creado en ${UPLOAD_DIR}`);
+  logger.info(`Directorio creado en ${UPLOAD_DIR}`);
 } else {
-  console.log(`Directorio existente en ${UPLOAD_DIR}`);
+  logger.info(`Directorio existente en ${UPLOAD_DIR}`);
 }
 
 app.use(cookieParser());
@@ -91,9 +91,6 @@ const connectToDatabase = async () => {
   try {
     await sequelize.authenticate();
     logger.info('Conexión exitosa a la base de datos');
-
-    await sequelize.sync({ alter: true });
-    logger.info('Modelos sincronizados con la base de datos');
   } catch (err) {
     logger.error('Error de conexión o sincronización con la base de datos:', err);
     throw new Error('Error de conexión con la base de datos');

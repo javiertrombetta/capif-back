@@ -1,18 +1,19 @@
 import dotenv from 'dotenv';
+import logger from '../logger';
 
 const env = process.env.NODE_ENV || 'development';
 
 if (env === 'development') {
-  console.log('Cargando variables de entorno desde .env.dev.local...');
+  logger.info('Cargando variables de entorno desde .env.dev.local...');
   dotenv.config({ path: '.env.dev.local' });
 } else if (env === 'production.local') {
-  console.log('Cargando variables de entorno desde .env.prod.local...');
+  logger.info('Cargando variables de entorno desde .env.prod.local...');
   dotenv.config({ path: '.env.prod.local' });
 } else if (env === 'production.remote') {
-  console.log('Cargando variables de entorno desde .env.prod.remote...');
+  logger.info('Cargando variables de entorno desde .env.prod.remote...');
   dotenv.config({ path: '.env.prod.remote' });
 } else {
-  console.log(
+  logger.warn(
     `El entorno ${env} no está definido. Cargando las variables de entorno por defecto...`
   );
   dotenv.config();
@@ -23,7 +24,6 @@ import sequelize from './sequelize';
 import initSeed from '../../seeders/init.seed';
 import usersSeed from '../../seeders/usuarios.seed';
 import producersSeed from '../../seeders/productoras.seed';
-import logger from '../logger';
 
 const runSpecificMigration = (migrationFile: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
@@ -70,7 +70,7 @@ const checkIfTablesExist = (): Promise<boolean> => {
 
 const runSeeders = async () => {  
   try {
-    console.log('Ejecutando seeders...');
+    logger.info('Ejecutando seeders...');
     await initSeed();
     await usersSeed();
     await producersSeed();
@@ -87,16 +87,16 @@ const initDatabase = async () => {
 
     if (env === 'development') {
       await sequelize.sync();
-      console.log('Tablas sincronizadas en desarrollo.');
+      logger.info('Modelos sincronizados con la base de datos');
       await runSeeders();
-      console.log('Todos los seed fueron ejecutados correctamente.');
+      logger.info('Todos los seed fueron ejecutados correctamente.');
     } else if (env === 'production') {
       const tablesExist = await checkIfTablesExist();
       if (!tablesExist) {
-        console.log('Ejecutando migración inicial en producción...');
+        logger.info('Ejecutando migración inicial en producción...');
         await runSpecificMigration('20241109000000-dummy.js');
       } else {
-        console.log('Migraciones ya aplicadas. No se requieren nuevas migraciones.');
+        logger.info('Migraciones ya aplicadas. No se requieren nuevas migraciones.');
       }
     }
 

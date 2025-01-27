@@ -8,6 +8,7 @@ class ProductoraDocumento extends Model {
   public productora_id!: string;
   public tipo_documento_id!: string;
   public ruta_archivo_documento!: string;
+  public fecha_confirmado!: Date | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -68,6 +69,16 @@ ProductoraDocumento.init(
       validate: {
         notEmpty: {
           msg: 'La ruta del archivo no puede estar vacía.',
+        },
+      },
+    },
+    fecha_confirmado: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de confirmación debe ser una fecha válida.',
         },
       },
     },

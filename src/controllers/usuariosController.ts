@@ -136,6 +136,7 @@ export const getUsers = async (
     logger.info(`${req.method} ${req.originalUrl} - Solicitud para obtener usuarios.`, query);
 
     const queryMapping: Record<string, string> = {
+      usuarioId: "userId",
       estado: "tipo_registro",
       rolNombre: "nombre_rol",
     };
@@ -157,7 +158,12 @@ export const getUsers = async (
 
     logger.info(`${req.method} ${req.originalUrl} - Se encontraron ${usuarios.users.length} usuarios.`);
 
-    res.status(200).json(usuarios.users);
+    res.status(200).json({
+      total: usuarios.total,
+      totalPages: Math.ceil(usuarios.total / (filters.limit || 50)),
+      currentPage: filters.offset ? Math.floor(filters.offset / (filters.limit || 50)) + 1 : 1,
+      data: usuarios.users,
+    });
 
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al buscar el o los usuarios");

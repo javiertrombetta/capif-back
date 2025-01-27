@@ -20,95 +20,93 @@ if (env === 'development') {
 }
 
 import { exec } from 'child_process';
+import util from 'util';
 import sequelize from './sequelize';
 import initSeed from '../../seeders/init.seed';
 import usersSeed from '../../seeders/usuarios.seed';
 import producersSeed from '../../seeders/productoras.seed';
 
-const runSpecificMigration = (migrationFile: string): Promise<void> => {
-  return new Promise<void>((resolve, reject) => {
-    exec(
-      `npx sequelize-cli db:migrate --to ${migrationFile}`,
-      { env: process.env },
-      (error, stdout, stderr) => {
-        if (error) {
-          logger.error(
-            `Error ejecutando la migración específica: ${error.message}\nStack: ${error.stack}\nStderr: ${stderr}`
-          );
-          return reject(
-            new Error(`Error ejecutando la migración específica: ${stderr || error.message}`)
-          );
-        }
-        if (stderr) {
-          logger.warn(`Advertencia durante la ejecución de la migración: ${stderr}`);
-          return reject(new Error(`Advertencia durante la migración: ${stderr}`));
-        }
-        logger.info(`Migración específica ejecutada exitosamente: ${stdout}`);
-        resolve();
-      }
-    );
-  });
+const execPromise = util.promisify(exec);
+
+const runSpecificMigration = async (migrationFile: string): Promise<void> => {
+  try {
+    const { stdout, stderr } = await execPromise(`npx sequelize-cli db:migrate --to ${migrationFile}`, { env: process.env });
+    if (stderr) throw new Error(stderr);
+    logger.info(`Migración específica ejecutada exitosamente: ${stdout}`);
+
+  } catch (error:any) {
+    logger.error(`Error ejecutando la migración específica: ${error.message}`);
+    throw error;
+  }
 };
 
-const checkIfTablesExist = (): Promise<boolean> => {
-  return new Promise<boolean>((resolve, reject) => {
-    exec('npx sequelize-cli db:migrate:status', { env: process.env }, (error, stdout, stderr) => {
-      if (error) {
-        logger.error(`Error verificando el estado de migraciones: ${stderr || error.message}`);
-        return reject(
-          new Error(`Error verificando el estado de migraciones: ${stderr || error.message}`)
-        );
-      }
-      if (stdout.includes('up')) {
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    });
-  });
+const checkIfTablesExist = async (): Promise<boolean> => {
+  try {
+    const { stdout } = await execPromise('npx sequelize-cli db:migrate:status', { env: process.env });
+    return stdout.includes('up');
+
+  } catch (error:any) {
+    logger.error(`Error verificando el estado de migraciones: ${error.message}`);
+    throw error;
+  }
 };
 
-const runSeeders = async () => {  
+const runSeeders = async (): Promise<void> => {
   try {
     logger.info('Ejecutando seeders...');
     await initSeed();
     await usersSeed();
     await producersSeed();
+    logger.info('Seeders ejecutados exitosamente.');
+
   } catch (error) {
     logger.error('Error al ejecutar los seeders:', error);
     throw error;
   }
 };
 
-const initDatabase = async () => {
+const initDatabase = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
-    logger.info('Conexión exitosa a la base de datos');
+    logger.info('Conexión exitosa a la base de datos.');
 
-    if (env === 'development') {
+    if (process.env.NODE_ENV === 'development') {
       await sequelize.sync();
-      logger.info('Modelos sincronizados con la base de datos');
+      logger.info('Modelos sincronizados con la base de datos.');
       await runSeeders();
-      logger.info('Todos los seed fueron ejecutados correctamente.');
-    } else if (env === 'production') {
+
+    } else if (process.env.NODE_ENV === 'production') {
       const tablesExist = await checkIfTablesExist();
       if (!tablesExist) {
         logger.info('Ejecutando migración inicial en producción...');
         await runSpecificMigration('20241109000000-dummy.js');
+
       } else {
         logger.info('Migraciones ya aplicadas. No se requieren nuevas migraciones.');
       }
     }
+  } catch (error) {
+    logger.error('Error al inicializar la base de datos:', error);
+    throw error;
 
-  } catch (err) {
-    logger.error('Error al inicializar la base de datos:', err);
-    return;
-    
   } finally {
-    await sequelize.close();
-    logger.info('Conexión cerrada correctamente en la inicialización de Postgres.');
-    return;
+    try {
+      await sequelize.close();
+      logger.info('Conexión cerrada correctamente en la inicialización de Postgres.');
+      process.exit(0);
+
+    } catch (error) {
+      logger.error('Error al cerrar la conexión:', error);
+    }
   }
 };
 
-initDatabase();
+(async () => {
+  try {
+    await initDatabase();
+
+  } catch (error) {
+    logger.error('Error crítico durante la inicialización:', error);
+    process.exit(1);
+  }
+})();

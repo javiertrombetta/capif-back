@@ -84,14 +84,16 @@ const seedUsuarios = async () => {
         rol_id: rol.id_rol,
         fecha_ultimo_cambio_rol: new Date(),
       });
-
+ 
       console.log(`Usuario creado: ${email} con clave ${clave}`);
 
-      // Asociar con la productora principal
-      await UsuarioMaestro.create({
-        usuario_id: nuevoUsuario.id_usuario,
-        productora_id: productoraPrincipal.id_productora,
-      });
+      if(rol.nombre_rol == 'productor_principal' || rol.nombre_rol == 'productor_secundario'){
+        // Asociar con la productora principal
+        await UsuarioMaestro.create({
+          usuario_id: nuevoUsuario.id_usuario,
+          productora_id: productoraPrincipal.id_productora,
+        });
+      }
 
       // Buscar vistas asociadas al rol del usuario
       const vistas = await UsuarioVista.findAll({ where: { rol_id: rol.id_rol } });

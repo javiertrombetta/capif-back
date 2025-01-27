@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.178 - 27-01-2025
+## 🐛 Fixes
+
+- fix: change create producer in controller
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.175
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.175 - 27-01-2025
 ## 🐛 Fixes
 

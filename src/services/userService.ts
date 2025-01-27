@@ -248,7 +248,7 @@ interface Filters {
   offset?: number;
 }
 
-export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioResponse[]; isSingleUser: boolean }> => {
+export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioResponse[]; total: number; isSingleUser: boolean }> => {
   const whereUsuario: Record<string, any> = {};
   const includeUsuario: any[] = [];
   const includeMaestro: any[] = [];
@@ -284,19 +284,27 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
     where: Object.keys(whereRol).length ? whereRol : undefined,
   });
 
-  // Filtro por productora
-  const whereProductora: Record<string, any> = {};
-  if (filters.productoraId) whereProductora.id_productora = filters.productoraId;
-  if (filters.productoraNombre) whereProductora.nombre_productora = filters.productoraNombre;
+  // Filtros de Productora aplicados en UsuarioMaestro
+  if (filters.productoraId || filters.productoraNombre) {
+    includeUsuario.push({
+      model: UsuarioMaestro,
+      as: "usuariosRegistrantes",
+      attributes: [],
+      include: [
+        {
+          model: Productora,
+          as: "productora",
+          attributes: [],
+          where: {
+            ...(filters.productoraId && { id_productora: filters.productoraId }),
+            ...(filters.productoraNombre && { nombre_productora: { [Op.like]: `%${filters.productoraNombre}%` } }),
+          },
+        },
+      ],
+    });
+  }  
 
-  includeMaestro.push({
-    model: Productora,
-    as: "productora",
-    attributes: ["id_productora", "nombre_productora"],
-    where: Object.keys(whereProductora).length ? whereProductora : undefined,
-  });
-
-  // Buscar Usuarios
+  // Obtener los registros paginados
   const usuarios = await Usuario.findAll({
     where: whereUsuario,
     include: includeUsuario,
@@ -304,20 +312,26 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
     offset: filters.offset ?? 0,
   });
 
-  if (!usuarios.length) return { users: [], isSingleUser: false };
+  if (!usuarios.length) return { users: [], total: 0, isSingleUser: false };
 
   // Determinar si es un único usuario
   const isSingleUser = usuarios.length === 1;
 
+
   // Buscar UsuariosMaestro relacionados para todos los usuarios encontrados
   const usuariosMaestro = await UsuarioMaestro.findAll({
     where: { usuario_id: { [Op.in]: usuarios.map((u) => u.id_usuario) } },
-    include: includeMaestro,
+    include: [
+      {
+        model: Productora,
+        as: "productora",
+        attributes: ["id_productora", "nombre_productora"],
+      },
+    ],
   });
 
   const maestrosPorUsuario = usuarios.reduce((acc, usuario) => {
-    const maestros = usuariosMaestro
-      .filter((maestro) => maestro.usuario_id === usuario.id_usuario);
+    const maestros = usuariosMaestro.filter((maestro) => maestro.usuario_id === usuario.id_usuario);
 
     acc[usuario.id_usuario] = {
       maestros,
@@ -359,6 +373,7 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
         hasSingleMaestro: usuarioMaestroData.hasSingleMaestro,
       };
     }),
+    total: usuarios.length,
     isSingleUser,
   };
 };

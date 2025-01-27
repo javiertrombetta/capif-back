@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.169 - 27-01-2025
+## 🚀 Features
+
+- feat: add docs to producers routes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.166
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.166 - 26-01-2025
 ## 🐛 Fixes
 

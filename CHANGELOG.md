@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.172 - 27-01-2025
+## 🐛 Fixes
+
+- fix: change generarCodigosISRC in usuarios.seed
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.169
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.169 - 27-01-2025
 ## 🚀 Features
 

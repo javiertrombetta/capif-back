@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.181 - 27-01-2025
+## 🐛 Fixes
+
+- fix: change querys and pagination
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.178
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.178 - 27-01-2025
 ## 🐛 Fixes
 

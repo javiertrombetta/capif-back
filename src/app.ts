@@ -40,15 +40,28 @@ import router from './routes';
 const app = express();
 const globalPrefix = process.env.GLOBAL_PREFIX || 'api/v1';
 
+// Verificar que UPLOAD_DIR esté definido
+if (!process.env.UPLOAD_DIR) {
+  throw new Error("La variable de entorno UPLOAD_DIR no está definida. Por favor configúrala antes de iniciar el servidor.");
+}
+
 // Definir y verificar UPLOAD_DIR
-export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || './uploads');
+export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR );
 
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
   logger.info(`Directorio creado en ${UPLOAD_DIR}`);
-} else {
-  logger.info(`Directorio existente en ${UPLOAD_DIR}`);
 }
+
+// Crear subdirectorios específicos
+const subdirectories = ['documents', 'audio'];
+subdirectories.forEach((subdir) => {
+  const subdirPath = path.join(UPLOAD_DIR, subdir);
+  if (!fs.existsSync(subdirPath)) {
+    fs.mkdirSync(subdirPath, { recursive: true });
+    logger.info(`Subdirectorio creado en ${subdirPath}`);
+  }
+});
 
 app.use(cookieParser());
 

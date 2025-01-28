@@ -2,7 +2,7 @@ import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Fonograma from './Fonograma';
 
-const OPERACIONES_PERMITIDAS = ['DATOS', 'TERRITORIO'] as const;
+const OPERACIONES_PERMITIDAS = ['ALTA', 'DATOS', 'ARCHIVO', 'TERRITORIO', 'PARTICIPACION', 'BAJA'] as const;
 
 class FonogramaMaestro extends Model {
   public id_fonograma_maestro!: string;

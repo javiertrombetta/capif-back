@@ -3,22 +3,24 @@ import * as fs from "fs";
 import * as path from "path";
 import { Request } from "express";
 import { Productora, ProductoraDocumentoTipo } from "../models";
-import dotenv from "dotenv";
+import { UPLOAD_DIR } from '../app';
 
-dotenv.config();
-
-const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || "./uploads");
 const allowedFileTypes = [".pdf", ".png", ".jpg", ".jpeg"];
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     try {
-      if (!fs.existsSync(UPLOAD_DIR)) {
-        fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+      // Construir la ruta base con el subdirectorio "documents"
+      const uploadPath = path.join(UPLOAD_DIR, 'documents');
+      
+      // Verificar si el directorio existe, de lo contrario, crearlo
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
       }
-      cb(null, UPLOAD_DIR);
+
+      cb(null, uploadPath);
     } catch (error) {
-      cb(new Error("Error al crear el directorio de subida"), "");
+      cb(new Error('Error al crear el directorio de subida'), "");
     }
   },
   filename: async (req: Request, file, cb) => {
@@ -64,7 +66,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   cb(null, true);
 };
 
-export const upload = multer({
+export const uploadDocuments = multer({
   storage,
   fileFilter,
   limits: {

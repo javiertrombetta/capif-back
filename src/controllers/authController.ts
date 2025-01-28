@@ -1381,6 +1381,9 @@ export const sendApplication = async (
       telefono,
     } = req.body;
 
+    // Parsear el JSON recibido como texto
+    const parsedProductoraData = JSON.parse(productoraData);
+
     // Verifica el usuario autenticado
     const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
     
@@ -1403,7 +1406,7 @@ export const sendApplication = async (
     );
 
     // Manejar la productora
-    const productora = await createOrUpdateProductora(productoraData);
+    const productora = await createOrUpdateProductora(parsedProductoraData);
     logger.info(
       `${req.method} ${req.originalUrl} - Productora procesada exitosamente.`
     );
@@ -1414,26 +1417,48 @@ export const sendApplication = async (
       `${req.method} ${req.originalUrl} - Relación Usuario-Productora creada en UsuarioMaestro.`
     );
 
-    // Manejar documentos
+    // Manejar documentos y sus tipos
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
       const archivos = req.files as Express.Multer.File[];
 
       try {
-        const documentosProcesados = archivos.map((archivo) => {
-          const partesNombre = archivo.filename.split('_');
-          if (partesNombre.length < 2) {
-            throw new Error(`El nombre del archivo no está en el formato esperado: ${archivo.filename}`);
+        // Validar que el número de archivos coincida con los tipos de documentos
+        if (archivos.length !== Object.keys(req.body).filter(key => key.startsWith('tipoDocumento')).length) {
+          throw new Error("El número de archivos no coincide con el número de tipos de documento.");
+        }
+
+        const documentosProcesados = archivos.map((archivo, index) => {
+          const tipoDocumento = req.body[`tipoDocumento[${index}]`];
+          if (!tipoDocumento) {
+            throw new Error(`Falta el tipoDocumento para el archivo ${archivo.originalname}`);
           }
 
+          // Validar la extensión del archivo
+          const allowedExtensions = [".pdf", ".jpg", ".jpeg", ".png"];
+          const ext = path.extname(archivo.originalname).toLowerCase();
+          if (!allowedExtensions.includes(ext)) {
+            throw new Error(`El archivo ${archivo.originalname} tiene una extensión no permitida: ${ext}`);
+          }
+
+          logger.info(`Procesando archivo: ${archivo.originalname} como tipoDocumento: ${tipoDocumento}`);
+
           return {
-            nombre_documento: partesNombre[1],
+            nombre_documento: tipoDocumento,
             ruta_archivo_documento: path.join(UPLOAD_DIR, archivo.filename),
           };
         });
 
-        await processDocuments(authUser.id_usuario, productora.id_productora, documentosProcesados, productoraData.cuit_cuil);
+        // Procesar los documentos en la base de datos
+        await processDocuments(
+          authUser.id_usuario,
+          productora.id_productora,
+          documentosProcesados,
+          parsedProductoraData.cuit_cuil
+        );
 
-        logger.info(`${req.method} ${req.originalUrl} - Documentos procesados exitosamente.`);
+        logger.info(
+          `${req.method} ${req.originalUrl} - Documentos procesados exitosamente.`
+        );
       } catch (err) {
         handleGeneralError(err, req, res, next, "Error procesando documentos");
       }

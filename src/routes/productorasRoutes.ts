@@ -2,7 +2,7 @@ import express from "express";
 import { celebrate, Segments } from "celebrate";
 
 import { authenticate, authorizeRoles } from '../middlewares/auth';
-import { upload } from '../middlewares/upload';
+import { uploadDocuments } from '../middlewares/documents';
 
 import {
   getAllProductoras,
@@ -69,7 +69,7 @@ router.post(
   "/:id/documentos",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
-  upload.single("documento"),
+  uploadDocuments.single("documento"),
   celebrate({
     [Segments.BODY]: createDocumentoSchema,
   }),

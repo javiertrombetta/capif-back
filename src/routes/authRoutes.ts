@@ -36,7 +36,7 @@ import {
   requestPasswordSchema,
   deleteApplicationSchema,
 } from "../utils/validationSchemas";
-import { upload } from "../middlewares/upload";
+import { uploadDocuments } from "../middlewares/documents";
 
 const router = express.Router();
 
@@ -52,7 +52,7 @@ router.post(
   "/prods/primary/step-two",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
-  upload.array('documentos', 4),
+  uploadDocuments.array('documentos', 4),
   celebrate({ [Segments.BODY]: sendApplicationSchema }),
   sendApplication
 );

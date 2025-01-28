@@ -17,12 +17,16 @@ import {
   listTerritorios,
   updateTerritorio,
   deleteTerritorio,
+  cargarRepertoriosMasivo,
 } from '../controllers/repertoriosController';
+import { uploadAudio } from '../middlewares/audio';
+import uploadCSV from '../middlewares/csv';
 
 const router = Router();
 
 // Rutas para Fonograma
-router.post('/repertorios', createFonograma);
+router.post('/repertorios/cargar-masivo', uploadCSV.single('csvFile'), cargarRepertoriosMasivo);
+router.post("/repertorios", uploadAudio.single("archivo_audio"), createFonograma);
 router.get('/repertorios', listFonogramas);
 router.get('/repertorios/:id', getFonogramaById);
 router.put('/repertorios/:id', updateFonograma);

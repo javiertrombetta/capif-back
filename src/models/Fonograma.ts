@@ -164,19 +164,13 @@ Fonograma.init(
       },
     },
     porcentaje_titularidad_total: {
-      type: DataTypes.DECIMAL(5, 2),
+      type: DataTypes.INTEGER,
       allowNull: false,
+      defaultValue: 0,
       validate: {
-        isDecimal: {
-          msg: 'El porcentaje de titularidad total debe ser un número decimal válido.',
-        },
         min: {
           args: [0],
           msg: 'El porcentaje de titularidad total no puede ser menor que 0.',
-        },
-        max: {
-          args: [100],
-          msg: 'El porcentaje de titularidad total no puede ser mayor que 100.',
         },
       },
     },

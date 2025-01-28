@@ -11,32 +11,30 @@ const seedProductoraData = async () => {
       throw new Error('La productora WARNER MUSIC ARGENTINA SA no fue encontrada.');
     }
 
-    // Crear tipos de documentos si no existen
-    const tipoDocumento1 = await ProductoraDocumentoTipo.findOrCreate({
-      where: { nombre_documento: 'Contrato' },
-      defaults: {
-        nombre_documento: 'Contrato',
-      },
+    // Buscar los tipos de documentos existentes
+    const contratoSocial = await ProductoraDocumentoTipo.findOne({
+      where: { nombre_documento: 'contrato_social' },
     });
 
-    const tipoDocumento2 = await ProductoraDocumentoTipo.findOrCreate({
-      where: { nombre_documento: 'Licencia' },
-      defaults: {
-        nombre_documento: 'Licencia',
-      },
+    const comprobanteISRC = await ProductoraDocumentoTipo.findOne({
+      where: { nombre_documento: 'comprobante_ISRC' },
     });
 
-    // Crear documentos para la productora
+    if (!contratoSocial || !comprobanteISRC) {
+      throw new Error('Los tipos de documento contrato_social o comprobante_ISRC no fueron encontrados.');
+    }
+
+    // Crear documentos para la productora con los tipos existentes
     await ProductoraDocumento.bulkCreate([
       {
         productora_id: productora.id_productora,
-        tipo_documento_id: tipoDocumento1[0].id_documento_tipo,
-        ruta_archivo_documento: 'https://example.com/documentos/contrato.pdf',
+        tipo_documento_id: contratoSocial.id_documento_tipo,
+        ruta_archivo_documento: 'https://example.com/documentos/contrato_social.pdf',
       },
       {
         productora_id: productora.id_productora,
-        tipo_documento_id: tipoDocumento2[0].id_documento_tipo,
-        ruta_archivo_documento: 'https://example.com/documentos/licencia.pdf',
+        tipo_documento_id: comprobanteISRC.id_documento_tipo,
+        ruta_archivo_documento: 'https://example.com/documentos/comprobante_ISRC.pdf',
       },
     ]);
 
@@ -54,7 +52,7 @@ const seedProductoraData = async () => {
         codigo_postulacion: 'POST002',
         fecha_asignacion: fechaAsignacion,
       },
-    ]); 
+    ]);
 
     console.log('productoras.seed completado con éxito.');
 

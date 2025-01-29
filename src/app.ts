@@ -1,11 +1,13 @@
 import dotenv from 'dotenv';
 import logger from './config/logger';
+import { startFakeFtpServer, stopFakeFtpServer } from "./utils/fakeFtp";
 
 const env = process.env.NODE_ENV || 'development';
 
 if (env === 'development') {
   logger.info('Cargando variables de entorno desde .env.dev.local...');
   dotenv.config({ path: '.env.dev.local' });
+  startFakeFtpServer();
 } else if (env === 'production.local') {
   logger.info('Cargando variables de entorno desde .env.prod.local...');
   dotenv.config({ path: '.env.prod.local' });
@@ -35,6 +37,7 @@ import { setupSwagger } from './config/swagger';
 import { errorHandler } from './middlewares/errorHandler';
 import { transactionMiddleware } from "./middlewares/transaction";
 
+
 import router from './routes';
 
 const app = express();
@@ -45,7 +48,7 @@ if (!process.env.UPLOAD_DIR) {
   throw new Error("La variable de entorno UPLOAD_DIR no está definida. Por favor configúrala antes de iniciar el servidor.");
 }
 
-// Definir y verificar UPLOAD_DIR
+// Definir variables de entorno a usarse en la aplicación
 export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR );
 
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -116,31 +119,43 @@ const startServer = () => {
     logger.info(`Servidor corriendo en el puerto ${port}`);
   });
 
+  let isShuttingDown = false;
+
   const gracefulShutdown = async () => {
-    logger.info('Apagado del servidor en curso...');
+    if (isShuttingDown) {
+      logger.warn("El servidor ya está en proceso de apagado.");
+      return;
+    }
+
+    isShuttingDown = true;
+
+    logger.info("Apagado del servidor en curso...");
     Cron.stopCronTasks();
 
-    // Cierra el servidor y espera a que todas las solicitudes se completen
     await new Promise<void>((resolve) => {
       server.close(() => {
-        logger.info('Servidor cerrado.');
+        logger.info("Servidor cerrado.");
         resolve();
       });
     });
 
-    // Cierra Sequelize y otros recursos
     try {
       await sequelize.close();
-      logger.info('Conexiones cerradas correctamente');
-      return;
+      logger.info("Conexiones a postgres cerradas correctamente.");
+
+      if (process.env.NODE_ENV === "development") {
+        await stopFakeFtpServer();
+      }
     } catch (error) {
-      logger.error('Error cerrando conexiones:', error);
-      return;
+      logger.error("Error cerrando conexiones:", error);
+    } finally {
+      process.exit(0);
     }
   };
 
-  process.on('SIGTERM', gracefulShutdown);
-  process.on('SIGINT', gracefulShutdown);
+  //Manejo de señales para apagar correctamente el servidor
+  process.once("SIGINT", gracefulShutdown);
+  process.once("SIGTERM", gracefulShutdown);
 };
 
 (async () => {

@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.187 - 29-01-2025
+## 🚀 Features
+
+- feat: add Fonograma and FonogramaEnvio to repertoires
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.184
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.184 - 28-01-2025
 ## 🚀 Features
 

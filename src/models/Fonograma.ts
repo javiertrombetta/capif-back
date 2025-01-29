@@ -32,8 +32,8 @@ class Fonograma extends Model {
 
   public static associations: {
     productoraDelFonograma: Association<Fonograma, Productora>;
-    archivoAudioDelFonograma: Association<Fonograma, FonogramaArchivo>;
-    envioDelAudio: Association<Fonograma, FonogramaEnvio>;
+    archivoDelFonograma: Association<Fonograma, FonogramaArchivo>;
+    envioDelFonograma: Association<Fonograma, FonogramaEnvio>;
   };
 }
 

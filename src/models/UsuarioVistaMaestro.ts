@@ -16,7 +16,7 @@ class UsuarioVistaMaestro extends Model {
   public vista?: UsuarioVista;
 
   public static associations: {
-    usuario: Association<UsuarioVistaMaestro, Usuario>;
+    usuarioDeVista: Association<UsuarioVistaMaestro, Usuario>;
     vista: Association<UsuarioVistaMaestro, UsuarioVista>;
 
   };

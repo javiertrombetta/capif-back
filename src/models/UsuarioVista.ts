@@ -13,7 +13,7 @@ class UsuarioVista extends Model {
   public rolDeVista?: UsuarioRol;
 
   public static associations: {
-    rol: Association<UsuarioVista, UsuarioRol>;
+    rolDeVista: Association<UsuarioVista, UsuarioRol>;
   };
 }
 

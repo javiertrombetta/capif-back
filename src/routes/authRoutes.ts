@@ -36,7 +36,6 @@ import {
   requestPasswordSchema,
   deleteApplicationSchema,
 } from "../utils/validationSchemas";
-import { uploadDocuments } from "../middlewares/documents";
 
 const router = express.Router();
 

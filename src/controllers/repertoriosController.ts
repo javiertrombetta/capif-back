@@ -106,10 +106,6 @@ export const createFonograma = async (req: AuthenticatedRequest, res: Response, 
           territorios: territoriosActivos
         } = req.body;
 
-        // Convertir campos JSON si son cadenas
-        const parsedParticipaciones = participaciones ? JSON.parse(participaciones) : [];
-        const parsedTerritoriosActivos = territoriosActivos ? JSON.parse(territoriosActivos) : [];
-
         // Priorizar `productora_id` de `req.productoraId`, si está presente.
         const productora_id = req.productoraId || bodyProductoraId;
 
@@ -159,71 +155,15 @@ export const createFonograma = async (req: AuthenticatedRequest, res: Response, 
             modelo: "Fonograma",
             tipo_auditoria: "ALTA",
             detalle: `Se creó el fonograma con título '${titulo}' y ID '${fonograma.id_fonograma}'`,
-        });
-
-        // Renombrar el archivo de audio y registrarlo (si existe)
-        if (req.file) {
-            const ext = path.extname(req.file.originalname).toLowerCase();
-            const newFileName = `${isrc}${ext}`;
-            const newPath = path.join(req.file.destination, newFileName);
-
-            fs.renameSync(req.file.path, newPath);
-
-            // Registrar el archivo en la base de datos
-            const registrarArchivo = await FonogramaArchivo.create({
-                fonograma_id: fonograma.id_fonograma,
-                ruta_archivo_audio: newPath,
-            });
-
-            // Asignar el ID del envío a la propiedad correcta en el fonograma
-            fonograma.archivo_audio_id = registrarArchivo.id_archivo;
-            await fonograma.save();
-
-            await registrarAuditoria({
-                usuario_originario_id: authUser.id_usuario,
-                usuario_destino_id: null,
-                modelo: "FonogramaArchivo",
-                tipo_auditoria: "ALTA",
-                detalle: `Se registró el archivo de audio para el fonograma con ISRC: '${isrc}'`,
-            });
-        }
-
-        // Verificar si ya existe un Fonograma en estado "PENDIENTE DE ENVIO" sino cargarlo
-        const existingEnvio = await FonogramaEnvio.findOne({
-            where: {
-                fonograma_id: fonograma.id_fonograma,
-                tipo_estado: "PENDIENTE DE ENVIO",
-            },
-        });
-
-        if (!existingEnvio) {
-            const registrarEnvio = await FonogramaEnvio.create({
-                fonograma_id: fonograma.id_fonograma,
-                tipo_estado: "PENDIENTE DE ENVIO",
-                fecha_envio_inicial: null,
-                fecha_envio_ultimo: null,
-            });
-
-            // Asignar el ID del envío a la propiedad correcta en el fonograma
-            fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
-            await fonograma.save();
-
-            await registrarAuditoria({
-                usuario_originario_id: authUser.id_usuario,
-                usuario_destino_id: null,
-                modelo: "FonogramaEnvio",
-                tipo_auditoria: "ALTA",
-                detalle: `Se creó un envío en estado PENDIENTE DE ENVIO para el fonograma con ISRC '${isrc}'`,
-            });
-        }
+        });        
 
         // Registrar participaciones de productoras (obligatorio)
         let totalParticipationPercentage = 0;
         const overlappingPeriods: string[] = [];
 
-        if (parsedParticipaciones && parsedParticipaciones.length > 0) {
+        if (participaciones && participaciones.length > 0) {
             await Promise.all(
-                parsedParticipaciones.map(async (participacion: any) => {
+                participaciones.map(async (participacion: any) => {
                     const { cuit, porcentaje_participacion, fecha_inicio, fecha_hasta } = participacion;
 
                     const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
@@ -306,13 +246,13 @@ export const createFonograma = async (req: AuthenticatedRequest, res: Response, 
             throw new Error("No hay territorios habilitados disponibles.");
         }
 
-        if (!Array.isArray(parsedTerritoriosActivos) || parsedTerritoriosActivos.length === 0) {
+        if (!Array.isArray(territoriosActivos) || territoriosActivos.length === 0) {
             throw new Error("Debe proporcionar al menos un territorio activo.");
         }
 
         await Promise.all(
             territoriosHabilitados.map(async (territorio) => {
-                const isActivo = parsedTerritoriosActivos.includes(territorio.codigo_iso);
+                const isActivo = territoriosActivos.includes(territorio.codigo_iso);
                 await FonogramaTerritorioMaestro.create({
                     fonograma_id: fonograma.id_fonograma,
                     territorio_id: territorio.id_territorio,

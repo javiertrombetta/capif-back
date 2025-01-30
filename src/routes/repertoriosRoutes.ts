@@ -27,13 +27,13 @@ import uploadCSV from '../middlewares/csv';
 const router = Router();
 
 // Rutas para FonogramaEnvio
-router.post('/repertorios/envio', enviarFonograma);
-router.get('/repertorios/novedades', getNovedadesFonograma);
-router.get('/repertorios/:id/envios', getEnviosByFonograma);
+router.post('/send', enviarFonograma);
+router.get('/:id/send', getEnviosByFonograma);
+router.get('/send', getNovedadesFonograma);
 
 // Rutas para FonogramaArchivo
-router.post('/repertorios/:id/audio', uploadAudio.single("archivo_audio"), addArchivoToFonograma);
-router.get('/repertorios/:id/audio', getArchivoByFonograma);
+router.post('/:id/file', uploadAudio.single("audioFile"), addArchivoToFonograma);
+router.get('/:id/file', getArchivoByFonograma);
 
 // Rutas para FonogramaParticipacion
 router.post('/repertorios/:id/participaciones', addParticipacionToFonograma);
@@ -48,12 +48,12 @@ router.put('/repertorios/:id/territorios/:territorioId', updateTerritorio);
 router.delete('/repertorios/:id/territorios/:territorioId', deleteTerritorio);
 
 // Rutas para Fonograma
-router.post("/repertorio/isrc/validate", validateISRC);
-router.post('/repertorios/cargar-masivo', uploadCSV.single('csvFile'), cargarRepertoriosMasivo);
-router.post("/repertorios", uploadAudio.single("archivo_audio"), createFonograma);
-router.get('/repertorios/:id', getFonogramaById);
-router.get('/repertorios', listFonogramas);
-router.put('/repertorios/:id', updateFonograma);
-router.delete('/repertorios/:id', deleteFonograma);
+router.post("/isrc/validate", validateISRC);
+router.post('/massive', uploadCSV.single('csvFile'), cargarRepertoriosMasivo);
+router.post("/", createFonograma);
+router.get('/:id', getFonogramaById);
+router.get('/', listFonogramas);
+router.put('/:id', updateFonograma);
+router.delete('/:id', deleteFonograma);
 
 export default router;

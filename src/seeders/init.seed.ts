@@ -78,95 +78,95 @@ type VistaData = {
   ]);
 
   agregarVistasPorRol("admin_principal", [
-    { nombreVista: "Repertorio" },
+    // { nombreVista: "Repertorio" },
     { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
     { nombreVista: "Envío Archivo Audio", vistaSuperior: "Repertorio" },
     { nombreVista: "Territorialidad", vistaSuperior: "Repertorio" },
 
-    { nombreVista: "Productoras" },
+    // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
 
-    { nombreVista: "Usuarios" },
+    // { nombreVista: "Usuarios" },
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
 
-    { nombreVista: "Cuentas Corrientes" },
+    // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Pagos", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Traspasos", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Rechazos", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
 
-    { nombreVista: "Auditoría" },
+    // { nombreVista: "Auditoría" },
     { nombreVista: "Historial de Cambios", vistaSuperior: "Auditoría" },
     { nombreVista: "Cambios en Repertorios", vistaSuperior: "Auditoría" },
     { nombreVista: "Sesiones", vistaSuperior: "Auditoría" },
   ]);
 
   agregarVistasPorRol("admin_secundario", [
-    { nombreVista: "Repertorio" },
+    // { nombreVista: "Repertorio" },
     { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
     { nombreVista: "Envío Archivo Audio", vistaSuperior: "Repertorio" },
     { nombreVista: "Territorialidad", vistaSuperior: "Repertorio" },
 
-    { nombreVista: "Productoras" },
+    // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
 
-    { nombreVista: "Usuarios" },
+    // { nombreVista: "Usuarios" },
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
 
-    { nombreVista: "Cuentas Corrientes" },
+    // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Pagos", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Traspasos", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Rechazos", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
 
-    { nombreVista: "Auditoría" },
+    // { nombreVista: "Auditoría" },
     { nombreVista: "Historial de Cambios", vistaSuperior: "Auditoría" },
     { nombreVista: "Cambios en Repertorios", vistaSuperior: "Auditoría" },
     { nombreVista: "Sesiones", vistaSuperior: "Auditoría" },
   ]);
 
   agregarVistasPorRol("productor_principal", [
-    { nombreVista: "Repertorio" },
+    // { nombreVista: "Repertorio" },
     { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
 
-    { nombreVista: "Productoras" },
+    // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
 
-    { nombreVista: "Usuarios" },
+    // { nombreVista: "Usuarios" },
     { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
 
-    { nombreVista: "Cuentas Corrientes" },
+    // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
   ]);
 
   agregarVistasPorRol("productor_secundario", [
-    { nombreVista: "Repertorio" },
+    // { nombreVista: "Repertorio" },
     { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
 
-    { nombreVista: "Productoras" },
+    // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
 
-    { nombreVista: "Usuarios" },
+    // { nombreVista: "Usuarios" },
     { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
 
-    { nombreVista: "Cuentas Corrientes" },
+    // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
   ]);
 

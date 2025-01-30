@@ -94,7 +94,7 @@ export const blockOrUnblockUser = async (
     }
 
     // Actualiza el estado de habilitación del usuario
-    targetUser.is_bloqueado = !isBlocked;
+    targetUser.is_bloqueado = isBlocked;
     await targetUser.save();
 
     // Mensaje de éxito según la acción realizada
@@ -156,15 +156,43 @@ export const getUsers = async (
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
 
-    logger.info(`${req.method} ${req.originalUrl} - Se encontraron ${usuarios.users.length} usuarios.`);
+    if(usuarios.users.length == 1){
+      logger.info(`${req.method} ${req.originalUrl} - Se encontró ${usuarios.users.length} usuario.`);
+    }    
+    else{
+      logger.info(`${req.method} ${req.originalUrl} - Se encontron ${usuarios.users.length} usuarios.`);
+    }
+
+    // Filtrar y mapear las vistas asociadas para devolver solo los campos requeridos
+    const filteredUsers = usuarios.users.map((usuario) => ({
+      id: usuario.user.id_usuario,
+      email: usuario.user.email,
+      nombre: usuario.user.nombre,
+      apellido: usuario.user.apellido,
+      telefono: usuario.user.telefono,
+      rol: usuario.user.rol?.nombre_rol || null,
+      estado: usuario.user.tipo_registro,
+      isBloqueado: usuario.user.is_bloqueado,
+      productoras: usuario.maestros.map((maestro) => ({
+        id: maestro.productora?.id_productora,
+        productora: maestro.productora?.nombre_productora,
+      })),
+      vistas: usuario.vistas
+        .filter((vistaMaestro) => vistaMaestro.vista)
+        .map((vistaMaestro) => ({
+          id_vista_maestro: vistaMaestro.id_vista_maestro,
+          is_habilitado: vistaMaestro.is_habilitado,
+          nombre_vista: vistaMaestro.vista?.nombre_vista,
+          nombre_vista_superior: vistaMaestro.vista?.nombre_vista_superior,
+        })),
+    }));
 
     res.status(200).json({
       total: usuarios.total,
       totalPages: Math.ceil(usuarios.total / (filters.limit || 50)),
       currentPage: filters.offset ? Math.floor(filters.offset / (filters.limit || 50)) + 1 : 1,
-      data: usuarios.users,
+      data: filteredUsers,
     });
-
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al buscar el o los usuarios");
   }

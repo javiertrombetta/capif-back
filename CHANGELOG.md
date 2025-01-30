@@ -1,4 +1,19 @@
 # Changelog
+## v0.1.191 - 30-01-2025
+## 🐛 Fixes
+
+- fix: change bodyParser
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.187
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.1.187 - 29-01-2025
 ## 🚀 Features
 

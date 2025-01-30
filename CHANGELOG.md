@@ -1,4 +1,16 @@
 # Changelog
+## v0.1.195 - 30-01-2025
+## 🐛 Fixes
+
+- fix: change loading documents in producers
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.191
+- chore(docs): update CHANGELOG.MD
+- chore: merge with feature_repertoires
+
+
 ## v0.1.191 - 30-01-2025
 ## 🐛 Fixes
 

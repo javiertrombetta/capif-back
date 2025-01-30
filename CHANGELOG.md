@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.204 - 30-01-2025
+## 🐛 Fixes
+
+- fix: change getUsers in users and clean init seed
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.201
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.201 - 30-01-2025
 ## 🐛 Fixes
 

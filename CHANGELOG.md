@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.201 - 30-01-2025
+## 🐛 Fixes
+
+- fix: change file use in createFonograma
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.198
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.198 - 30-01-2025
 ## 🐛 Fixes
 

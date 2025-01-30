@@ -44,12 +44,12 @@ const storage = multer.diskStorage({
 
       const cuit = productora.cuit_cuil;
 
-      // **🔹 Obtener el índice del archivo actual**
+      // Obtener el índice del archivo actual
       if (typeof req.fileIndex === "undefined") {
         req.fileIndex = 0;
       }
 
-      // **🔹 Convertir `tipoDocumento` en un array válido**
+      // Convertir tipoDocumento en un array válido
       let tipoDocumentoArray: string[] = [];
 
       if (Array.isArray(req.body.tipoDocumento)) {
@@ -58,11 +58,10 @@ const storage = multer.diskStorage({
         tipoDocumentoArray = req.body.tipoDocumento.split(",").map((item:any) => item.trim());
       }
 
-      // **🔹 Obtener el tipo de documento correspondiente**
+      // Obtener el tipo de documento correspondiente
       const tipoDocumento = tipoDocumentoArray[req.fileIndex]?.trim();
-      console.log(`Procesando archivo con tipoDocumento: ${tipoDocumento}`); // Debugging
 
-      req.fileIndex++; // Incrementar después de usarlo
+      req.fileIndex++;
 
       if (!tipoDocumento) {
         return cb(new Error(`Cada archivo debe tener un tipoDocumento asociado.`), "");
@@ -73,14 +72,14 @@ const storage = multer.diskStorage({
         return cb(new Error(`Tipo de archivo no permitido: ${ext}.`), "");
       }
 
-      // **🔹 Validar tipo de documento en la base de datos**
+      // Validar tipo de documento en la base de datos
       const tipoDoc = await ProductoraDocumentoTipo.findOne({ where: { nombre_documento: tipoDocumento } });
 
       if (!tipoDoc) {
         return cb(new Error(`Tipo de documento no válido: ${tipoDocumento}.`), "");
       }
 
-      // **🔹 Generar el nombre del archivo basado en CUIT y tipo de documento**
+      // Generar el nombre del archivo basado en CUIT y tipo de documento
       const sanitizedFileName = `${cuit}_${tipoDocumento}${ext}`;
       const filePath = path.join(UPLOAD_DIR, "documents", sanitizedFileName);
 
@@ -134,7 +133,7 @@ export const uploadDocuments: RequestHandler = async (req, res, next) => {
       return res.status(400).json({ error: err.message });
     }
 
-    // **🔹 Asegurar que `tipoDocumento` sea siempre un array**
+    // Asegurar que tipoDocumento sea siempre un array
     let tipoDocumentoArray: string[] = [];
 
     if (Array.isArray(req.body.tipoDocumento)) {
@@ -143,9 +142,7 @@ export const uploadDocuments: RequestHandler = async (req, res, next) => {
       tipoDocumentoArray = req.body.tipoDocumento.split(",").map((item:any) => item.trim());
     }
 
-    console.log("Tipo de Documento Recibido:", tipoDocumentoArray); // Depuración
-
-    // **🔹 Validar que el número de tipos de documentos coincida con los archivos**
+    // Validar que el número de tipos de documentos coincida con los archivos
     const archivos = req.files as Express.Multer.File[];
 
     if (tipoDocumentoArray.length !== archivos.length) {
@@ -154,13 +151,11 @@ export const uploadDocuments: RequestHandler = async (req, res, next) => {
       });
     }
 
-    // **🔹 Validar duplicados y emparejamiento**
+    // Validar duplicados y emparejamiento
     const archivosPorTipo: Record<string, boolean> = {};
 
     archivos.forEach((file, index) => {
       const tipoDocumento = tipoDocumentoArray[index]?.trim();
-
-      console.log(`Archivo: ${file.originalname} -> TipoDocumento: ${tipoDocumento}`); // Debugging
 
       if (!tipoDocumento) {
         return res.status(400).json({

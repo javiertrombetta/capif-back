@@ -204,19 +204,19 @@ export const createDocumentos = async (req: Request, res: Response, next: NextFu
 
     logger.info(`${req.method} ${req.originalUrl} - Creando documentos para la productora con ID: ${id}.`);
 
-    // **🔹 Validar que al menos se subió un archivo**
+    // Validar que al menos se subió un archivo
     if (!req.files || Object.keys(req.files).length === 0) {
       throw new Error("Debe subir al menos un archivo.");
     }
 
     const archivos = req.files as Express.Multer.File[];
 
-    // **🔹 Validar que se haya recibido `tipoDocumento` en `form-data`**
+    // Validar que se haya recibido tipoDocumento en form-data
     if (!req.body.tipoDocumento) {
       throw new Error("Debe enviar el tipo de documento en form-data.");
     }
 
-    // **🔹 Convertir `tipoDocumento` en un array válido**
+    // Convertir tipoDocumento en un array válido
     let tiposDocumento: string[] = [];
 
     if (Array.isArray(req.body.tipoDocumento)) {
@@ -225,14 +225,12 @@ export const createDocumentos = async (req: Request, res: Response, next: NextFu
       tiposDocumento = req.body.tipoDocumento.split(",").map((item:any) => item.trim());
     }
 
-    console.log("Tipo de Documentos Procesados:", tiposDocumento); // **Debugging**
-
-    // **🔹 Validar que el número de tipos de documentos coincida con el número de archivos**
+    // Validar que el número de tipos de documentos coincida con el número de archivos
     if (tiposDocumento.length !== archivos.length) {
       throw new Error("El número de tipos de documentos debe coincidir con el número de archivos.");
     }
 
-    // **🔹 Verificar que solo haya un documento por tipo**
+    // Verificar que solo haya un documento por tipo
     const archivosPorTipo: Record<string, boolean> = {};
     const documentosData = archivos.map((archivo, index) => {
       const tipoDocumento = tiposDocumento[index];
@@ -254,7 +252,7 @@ export const createDocumentos = async (req: Request, res: Response, next: NextFu
       };
     });
 
-    // **🔹 Guardar los documentos en la base de datos**
+    // Guardar los documentos en la base de datos
     const newDocumentos = await productoraService.createDocumentos(id, documentosData);
 
     logger.info(`${req.method} ${req.originalUrl} - Documentos creados exitosamente.`);

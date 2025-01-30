@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.198 - 30-01-2025
+## 🐛 Fixes
+
+- fix: change return object in sendApplication
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.195
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.195 - 30-01-2025
 ## 🐛 Fixes
 

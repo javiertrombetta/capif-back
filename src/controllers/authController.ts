@@ -1418,26 +1418,20 @@ export const sendApplication = async (
     );
 
     // Manejar documentos y sus tipos
-    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-      const archivos = req.files as Express.Multer.File[];
+    if (req.files && Object.keys(req.files).length > 0) {
+      const archivos = Object.values(req.files).flat() as Express.Multer.File[];
 
       try {
-        // Validar que el número de archivos coincida con los tipos de documentos
-        if (archivos.length !== Object.keys(req.body).filter(key => key.startsWith('tipoDocumento')).length) {
-          throw new Error("El número de archivos no coincide con el número de tipos de documento.");
+        // Validar si se enviaron tipos de documento
+        if (!req.body.tipoDocumento || archivos.length !== Object.keys(req.body.tipoDocumento).length) {
+          return res.status(400).json({ error: "Cada archivo debe tener un tipoDocumento asociado." });
         }
 
         const documentosProcesados = archivos.map((archivo, index) => {
+          // Validar que exista un tipoDocumento para el archivo actual
           const tipoDocumento = req.body[`tipoDocumento[${index}]`];
           if (!tipoDocumento) {
             throw new Error(`Falta el tipoDocumento para el archivo ${archivo.originalname}`);
-          }
-
-          // Validar la extensión del archivo
-          const allowedExtensions = [".pdf", ".jpg", ".jpeg", ".png"];
-          const ext = path.extname(archivo.originalname).toLowerCase();
-          if (!allowedExtensions.includes(ext)) {
-            throw new Error(`El archivo ${archivo.originalname} tiene una extensión no permitida: ${ext}`);
           }
 
           logger.info(`Procesando archivo: ${archivo.originalname} como tipoDocumento: ${tipoDocumento}`);

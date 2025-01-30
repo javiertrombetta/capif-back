@@ -1437,7 +1437,7 @@ export const sendApplication = async (
       next
     );
 
-    res.status(200).json({ message: MESSAGES.SUCCESS.APPLICATION.SAVED });
+    res.status(200).json({ productora: productora.id_productora, message: MESSAGES.SUCCESS.APPLICATION.SAVED, });
 
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al enviar la aplicación");

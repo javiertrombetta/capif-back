@@ -38,7 +38,7 @@ export const authSwaggerDocs = {
                     description: "Datos de la solicitud de aplicación.",
                     required: true,
                     content: {
-                        "multipart/form-data": {
+                        "application/json": {
                             schema: {
                                 type: "object",
                                 properties: {
@@ -61,23 +61,7 @@ export const authSwaggerDocs = {
                                         type: "string",
                                         description: "Teléfono del usuario que envía la solicitud.",
                                         example: "+54 11 1234-5678"
-                                    },
-                                    documentos: {
-                                        type: "array",
-                                        items: {
-                                            type: "string",
-                                            format: "binary"
-                                        },
-                                        description: "Archivos asociados a la solicitud."
-                                    },
-                                    tipoDocumento: {
-                                        type: "array",
-                                        items: {
-                                            type: "string"
-                                        },
-                                        description: "Tipos de documentos correspondientes a los archivos cargados. Cada tipoDocumento debe estar en el mismo orden que los archivos en 'documentos'.",
-                                        example: ["dni_persona_fisica", "comprobante_domicilio"]
-                                    }
+                                    },                                    
                                 },
                                 required: ["productoraData", "nombre", "apellido", "telefono"]
                             }

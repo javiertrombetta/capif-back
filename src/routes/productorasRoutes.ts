@@ -12,7 +12,7 @@ import {
   deleteProductora,
   getAllDocumentos,
   getDocumentoById,
-  createDocumento,
+  createDocumentos,
   updateDocumento,
   deleteDocumento,
   deleteAllDocumentos,
@@ -30,7 +30,31 @@ import {
   getDocumentosMetadata
 } from '../controllers/productorasController';
 
-import { createDocumentoSchema, createISRCBodySchema, createISRCParamsSchema, createPostulacionesQuerySchema, createProductoraBodySchema, deleteAllDocumentosSchema, deleteISRCParamsSchema, deletePostulacionParamsSchema, deleteProductoraParamsSchema, documentoParamsSchema, getAllDocumentosSchema, getAllPostulacionesQuerySchema, getDocumentoByIdSchema, getDocumentosMetadataSchema, getISRCByIdSchema, getPostulacionesByIdSchema, getProductoraByIdParamsSchema, updateDocumentoSchema, updateISRCBodySchema, updateISRCParamsSchema, updatePostulacionBodySchema, updatePostulacionParamsSchema, updateProductoraBodySchema, updateProductoraParamsSchema } from "../utils/validationSchemas";
+import { 
+  createISRCBodySchema, 
+  createISRCParamsSchema, 
+  createPostulacionesQuerySchema, 
+  createProductoraBodySchema, 
+  deleteAllDocumentosSchema, 
+  deleteISRCParamsSchema, 
+  deletePostulacionParamsSchema, 
+  deleteProductoraParamsSchema, 
+  documentoParamsSchema, 
+  getAllDocumentosSchema, 
+  getAllPostulacionesQuerySchema, 
+  getDocumentoByIdSchema, 
+  getDocumentosMetadataSchema, 
+  getISRCByIdSchema, 
+  getPostulacionesByIdSchema, 
+  getProductoraByIdParamsSchema, 
+  updateDocumentoSchema, 
+  updateISRCBodySchema, 
+  updateISRCParamsSchema, 
+  updatePostulacionBodySchema, 
+  updatePostulacionParamsSchema, 
+  updateProductoraBodySchema, 
+  updateProductoraParamsSchema 
+} from "../utils/validationSchemas";
 
 const router = express.Router();
 
@@ -65,16 +89,13 @@ router.get(
   getDocumentosMetadata
 );
 
-// router.post(
-//   "/:id/documentos",
-//   authenticate,
-//   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
-//   uploadDocuments.single("documento"),
-//   celebrate({
-//     [Segments.BODY]: createDocumentoSchema,
-//   }),
-//   createDocumento
-// );
+router.post(
+  "/:id/documentos",
+  authenticate,
+  authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
+  uploadDocuments,
+  createDocumentos
+);
 
 router.put(
   "/:id/documentos/:docId",

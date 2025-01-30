@@ -303,19 +303,7 @@ const productoraDataSchema = Joi.object({
 
 // Main Schema for sendApplication
 export const sendApplicationSchema = Joi.object({
-  productoraData: Joi.string().required().messages({
-    'any.required': 'El campo productoraData es obligatorio.',
-  }),
-
-  tipoDocumento: Joi.array()
-    .items(Joi.string().trim().required().messages({
-      'string.empty': 'Cada tipo de documento debe ser un string no vacío.',
-      'any.required': 'Cada tipo de documento es obligatorio.',
-    }))
-    .optional()
-    .messages({
-      'array.base': 'El campo tipoDocumento debe ser un arreglo de strings.',
-    }),
+  productoraData: productoraDataSchema,
 
   nombre: Joi.string().min(3).max(255).required().messages({
     'any.required': 'El campo nombre es obligatorio.',
@@ -329,13 +317,10 @@ export const sendApplicationSchema = Joi.object({
     'string.max': 'El campo apellido no debe exceder los 255 caracteres.',
   }),
 
-  telefono: Joi.string()
-    .pattern(/^[0-9]+$/)
-    .required()
-    .messages({
-      'any.required': 'El campo telefono es obligatorio.',
-      'string.pattern.base': 'El campo telefono debe contener solo números.',
-    }),
+  telefono: Joi.string().pattern(/^[0-9]+$/).required().messages({
+    'any.required': 'El campo telefono es obligatorio.',
+    'string.pattern.base': 'El campo telefono debe contener solo números.',
+  }),
 });
 
 // Schema for updating a user's details
@@ -525,22 +510,22 @@ export const getDocumentosMetadataSchema = Joi.object({
   }),
 });
 
-export const createDocumentoSchema = Joi.object({
-  tipoDocumento: Joi.string()
-    .valid(
-      "dni_persona_fisica",
-      "dni_representante_legal",
-      "comprobante_ISRC",
-      "contrato_social"
-    )
-    .required()
-    .messages({
-      "string.base": "El tipo de documento debe ser un texto.",
-      "string.empty": "El tipo de documento no puede estar vacío.",
-      "any.only": "El tipo de documento debe ser uno de los siguientes: dni_persona_fisica, dni_representante_legal, comprobante_ISRC, contrato_social.",
-      "any.required": "El tipo de documento es obligatorio.",
-    }),
-});
+// export const createDocumentoSchema = Joi.object({
+//   tipoDocumento: Joi.string()
+//     .valid(
+//       "dni_persona_fisica",
+//       "dni_representante_legal",
+//       "comprobante_ISRC",
+//       "contrato_social"
+//     )
+//     .required()
+//     .messages({
+//       "string.base": "El tipo de documento debe ser un texto.",
+//       "string.empty": "El tipo de documento no puede estar vacío.",
+//       "any.only": "El tipo de documento debe ser uno de los siguientes: dni_persona_fisica, dni_representante_legal, comprobante_ISRC, contrato_social.",
+//       "any.required": "El tipo de documento es obligatorio.",
+//     }),
+// });
 
 export const documentoParamsSchema = Joi.object({
   id: Joi.string().uuid().required().messages({

@@ -135,14 +135,49 @@ export const getDocumentoById = async (productoraId: string, docId: string) => {
 };
 
 // Servicio para cargar un documento a una productora
-export const createDocumento = async (productoraId: string, data: any) => {
-  const documento = await ProductoraDocumento.create({ ...data, productora_id: productoraId });
+export const createDocumentos = async (productoraId: string, documentosData: Array<{ 
+  id_productora: string; 
+  nombre_documento: string; 
+  ruta_archivo_documento: string; 
+}>) => {
+  const documentosGuardados = [];
 
-  if (!documento) {
-    throw new Err.InternalServerError(MESSAGES.ERROR.DOCUMENTOS.CREATION_FAILED);
+  for (const doc of documentosData) {
+    // Buscar el tipo de documento en la base de datos
+    const tipoDocumento = await ProductoraDocumentoTipo.findOne({
+      where: { nombre_documento: doc.nombre_documento },
+    });
+
+    if (!tipoDocumento) {
+      throw new Error(`Tipo de documento no válido: ${doc.nombre_documento}`);
+    }
+
+    // Verificar si ya existe un documento para esta productora con este tipo de documento
+    const documentoExistente = await ProductoraDocumento.findOne({
+      where: {
+        productora_id: productoraId,
+        tipo_documento_id: tipoDocumento.id_documento_tipo,
+      },
+    });
+
+    if (documentoExistente) {
+      // Actualizar la ruta del documento existente
+      await documentoExistente.update({ ruta_archivo_documento: doc.ruta_archivo_documento });
+     
+      documentosGuardados.push(documentoExistente);
+    } else {
+      // Crear un nuevo documento si no existe
+      const nuevoDocumento = await ProductoraDocumento.create({
+        productora_id: productoraId,
+        tipo_documento_id: tipoDocumento.id_documento_tipo,
+        ruta_archivo_documento: doc.ruta_archivo_documento,
+      });
+            
+      documentosGuardados.push(nuevoDocumento);
+    }
   }
 
-  return documento;
+  return documentosGuardados;
 };
 
 // Servicio para actualizar un documento de una productora

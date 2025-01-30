@@ -198,29 +198,73 @@ export const getDocumentosMetadata = async (req: Request, res: Response, next: N
 };
 
 // Cargar un documento nuevo a una productora por ID
-export const createDocumento = async (req: Request, res: Response, next: NextFunction) => {
+export const createDocumentos = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
 
-    logger.info(`${req.method} ${req.originalUrl} - Creando documento para la productora con ID: ${id}.`);
+    logger.info(`${req.method} ${req.originalUrl} - Creando documentos para la productora con ID: ${id}.`);
 
-    // Validar que se subió un archivo
-    if (!req.file) {
-      throw new Error('El archivo es obligatorio para crear un documento.');
+    // **🔹 Validar que al menos se subió un archivo**
+    if (!req.files || Object.keys(req.files).length === 0) {
+      throw new Error("Debe subir al menos un archivo.");
     }
 
-    const documentoData = {
-      ...req.body,
-      ruta_archivo_documento: path.join(UPLOAD_DIR, req.file.filename),
-    };
+    const archivos = req.files as Express.Multer.File[];
 
-    const newDocumento = await productoraService.createDocumento(id, documentoData);
+    // **🔹 Validar que se haya recibido `tipoDocumento` en `form-data`**
+    if (!req.body.tipoDocumento) {
+      throw new Error("Debe enviar el tipo de documento en form-data.");
+    }
 
-    logger.info(`${req.method} ${req.originalUrl} - Documento creado exitosamente: ${newDocumento.id_documento}`);
-    res.status(201).json({ message: 'Documento creado exitosamente.', documento: newDocumento });
-    
+    // **🔹 Convertir `tipoDocumento` en un array válido**
+    let tiposDocumento: string[] = [];
+
+    if (Array.isArray(req.body.tipoDocumento)) {
+      tiposDocumento = req.body.tipoDocumento;
+    } else if (typeof req.body.tipoDocumento === "string") {
+      tiposDocumento = req.body.tipoDocumento.split(",").map((item:any) => item.trim());
+    }
+
+    console.log("Tipo de Documentos Procesados:", tiposDocumento); // **Debugging**
+
+    // **🔹 Validar que el número de tipos de documentos coincida con el número de archivos**
+    if (tiposDocumento.length !== archivos.length) {
+      throw new Error("El número de tipos de documentos debe coincidir con el número de archivos.");
+    }
+
+    // **🔹 Verificar que solo haya un documento por tipo**
+    const archivosPorTipo: Record<string, boolean> = {};
+    const documentosData = archivos.map((archivo, index) => {
+      const tipoDocumento = tiposDocumento[index];
+
+      if (!tipoDocumento) {
+        throw new Error(`Falta el tipoDocumento para el archivo ${archivo.originalname}`);
+      }
+
+      if (archivosPorTipo[tipoDocumento]) {
+        throw new Error(`Solo se permite un archivo por tipo de documento (${tipoDocumento})`);
+      }
+
+      archivosPorTipo[tipoDocumento] = true;
+
+      return {
+        id_productora: id,
+        nombre_documento: tipoDocumento,
+        ruta_archivo_documento: path.join(UPLOAD_DIR, "documents", archivo.filename),
+      };
+    });
+
+    // **🔹 Guardar los documentos en la base de datos**
+    const newDocumentos = await productoraService.createDocumentos(id, documentosData);
+
+    logger.info(`${req.method} ${req.originalUrl} - Documentos creados exitosamente.`);
+    res.status(201).json({
+      message: "Documentos creados exitosamente.",
+      documentos: newDocumentos,
+    });
+
   } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error al crear documento');
+    handleGeneralError(err, req, res, next, "Error al crear documento");
   }
 };
 

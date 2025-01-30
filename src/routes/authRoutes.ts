@@ -37,7 +37,6 @@ import {
   deleteApplicationSchema,
 } from "../utils/validationSchemas";
 import { uploadDocuments } from "../middlewares/documents";
-import { parseFormData } from "../middlewares/parseBody";
 
 const router = express.Router();
 
@@ -53,8 +52,6 @@ router.post(
   "/prods/primary/step-two",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
-  parseFormData,
-  uploadDocuments,
   celebrate({ [Segments.BODY]: sendApplicationSchema }),
   sendApplication
 );

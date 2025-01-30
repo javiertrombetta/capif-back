@@ -223,27 +223,7 @@ export const authSchemas = {
           'alias_cbu',
           'cbu',
         ],
-      },
-      documentos: {
-        type: 'array',
-        description: 'Lista de documentos asociados a la solicitud.',
-        items: {
-          type: 'object',
-          properties: {
-            nombre_documento: {
-              type: 'string',
-              description: 'Nombre del tipo de documento.',
-              example: 'dni_persona_fisica',
-            },
-            ruta_archivo_documento: {
-              type: 'string',
-              description: 'Ruta del archivo del documento.',
-              example: '/uploads/documento.pdf',
-            },
-          },
-          required: ['nombre_documento', 'ruta_archivo_documento'],
-        },
-      },
+      },      
       nombre: {
         type: 'string',
         description: 'Nombre del usuario que envía la solicitud.',
@@ -261,8 +241,7 @@ export const authSchemas = {
       },
     },
     required: [
-      'productoraData',
-      'documentos',
+      'productoraData',  
       'nombre',
       'apellido',
       'telefono',

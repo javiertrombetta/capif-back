@@ -1378,15 +1378,12 @@ export const sendApplication = async (
       productoraData,
       nombre,
       apellido,
-      telefono,
+      telefono,  
     } = req.body;
-
-    // Parsear el JSON recibido como texto
-    const parsedProductoraData = JSON.parse(productoraData);
 
     // Verifica el usuario autenticado
     const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
-    
+
     if (authMaestros.length > 0) {
       logger.warn(
         `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
@@ -1401,68 +1398,19 @@ export const sendApplication = async (
 
     // Actualizar los datos básicos del usuario
     await updateUserData(authUser, { nombre, apellido, telefono });
-    logger.info(
-      `${req.method} ${req.originalUrl} - Datos del usuario actualizados.`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Datos del usuario actualizados.`);
 
     // Manejar la productora
-    const productora = await createOrUpdateProductora(parsedProductoraData);
-    logger.info(
-      `${req.method} ${req.originalUrl} - Productora procesada exitosamente.`
-    );
+    const productora = await createOrUpdateProductora(productoraData);
+    logger.info(`${req.method} ${req.originalUrl} - Productora procesada exitosamente.`);
 
     // Manejar relación de Usuario y Productora en UsuarioMaestro
     await linkUserToProductora(authUser.id_usuario, productora.id_productora);
-    logger.info(
-      `${req.method} ${req.originalUrl} - Relación Usuario-Productora creada en UsuarioMaestro.`
-    );
-
-    // Manejar documentos y sus tipos
-    if (req.files && Object.keys(req.files).length > 0) {
-      const archivos = Object.values(req.files).flat() as Express.Multer.File[];
-
-      try {
-        // Validar si se enviaron tipos de documento
-        if (!req.body.tipoDocumento || archivos.length !== Object.keys(req.body.tipoDocumento).length) {
-          return res.status(400).json({ error: "Cada archivo debe tener un tipoDocumento asociado." });
-        }
-
-        const documentosProcesados = archivos.map((archivo, index) => {
-          // Validar que exista un tipoDocumento para el archivo actual
-          const tipoDocumento = req.body[`tipoDocumento[${index}]`];
-          if (!tipoDocumento) {
-            throw new Error(`Falta el tipoDocumento para el archivo ${archivo.originalname}`);
-          }
-
-          logger.info(`Procesando archivo: ${archivo.originalname} como tipoDocumento: ${tipoDocumento}`);
-
-          return {
-            nombre_documento: tipoDocumento,
-            ruta_archivo_documento: path.join(UPLOAD_DIR, archivo.filename),
-          };
-        });
-
-        // Procesar los documentos en la base de datos
-        await processDocuments(
-          authUser.id_usuario,
-          productora.id_productora,
-          documentosProcesados,
-          parsedProductoraData.cuit_cuil
-        );
-
-        logger.info(
-          `${req.method} ${req.originalUrl} - Documentos procesados exitosamente.`
-        );
-      } catch (err) {
-        handleGeneralError(err, req, res, next, "Error procesando documentos");
-      }
-    }
+    logger.info(`${req.method} ${req.originalUrl} - Relación Usuario-Productora creada en UsuarioMaestro.`);    
 
     // Actualizar el tipo_registro del usuario a ENVIADO
     await updateUserRegistrationState(authUser, "ENVIADO");
-    logger.info(
-      `${req.method} ${req.originalUrl} - Tipo de registro actualizado a ENVIADO.`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Tipo de registro actualizado a ENVIADO.`);
 
     // Registrar auditoría
     await registrarAuditoria({
@@ -1483,7 +1431,11 @@ export const sendApplication = async (
         html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(authUser.email),
         successLog: `Correo de aplicación enviado a ${authUser.email}`,
         errorLog: `Error al enviar el correo de aplicación a ${authUser.email}`,
-      }, req, res, next);
+      },
+      req,
+      res,
+      next
+    );
 
     res.status(200).json({ message: MESSAGES.SUCCESS.APPLICATION.SAVED });
 

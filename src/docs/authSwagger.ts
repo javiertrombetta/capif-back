@@ -38,9 +38,48 @@ export const authSwaggerDocs = {
                     description: "Datos de la solicitud de aplicación.",
                     required: true,
                     content: {
-                        "application/json": {
+                        "multipart/form-data": {
                             schema: {
-                                $ref: "#/components/schemas/SendApplication"
+                                type: "object",
+                                properties: {
+                                    productoraData: {
+                                        type: "string",
+                                        description: "Datos relacionados con la productora en formato JSON.",
+                                        example: "{\"tipo_persona\":\"FISICA\",\"nombre_productora\":\"Productora Ejemplo\",\"cuit_cuil\":\"30123456789\"}"
+                                    },
+                                    nombre: {
+                                        type: "string",
+                                        description: "Nombre del usuario que envía la solicitud.",
+                                        example: "Juan"
+                                    },
+                                    apellido: {
+                                        type: "string",
+                                        description: "Apellido del usuario que envía la solicitud.",
+                                        example: "Pérez"
+                                    },
+                                    telefono: {
+                                        type: "string",
+                                        description: "Teléfono del usuario que envía la solicitud.",
+                                        example: "+54 11 1234-5678"
+                                    },
+                                    documentos: {
+                                        type: "array",
+                                        items: {
+                                            type: "string",
+                                            format: "binary"
+                                        },
+                                        description: "Archivos asociados a la solicitud."
+                                    },
+                                    tipoDocumento: {
+                                        type: "array",
+                                        items: {
+                                            type: "string"
+                                        },
+                                        description: "Tipos de documentos correspondientes a los archivos cargados. Cada tipoDocumento debe estar en el mismo orden que los archivos en 'documentos'.",
+                                        example: ["dni_persona_fisica", "comprobante_domicilio"]
+                                    }
+                                },
+                                required: ["productoraData", "nombre", "apellido", "telefono"]
                             }
                         }
                     }

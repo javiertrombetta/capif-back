@@ -65,16 +65,16 @@ router.get(
   getDocumentosMetadata
 );
 
-router.post(
-  "/:id/documentos",
-  authenticate,
-  authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
-  uploadDocuments.single("documento"),
-  celebrate({
-    [Segments.BODY]: createDocumentoSchema,
-  }),
-  createDocumento
-);
+// router.post(
+//   "/:id/documentos",
+//   authenticate,
+//   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
+//   uploadDocuments.single("documento"),
+//   celebrate({
+//     [Segments.BODY]: createDocumentoSchema,
+//   }),
+//   createDocumento
+// );
 
 router.put(
   "/:id/documentos/:docId",

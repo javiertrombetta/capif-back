@@ -303,28 +303,32 @@ const productoraDataSchema = Joi.object({
 
 // Main Schema for sendApplication
 export const sendApplicationSchema = Joi.object({
-  productoraData: productoraDataSchema,
-  documentos: Joi.array().items(documentSchema).optional().messages({
-    'array.base': 'El campo documentos debe ser un arreglo.',
+  productoraData: Joi.string().required().messages({
+    'any.required': 'El campo productoraData es obligatorio.',
   }),
-  nombre: Joi.string()
-    .min(3)
-    .max(255)
-    .required()
+
+  tipoDocumento: Joi.array()
+    .items(Joi.string().trim().required().messages({
+      'string.empty': 'Cada tipo de documento debe ser un string no vacío.',
+      'any.required': 'Cada tipo de documento es obligatorio.',
+    }))
+    .optional()
     .messages({
-      'any.required': 'El campo nombre es obligatorio.',
-      'string.min': 'El campo nombre debe tener al menos 3 caracteres.',
-      'string.max': 'El campo nombre no debe exceder los 255 caracteres.',
+      'array.base': 'El campo tipoDocumento debe ser un arreglo de strings.',
     }),
-  apellido: Joi.string()
-    .min(3)
-    .max(255)
-    .required()
-    .messages({
-      'any.required': 'El campo apellido es obligatorio.',
-      'string.min': 'El campo apellido debe tener al menos 3 caracteres.',
-      'string.max': 'El campo apellido no debe exceder los 255 caracteres.',
-    }),
+
+  nombre: Joi.string().min(3).max(255).required().messages({
+    'any.required': 'El campo nombre es obligatorio.',
+    'string.min': 'El campo nombre debe tener al menos 3 caracteres.',
+    'string.max': 'El campo nombre no debe exceder los 255 caracteres.',
+  }),
+
+  apellido: Joi.string().min(3).max(255).required().messages({
+    'any.required': 'El campo apellido es obligatorio.',
+    'string.min': 'El campo apellido debe tener al menos 3 caracteres.',
+    'string.max': 'El campo apellido no debe exceder los 255 caracteres.',
+  }),
+
   telefono: Joi.string()
     .pattern(/^[0-9]+$/)
     .required()

@@ -1,4 +1,19 @@
 # Changelog
+## v0.1.208 - 31-01-2025
+## 🐛 Fixes
+
+- fix: changes in findUsuarios, getProductoras, getUsers and approveApplication
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.204
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.1.204 - 30-01-2025
 ## 🐛 Fixes
 

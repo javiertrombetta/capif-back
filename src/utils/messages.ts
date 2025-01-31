@@ -276,63 +276,83 @@ export const ERROR = {
 export const EMAIL_BODY = {
   PASSWORD_RECOVERY: (resetLink: string) => `
     <h1>Recuperación de contraseña</h1>
-    <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
+    <p>Hacé clic en el siguiente enlace para restablecer tu contraseña:</p>
     <a href="http://localhost:3001/password-recovery/${resetLink}">http://localhost:3001/password-recovery/${resetLink}</a>
-    <p>Este enlace expirará en 1 hora.</p>
+    <p>Este enlace expira en 1 hora.</p>
+    <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
   `,
   VALIDATE_ACCOUNT: (validationLink: string) => `
-    <h1>Confirma tu cuenta</h1>
-    <p>Haz clic en el siguiente enlace para validar tu correo electrónico:</p>
+    <h1>Confirmá tu cuenta</h1>
+    <p>Hacé clic en el siguiente enlace para validar tu correo electrónico:</p>
     <a href="http://localhost:3001/confirm-account/${validationLink}">http://localhost:3001/confirm-account/${validationLink}</a>    
-    <p>Este enlace expirará en 24 horas.</p>
+    <p>Este enlace expira en 24 horas.</p>
+    <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
   `,
-  REJECTION_NOTIFICATION: (email: string, comentario: string) => `
-    <p>Estimado/a ${email},</p>
-    <p>Lamentamos informarle que la carga de sus datos ha sido rechazada por el siguiente motivo:</p>
+  REJECTION_NOTIFICATION: (nombre: string, comentario: string) => `
+    <p>Hola ${nombre},</p>
+    <p>Lamentamos informarte que el registro de nueva productora fue rechazado por el siguiente motivo:</p>
     <blockquote>${comentario}</blockquote>
-    <p>Por favor, ingrese nuevamente al sistema para corregir los datos.</p>
-    <p>Gracias por su atención.</p>
+    <p>Por favor, ingresá nuevamente al sistema GIT para corregir los datos.</p>
+    <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
   `,
   TEMP_PASSWORD: (tempPassword: string) => `
-    <h1>Registro exitoso</h1>
-    <p>Su cuenta ha sido creada exitosamente. Use la siguiente contraseña temporal para iniciar sesión:</p>
+    <h1>Registro en el sistema GIT</h1>
+    <p>Ya podés acceder al sistema GIT con la siguiente contraseña temporal:</p>
     <p><strong>${tempPassword}</strong></p>
-    <p>Por motivos de seguridad, se le pedirá que cambie esta contraseña en su primer ingreso.</p>
-    <p>Gracias por registrarse.</p>
+    <p>Por motivos de seguridad, se te pedirá que cambies esta contraseña al acceder al sistema.</p>
+    <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
   `,
   VALIDATE_ACCOUNT_WITH_TEMP_PASSWORD: (validationLink: string, tempPassword: string) => `
-    <h1>Confirma tu cuenta</h1>
-    <p>Su cuenta ha sido creada exitosamente como usuario secundario. Para activar su cuenta, haga clic en el siguiente enlace:</p>
+    <h1>Registro en el sistema GIT</h1>
+    <p>Tu cuenta fue creada con éxito. Para activarla tenés que hacer clic en el siguiente enlace:</p>
     <a href="http://localhost:3001/confirm-account/${validationLink}">http://localhost:3001/confirm-account/${validationLink}</a>    
-    <p>Este enlace expirará en 24 horas.</p>
-    <p>Use la siguiente contraseña temporal para su primer acceso:</p>
+    <p>Este enlace expira en 24 horas.</p>
+    <p>Usá la siguiente contraseña temporal para ingresar por primera vez:</p>
     <p><strong>${tempPassword}</strong></p>
-    <p>Por motivos de seguridad, deberá cambiar esta contraseña en su primer ingreso.</p>
-    <p>Gracias por registrarse.</p>
+    <p>Por motivos de seguridad, el sistema te va a pedir que cambies esta contraseña luego de acceder al sistema.</p>
+    <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
   `,
   PRODUCTOR_PRINCIPAL_NOTIFICATION: (
+    nombrePersona: string,
     nombreProductora: string,
     cuitProductora: string,
     cbuProductora: string,
-    aliasCbuProductora: string
+    aliasCbuProductora: string,
+    isrcs: { tipo: string; codigo_productora: string }[]
   ) => `
-    <h1>Registro exitoso como Productor Principal</h1>
-    <p>Estimado usuario,</p>
-    <p>Su cuenta fue registrada exitosamente como productor principal de la productora <strong>${nombreProductora}</strong>.</p>
-    <p>A continuación, encontrará los datos asociados a la productora:</p>
+    <h1>Registro en el sistema GIT</h1>
+    <p>Hola ${nombrePersona},</p>
+    <p>Tu cuenta fue autorizada como principal para la productora <strong>${nombreProductora}</strong>.</p>
+    <p>A continuación, los datos asociados a la productora registrada:</p>
     <ul>
       <li><strong>Nombre de la productora:</strong> ${nombreProductora}</li>
       <li><strong>CUIT:</strong> ${cuitProductora}</li>
       <li><strong>CBU:</strong> ${cbuProductora}</li>
       <li><strong>Alias CBU:</strong> ${aliasCbuProductora}</li>
     </ul>
-    <p>Gracias por registrarte.</p>
+    <p>IMPORTANTE: Guardá los siguientes Códigos de Entidad Registrante para armar los ISRC:</p>
+    <ul>
+      ${isrcs
+        .map(
+          (isrc) =>
+            `<li><strong>Tipo:</strong> ${isrc.tipo} - <strong>Código:</strong> ${isrc.codigo_productora}</li>`
+        )
+        .join("")}
+    </ul>
+    <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
   `,
-  APPLICATION_SUBMITTED: (email: string) => `
-    <p>Estimado/a ${email},</p>
-    <p>Su solicitud ha sido enviada exitosamente y está en proceso de revisión.</p>
-    <p>Nos pondremos en contacto con usted una vez que se complete la revisión.</p>
-    <p>Gracias por su paciencia.</p>
+  APPLICATION_SUBMITTED: (nombre: string) => `
+    <p>Hola ${nombre},</p>
+    <p>Tu solicitud de alta de productora fue enviada exitosamente y está en proceso de revisión.</p>
+    <p>Nos pondremos en contacto con vos una vez que se complete la revisión.</p>
+    <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
   `,
 };
 

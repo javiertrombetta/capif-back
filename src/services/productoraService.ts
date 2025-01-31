@@ -33,6 +33,7 @@ export const findAllProductoras = async () => {
       {
         model: ProductoraISRC,
         as: 'codigosDeLaProductora',
+        attributes: ['tipo', 'codigo_productora'],
       },
     ],
   });
@@ -46,7 +47,15 @@ export const findAllProductoras = async () => {
 
 // Servicio para obtener una productora por ID
 export const findProductoraById = async (id: string) => {
-  const productora = await Productora.findByPk(id);
+  const productora = await Productora.findByPk(id, {
+    include: [
+      {
+        model: ProductoraISRC,
+        as: 'codigosDeLaProductora',
+        attributes: ['tipo', 'codigo_productora'],
+      },
+    ],
+  });
 
   if (!productora) {
     throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
@@ -512,7 +521,7 @@ export const generarCodigosISRC = async (productoraId: string) => {
     } while (usedCodes.has(codigoGenerado)); // Asegurarse de que el código no esté en uso
 
     // Asignar y registrar el código
-    productoraISRCs[i].codigo_productora = codigoGenerado;
+    productoraISRCs[i].codigo_productora = codigoGenerado as string;
     usedCodes.add(codigoGenerado); // Marcar el código como usado
     await ProductoraISRC.create(productoraISRCs[i]); // Insertar en la base de datos
   }

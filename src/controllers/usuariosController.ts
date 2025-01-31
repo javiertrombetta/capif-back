@@ -151,12 +151,10 @@ export const getUsers = async (
 
     const usuarios = await findUsuarios(filters);
 
-    if (!usuarios || !usuarios.users.length) {
+    if (usuarios.users.length < 1) {
       logger.warn(`${req.method} ${req.originalUrl} - No se encontraron usuarios con los filtros proporcionados.`);
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
-
-    if(usuarios.users.length == 1){
+    else if(usuarios.users.length == 1){
       logger.info(`${req.method} ${req.originalUrl} - Se encontró ${usuarios.users.length} usuario.`);
     }    
     else{

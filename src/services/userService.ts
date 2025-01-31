@@ -251,7 +251,6 @@ interface Filters {
 export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioResponse[]; total: number; isSingleUser: boolean }> => {
   const whereUsuario: Record<string, any> = {};
   const includeUsuario: any[] = [];
-  const includeMaestro: any[] = [];
 
   // Validaciones de límites
   if (filters.limit && typeof filters.limit !== "number") {
@@ -263,19 +262,19 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
 
   // Filtro por Usuario
   if (filters.userId) whereUsuario.id_usuario = filters.userId;
-  if (filters.email) whereUsuario.email = filters.email;
+  if (filters.email) whereUsuario.email = { [Op.iLike]: `%${filters.email}%` };
   if (filters.tipo_registro) {
     whereUsuario.tipo_registro = Array.isArray(filters.tipo_registro)
       ? { [Op.in]: filters.tipo_registro }
       : filters.tipo_registro;
   }
-  if (filters.nombre) whereUsuario.nombre = { [Op.like]: `%${filters.nombre}%` };
-  if (filters.apellido) whereUsuario.apellido = { [Op.like]: `%${filters.apellido}%` };
+  if (filters.nombre) whereUsuario.nombre = { [Op.iLike]: `%${filters.nombre}%` };
+  if (filters.apellido) whereUsuario.apellido = { [Op.iLike]: `%${filters.apellido}%` };
 
   // Filtro por rol
   const whereRol: Record<string, any> = {};
   if (filters.rolId) whereRol.id_rol = filters.rolId;
-  if (filters.nombre_rol) whereRol.nombre_rol = filters.nombre_rol;
+  if (filters.nombre_rol) whereRol.nombre_rol = { [Op.iLike]: `%${filters.nombre_rol}%` };
 
   includeUsuario.push({
     model: UsuarioRol,
@@ -297,7 +296,7 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
           attributes: [],
           where: {
             ...(filters.productoraId && { id_productora: filters.productoraId }),
-            ...(filters.productoraNombre && { nombre_productora: { [Op.like]: `%${filters.productoraNombre}%` } }),
+            ...(filters.productoraNombre && { nombre_productora: { [Op.iLike]: `%${filters.productoraNombre}%` }, }),
           },
         },
       ],

@@ -1069,20 +1069,31 @@ export const approveApplication = async (
       detalle: `Generación de códigos ISRC para la Productora: (${productora.id_productora})`,
     });
 
+    const validIsrcs = isrcs.map((isrc) => ({
+      tipo: isrc.tipo,
+      codigo_productora: isrc.codigo_productora || "N/A",
+    }));
+
     // Enviar el correo de notificación al usuario
     await sendEmailWithErrorHandling(
       {
         to: targetUser.email,
         subject: "Registro Exitoso como Productor Principal",
         html: MESSAGES.EMAIL_BODY.PRODUCTOR_PRINCIPAL_NOTIFICATION(
+          targetUser.nombre!,
           productora.nombre_productora,
           productora.cuit_cuil,
           productora.cbu,
-          productora.alias_cbu
+          productora.alias_cbu,
+          validIsrcs
         ),
         successLog: `Usuario autorizado y correo de notificación enviado a ${targetUser.email}.`,
         errorLog: `Error al enviar el correo de aprobación de aplicación a ${targetUser.email}.`,
-      }, req, res, next);
+      },
+      req,
+      res,
+      next
+    );
 
     // Enviar respuesta exitosa al cliente
     return res.status(200).json({
@@ -1346,7 +1357,7 @@ export const rejectApplication = async (
       {
         to: targetUser.email,
         subject: "Rechazo de su Aplicación",
-        html: MESSAGES.EMAIL_BODY.REJECTION_NOTIFICATION(targetUser.email, comentario),
+        html: MESSAGES.EMAIL_BODY.REJECTION_NOTIFICATION(targetUser.nombre!, comentario),
         successLog: `Aplicación rechazada y correo de notificación enviado a ${targetUser.email}.`,
         errorLog: `Error al enviar el correo de rechazo a ${targetUser.email}.`,
       }, req, res, next);
@@ -1428,7 +1439,7 @@ export const sendApplication = async (
       {
         to: authUser.email,
         subject: "Solicitud de Aplicación Enviada",
-        html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(authUser.email),
+        html: MESSAGES.EMAIL_BODY.APPLICATION_SUBMITTED(nombre),
         successLog: `Correo de aplicación enviado a ${authUser.email}`,
         errorLog: `Error al enviar el correo de aplicación a ${authUser.email}`,
       },

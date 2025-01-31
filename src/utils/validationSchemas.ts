@@ -89,9 +89,7 @@ export const blockOrUnblockBodySchema = Joi.object({
 // Schema para filtros en query
 export const getUsuariosQuerySchema = Joi.object({
   usuarioId: uuidSchema.optional(),
-  email: Joi.string().email().optional().messages({
-    "string.email": "El email debe ser válido.",
-  }),
+  email: Joi.string().optional(),
   nombre: Joi.string().optional(),
   apellido: Joi.string().optional(),
   estado: Joi.string()

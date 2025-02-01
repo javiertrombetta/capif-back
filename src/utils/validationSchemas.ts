@@ -160,7 +160,7 @@ export const approveApplicationSchema = Joi.object({
 // Schema for rejecting an application usuarioId
 // Params
 export const rejectApplicationParamsSchema = Joi.object({
-  usuarioId: Joi.string().uuid().required().messages({
+  usuarioId: uuidSchema.messages({
     'string.uuid': 'El ID del usuario debe ser un UUID válido.',
     'any.required': 'El ID del usuario es obligatorio.',
   }),
@@ -324,10 +324,7 @@ export const sendApplicationSchema = Joi.object({
 // Schema for updating a user's details
 //Params
 export const updateUserParamsSchema = Joi.object({
-  usuarioId: Joi.string()
-    .uuid()
-    .required()
-    .messages({
+  usuarioId: uuidSchema.messages({
       "string.uuid": "El usuarioId debe ser un UUID válido.",
       "any.required": "El usuarioId es obligatorio.",
     }),
@@ -383,10 +380,7 @@ export const deleteUserSchema = Joi.object({
 // Schema for updating user's views
 // Params
 export const updateUserViewsParamsSchema = Joi.object({
-  usuarioId: Joi.string()
-    .uuid()
-    .required()
-    .messages({
+  usuarioId: uuidSchema.messages({
       "string.uuid": "El usuarioId debe ser un UUID válido.",
       "any.required": "El usuarioId es obligatorio.",
     }),
@@ -476,13 +470,13 @@ export const changePasswordBodySchema = Joi.object({
 // strart of producersRoutes
 
 export const getDocumentoByIdSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
     "any.required": "El ID de la productora es obligatorio.",
   }),
-  docId: Joi.string().uuid().required().messages({
+  docId: uuidSchema.messages({
     "string.base": "El ID del documento debe ser un texto.",
     "string.empty": "El ID del documento no puede estar vacío.",
     "string.uuid": "El ID del documento debe ser un UUID válido.",
@@ -491,7 +485,7 @@ export const getDocumentoByIdSchema = Joi.object({
 });
 
 export const getAllDocumentosSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -500,7 +494,7 @@ export const getAllDocumentosSchema = Joi.object({
 });
 
 export const getDocumentosMetadataSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -508,31 +502,14 @@ export const getDocumentosMetadataSchema = Joi.object({
   }),
 });
 
-// export const createDocumentoSchema = Joi.object({
-//   tipoDocumento: Joi.string()
-//     .valid(
-//       "dni_persona_fisica",
-//       "dni_representante_legal",
-//       "comprobante_ISRC",
-//       "contrato_social"
-//     )
-//     .required()
-//     .messages({
-//       "string.base": "El tipo de documento debe ser un texto.",
-//       "string.empty": "El tipo de documento no puede estar vacío.",
-//       "any.only": "El tipo de documento debe ser uno de los siguientes: dni_persona_fisica, dni_representante_legal, comprobante_ISRC, contrato_social.",
-//       "any.required": "El tipo de documento es obligatorio.",
-//     }),
-// });
-
 export const documentoParamsSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
     "any.required": "El ID de la productora es obligatorio.",
   }),
-  docId: Joi.string().uuid().required().messages({
+  docId: uuidSchema.messages({
     "string.base": "El ID del documento debe ser un texto.",
     "string.empty": "El ID del documento no puede estar vacío.",
     "string.uuid": "El ID del documento debe ser un UUID válido.",
@@ -554,7 +531,7 @@ export const updateDocumentoSchema = Joi.object({
 });
 
 export const deleteAllDocumentosSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -563,7 +540,7 @@ export const deleteAllDocumentosSchema = Joi.object({
 });
 
 export const getISRCByIdSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -583,7 +560,7 @@ export const createISRCBodySchema = Joi.object({
 });
 
 export const createISRCParamsSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -592,7 +569,7 @@ export const createISRCParamsSchema = Joi.object({
 });
 
 export const updateISRCBodySchema = Joi.object({
-  id_productora_isrc: Joi.string().uuid().required().messages({
+  id_productora_isrc: uuidSchema.messages({
     "string.base": "El ID del ISRC debe ser un texto.",
     "string.empty": "El ID del ISRC no puede estar vacío.",
     "string.uuid": "El ID del ISRC debe ser un UUID válido.",
@@ -609,7 +586,7 @@ export const updateISRCBodySchema = Joi.object({
 });
 
 export const updateISRCParamsSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -618,7 +595,7 @@ export const updateISRCParamsSchema = Joi.object({
 });
 
 export const deleteISRCParamsSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -627,7 +604,7 @@ export const deleteISRCParamsSchema = Joi.object({
 });
 
 export const getPostulacionesByIdSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -663,7 +640,7 @@ export const createPostulacionesQuerySchema = Joi.object({
 });
 
 export const updatePostulacionBodySchema = Joi.object({
-  id_premio: Joi.string().uuid().required().messages({
+  id_premio: uuidSchema.messages({
     "string.base": "El ID de la postulación debe ser un texto.",
     "string.empty": "El ID de la postulación no puede estar vacío.",
     "string.uuid": "El ID de la postulación debe ser un UUID válido.",
@@ -681,7 +658,7 @@ export const updatePostulacionBodySchema = Joi.object({
 });
 
 export const updatePostulacionParamsSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -690,7 +667,7 @@ export const updatePostulacionParamsSchema = Joi.object({
 });
 
 export const deletePostulacionParamsSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -699,7 +676,7 @@ export const deletePostulacionParamsSchema = Joi.object({
 });
 
 export const getProductoraByIdParamsSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -782,7 +759,7 @@ export const updateProductoraBodySchema = Joi.object({
 });
 
 export const updateProductoraParamsSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
@@ -791,10 +768,438 @@ export const updateProductoraParamsSchema = Joi.object({
 });
 
 export const deleteProductoraParamsSchema = Joi.object({
-  id: Joi.string().uuid().required().messages({
+  id: uuidSchema.messages({
     "string.base": "El ID de la productora debe ser un texto.",
     "string.empty": "El ID de la productora no puede estar vacío.",
     "string.uuid": "El ID de la productora debe ser un UUID válido.",
     "any.required": "El ID de la productora es obligatorio.",
   }),
+});
+
+//  end of producersRoutes
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// strart of repertoiresRoutes
+
+export const enviarFonogramaBodySchema = Joi.object({
+  fonograma_ids: Joi.array()
+    .items(uuidSchema)
+    .min(1)
+    .required()
+    .messages({
+      "array.base": "El campo 'fonograma_ids' debe ser un array de UUIDs.",
+      "array.min": "Debe haber al menos un 'fonograma_id' en la solicitud.",
+      "any.required": "El campo 'fonograma_ids' es obligatorio.",
+    }),
+});
+
+export const getEnviosByFonogramaParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El ID del fonograma debe ser un string.",
+      "string.guid": "El ID del fonograma debe ser un UUID válido.",
+      "any.required": "El ID del fonograma es obligatorio.",
+    }),
+});
+
+export const getNovedadesFonogramaQuerySchema = Joi.object({
+  operacion: Joi.alternatives().try(
+    Joi.string().valid("ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION", "BAJA"),
+    Joi.array().items(Joi.string().valid("ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION", "BAJA"))
+  ).messages({
+    "string.base": "El campo 'operacion' debe ser una cadena de texto.",
+    "any.only": "Operación inválida. Valores permitidos: ALTA, DATOS, ARCHIVO, TERRITORIO, PARTICIPACION, BAJA.",
+  }),
+  isProcesado: Joi.boolean().messages({
+    "boolean.base": "El campo 'isProcesado' debe ser un valor booleano (true o false).",
+  }),
+});
+
+export const addArchivoToFonogramaParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+});
+
+export const getArchivoByFonogramaParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+});
+
+export const addParticipacionToFonogramaParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+});
+
+export const addParticipacionToFonogramaBodySchema = Joi.object({
+  participaciones: Joi.array()
+    .items(
+      Joi.object({
+        cuit: Joi.string()
+          .pattern(/^\d{11}$/)
+          .required()
+          .messages({
+            "string.pattern.base": "El 'cuit' debe contener 11 dígitos numéricos.",
+            "any.required": "El campo 'cuit' es obligatorio.",
+          }),
+        porcentaje_participacion: Joi.number()
+          .min(0)
+          .max(100)
+          .required()
+          .messages({
+            "number.base": "El 'porcentaje_participacion' debe ser un número.",
+            "number.min": "El 'porcentaje_participacion' no puede ser menor a 0.",
+            "number.max": "El 'porcentaje_participacion' no puede ser mayor a 100.",
+            "any.required": "El campo 'porcentaje_participacion' es obligatorio.",
+          }),
+        fecha_inicio: Joi.date().iso().required().messages({
+          "date.base": "El campo 'fecha_inicio' debe ser una fecha válida en formato ISO.",
+          "any.required": "El campo 'fecha_inicio' es obligatorio.",
+        }),
+        fecha_hasta: Joi.date()
+          .iso()
+          .greater(Joi.ref("fecha_inicio"))
+          .messages({
+            "date.base": "El campo 'fecha_hasta' debe ser una fecha válida en formato ISO.",
+            "date.greater": "El campo 'fecha_hasta' debe ser posterior a 'fecha_inicio'.",
+          }),
+      })
+    )
+    .min(1)
+    .required()
+    .messages({
+      "array.base": "El campo 'participaciones' debe ser un array de objetos.",
+      "array.min": "Debe haber al menos una participación.",
+      "any.required": "El campo 'participaciones' es obligatorio.",
+    }),
+});
+
+export const listParticipacionesParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+});
+
+export const listParticipacionesQuerySchema = Joi.object({
+  fecha_inicio: Joi.date().iso().messages({
+    "date.base": "El campo 'fecha_inicio' debe ser una fecha válida en formato ISO.",
+  }),
+  fecha_hasta: Joi.date()
+    .iso()
+    .greater(Joi.ref("fecha_inicio"))
+    .messages({
+      "date.base": "El campo 'fecha_hasta' debe ser una fecha válida en formato ISO.",
+      "date.greater": "El campo 'fecha_hasta' debe ser posterior a 'fecha_inicio'.",
+    }),
+});
+
+export const updateParticipacionParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+  shareId: uuidSchema.messages({
+      "string.base": "El parámetro 'shareId' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'shareId' debe ser un UUID válido.",
+      "any.required": "El parámetro 'shareId' es obligatorio.",
+    }),
+});
+
+export const updateParticipacionBodySchema = Joi.object({
+  porcentaje_participacion: Joi.number()
+    .min(0)
+    .max(100)
+    .required()
+    .messages({
+      "number.base": "El 'porcentaje_participacion' debe ser un número.",
+      "number.min": "El 'porcentaje_participacion' no puede ser menor a 0.",
+      "number.max": "El 'porcentaje_participacion' no puede ser mayor a 100.",
+      "any.required": "El campo 'porcentaje_participacion' es obligatorio.",
+    }),
+  fecha_participacion_inicio: Joi.date().iso().required().messages({
+    "date.base": "El campo 'fecha_participacion_inicio' debe ser una fecha válida en formato ISO.",
+    "any.required": "El campo 'fecha_participacion_inicio' es obligatorio.",
+  }),
+  fecha_participacion_hasta: Joi.date()
+    .iso()
+    .greater(Joi.ref("fecha_participacion_inicio"))
+    .required()
+    .messages({
+      "date.base": "El campo 'fecha_participacion_hasta' debe ser una fecha válida en formato ISO.",
+      "date.greater": "El campo 'fecha_participacion_hasta' debe ser posterior a 'fecha_participacion_inicio'.",
+      "any.required": "El campo 'fecha_participacion_hasta' es obligatorio.",
+    }),
+});
+
+export const deleteParticipacionParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+  shareId: uuidSchema.messages({
+      "string.base": "El parámetro 'shareId' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'shareId' debe ser un UUID válido.",
+      "any.required": "El parámetro 'shareId' es obligatorio.",
+    }),
+});
+
+export const addTerritorioToFonogramaParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+});
+
+export const addTerritorioToFonogramaBodySchema = Joi.object({
+  codigo_iso: Joi.string()
+    .length(2)
+    .uppercase()
+    .required()
+    .messages({
+      "string.base": "El campo 'codigo_iso' debe ser una cadena de texto.",
+      "string.length": "El campo 'codigo_iso' debe tener exactamente 2 caracteres.",
+      "string.uppercase": "El campo 'codigo_iso' debe estar en mayúsculas.",
+      "any.required": "El campo 'codigo_iso' es obligatorio.",
+    }),
+  is_activo: Joi.boolean().messages({
+    "boolean.base": "El campo 'is_activo' debe ser un valor booleano (true o false).",
+  }),
+});
+
+export const listTerritoriosParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+});
+
+export const updateTerritorioParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+  territoryId: uuidSchema.messages({
+      "string.base": "El parámetro 'territoryId' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'territoryId' debe ser un UUID válido.",
+      "any.required": "El parámetro 'territoryId' es obligatorio.",
+    }),
+});
+
+export const updateTerritorioBodySchema = Joi.object({
+  is_activo: Joi.boolean()
+    .required()
+    .messages({
+      "boolean.base": "El campo 'is_activo' debe ser un valor booleano (true o false).",
+      "any.required": "El campo 'is_activo' es obligatorio.",
+    }),
+});
+
+export const deleteTerritorioParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+  territoryId: uuidSchema.messages({
+      "string.base": "El parámetro 'territoryId' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'territoryId' debe ser un UUID válido.",
+      "any.required": "El parámetro 'territoryId' es obligatorio.",
+    }),
+});
+
+export const validateISRCBodySchema = Joi.object({
+  isrc: Joi.string()
+    .length(12)
+    .pattern(/^AR\d{10}$/)
+    .required()
+    .messages({
+      "string.base": "El campo 'isrc' debe ser una cadena de texto.",
+      "string.length": "El 'isrc' debe tener exactamente 12 caracteres.",
+      "string.pattern.base": "El 'isrc' debe comenzar con 'AR' seguido de 10 dígitos numéricos.",
+      "any.required": "El campo 'isrc' es obligatorio.",
+    }),
+});
+
+export const createFonogramaBodySchema = Joi.object({
+  productora_id: uuidSchema.messages({
+      "string.base": "El campo 'productora_id' debe ser una cadena de texto.",
+      "string.uuid": "El campo 'productora_id' debe ser un UUID válido.",
+      "any.required": "El campo 'productora_id' es obligatorio.",
+    }),
+  titulo: Joi.string().min(1).required().messages({
+    "string.base": "El campo 'titulo' debe ser una cadena de texto.",
+    "string.min": "El campo 'titulo' no puede estar vacío.",
+    "any.required": "El campo 'titulo' es obligatorio.",
+  }),
+  artista: Joi.string().min(1).required().messages({
+    "string.base": "El campo 'artista' debe ser una cadena de texto.",
+    "string.min": "El campo 'artista' no puede estar vacío.",
+    "any.required": "El campo 'artista' es obligatorio.",
+  }),
+  album: Joi.string().allow(null, "").messages({
+    "string.base": "El campo 'album' debe ser una cadena de texto.",
+  }),
+  duracion: Joi.number().min(1).required().messages({
+    "number.base": "El campo 'duracion' debe ser un número.",
+    "number.min": "El campo 'duracion' debe ser mayor a 0.",
+    "any.required": "El campo 'duracion' es obligatorio.",
+  }),
+  anio_lanzamiento: Joi.number()
+    .integer()
+    .min(1900)
+    .max(new Date().getFullYear())
+    .required()
+    .messages({
+      "number.base": "El campo 'anio_lanzamiento' debe ser un número entero.",
+      "number.min": "El campo 'anio_lanzamiento' no puede ser menor a 1900.",
+      "number.max": `El campo 'anio_lanzamiento' no puede ser mayor al año actual (${new Date().getFullYear()}).`,
+      "any.required": "El campo 'anio_lanzamiento' es obligatorio.",
+    }),
+  sello_discografico: Joi.string().allow(null, "").messages({
+    "string.base": "El campo 'sello_discografico' debe ser una cadena de texto.",
+  }),
+  codigo_designacion: Joi.string()
+    .length(5)
+    .required()
+    .messages({
+      "string.base": "El campo 'codigo_designacion' debe ser una cadena de texto.",
+      "string.length": "El campo 'codigo_designacion' debe tener exactamente 5 caracteres.",
+      "any.required": "El campo 'codigo_designacion' es obligatorio.",
+    }),
+  participaciones: Joi.array()
+    .items(
+      Joi.object({
+        cuit: Joi.string()
+          .pattern(/^\d{11}$/)
+          .required()
+          .messages({
+            "string.pattern.base": "El campo 'cuit' debe contener 11 dígitos numéricos.",
+            "any.required": "El campo 'cuit' es obligatorio.",
+          }),
+        porcentaje_participacion: Joi.number()
+          .min(0)
+          .max(100)
+          .required()
+          .messages({
+            "number.base": "El 'porcentaje_participacion' debe ser un número.",
+            "number.min": "El 'porcentaje_participacion' no puede ser menor a 0.",
+            "number.max": "El 'porcentaje_participacion' no puede ser mayor a 100.",
+            "any.required": "El campo 'porcentaje_participacion' es obligatorio.",
+          }),
+        fecha_inicio: Joi.date().iso().required().messages({
+          "date.base": "El campo 'fecha_inicio' debe ser una fecha válida en formato ISO.",
+          "any.required": "El campo 'fecha_inicio' es obligatorio.",
+        }),
+        fecha_hasta: Joi.date()
+          .iso()
+          .greater(Joi.ref("fecha_inicio"))
+          .messages({
+            "date.base": "El campo 'fecha_hasta' debe ser una fecha válida en formato ISO.",
+            "date.greater": "El campo 'fecha_hasta' debe ser posterior a 'fecha_inicio'.",
+          }),
+      })
+    )
+    .min(1)
+    .required()
+    .messages({
+      "array.base": "El campo 'participaciones' debe ser un array de objetos.",
+      "array.min": "Debe haber al menos una participación.",
+      "any.required": "El campo 'participaciones' es obligatorio.",
+    }),
+  territorios: Joi.array()
+    .items(Joi.string().length(2).uppercase())
+    .min(1)
+    .required()
+    .messages({
+      "array.base": "El campo 'territorios' debe ser un array de códigos ISO de 2 letras.",
+      "array.min": "Debe haber al menos un territorio activo.",
+      "string.length": "Cada código de territorio debe tener exactamente 2 caracteres.",
+      "string.uppercase": "Los códigos de territorio deben estar en mayúsculas.",
+      "any.required": "El campo 'territorios' es obligatorio.",
+    }),
+});
+
+export const getFonogramaByIdParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+});
+
+export const listFonogramasQuerySchema = Joi.object({
+  search: Joi.string()
+    .allow("")
+    .messages({
+      "string.base": "El parámetro 'search' debe ser una cadena de texto.",
+    }),
+});
+
+export const updateFonogramaParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
+});
+
+export const updateFonogramaBodySchema = Joi.object({
+  titulo: Joi.string().min(1).messages({
+    "string.base": "El campo 'titulo' debe ser una cadena de texto.",
+    "string.min": "El campo 'titulo' no puede estar vacío.",
+  }),
+  artista: Joi.string().min(1).messages({
+    "string.base": "El campo 'artista' debe ser una cadena de texto.",
+    "string.min": "El campo 'artista' no puede estar vacío.",
+  }),
+  album: Joi.string().allow(null, "").messages({
+    "string.base": "El campo 'album' debe ser una cadena de texto.",
+  }),
+  duracion: Joi.number().min(1).messages({
+    "number.base": "El campo 'duracion' debe ser un número.",
+    "number.min": "El campo 'duracion' debe ser mayor a 0.",
+  }),
+  anio_lanzamiento: Joi.number()
+    .integer()
+    .min(1900)
+    .max(new Date().getFullYear())
+    .messages({
+      "number.base": "El campo 'anio_lanzamiento' debe ser un número entero.",
+      "number.min": "El campo 'anio_lanzamiento' no puede ser menor a 1900.",
+      "number.max": `El campo 'anio_lanzamiento' no puede ser mayor al año actual (${new Date().getFullYear()}).`,
+    }),
+  sello_discografico: Joi.string().allow(null, "").messages({
+    "string.base": "El campo 'sello_discografico' debe ser una cadena de texto.",
+  }),
+  estado_fonograma: Joi.string()
+    .valid("ACTIVO", "INACTIVO", "BAJA")
+    .messages({
+      "string.base": "El campo 'estado_fonograma' debe ser una cadena de texto.",
+      "any.only": "El campo 'estado_fonograma' solo puede ser 'ACTIVO', 'INACTIVO' o 'BAJA'.",
+    }),
+});
+
+export const deleteFonogramaParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+      "string.base": "El parámetro 'id' debe ser una cadena de texto.",
+      "string.uuid": "El parámetro 'id' debe ser un UUID válido.",
+      "any.required": "El parámetro 'id' es obligatorio.",
+    }),
 });

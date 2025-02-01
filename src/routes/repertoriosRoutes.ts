@@ -28,36 +28,218 @@ import {
   getNovedadesFonograma,
 } from '../controllers/repertoriosController';
 
+import { addArchivoToFonogramaParamsSchema, addParticipacionToFonogramaBodySchema, addParticipacionToFonogramaParamsSchema, addTerritorioToFonogramaBodySchema, addTerritorioToFonogramaParamsSchema, createFonogramaBodySchema, deleteFonogramaParamsSchema, deleteParticipacionParamsSchema, deleteTerritorioParamsSchema, enviarFonogramaBodySchema, getArchivoByFonogramaParamsSchema, getEnviosByFonogramaParamsSchema, getFonogramaByIdParamsSchema, getNovedadesFonogramaQuerySchema, listFonogramasQuerySchema, listParticipacionesParamsSchema, listParticipacionesQuerySchema, listTerritoriosParamsSchema, updateFonogramaBodySchema, updateFonogramaParamsSchema, updateParticipacionBodySchema, updateParticipacionParamsSchema, updateTerritorioBodySchema, updateTerritorioParamsSchema, validateISRCBodySchema } from "../utils/validationSchemas";
+
 const router = express.Router();
 
 // Rutas para FonogramaEnvio
-router.post('/send', enviarFonograma);
-router.get('/:id/send', getEnviosByFonograma);
-router.get('/send', getNovedadesFonograma);
+router.post(
+  "/send",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.BODY]: enviarFonogramaBodySchema,
+  }),
+  enviarFonograma
+);
+
+router.get(
+  '/:id/send',
+  authenticate,
+  authorizeRoles(['admin_principal', 'admin_secundario']),
+  celebrate({
+    [Segments.PARAMS]: getEnviosByFonogramaParamsSchema,
+  }),
+  getEnviosByFonograma
+);
+
+router.get(
+  "/send",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.QUERY]: getNovedadesFonogramaQuerySchema,
+  }),
+  getNovedadesFonograma
+);
 
 // Rutas para FonogramaArchivo
-router.post('/:id/file', uploadAudio.single("audioFile"), addArchivoToFonograma);
-router.get('/:id/file', getArchivoByFonograma);
+router.post(
+  "/:id/file",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: addArchivoToFonogramaParamsSchema,
+  }),
+  uploadAudio.single("audioFile"),
+  addArchivoToFonograma
+);
+
+router.get(
+  "/:id/file",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: getArchivoByFonogramaParamsSchema,
+  }),
+  getArchivoByFonograma
+);
 
 // Rutas para FonogramaParticipacion
-router.post('/:id/shares', addParticipacionToFonograma);
-router.get('/:id/shares', listParticipaciones);
-router.put('/:id/shares/:shareId', updateParticipacion);
-router.delete('/:id/shares/:shareId', deleteParticipacion);
+router.post(
+  "/:id/shares",
+  authenticate,
+  authorizeRoles(["admin_principal"]),
+  celebrate({
+    [Segments.PARAMS]: addParticipacionToFonogramaParamsSchema,
+    [Segments.BODY]: addParticipacionToFonogramaBodySchema,
+  }),
+  addParticipacionToFonograma
+);
+
+router.get(
+  "/:id/shares",
+  authenticate,
+  authorizeRoles(["admin_principal"]),
+  celebrate({
+    [Segments.PARAMS]: listParticipacionesParamsSchema,
+    [Segments.QUERY]: listParticipacionesQuerySchema,
+  }),
+  listParticipaciones
+);
+
+router.put(
+  "/:id/shares/:shareId",
+  authenticate,
+  authorizeRoles(["admin_principal"]),
+  celebrate({
+    [Segments.PARAMS]: updateParticipacionParamsSchema,
+    [Segments.BODY]: updateParticipacionBodySchema,
+  }),
+  updateParticipacion
+);
+
+router.delete(
+  "/:id/shares/:shareId",
+  authenticate,
+  authorizeRoles(["admin_principal"]),
+  celebrate({
+    [Segments.PARAMS]: deleteParticipacionParamsSchema,
+  }),
+  deleteParticipacion
+);
 
 // Rutas para FonogramaTerritorio
-router.post('/:id/territories', addTerritorioToFonograma);
-router.get('/:id/territories', listTerritorios);
-router.put('/:id/territories/:territoryId/state', updateTerritorio);
-router.delete('/:id/territories/:territoryId', deleteTerritorio);
+router.post(
+  "/:id/territories",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: addTerritorioToFonogramaParamsSchema,
+    [Segments.BODY]: addTerritorioToFonogramaBodySchema,
+  }),
+  addTerritorioToFonograma
+);
+
+router.get(
+  "/:id/territories",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: listTerritoriosParamsSchema,
+  }),
+  listTerritorios
+);
+
+router.put(
+  "/:id/territories/:territoryId/state",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: updateTerritorioParamsSchema,
+    [Segments.BODY]: updateTerritorioBodySchema,
+  }),
+  updateTerritorio
+);
+
+router.delete(
+  "/:id/territories/:territoryId",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: deleteTerritorioParamsSchema,
+  }),
+  deleteTerritorio
+);
 
 // Rutas para Fonograma
-router.post("/isrc/validate", validateISRC);
-router.post('/massive', uploadCSV.single('csvFile'), cargarRepertoriosMasivo);
-router.post("/", createFonograma);
-router.get('/:id', getFonogramaById);
-router.get('/', listFonogramas);
-router.put('/:id', updateFonograma);
-router.delete('/:id', deleteFonograma);
+router.post(
+  "/isrc/validate",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.BODY]: validateISRCBodySchema,
+  }),
+  validateISRC
+);
+
+router.post(
+  "/massive",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  uploadCSV.single("csvFile"),
+  cargarRepertoriosMasivo
+);
+
+router.post(
+  "/",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.BODY]: createFonogramaBodySchema,
+  }),
+  createFonograma
+);
+
+router.get(
+  "/:id",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: getFonogramaByIdParamsSchema,
+  }),
+  getFonogramaById
+);
+
+router.get(
+  "/",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.QUERY]: listFonogramasQuerySchema,
+  }),
+  listFonogramas
+);
+
+router.put(
+  "/:id",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: updateFonogramaParamsSchema,
+    [Segments.BODY]: updateFonogramaBodySchema,
+  }),
+  updateFonograma
+);
+
+router.delete(
+  "/:id",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: deleteFonogramaParamsSchema,
+  }),
+  deleteFonograma
+);
 
 export default router;

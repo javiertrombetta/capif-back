@@ -54,6 +54,7 @@ export const SUCCESS = {
     CREATED: 'ISRC creado exitosamente.',
     UPDATED: 'ISRC actualizado exitosamente.',
     DELETED: 'Todos los ISRCs de la productora fueron eliminados exitosamente.',
+    ISRC_AVAILABLE: "El ISRC está disponible.",
   },
   POSTULACION: {
     CREATED: 'Postulación creada exitosamente.',
@@ -251,6 +252,12 @@ export const ERROR = {
     ALREADY_EXISTS: 'Ya existe un ISRC con este código para la productora especificada.',
     NO_ISRC_CODES_AVAILABLE: 'No hay códigos ISRC disponibles.',
     CREATION_FAILED: 'No se pudo crear el ISRC.',
+    ISRC_REQUIRED: "El ISRC debe ser proporcionado y debe ser una cadena de texto.",
+    ISRC_LENGTH: "El ISRC debe tener exactamente 12 caracteres.",
+    ISRC_PREFIX: "El ISRC debe comenzar con 'AR'.",
+    ISRC_PRODUCTORA_INVALID: "El código de productora no es válido o no existe como tipo AUDIO.",
+    ISRC_YEAR_MISMATCH: "El año en el ISRC no coincide con el año actual ({year}).",
+    ISRC_IN_USE: "El ISRC ya está en uso.",
   },
   REGLA: {
     NOT_FOUND: 'Regla no encontrada.',

@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.0 - 01-02-2025
+## 🚀 Features
+
+- feat(MINOR): add repertoires
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.214
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.214 - 01-02-2025
 ## 🚀 Features
 

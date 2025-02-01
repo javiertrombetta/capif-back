@@ -132,6 +132,12 @@ export const ERROR = {
     PRODUCTORA_ID_REQUIRED: 'El ID de la productora no fue propocionado o es inválido.',
     MISSING_PARAMETERS: 'Faltan uno o más parámetros obligatorios.',
     NO_DATA_PROVIDED: 'No se proporcionaron datos para actualizar.',
+    FONOGRAMAS_NOT_PROVIDED: "Se debe proporcionar un array de IDs de fonogramas.",
+    OPERATIONS_INVALID: 'Las operaciones proporcionadas no son válidas.',
+    PARTICIPACION_NOT_PROVIDED: 'No se incluyeron participaciones en la solicitud.',
+    TERRITORIO_ISO_NOT_FOUND: 'No se proporcionó un código ISO de territorio.',
+    TERRITORIO_ALREADY_EXIST: 'El territorio ya está asociado a este fonograma.',
+    TERRITORIO_STATUS_NOT_FOUND: 'El campo is_activo debe ser true o false.',
   },
   REGISTER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
@@ -191,12 +197,14 @@ export const ERROR = {
     RECORD_NOT_FOUND: 'El registro solicitado no fue encontrado.',
     MODEL_NOT_FOUND: 'El modelo solicitado no fue encontrado.',
   },
-  CONSULTA: {
-    NOT_FOUND: 'Consulta no encontrada.',
+  ENVIO: {
+    NOT_FOUND: 'No hay envíos registrados para este fonograma.',
   },
   FONOGRAMA: {
-    NOT_FOUND: 'El fonograma no fue encontrado.',
-    TYPE_NOT_FOUND: 'El tipo de fonograma no fue encontrado.',
+    NOT_FOUND: 'El repetorio no fue encontrado.',
+    NOT_FOUND_MULTIPLE: 'Uno o más repertorios no fueron encontrados.',
+    TYPE_NOT_FOUND: 'El tipo de repertorio no fue encontrado.',
+    NOT_SEND_PENDING: 'Uno o más fonogramas no están en estado PENDIENTE DE ENVIO.'
   },
   CONFLICTO: {
     NOT_FOUND: 'El conflicto no fue encontrado.',
@@ -205,9 +213,10 @@ export const ERROR = {
   ESTADO: {
     NOT_FOUND: 'El estado no fue encontrado.',
   },
-  INVOLUCRADO: {
-    NOT_FOUND: 'El involucrado no fue encontrado.',
-    ALREADY_EXISTS: 'El involucrado ya está registrado en el conflicto.',
+  PARTICIPACION: {
+    NOT_FOUND: 'La participación no fue encontrada para este fonograma.',
+    NOT_FOUND_PERIOD: 'No hay participaciones para este fonograma en el período seleccionado.',
+    ALREADY_EXISTS: 'La participación ya existe en el fonograma.',
   },
   CUENTA_CORRIENTE: {
     NOT_FOUND: 'La cuenta corriente no fue encontrada.',
@@ -227,7 +236,9 @@ export const ERROR = {
     CREATION_FAILED: 'No se pudo crear la postulación.',
   },
   ARCHIVO: {
-    NOT_FOUND: 'No se encontró el archivo.',
+    NOT_FOUND: 'No hay un archivo cargado a esta ruta.',
+    NOT_FOUND_FILE: 'No se encontró el archivo fisico en el sistema.',
+    NOT_FOUND_DB: 'No se encontró el registro del archivo en la base de datos.',
     INVALID_FILE_EXTENSION: 'Extensión de archivo inválida.',
   },
   PRODUCTORA: {
@@ -274,8 +285,9 @@ export const ERROR = {
   SESION: {
     NOT_FOUND: 'No se encontró la sesión solicitada.',
   },
-  TRAMITE: {
-    NOT_FOUND: 'No se encontró el trámite solicitado.',
+  TERRITORIO: {
+    NOT_FOUND: 'El territorio no existe o no está habilitado.',
+    NOT_ASSIGNED: 'No hay territorios asociados a este fonograma.',
     INVALID_TYPE: 'El tipo de trámite es inválido.',
   },
 };

@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.214 - 01-02-2025
+## 🚀 Features
+
+- feat: add joi to repertoires
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.211
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.211 - 01-02-2025
 ## 🚀 Features
 

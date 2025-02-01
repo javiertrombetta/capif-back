@@ -1,4 +1,15 @@
 # Changelog
+## v0.1.211 - 01-02-2025
+## 🚀 Features
+
+- feat: add all endpoints to repertoires controller
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.1.208
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.1.208 - 31-01-2025
 ## 🐛 Fixes
 

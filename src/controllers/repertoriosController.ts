@@ -10,6 +10,8 @@ import FonogramaParticipacion from "../models/FonogramaParticipacion";
 import FonogramaTerritorioMaestro from "../models/FonogramaTerritorioMaestro";
 import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 import { getAuthenticatedUser } from "../services/authService";
+import * as repertorioService from "../services/repertorioService";
+import * as MESSAGES from "../utils/messages";
 
 import * as fs from "fs";
 import * as path from "path";
@@ -28,66 +30,17 @@ export const validateISRC = async (req: Request, res: Response, next: NextFuncti
   try {
     const { isrc } = req.body;
 
-    if (!isrc || typeof isrc !== "string") {
-      return res.status(400).json({ error: "El ISRC debe ser proporcionado y debe ser una cadena de texto." });
-    }
+    logger.info(`${req.method} ${req.originalUrl} - Validando ISRC: ${isrc}.`);
 
-    // Validar que el ISRC tenga exactamente 12 caracteres
-    if (isrc.length !== 12) {
-      return res.status(400).json({ error: "El ISRC debe tener exactamente 12 caracteres." });
-    }
+    const validationResult = await repertorioService.validateISRC(isrc);
 
-    // Validar que los dos primeros caracteres sean 'AR'
-    if (!isrc.startsWith("AR")) {
-      return res.status(400).json({ error: "El ISRC debe comenzar con 'AR'." });
-    }
-
-    // Extraer partes del ISRC
-    const codigoProductora = isrc.substring(2, 5); // 3ro al 5to dígito
-    const anioISRC = isrc.substring(5, 7); // 6to y 7mo dígito
-    const codigoDesignacion = isrc.substring(7); // Últimos 5 dígitos
-
-    // Validar que el código de la productora exista en la base de datos
-    const currentYear = new Date().getFullYear().toString().slice(-2);
-    const productoraISRC = await ProductoraISRC.findOne({
-      where: {
-        codigo_productora: codigoProductora,
-        tipo: "AUDIO",
-      },
-    });
-
-    if (!productoraISRC) {
-      return res.status(400).json({ error: "El código de productora no es válido o no existe como tipo AUDIO." });
-    }
-
-    // Validar que los dígitos del año sean los del año actual
-    if (anioISRC !== currentYear) {
-      return res.status(400).json({
-        error: `El año en el ISRC no coincide con el año actual (${currentYear}).`,
-      });
-    }
-
-    // Validar que el ISRC no exista ya en la tabla de fonogramas
-    const fonogramaExistente = await Fonograma.findOne({
-      where: { isrc },
-    });
-
-    if (fonogramaExistente) {
-      return res.status(200).json({
-        isrc,
-        available: false,
-        message: "El ISRC ya está en uso.",
-      });
-    }
-
-    // Si todo es válido, el ISRC está disponible
     return res.status(200).json({
       isrc,
-      available: true,
-      message: "El ISRC está disponible.",
+      available: validationResult.available,
+      message: validationResult.message,
     });
   } catch (err) {
-    next(err);
+    handleGeneralError(err, req, res, next, "Error al validar el ISRC");
   }
 };
 
@@ -114,7 +67,7 @@ export const createFonograma = async (req: AuthenticatedRequest, res: Response, 
         }
 
         // Verifica el usuario autenticado
-        const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);       
+        const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
         // Validar que la productora exista y obtener su código ISRC AUDIO
         const productoraISRC = await ProductoraISRC.findOne({
@@ -158,7 +111,6 @@ export const createFonograma = async (req: AuthenticatedRequest, res: Response, 
         });        
 
         // Registrar participaciones de productoras (obligatorio)
-        let totalParticipationPercentage = 0;
         const overlappingPeriods: string[] = [];
 
         if (participaciones && participaciones.length > 0) {
@@ -166,10 +118,28 @@ export const createFonograma = async (req: AuthenticatedRequest, res: Response, 
                 participaciones.map(async (participacion: any) => {
                     const { cuit, porcentaje_participacion, fecha_inicio, fecha_hasta } = participacion;
 
+                    // Verificar si la productora del usuario que registra es parte de los participantes
                     const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
-
                     if (!productora) {
                         throw new Error(`No se encontró ninguna productora con el cuit: ${cuit}`);
+                    }
+
+                    // Validar si la productora ya está registrada en el mismo período para este fonograma
+                    const participacionExistente = await FonogramaParticipacion.findOne({
+                        where: {
+                            fonograma_id: fonograma.id_fonograma,
+                            productora_id: productora.id_productora,
+                            [Op.or]: [
+                                { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                                { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                            ],
+                        },
+                    });
+
+                    if (participacionExistente) {
+                        return res.status(400).json({
+                            error: `La productora con CUIT '${cuit}' ya tiene una participación registrada en este fonograma para el período entre ${fecha_inicio} y ${fecha_hasta}.`,
+                        });
                     }
 
                     await FonogramaParticipacion.create({
@@ -188,28 +158,16 @@ export const createFonograma = async (req: AuthenticatedRequest, res: Response, 
                         detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ISRC '${isrc}'`,
                     });
 
-                    // Calcular el porcentaje total
-                    totalParticipationPercentage += porcentaje_participacion;
-
                     // Verificar períodos superpuestos
                     const participacionesExistentes = await FonogramaParticipacion.findAll({
                         where: {
                             fonograma_id: fonograma.id_fonograma,
                             [Op.or]: [
-                                {
-                                    fecha_participacion_inicio: {
-                                        [Op.between]: [fecha_inicio, fecha_hasta],
-                                    },
-                                },
-                                {
-                                    fecha_participacion_hasta: {
-                                        [Op.between]: [fecha_inicio, fecha_hasta],
-                                    },
-                                },
+                                { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                                { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
                             ],
                         },
                     });
-
                     const porcentajeSuperpuesto = participacionesExistentes.reduce(
                         (sum, p) => sum + p.porcentaje_participacion,
                         porcentaje_participacion
@@ -222,18 +180,26 @@ export const createFonograma = async (req: AuthenticatedRequest, res: Response, 
                     }
                 })
             );
+
+            // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy
+            const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
+                where: {
+                    fonograma_id: fonograma.id_fonograma,
+                    fecha_participacion_inicio: { [Op.lte]: new Date() },
+                    fecha_participacion_hasta: { [Op.gte]: new Date() },
+                },
+            });
+
+            fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
+            await fonograma.save();
+
+        } else {
+          return res.status(400).json({ error: "No se incluyeron participaciones en la creación del fonograma." });
         }
-
-        // Actualizar el porcentaje total en el fonograma
-        fonograma.porcentaje_titularidad_total = totalParticipationPercentage;
-        await fonograma.save();
-
 
         // Verificar si hubo períodos superpuestos
         const message = overlappingPeriods.length > 0
-            ? `Fonograma creado con éxito, pero hay períodos donde se supera el 100% de participación: ${overlappingPeriods.join(
-                "; "
-            )}`
+            ? `Fonograma creado con éxito, pero hay períodos donde se supera el 100% de participación: ${overlappingPeriods.join("; ")}`
             : "Fonograma creado exitosamente";
 
 
@@ -436,8 +402,7 @@ export const cargarRepertoriosMasivo = async (req: AuthenticatedRequest, res: Re
                         });
                     }
 
-                    // Registrar participaciones y calcular conflictos
-                    let porcentajeTotal = 0;
+                    // Registrar participaciones y calcular conflictos            
                     await Promise.all(
                         parsedParticipaciones.map(async (participacion: any) => {
                             const { cuit, porcentaje_participacion, fecha_inicio, fecha_hasta } = participacion;
@@ -448,60 +413,76 @@ export const cargarRepertoriosMasivo = async (req: AuthenticatedRequest, res: Re
                                 throw new Error(`No se encontró ninguna productora con el CUIT '${cuit}'`);
                             }
 
-                            // Registrar participación
-                            await FonogramaParticipacion.create({
-                                fonograma_id: fonograma.id_fonograma,
-                                productora_id: productora.id_productora,
-                                porcentaje_participacion,
-                                fecha_participacion_inicio: fecha_inicio || new Date(),
-                                fecha_participacion_hasta: fecha_hasta || new Date("2099-12-31"),
-                            });
-
-                            await registrarAuditoria({
-                                usuario_originario_id: authUser.id_usuario,
-                                usuario_destino_id: null,
-                                modelo: "FonogramaParticipacion",
-                                tipo_auditoria: "ALTA",
-                                detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ISRC '${isrc}'`,
-                            });
-
-                            porcentajeTotal += porcentaje_participacion;
-
-                            // Verificar conflictos de periodos
-                            const conflictosExistentes = await FonogramaParticipacion.findAll({
+                            // Validar si la productora ya está registrada en el mismo período para este fonograma
+                            const participacionExistente = await FonogramaParticipacion.findOne({
                                 where: {
                                     fonograma_id: fonograma.id_fonograma,
+                                    productora_id: productora.id_productora,
                                     [Op.or]: [
-                                        {
-                                            fecha_participacion_inicio: {
-                                                [Op.between]: [fecha_inicio, fecha_hasta],
-                                            },
-                                        },
-                                        {
-                                            fecha_participacion_hasta: {
-                                                [Op.between]: [fecha_inicio, fecha_hasta],
-                                            },
-                                        },
+                                        { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                                        { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
                                     ],
                                 },
                             });
 
-                            const porcentajeSuperpuesto = conflictosExistentes.reduce(
-                                (sum, p) => sum + p.porcentaje_participacion,
-                                porcentaje_participacion
-                            );
+                            if (participacionExistente) {
+                              conflictos.push(
+                                  `Conflicto en el fonograma con ISRC '${isrc}': Ya existe una participación de ${productora.id_productora} entre ${fecha_inicio} y ${fecha_hasta}.`
+                              );
+                            }
+                            else {
+                                // Registrar participación
+                                await FonogramaParticipacion.create({
+                                    fonograma_id: fonograma.id_fonograma,
+                                    productora_id: productora.id_productora,
+                                    porcentaje_participacion,
+                                    fecha_participacion_inicio: fecha_inicio || new Date(),
+                                    fecha_participacion_hasta: fecha_hasta || new Date("2099-12-31"),
+                                });
 
-                            if (porcentajeSuperpuesto > 100) {
-                                conflictos.push(
-                                    `Conflicto en el fonograma con ISRC '${isrc}': El porcentaje total supera el 100% entre ${fecha_inicio} y ${fecha_hasta} (${porcentajeSuperpuesto}%)`
+                                await registrarAuditoria({
+                                    usuario_originario_id: authUser.id_usuario,
+                                    usuario_destino_id: null,
+                                    modelo: "FonogramaParticipacion",
+                                    tipo_auditoria: "ALTA",
+                                    detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ISRC '${isrc}'`,
+                                });                            
+
+                                // Verificar conflictos de periodos
+                                const conflictosExistentes = await FonogramaParticipacion.findAll({
+                                    where: {
+                                        fonograma_id: fonograma.id_fonograma,
+                                        [Op.or]: [
+                                            { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                                            { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                                        ],
+                                    },
+                                });
+                                const porcentajeSuperpuesto = conflictosExistentes.reduce(
+                                    (sum, p) => sum + p.porcentaje_participacion,
+                                    porcentaje_participacion
                                 );
+
+                                if (porcentajeSuperpuesto > 100) {
+                                    conflictos.push(
+                                        `Conflicto en el fonograma con ISRC '${isrc}': El porcentaje total supera el 100% entre ${fecha_inicio} y ${fecha_hasta} (${porcentajeSuperpuesto}%)`
+                                    );
+                                }
                             }
                         })
                     );
 
-                    // Actualizar el porcentaje total en el fonograma
-                    fonograma.porcentaje_titularidad_total = porcentajeTotal;
-                    await fonograma.save();                   
+                    // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy
+                    const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
+                        where: {
+                            fonograma_id: fonograma.id_fonograma,
+                            fecha_participacion_inicio: { [Op.lte]: new Date() },
+                            fecha_participacion_hasta: { [Op.gte]: new Date() },
+                        },
+                    });
+
+                    fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
+                    await fonograma.save();
 
                     // Registrar territorios
                     const territoriosHabilitados = await FonogramaTerritorio.findAll({
@@ -695,7 +676,7 @@ export const updateFonograma = async (req: AuthenticatedRequest, res: Response, 
   }
 };
 
-export const deleteFonograma = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteFonograma = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
 
@@ -705,6 +686,9 @@ export const deleteFonograma = async (req: Request, res: Response, next: NextFun
     if (!fonograma) {
       return res.status(404).json({ error: "El fonograma no existe." });
     }
+
+    // Verifica el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
     try {
       // Eliminar asociaciones relacionadas
@@ -730,6 +714,15 @@ export const deleteFonograma = async (req: Request, res: Response, next: NextFun
 
       // Eliminar el fonograma
       await fonograma.destroy();
+
+      // Registrar auditoría
+      await registrarAuditoria({
+          usuario_originario_id: authUser.id_usuario,
+          usuario_destino_id: null,
+          modelo: "Fonograma",
+          tipo_auditoria: "BAJA",
+          detalle: `El fonograma con ID '${id}' y todas sus asociaciones han sido eliminados.`,
+      });
 
       res.status(200).json({
         message: `El fonograma con ID '${id}' y sus asociaciones han sido eliminados exitosamente.`,
@@ -781,7 +774,7 @@ export const listFonogramas = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-export const addArchivoToFonograma = async (req: Request, res: Response, next: NextFunction) => {
+export const addArchivoToFonograma = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
 
@@ -945,7 +938,7 @@ export const getArchivoByFonograma = async (req: Request, res: Response, next: N
   }
 };
 
-export const enviarFonograma = async (req: Request, res: Response, next: NextFunction) => {
+export const enviarFonograma = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
 
   try {
 
@@ -1180,34 +1173,562 @@ export const getEnviosByFonograma = (req: Request, res: Response) => {
   res.status(200).send({ message: `Envíos del fonograma con ID ${req.params.id}` });
 };
 
-export const addParticipacionToFonograma = (req: Request, res: Response) => {
-  res.status(201).send({ message: 'Participación añadida al fonograma exitosamente' });
+export const addParticipacionToFonograma = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id: fonogramaId } = req.params;
+        const { participaciones } = req.body;
+
+        if (!participaciones || participaciones.length === 0) {
+            return res.status(400).json({ error: "No se incluyeron participaciones en la solicitud." });
+        }
+
+        // Verificar si el fonograma existe
+        const fonograma = await Fonograma.findByPk(fonogramaId);
+        if (!fonograma) {
+            return res.status(404).json({ error: "El fonograma no existe." });
+        }
+
+        // Obtener usuario autenticado
+        const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+        
+        const overlappingPeriods: string[] = [];
+
+        // Procesar cada participación
+        for (const participacion of participaciones) {
+            const { cuit, porcentaje_participacion, fecha_inicio, fecha_hasta } = participacion;
+
+            const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
+            if (!productora) {
+                return res.status(400).json({ error: `No se encontró ninguna productora con el CUIT: ${cuit}` });
+            }
+
+            // Validar si la productora ya está registrada en el mismo período para este fonograma
+            const participacionExistente = await FonogramaParticipacion.findOne({
+                where: {
+                    fonograma_id: fonogramaId,
+                    productora_id: productora.id_productora,
+                    [Op.or]: [
+                        { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                        { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                    ],
+                },
+            });
+
+            if (participacionExistente) {
+                return res.status(400).json({
+                    error: `La productora con CUIT '${cuit}' ya tiene una participación registrada en este fonograma para el período entre ${fecha_inicio} y ${fecha_hasta}.`,
+                });
+            }
+
+            // Crear la nueva participación
+            await FonogramaParticipacion.create({
+                fonograma_id: fonogramaId,
+                productora_id: productora.id_productora,
+                porcentaje_participacion,
+                fecha_participacion_inicio: fecha_inicio || new Date(),
+                fecha_participacion_hasta: fecha_hasta || new Date("2099-12-31"),
+            });
+
+            await registrarAuditoria({
+                usuario_originario_id: authUser.id_usuario,
+                usuario_destino_id: null,
+                modelo: "FonogramaParticipacion",
+                tipo_auditoria: "ALTA",
+                detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ID '${fonogramaId}'`,
+            });
+
+            // Verificar superposición de períodos
+            const participacionesExistentes = await FonogramaParticipacion.findAll({
+                where: {
+                    fonograma_id: fonogramaId,
+                    [Op.or]: [
+                        { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                        { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                    ],
+                },
+            });
+
+            const porcentajeSuperpuesto = participacionesExistentes.reduce(
+                (sum, p) => sum + p.porcentaje_participacion,
+                porcentaje_participacion
+            );
+
+            if (porcentajeSuperpuesto > 100) {
+                overlappingPeriods.push(
+                    `Entre ${fecha_inicio} y ${fecha_hasta} se supera el 100% con un total de ${porcentajeSuperpuesto}%`
+                );
+            }
+        }
+
+        // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy
+            const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
+                where: {
+                    fonograma_id: fonograma.id_fonograma,
+                    fecha_participacion_inicio: { [Op.lte]: new Date() },
+                    fecha_participacion_hasta: { [Op.gte]: new Date() },
+                },
+            });
+
+            fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
+            await fonograma.save();
+
+        // Responder con mensaje de éxito o advertencias
+        const message = overlappingPeriods.length > 0
+            ? `Participaciones agregadas con éxito, pero hay períodos donde se supera el 100% de participación: ${overlappingPeriods.join("; ")}`
+            : "Participaciones agregadas exitosamente";
+
+        res.status(201).json({ message, data: { fonogramaId, participaciones } });
+
+    } catch (err) {
+        handleGeneralError(err, req, res, next, "Error al agregar participaciones al fonograma");
+    }
 };
 
-export const listParticipaciones = (req: Request, res: Response) => {
-  res.status(200).send({ message: `Listado de participaciones para el fonograma con ID ${req.params.id}` });
+export const listParticipaciones = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id: fonogramaId } = req.params;
+        const { fecha_inicio, fecha_hasta } = req.query;
+
+        // Verificar si el fonograma existe
+        const fonograma = await Fonograma.findByPk(fonogramaId);
+        if (!fonograma) {
+            return res.status(404).json({ error: "El fonograma no existe." });
+        }
+
+        // Construir filtro de búsqueda
+        const whereCondition: any = { fonograma_id: fonogramaId };
+
+        if (fecha_inicio && fecha_hasta) {
+            whereCondition[Op.or] = [
+                { fecha_participacion_inicio: { [Op.lte]: fecha_hasta } },
+                { fecha_participacion_hasta: { [Op.gte]: fecha_inicio } }
+            ];
+        }
+
+        // Obtener participaciones filtradas
+        const participaciones = await FonogramaParticipacion.findAll({
+            where: whereCondition,
+            include: [
+                {
+                    model: Productora,
+                    as: "productoraDeParticipante",
+                    attributes: ["id_productora", "nombre", "cuit_cuil"]
+                }
+            ],
+            order: [["fecha_participacion_inicio", "ASC"], ["fecha_participacion_hasta", "ASC"]]
+        });
+
+        if (!participaciones.length) {
+            return res.status(404).json({ error: "No hay participaciones para este fonograma en el período seleccionado." });
+        }
+
+        // **Calcular los momentos en los que cambia la participación total**
+        const cambiosParticipacion: { [key: string]: number } = {};
+        let participacionAcumulada = 0;
+
+        participaciones.forEach((participacion) => {
+            const inicio = participacion.fecha_participacion_inicio.toISOString().split("T")[0];
+            const fin = participacion.fecha_participacion_hasta.toISOString().split("T")[0];
+
+            // Incrementar la participación en la fecha de inicio
+            if (!cambiosParticipacion[inicio]) cambiosParticipacion[inicio] = participacionAcumulada;
+            cambiosParticipacion[inicio] += participacion.porcentaje_participacion;
+
+            // Disminuir la participación en la fecha de fin (cuando deja de ser válida)
+            if (!cambiosParticipacion[fin]) cambiosParticipacion[fin] = participacionAcumulada;
+            cambiosParticipacion[fin] -= participacion.porcentaje_participacion;
+        });
+
+        // Ordenar los cambios de participación por fecha
+        const momentosClave = Object.keys(cambiosParticipacion)
+            .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+            .reduce((acc, fecha) => {
+                participacionAcumulada = cambiosParticipacion[fecha];
+                acc[fecha] = participacionAcumulada;
+                return acc;
+            }, {} as { [key: string]: number });
+
+        res.status(200).json({
+            fonograma_id: fonogramaId,
+            participaciones,
+            momentosClave
+        });
+
+    } catch (err) {
+        handleGeneralError(err, req, res, next, "Error al obtener las participaciones del fonograma");
+    }
 };
 
-export const updateParticipacion = (req: Request, res: Response) => {
-  res.status(200).send({ message: `Participación con ID ${req.params.participacionId} actualizada exitosamente` });
+export const updateParticipacion = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id: fonogramaId, shareId: participacionId } = req.params;
+        const { porcentaje_participacion, fecha_participacion_inicio, fecha_participacion_hasta } = req.body;
+
+        // Verificar si el fonograma existe
+        const fonograma = await Fonograma.findByPk(fonogramaId);
+        if (!fonograma) {
+            return res.status(404).json({ error: "El fonograma no existe." });
+        }
+
+        // Verificar si la participación existe y pertenece al fonograma
+        const participacion = await FonogramaParticipacion.findOne({
+            where: { id_participacion: participacionId, fonograma_id: fonogramaId }
+        });
+
+        if (!participacion) {
+            return res.status(404).json({ error: "La participación no existe para este fonograma." });
+        }
+
+        // Verifica el usuario autenticado
+        const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+        // Obtener todas las participaciones en el período actualizado
+        const participacionesEnPeriodo = await FonogramaParticipacion.findAll({
+            where: {
+                fonograma_id: fonogramaId,
+                id_participacion: { [Op.ne]: participacionId }, // Excluir la participación a actualizar
+                [Op.or]: [
+                    { fecha_participacion_inicio: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } },
+                    { fecha_participacion_hasta: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } }
+                ]
+            }
+        });
+
+        // Calcular el total de participación dentro del período actualizado
+        const totalParticipacion = participacionesEnPeriodo.reduce(
+            (sum, p) => sum + p.porcentaje_participacion,
+            porcentaje_participacion // Incluir el nuevo porcentaje de la participación actualizada
+        );
+
+        // Mensaje de advertencia si supera el 100%
+        let warningMessage = null;
+        if (totalParticipacion > 100) {
+            warningMessage = `Advertencia: El total de participación en el período ${fecha_participacion_inicio} - ${fecha_participacion_hasta} ahora es ${totalParticipacion}%, lo que supera el 100%.`;
+        }
+
+        // Actualizar la participación
+        await participacion.update(
+            {
+                porcentaje_participacion,
+                fecha_participacion_inicio,
+                fecha_participacion_hasta
+            }
+        );
+
+        // Registrar auditoría
+        await registrarAuditoria({
+            usuario_originario_id: authUser.id_usuario,
+            usuario_destino_id: null,
+            modelo: "FonogramaParticipacion",
+            tipo_auditoria: "CAMBIO",
+            detalle: `Se actualizó la participación de la productora con CUIT '${participacion.productoraDeParticipante?.cuit_cuil}' para el fonograma con ID '${fonogramaId}'`,
+        });
+
+        // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy
+        const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
+            where: {
+                fonograma_id: fonogramaId,
+                fecha_participacion_inicio: { [Op.lte]: new Date() },
+                fecha_participacion_hasta: { [Op.gte]: new Date() },
+            },
+        });
+
+        fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
+        await fonograma.save();
+
+        res.status(200).json({
+            message: "Participación actualizada exitosamente.",
+            data: participacion,
+            warning: warningMessage || undefined // Solo se incluye si hay una advertencia
+        });
+
+    } catch (err) {
+        handleGeneralError(err, req, res, next, "Error al actualizar la participación");
+    }
 };
 
-export const deleteParticipacion = (req: Request, res: Response) => {
-  res.status(200).send({ message: `Participación con ID ${req.params.participacionId} eliminada exitosamente` });
+export const deleteParticipacion = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id: fonogramaId, shareId: participacionId } = req.params;
+
+        // Verificar si el fonograma existe
+        const fonograma = await Fonograma.findByPk(fonogramaId);
+        if (!fonograma) {
+            return res.status(404).json({ error: "El fonograma no existe." });
+        }
+
+        // Verificar si la participación existe
+        const participacion = await FonogramaParticipacion.findOne({
+            where: { id_participacion: participacionId, fonograma_id: fonogramaId }
+        });
+
+        if (!participacion) {
+            return res.status(404).json({ error: "La participación no existe para este fonograma." });
+        }
+
+        // Verifica el usuario autenticado
+        const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+        // Guardar los datos del período antes de eliminar la participación
+        const { fecha_participacion_inicio, fecha_participacion_hasta, porcentaje_participacion } = participacion;
+
+        // Eliminar la participación
+        await participacion.destroy();
+
+        // Registrar auditoría de eliminación
+        await registrarAuditoria({
+            usuario_originario_id: authUser.id_usuario,
+            usuario_destino_id: null,
+            modelo: "FonogramaParticipacion",
+            tipo_auditoria: "BAJA",
+            detalle: `Se eliminó la participación con ID '${participacionId}' del fonograma '${fonogramaId}'`,
+        });
+
+        // Recalcular la participación total en el período de la participación eliminada
+        const totalParticipacionEnPeriodo = await FonogramaParticipacion.sum('porcentaje_participacion', {
+            where: {
+                fonograma_id: fonogramaId,
+                [Op.or]: [
+                    { fecha_participacion_inicio: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } },
+                    { fecha_participacion_hasta: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } }
+                ]
+            }
+        });
+
+        // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy
+        const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
+            where: {
+                fonograma_id: fonogramaId,
+                fecha_participacion_inicio: { [Op.lte]: new Date() },
+                fecha_participacion_hasta: { [Op.gte]: new Date() },
+            },
+        });
+
+        fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
+        await fonograma.save();
+
+        // Mensaje de advertencia si el total en el período sigue siendo mayor al 100%
+        let warningMessage = null;
+        if (totalParticipacionEnPeriodo > 100) {
+            warningMessage = `Advertencia: Luego de eliminar la participación, el total de participación en el período ${fecha_participacion_inicio} - ${fecha_participacion_hasta} sigue siendo ${totalParticipacionEnPeriodo}%, lo que supera el 100%.`;
+        }
+
+        res.status(200).json({
+            message: "Participación eliminada exitosamente.",
+            warning: warningMessage || undefined
+        });
+
+    } catch (err) {
+        handleGeneralError(err, req, res, next, "Error al eliminar la participación");
+    }
 };
 
-export const addTerritorioToFonograma = (req: Request, res: Response) => {
-  res.status(201).send({ message: 'Territorio añadido al fonograma exitosamente' });
+export const addTerritorioToFonograma = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id: fonogramaId } = req.params;
+        const { codigo_iso, is_activo = true } = req.body; // is_activo por defecto en true
+
+        if (!codigo_iso) {
+            return res.status(400).json({ error: "Debe proporcionar un código ISO de territorio." });
+        }
+
+        // Verificar si el fonograma existe
+        const fonograma = await Fonograma.findByPk(fonogramaId);
+        if (!fonograma) {
+            return res.status(404).json({ error: "El fonograma no existe." });
+        }
+
+        // Verificar si el territorio existe en FonogramaTerritorio
+        const territorio = await FonogramaTerritorio.findOne({ where: { codigo_iso, is_habilitado: true } });
+        if (!territorio) {
+            return res.status(404).json({ error: "El territorio no existe o no está habilitado." });
+        }
+
+        // Verifica el usuario autenticado
+        const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+        // Verificar si el fonograma ya tiene este territorio registrado en FonogramaTerritorioMaestro
+        const territorioExistente = await FonogramaTerritorioMaestro.findOne({
+            where: {
+                fonograma_id: fonogramaId,
+                territorio_id: territorio.id_territorio,
+            },
+        });
+
+        if (territorioExistente) {
+            return res.status(400).json({ error: "El territorio ya está asociado a este fonograma." });
+        }
+
+        // Crear la nueva relación en FonogramaTerritorioMaestro con is_activo definido por el usuario o en true por defecto
+        const nuevoVinculo = await FonogramaTerritorioMaestro.create({
+            fonograma_id: fonogramaId,
+            territorio_id: territorio.id_territorio,
+            is_activo,
+        });
+
+        // Registrar auditoría
+        await registrarAuditoria({
+            usuario_originario_id: authUser.id_usuario,
+            usuario_destino_id: null,
+            modelo: "FonogramaTerritorioMaestro",
+            tipo_auditoria: "ALTA",
+            detalle: `Se agregó el territorio '${territorio.codigo_iso}' al fonograma con ID '${fonogramaId}', estado: ${is_activo ? "Activo" : "Inactivo"}`,
+        });
+
+        res.status(201).json({
+            message: "Territorio agregado exitosamente al fonograma.",
+            data: nuevoVinculo,
+        });
+
+    } catch (err) {
+        handleGeneralError(err, req, res, next, "Error al agregar el territorio al fonograma");
+    }
 };
 
-export const listTerritorios = (req: Request, res: Response) => {
-  res.status(200).send({ message: `Listado de territorios para el fonograma con ID ${req.params.id}` });
+export const listTerritorios = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id: fonogramaId } = req.params;
+
+        // Verificar si el fonograma existe
+        const fonograma = await Fonograma.findByPk(fonogramaId);
+        if (!fonograma) {
+            return res.status(404).json({ error: "El fonograma no existe." });
+        }
+
+        // Obtener todos los territorios vinculados a este fonograma
+        const territorios = await FonogramaTerritorioMaestro.findAll({
+            where: { fonograma_id: fonogramaId },
+            include: [
+                {
+                    model: FonogramaTerritorio,
+                    as: "territorioDelVinculo",
+                    attributes: ["id_territorio", "nombre_pais", "codigo_iso", "is_habilitado"]
+                }
+            ],
+            order: [["createdAt", "ASC"]] // Ordenar por fecha de vinculación
+        });
+
+        if (!territorios.length) {
+            return res.status(404).json({ error: "No hay territorios asociados a este fonograma." });
+        }
+
+        // Formatear respuesta
+        const resultado = territorios.map(vinculo => ({
+            id_territorio_maestro: vinculo.id_territorio_maestro,
+            id_territorio: vinculo.territorioDelVinculo?.id_territorio,
+            nombre_pais: vinculo.territorioDelVinculo?.nombre_pais,
+            codigo_iso: vinculo.territorioDelVinculo?.codigo_iso,
+            is_habilitado: vinculo.territorioDelVinculo?.is_habilitado,
+            is_activo: vinculo.is_activo
+        }));
+
+        res.status(200).json({
+            fonograma_id: fonogramaId,
+            territorios: resultado
+        });
+
+    } catch (err) {
+        handleGeneralError(err, req, res, next, "Error al obtener los territorios del fonograma");
+    }
 };
 
-export const updateTerritorio = (req: Request, res: Response) => {
-  res.status(200).send({ message: `Territorio con ID ${req.params.territorioId} actualizado exitosamente` });
+export const updateTerritorio = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id: fonogramaId, territoryId: territorioId } = req.params;
+        const { is_activo } = req.body;
+
+        // Validar que is_activo sea booleano
+        if (typeof is_activo !== "boolean") {
+            return res.status(400).json({ error: "El campo is_activo debe ser true o false." });
+        }
+
+        // Verificar si el fonograma existe
+        const fonograma = await Fonograma.findByPk(fonogramaId);
+        if (!fonograma) {
+            return res.status(404).json({ error: "El fonograma no existe." });
+        }
+
+        // Verifica el usuario autenticado
+        const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+        // Verificar si el territorio está vinculado al fonograma en FonogramaTerritorioMaestro
+        const territorioVinculado = await FonogramaTerritorioMaestro.findOne({
+            where: { fonograma_id: fonogramaId, territorio_id: territorioId },
+        });
+
+        if (!territorioVinculado) {
+            return res.status(404).json({ error: "El territorio no está vinculado a este fonograma." });
+        }
+
+        // Actualizar el estado is_activo
+        await territorioVinculado.update({ is_activo });
+
+        // Registrar auditoría
+        await registrarAuditoria({
+            usuario_originario_id: authUser.id_usuario,
+            usuario_destino_id: null,
+            modelo: "FonogramaTerritorioMaestro",
+            tipo_auditoria: "CAMBIO",
+            detalle: `Se actualizó el estado de territorio ID '${territorioId}' en el fonograma '${fonogramaId}' a ${is_activo ? "Activo" : "Inactivo"}.`,
+        });
+
+        res.status(200).json({
+            message: "Estado del territorio actualizado exitosamente.",
+            data: {
+                fonograma_id: fonogramaId,
+                territorio_id: territorioId,
+                is_activo,
+            },
+        });
+
+    } catch (err) {
+        handleGeneralError(err, req, res, next, "Error al actualizar el estado del territorio en el fonograma");
+    }
 };
 
-export const deleteTerritorio = (req: Request, res: Response) => {
-  res.status(200).send({ message: `Territorio con ID ${req.params.territorioId} eliminado exitosamente` });
+export const deleteTerritorio = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id: fonogramaId, territoryId: territorioId } = req.params;
+
+        // Verificar si el fonograma existe
+        const fonograma = await Fonograma.findByPk(fonogramaId);
+        if (!fonograma) {
+            return res.status(404).json({ error: "El fonograma no existe." });
+        }
+
+        // Verificar si el territorio está vinculado al fonograma en FonogramaTerritorioMaestro
+        const territorioVinculado = await FonogramaTerritorioMaestro.findOne({
+            where: { fonograma_id: fonogramaId, territorio_id: territorioId },
+        });
+
+        if (!territorioVinculado) {
+            return res.status(404).json({ error: "El territorio no está vinculado a este fonograma." });
+        }
+
+        // Verifica el usuario autenticado
+        const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+        // Eliminar la relación del territorio con el fonograma
+        await territorioVinculado.destroy();
+
+        // Registrar auditoría
+        await registrarAuditoria({
+            usuario_originario_id: authUser.id_usuario,
+            usuario_destino_id: null,
+            modelo: "FonogramaTerritorioMaestro",
+            tipo_auditoria: "BAJA",
+            detalle: `Se eliminó el territorio ID '${territorioId}' del fonograma '${fonogramaId}'.`,
+        });
+
+        res.status(200).json({
+            message: "Territorio eliminado exitosamente del fonograma.",
+            data: {
+                fonograma_id: fonogramaId,
+                territorio_id: territorioId
+            },
+        });
+
+    } catch (err) {
+        handleGeneralError(err, req, res, next, "Error al eliminar el territorio del fonograma");
+    }
 };

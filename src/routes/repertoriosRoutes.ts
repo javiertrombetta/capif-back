@@ -1,4 +1,10 @@
-import { Router } from 'express';
+import express from "express";
+import { celebrate, Segments } from "celebrate";
+
+import { authenticate, authorizeRoles } from "../middlewares/auth";
+import { uploadAudio } from '../middlewares/audio';
+import uploadCSV from '../middlewares/csv';
+
 import {
   createFonograma,
   getFonogramaById,
@@ -21,10 +27,8 @@ import {
   validateISRC,
   getNovedadesFonograma,
 } from '../controllers/repertoriosController';
-import { uploadAudio } from '../middlewares/audio';
-import uploadCSV from '../middlewares/csv';
 
-const router = Router();
+const router = express.Router();
 
 // Rutas para FonogramaEnvio
 router.post('/send', enviarFonograma);
@@ -36,16 +40,16 @@ router.post('/:id/file', uploadAudio.single("audioFile"), addArchivoToFonograma)
 router.get('/:id/file', getArchivoByFonograma);
 
 // Rutas para FonogramaParticipacion
-router.post('/repertorios/:id/participaciones', addParticipacionToFonograma);
-router.get('/repertorios/:id/participaciones', listParticipaciones);
-router.put('/repertorios/:id/participaciones/:participacionId', updateParticipacion);
-router.delete('/repertorios/:id/participaciones/:participacionId', deleteParticipacion);
+router.post('/:id/shares', addParticipacionToFonograma);
+router.get('/:id/shares', listParticipaciones);
+router.put('/:id/shares/:shareId', updateParticipacion);
+router.delete('/:id/shares/:shareId', deleteParticipacion);
 
 // Rutas para FonogramaTerritorio
-router.post('/repertorios/:id/territorios', addTerritorioToFonograma);
-router.get('/repertorios/:id/territorios', listTerritorios);
-router.put('/repertorios/:id/territorios/:territorioId', updateTerritorio);
-router.delete('/repertorios/:id/territorios/:territorioId', deleteTerritorio);
+router.post('/:id/territories', addTerritorioToFonograma);
+router.get('/:id/territories', listTerritorios);
+router.put('/:id/territories/:territoryId/state', updateTerritorio);
+router.delete('/:id/territories/:territoryId', deleteTerritorio);
 
 // Rutas para Fonograma
 router.post("/isrc/validate", validateISRC);

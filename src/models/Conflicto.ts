@@ -19,6 +19,9 @@ class Conflicto extends Model {
   public productora_conflicto_id!: string;
   public fonograma_id!: string;
   public estado_conflicto!: (typeof TIPO_ESTADOS)[number];
+  public fecha_periodo_desde!: Date;
+  public fecha_periodo_hasta!: Date;
+  public porcentaje_periodo!: number;
   public fecha_inicio_conflicto!: Date;
   public fecha_segunda_instancia!: Date | null;
   public fecha_fin_conflicto!: Date | null;
@@ -112,6 +115,39 @@ Conflicto.init(
         isIn: {
           args: [TIPO_ESTADOS],
           msg: 'El estado de conflicto no es válido.',
+        },
+      },
+    },
+    fecha_periodo_desde: {
+      type: DataTypes.DATE,
+      allowNull: false,    
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha desde del período a tomar del conflicto debe ser válida.',
+        },
+      },
+    },
+    fecha_periodo_hasta: {
+      type: DataTypes.DATE,
+      allowNull: false,  
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha hasta del período a tomar del conflicto debe ser válida.',
+        },
+      },
+    },
+    porcentaje_periodo: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        isDecimal: {
+          msg: 'El porcentaje de participación debe ser un número entero positivo.',
+        },
+        min: {
+          args: [0],
+          msg: 'El porcentaje de participación no puede ser menor a 0.',
         },
       },
     },

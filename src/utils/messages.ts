@@ -383,6 +383,13 @@ export const EMAIL_BODY = {
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
   `,
+  SEND_DOCUMENTS_NOTIFICATION: (nombre_participante: string, conflicto_id: string) => `
+    <p>Hola,</p>
+    <p>Se han adjuntado documentos enviados por el participante <strong>${nombre_participante}</strong> en relación con el conflicto <strong>${conflicto_id}</strong>.</p>
+    <p>Por favor, revise los archivos adjuntos.</p>
+    <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
+  `,
 };
 
 export const VALIDATION_AUTH = {

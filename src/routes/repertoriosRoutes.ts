@@ -26,9 +26,39 @@ import {
   cargarRepertoriosMasivo,
   validateISRC,
   getNovedadesFonograma,
+  cambiarEstadoEnvioFonograma,
+  cargarParticipacionesMasivo,
 } from '../controllers/repertoriosController';
 
-import { addArchivoToFonogramaParamsSchema, addParticipacionToFonogramaBodySchema, addParticipacionToFonogramaParamsSchema, addTerritorioToFonogramaBodySchema, addTerritorioToFonogramaParamsSchema, createFonogramaBodySchema, deleteFonogramaParamsSchema, deleteParticipacionParamsSchema, deleteTerritorioParamsSchema, enviarFonogramaBodySchema, getArchivoByFonogramaParamsSchema, getEnviosByFonogramaParamsSchema, getFonogramaByIdParamsSchema, getNovedadesFonogramaQuerySchema, listFonogramasQuerySchema, listParticipacionesParamsSchema, listParticipacionesQuerySchema, listTerritoriosParamsSchema, updateFonogramaBodySchema, updateFonogramaParamsSchema, updateParticipacionBodySchema, updateParticipacionParamsSchema, updateTerritorioBodySchema, updateTerritorioParamsSchema, validateISRCBodySchema } from "../utils/validationSchemas";
+import { 
+  addArchivoToFonogramaParamsSchema,
+  addParticipacionToFonogramaBodySchema,
+  addParticipacionToFonogramaParamsSchema,
+  addTerritorioToFonogramaBodySchema,
+  addTerritorioToFonogramaParamsSchema,
+  createFonogramaBodySchema,
+  deleteFonogramaParamsSchema,
+  deleteParticipacionParamsSchema,
+  deleteTerritorioParamsSchema,
+  enviarFonogramaBodySchema,
+  cambiarEstadoEnvioFonogramaParamsSchema,
+  getArchivoByFonogramaParamsSchema,
+  getEnviosByFonogramaParamsSchema,
+  getFonogramaByIdParamsSchema,
+  getNovedadesFonogramaQuerySchema,
+  listFonogramasQuerySchema,
+  listParticipacionesParamsSchema,
+  listParticipacionesQuerySchema,
+  listTerritoriosParamsSchema,
+  updateFonogramaBodySchema,
+  updateFonogramaParamsSchema,
+  updateParticipacionBodySchema,
+  updateParticipacionParamsSchema,
+  updateTerritorioBodySchema,
+  updateTerritorioParamsSchema,
+  validateISRCBodySchema,
+  cambiarEstadoEnvioFonogramaBodySchema
+} from "../utils/validationSchemas";
 
 const router = express.Router();
 
@@ -41,6 +71,17 @@ router.post(
     [Segments.BODY]: enviarFonogramaBodySchema,
   }),
   enviarFonograma
+);
+
+router.put(
+  '/:id/send/:sendId',
+  authenticate,
+  authorizeRoles(['admin_principal', 'admin_secundario']),
+  celebrate({
+    [Segments.PARAMS]: cambiarEstadoEnvioFonogramaParamsSchema,
+    [Segments.BODY]: cambiarEstadoEnvioFonogramaBodySchema,
+  }),
+  cambiarEstadoEnvioFonograma
 );
 
 router.get(
@@ -95,6 +136,14 @@ router.post(
     [Segments.BODY]: addParticipacionToFonogramaBodySchema,
   }),
   addParticipacionToFonograma
+);
+
+router.post(
+  "/shares/massive",
+  authenticate,
+  authorizeRoles(["admin_principal"]),
+  uploadCSV.single("sharesFile"),
+  cargarParticipacionesMasivo
 );
 
 router.get(
@@ -187,7 +236,7 @@ router.post(
   "/massive",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
-  uploadCSV.single("csvFile"),
+  uploadCSV.single("repertoiresFile"),
   cargarRepertoriosMasivo
 );
 

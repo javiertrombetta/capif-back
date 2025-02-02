@@ -68,8 +68,8 @@ interface EmailOptions {
 export const sendEmailWithErrorHandling = async (
   options: EmailOptions,
   req: Request,
-  res: Response,
-  next: NextFunction
+  res?: Response,
+  next?: NextFunction
 ): Promise<void> => {
   try {
     await sendEmail({
@@ -79,7 +79,12 @@ export const sendEmailWithErrorHandling = async (
     });
 
     logger.info(`${String(req.method)} ${String(req.originalUrl)} -- ${options.successLog}`);
+
   } catch (error) {
-    handleEmailError(error, req, res, next, options.errorLog);
+    if (res && next) {
+      handleEmailError(error, req, res, next, options.errorLog);
+    } else {
+      logger.error(`${options.errorLog}: ${error}`);
+    }
   }
 };

@@ -552,7 +552,7 @@ export const getLastRejectionMessage = async (usuarioId: string) => {
   return ProductoraMensaje.findOne({
     where: {
       usuario_id: usuarioId,
-      tipo_mensaje: "RECHAZO",
+      tipo_mensaje: "RECHAZO_APLICACION",
     },
     attributes: ["mensaje", "createdAt"],
     order: [["createdAt", "DESC"]],

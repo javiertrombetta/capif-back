@@ -107,6 +107,85 @@ export const repertoiresSwaggerDocs = {
                 }
             }
         },
+        "/repertoires/{id}/send/{sendId}": {
+            put: {
+                summary: "Actualizar estado del envío de un fonograma",
+                description: "Permite cambiar el estado de un envío de fonograma, notificando al productor principal en caso de rechazo por Vericast.",
+                tags: ["Repertorios"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        in: "path",
+                        name: "id",
+                        required: true,
+                        schema: {
+                            type: "string",
+                            format: "uuid"
+                        },
+                        description: "UUID del fonograma cuyo estado de envío se actualizará."
+                    },
+                    {
+                        in: "path",
+                        name: "sendId",
+                        required: true,
+                        schema: {
+                            type: "string",
+                            format: "uuid"
+                        },
+                        description: "UUID del envío de fonograma a actualizar."
+                    }
+                ],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    nuevoEstado: {
+                                        type: "string",
+                                        enum: ["RECHAZADO POR VERICAST", "ERROR EN EL ENVIO"],
+                                        description: "Nuevo estado del envío."
+                                    },
+                                    comentario: {
+                                        type: "string",
+                                        description: "Comentario opcional sobre el cambio de estado."
+                                    }
+                                },
+                                required: ["nuevoEstado"]
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: {
+                        description: "Estado del envío actualizado correctamente.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: {
+                                            type: "string",
+                                            example: "Estado del envío actualizado a 'PENDIENTE DE ENVIO'."
+                                        },
+                                        data: {
+                                            type: "object",
+                                            description: "Información del envío actualizado."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    400: { description: "Datos inválidos." },
+                    401: { description: "Usuario no autenticado." },
+                    403: { description: "Usuario no autorizado." },
+                    404: { description: "Fonograma o envío no encontrado." },
+                    500: { description: "Error interno del servidor." }
+                }
+            }
+        },
         "/repertoires/{id}/send": {
             get: {
                 summary: "Obtener envíos de un fonograma",
@@ -603,6 +682,73 @@ export const repertoiresSwaggerDocs = {
                     500: { description: "Error interno del servidor." }
                 }
             }
+        },
+        "/repertoires/shares/massive": {
+            post: {
+                summary: "Carga masiva de participaciones",
+                description: "Permite la carga masiva de participaciones en fonogramas a partir de un archivo CSV.",
+                tags: ["Repertorios"],
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "multipart/form-data": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    sharesFile: {
+                                        type: "string",
+                                        format: "binary",
+                                        description: "Archivo CSV con las participaciones a cargar.",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: {
+                        description: "Carga masiva completada con éxito.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: {
+                                            type: "string",
+                                            example: "Carga completada exitosamente.",
+                                        },
+                                        errores: {
+                                            type: "array",
+                                            items: { type: "string" },
+                                            example: [
+                                                "No se encontró ningún fonograma con el ISRC: US-DEF-23-11111",
+                                                "La productora con CUIT '30711234567' ya tiene participación en el período.",
+                                            ],
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: {
+                        description: "Datos inválidos o archivo no proporcionado.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        error: { type: "string", example: "No se subió ningún archivo." },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    401: { description: "Usuario no autenticado." },
+                    403: { description: "Usuario no autorizado." },
+                    500: { description: "Error interno del servidor." },
+                },
+            },
         },
         "/repertoires/{id}/territories/{territoryId}/state": {
             put: {

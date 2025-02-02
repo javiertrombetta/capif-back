@@ -6,7 +6,7 @@ export const producersSwaggerDocs = {
         },
     ],
     paths: {
-        "/productoras/{id}/documentos/{docId}": {
+        "/producers/{id}/documentos/{docId}": {
             put: {
                 summary: "Actualizar un documento específico por ID",
                 description: "Actualiza los detalles de un documento asociado a una productora por su ID.",
@@ -161,7 +161,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/productoras/{id}/documentos/zip": {
+        "/producers/{id}/documentos/zip": {
             get: {
                 summary: "Obtener todos los archivos de una productora",
                 description: "Devuelve un archivo ZIP con todos los documentos asociados a la productora por su ID.",
@@ -189,7 +189,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/productoras/{id}/documentos": {
+        "/producers/{id}/documentos": {
             post: {
                 summary: "Crear un documento para una productora",
                 description: "Permite subir un archivo asociado a una productora.",
@@ -345,7 +345,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/productoras/{id}/isrc": {
+        "/producers/{id}/isrc": {
             post: {
                 summary: "Crear un nuevo ISRC para una productora",
                 description: "Crea un nuevo código ISRC asociado a una productora por su ID.",
@@ -525,7 +525,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/productoras/isrc": {
+        "/producers/isrc": {
             get: {
                 summary: "Obtener todos los ISRCs",
                 description: "Devuelve una lista de todos los ISRCs registrados en el sistema.",
@@ -549,7 +549,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/productoras/{id}/postulaciones": {
+        "/producers/{id}/postulaciones": {
             get: {
                 summary: "Obtener postulaciones de una productora",
                 description: "Devuelve las postulaciones asociadas a una productora por su ID.",
@@ -682,7 +682,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/productoras/postulaciones": {
+        "/producers/postulaciones": {
             post: {
                 summary: "Crear postulaciones masivamente",
                 description: "Crea postulaciones para productoras filtrando por un rango de fechas.",
@@ -813,7 +813,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/productoras/{id}": {
+        "/producers/{id}": {
             get: {
                 summary: "Obtener una productora por ID",
                 description: "Devuelve los detalles de una productora específica por su ID.",
@@ -934,7 +934,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/productoras": {
+        "/producers": {
             post: {
                 summary: "Crear una nueva productora",
                 description: "Crea una nueva productora con los datos proporcionados.",

@@ -9,13 +9,15 @@ import Client from "ftp";
 
 import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 
-import { Fonograma, FonogramaArchivo, FonogramaEnvio, FonogramaMaestro, FonogramaParticipacion, FonogramaTerritorio, FonogramaTerritorioMaestro, Productora, ProductoraISRC } from "../models";
+import { Fonograma, FonogramaArchivo, FonogramaEnvio, FonogramaMaestro, FonogramaParticipacion, FonogramaTerritorio, FonogramaTerritorioMaestro, Productora, ProductoraISRC, Usuario, UsuarioMaestro } from "../models";
 
-import { getAuthenticatedUser } from "./authService";
+import { getAuthenticatedUser, getTargetUser } from "./authService";
 import { registrarAuditoria } from "./auditService";
 
 import * as MESSAGES from "../utils/messages";
 import * as Err from "../utils/customErrors";
+import { sendEmailWithErrorHandling } from "./emailService";
+import { createProductoraMessage } from "./productoraService";
 
 
 export const validateISRC = async (isrc: string) => {
@@ -250,9 +252,7 @@ export const createFonograma = async (req: any) => {
 
 export const cargarRepertoriosMasivo = async (req: any) => {
     
-    if (!req.file || !req.file.buffer) {
-      throw new Err.BadRequestError("Debe proporcionar un archivo CSV.");
-    }
+    if (!req.file || !req.file.buffer) throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.NO_CSV_FOUND);
 
     // Verifica el usuario autenticado
     const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
@@ -445,7 +445,7 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                         });
                         const porcentajeSuperpuesto = conflictosExistentes.reduce(
                             (sum, p) => sum + p.porcentaje_participacion,
-                            porcentaje_participacion
+                            Number(porcentaje_participacion)
                         );
 
                         if (porcentajeSuperpuesto > 100) {
@@ -488,7 +488,7 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                     });
                 }
                 registrosCreados.push({ titulo, isrc });
-            } catch (err:any) {
+            } catch (err: any) {
                 errores.push(`Error en fila ${index + 1}: ${err.message}`);
             }
         })
@@ -875,15 +875,23 @@ export const getArchivoByFonograma = async (id: string) => {
 };
 
 // EnviarFonograma: Función para subir el archivo al FTP
-const subirArchivoFTP = (zipPath: string, isrc: string, FTP_CONFIG: any): Promise<void> => {
+const subirArchivoFTP = (zipPath: string, isrc: string, codigoEnvio: string, FTP_CONFIG: any): Promise<void> => {
   return new Promise((resolve, reject) => {
     const client = new Client();
     client.on("ready", () => {
-      client.put(zipPath, `/uploads/${isrc}.zip`, (err: any) => {
+      const ftpFileName = `${isrc}_${codigoEnvio}.zip`;
+      client.put(zipPath, `/uploads/${ftpFileName}`, (err: any) => {
         if (err) {
           reject(new Error(`Error al subir el archivo ${zipPath}: ${err.message}`));
         } else {
-          console.log(`Archivo ${zipPath} subido correctamente.`);
+          console.log(`Archivo ${zipPath} subido correctamente como ${ftpFileName}.`);
+
+          // Eliminar el archivo ZIP después de subirlo
+          if (fs.existsSync(zipPath)) {
+            fs.unlinkSync(zipPath);
+            console.log(`Archivo ZIP eliminado: ${zipPath}`);
+          }
+
           resolve();
         }
         client.end();
@@ -891,23 +899,6 @@ const subirArchivoFTP = (zipPath: string, isrc: string, FTP_CONFIG: any): Promis
     });
     client.connect(FTP_CONFIG);
   });
-};
-
-// EnviarFonograma: Función para eliminar archivos temporales
-const eliminarArchivosTemporales = (paths: string[], audioPath: string | null) => {
-  try {
-    paths.forEach((filePath) => {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    });
-
-    if (audioPath && fs.existsSync(audioPath)) {
-      fs.unlinkSync(audioPath);
-    }
-  } catch (err) {
-    console.warn("Error al eliminar archivos temporales:", err);
-  }
 };
 
 export const enviarFonograma = async (req: any) => {
@@ -950,7 +941,8 @@ export const enviarFonograma = async (req: any) => {
     for (const fonograma of fonogramas) {
         const archivoAudio = fonograma.archivoDelFonograma?.ruta_archivo_audio ?? "";
         const isrc = fonograma.isrc;
-        const zipPath = path.join("/tmp", `${isrc}.zip`);
+        const codigoEnvio = new Date().toISOString().replace(/[-T:]/g, '').slice(0, 14);
+        const zipPath = path.join("/tmp", `${isrc}_${codigoEnvio}.zip`);
         const metadataPath = path.join("/tmp", "metadata.xls");
         const resourcesDir = path.join("/tmp/resources");
 
@@ -1007,8 +999,8 @@ export const enviarFonograma = async (req: any) => {
 
         await archive.finalize();
 
-        // Subir archivo ZIP al FTP
-        await subirArchivoFTP(zipPath, isrc, FTP_CONFIG);
+        // Subir archivo ZIP al FTP con el formato correcto
+        await subirArchivoFTP(zipPath, isrc, codigoEnvio, FTP_CONFIG);
 
         // Marcar el fonograma como ENVIADO CON AUDIO o ENVIADO SIN AUDIO
         const tipoEstado = audioExists ? "ENVIADO CON AUDIO" : "ENVIADO SIN AUDIO";
@@ -1042,13 +1034,83 @@ export const enviarFonograma = async (req: any) => {
           modelo: "FonogramaMaestro",
           tipo_auditoria: "CAMBIO",
           detalle: `Se marcaron como procesadas todas las operaciones pendientes para el fonograma con ISRC '${isrc}'.`,
-        });
-
-        // Eliminar archivos temporales
-        eliminarArchivosTemporales([zipPath, metadataPath], audioExists ? path.join(resourcesDir, path.basename(archivoAudio)) : null);
+        });       
     }
 
     return { message: "Fonogramas enviados correctamente." };
+};
+
+export const cambiarEstadoEnvioFonograma = async (fonogramaId: string, sendId: string, nuevoEstado: typeof FonogramaEnvio.prototype.tipo_estado, comentario: string | undefined, req: any) => {
+
+  // Verificar el usuario autenticado
+  const { user: authUser } = await getAuthenticatedUser(req);
+
+  const validStates = ['RECHAZADO POR VERICAST', 'ERROR EN EL ENVIO'];
+
+  if (!validStates.includes(nuevoEstado)) throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ENVIO_STATE_INVALID);
+
+  // Buscar el envío relacionado al fonograma
+  const envio = await FonogramaEnvio.findOne({
+    where: { id_envio_vericast: sendId, fonograma_id: fonogramaId },
+    include: [{ model: Fonograma, as: 'fonogramaDelEnvio', attributes: ['productora_id', 'titulo'] }],
+  });
+
+  if (!envio) throw new Err.NotFoundError(MESSAGES.ERROR.ENVIO.NOT_FOUND);
+  if (!envio.fonogramaDelEnvio) throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
+
+  const oldState = envio.tipo_estado;
+
+  if (nuevoEstado === 'RECHAZADO POR VERICAST') {
+    const { productora_id: productoraId } = envio.fonogramaDelEnvio;
+    if (!productoraId) throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
+
+    // Obtener el productor principal asociado a la productora del fonograma
+    const { user: targetUser } = await getTargetUser({ productoraId, nombre_rol: 'productor_principal' }, req);
+
+    // Mensaje de respuesta para enviar por email al productor principal
+    const rejectionComment = comentario || `El envío del archivo de audio del repertorio '${envio.fonogramaDelEnvio.titulo}' fue rechazado por Vericast.`;
+
+    // Crear mensaje asociado al rechazo
+    await createProductoraMessage({
+      usuarioId: authUser.id_usuario,
+      productoraId,
+      tipoMensaje: "RECHAZO_VERICAST",
+      mensaje: rejectionComment,
+    });
+
+    await sendEmailWithErrorHandling(
+    {
+        to: targetUser.email,
+        subject: 'Rechazo del envío del archivo de audio',
+        html: MESSAGES.EMAIL_BODY.SENDFILE_REJECTION_NOTIFICATION(targetUser.nombre!, rejectionComment),
+        successLog: `Correo enviado a ${targetUser.email} notificando rechazo del envío.`,
+        errorLog: `Error al enviar correo a ${targetUser.email} durante la notificación de rechazo.`,
+    },
+    req,
+    undefined,
+    undefined
+    );
+
+    // Cambiar el estado del envío a "PENDIENTE DE ENVIO"
+    nuevoEstado = 'PENDIENTE DE ENVIO';
+  }
+
+  envio.tipo_estado = nuevoEstado;
+  envio.fecha_envio_ultimo = new Date();
+  await envio.save();
+
+  await registrarAuditoria({
+    usuario_originario_id: authUser.id_usuario,
+    usuario_destino_id: null,
+    modelo: 'FonogramaEnvio',
+    tipo_auditoria: 'CAMBIO',
+    detalle: `El estado del envío con ID '${sendId}' cambió de '${oldState}' a '${nuevoEstado}'.`,
+  });
+
+  return {
+    message: `Estado del envío actualizado a '${nuevoEstado}'.`,
+    data: envio,
+  };
 };
 
 export const getNovedadesFonograma = async (query: any) => {
@@ -1246,6 +1308,147 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
         : "Participaciones agregadas exitosamente";
 
     return { message, data: { fonogramaId, participaciones } };
+};
+
+export const cargarParticipacionesMasivo = async (req: any) => {
+    
+  if (!req.file || !req.file.buffer) {
+    throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.NO_CSV_FOUND);
+  }
+
+  const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+  const participaciones: any[] = [];
+  const errores: string[] = [];
+  const overlappingPeriods: string[] = [];
+
+  // Leer y procesar el archivo CSV desde el buffer
+  await new Promise<void>((resolve, reject) => {
+    const stream = Readable.from(req.file!.buffer);
+    stream
+      .pipe(csv())
+      .on("data", (data) => participaciones.push(data))
+      .on("end", resolve)
+      .on("error", reject);
+  });
+
+  // 1. Obtener todos los fonogramas y productoras en paralelo
+  const isrcList = participaciones.map((p) => p.isrc);
+  const cuitList = participaciones.map((p) => p.cuit);
+
+  const [fonogramas, productoras] = await Promise.all([
+    Fonograma.findAll({ where: { isrc: isrcList } }),
+    Productora.findAll({ where: { cuit_cuil: cuitList } }),
+  ]);
+
+  // Convertir a mapas para acceso rápido
+  const fonogramaMap = new Map(fonogramas.map((f) => [f.isrc, f]));
+  const productoraMap = new Map(productoras.map((p) => [p.cuit_cuil, p]));
+
+  // 2. Validar existencia de fonogramas y productoras
+  participaciones.forEach(({ isrc, cuit }) => {
+    if (!fonogramaMap.has(isrc)) {
+      errores.push(`No se encontró ningún fonograma con el ISRC: ${isrc}`);
+    }
+    if (!productoraMap.has(cuit)) {
+      errores.push(`No se encontró ninguna productora con el CUIT: ${cuit}`);
+    }
+  });
+
+  // Filtrar participaciones válidas
+  const participacionesValidas = participaciones.filter(
+    ({ isrc, cuit }) => fonogramaMap.has(isrc) && productoraMap.has(cuit)
+  );
+
+  // 3. Obtener participaciones existentes en paralelo
+  const participacionesExistentes = await Promise.all(
+    participacionesValidas.map(({ isrc, cuit, fecha_inicio, fecha_hasta }) =>
+      FonogramaParticipacion.findAll({
+        where: {
+          fonograma_id: fonogramaMap.get(isrc)!.id_fonograma,
+          productora_id: productoraMap.get(cuit)!.id_productora,
+          [Op.or]: [
+            { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+            { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+          ],
+        },
+      })
+    )
+  );
+
+  // 4. Validar superposición de períodos
+  participacionesValidas.forEach((participacion, index) => {
+    const { isrc, cuit, fecha_inicio, fecha_hasta, porcentaje_titularidad } = participacion;
+    const existing = participacionesExistentes[index];
+
+    if (existing.length > 0) {
+      errores.push(
+        `La productora con CUIT '${cuit}' ya tiene una participación en el fonograma '${isrc}' para el período.`
+      );
+      return;
+    }
+
+    const porcentajeTotal = existing.reduce(
+      (sum, p) => sum + p.porcentaje_participacion,
+      Number(porcentaje_titularidad)
+    );
+
+    if (porcentajeTotal > 100) {
+      overlappingPeriods.push(
+        `Entre ${fecha_inicio} y ${fecha_hasta}, el porcentaje total (${porcentajeTotal}%) supera el 100%.`
+      );
+    }
+  });
+
+  // 5. Crear nuevas participaciones en paralelo
+  await Promise.all(
+    participacionesValidas.map(({ isrc, cuit, fecha_inicio, fecha_hasta, porcentaje_titularidad }) =>
+      FonogramaParticipacion.create({
+        fonograma_id: fonogramaMap.get(isrc)!.id_fonograma,
+        productora_id: productoraMap.get(cuit)!.id_productora,
+        porcentaje_participacion: porcentaje_titularidad,
+        fecha_participacion_inicio: fecha_inicio || new Date(),
+        fecha_participacion_hasta: fecha_hasta || new Date("2099-12-31"),
+      })
+    )
+  );
+
+  // 6. Registrar auditoría en paralelo
+  await Promise.all(
+    participacionesValidas.map(({ isrc, cuit }) =>
+      registrarAuditoria({
+        usuario_originario_id: authUser.id_usuario,
+        usuario_destino_id: null,
+        modelo: "FonogramaParticipacion",
+        tipo_auditoria: "ALTA",
+        detalle: `Se registró la participación de la productora con CUIT '${cuit}' en el fonograma '${isrc}'`,
+      })
+    )
+  );
+
+  // 7. Recalcular porcentaje total de titularidad de cada fonograma
+  await Promise.all(
+    fonogramas.map(async (fonograma) => {
+      const totalParticipationToday = await FonogramaParticipacion.sum("porcentaje_participacion", {
+        where: {
+          fonograma_id: fonograma.id_fonograma,
+          fecha_participacion_inicio: { [Op.lte]: new Date() },
+          fecha_participacion_hasta: { [Op.gte]: new Date() },
+        },
+      });
+
+      fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
+      await fonograma.save();
+    })
+  );
+
+  // 8. Devolver respuesta final
+  const message =
+    overlappingPeriods.length > 0
+      ? `Carga completada con advertencias: ${overlappingPeriods.join("; ")}`
+      : "Carga completada exitosamente.";
+
+  return { message, errores };
 };
 
 export const listParticipaciones = async (fonogramaId: string, query: any) => {

@@ -141,6 +141,22 @@ export const enviarFonograma = async (req: AuthenticatedRequest, res: Response, 
   }
 };
 
+export const cambiarEstadoEnvioFonograma = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    logger.info(`${req.method} ${req.originalUrl} - Cambiando estado de envío de fonograma.`);
+
+    const { id, sendId } = req.params;
+    const { nuevoEstado, comentario } = req.body;
+
+    const response = await repertorioService.cambiarEstadoEnvioFonograma(id, sendId, nuevoEstado, comentario, req);
+
+    res.status(200).json(response);
+
+  } catch (err) {
+    handleGeneralError(err, req, res, next, 'Error al cambiar el estado de envío del fonograma');
+  }
+};
+
 export const getNovedadesFonograma = async (req: Request, res: Response, next: NextFunction) => {
   try {
     logger.info(`${req.method} ${req.originalUrl} - Obteniendo novedades de fonogramas.`);
@@ -177,6 +193,19 @@ export const addParticipacionToFonograma = async (req: AuthenticatedRequest, res
 
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al agregar participaciones al fonograma");
+  }
+};
+
+export const cargarParticipacionesMasivo = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    logger.info(`${req.method} ${req.originalUrl} - Agregando participaciones de forma masiva`);
+
+    const response = await repertorioService.cargarParticipacionesMasivo(req);
+
+    return res.status(200).json(response);
+    
+  } catch (err) {
+    handleGeneralError(err, req, res, next, "Error al procesar el archivo CSV");
   }
 };
 

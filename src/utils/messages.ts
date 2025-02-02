@@ -138,6 +138,8 @@ export const ERROR = {
     TERRITORIO_ISO_NOT_FOUND: 'No se proporcionó un código ISO de territorio.',
     TERRITORIO_ALREADY_EXIST: 'El territorio ya está asociado a este fonograma.',
     TERRITORIO_STATUS_NOT_FOUND: 'El campo is_activo debe ser true o false.',
+    ENVIO_STATE_INVALID: 'El estado proporcionado no es válido.',
+    NO_CSV_FOUND: 'No se proporcionó un archivo CSV.'
   },
   REGISTER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
@@ -370,6 +372,14 @@ export const EMAIL_BODY = {
     <p>Hola ${nombre},</p>
     <p>Tu solicitud de alta de productora fue enviada exitosamente y está en proceso de revisión.</p>
     <p>Nos pondremos en contacto con vos una vez que se complete la revisión.</p>
+    <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
+  `,
+  SENDFILE_REJECTION_NOTIFICATION: (nombre: string, comentario: string) => `
+    <p>Hola ${nombre},</p>
+    <p>La aprobación del audio del repertorio fue rechazado por el siguiente motivo:</p>
+    <blockquote>${comentario}</blockquote>
+    <p>Por favor, contacte con CAPIF para obtener más información.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
   `,

@@ -48,7 +48,7 @@ export const login = async (
     const { email, password } = req.body;
 
     // Consulta para obtener el usuario y los maestros asociados
-    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ email }, req);    
+    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ email }, req);
     
     // Verificación de sesión existente
     const existingToken = req.cookies["auth_token"];
@@ -1348,7 +1348,7 @@ export const rejectApplication = async (
     await createProductoraMessage({
       usuarioId: authUser.id_usuario,
       productoraId: productora.id_productora,
-      tipoMensaje: "RECHAZO",
+      tipoMensaje: "RECHAZO_APLICACION",
       mensaje: comentario,
     });
 

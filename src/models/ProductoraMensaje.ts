@@ -4,7 +4,8 @@ import Usuario from './Usuario';
 import Productora from './Productora';
 
 const OPERACIONES_PERMITIDAS = [
-  "RECHAZO",
+  "RECHAZO_APLICACION",
+  "RECHAZO_VERICAST"
 ] as const;
 
 class ProductoraMensaje extends Model {

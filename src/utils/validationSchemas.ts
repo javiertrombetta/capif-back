@@ -796,6 +796,36 @@ export const enviarFonogramaBodySchema = Joi.object({
     }),
 });
 
+export const cambiarEstadoEnvioFonogramaParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+    "string.base": "El ID del fonograma debe ser un string.",
+    "string.guid": "El ID del fonograma debe ser un UUID válido.",
+    "any.required": "El ID del fonograma es obligatorio.",
+  }),
+  sendId: uuidSchema.messages({
+    "string.base": "El ID del envío debe ser un string.",
+    "string.guid": "El ID del envío debe ser un UUID válido.",
+    "any.required": "El ID del envío es obligatorio.",
+  }),
+});
+
+export const cambiarEstadoEnvioFonogramaBodySchema = Joi.object({
+  nuevoEstado: Joi.string()
+    .valid('RECHAZADO POR VERICAST', 'ERROR EN EL ENVIO')
+    .required()
+    .messages({
+      "string.base": "El estado debe ser un string.",
+      "any.only": "El estado debe ser 'RECHAZADO POR VERICAST' o 'ERROR EN EL ENVIO'.",
+      "any.required": "El estado es obligatorio.",
+    }),
+  comentario: Joi.string()
+    .optional()
+    .allow(null, '')
+    .messages({
+      "string.base": "El comentario debe ser un string.",
+    }),
+});
+
 export const getEnviosByFonogramaParamsSchema = Joi.object({
   id: uuidSchema.messages({
       "string.base": "El ID del fonograma debe ser un string.",

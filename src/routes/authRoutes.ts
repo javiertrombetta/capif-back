@@ -62,7 +62,7 @@ router.post(
 );
 
 router.post(
-  "/auth/prods/primary/:usuarioId/reject",
+  "/prods/primary/:usuarioId/reject",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({
@@ -73,7 +73,7 @@ router.post(
 );
 
 router.post(
-  "/auth/prods/primary/:usuarioId/authorize",
+  "/prods/primary/:usuarioId/authorize",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({ [Segments.PARAMS]: approveApplicationSchema }),
@@ -81,7 +81,7 @@ router.post(
 );
 
 router.post(
-  "/auth/me/:productoraId",
+  "/me/:productoraId",
   authenticate,
   celebrate({ [Segments.PARAMS]: selectProductoraSchema }),
   selectAuthProductora

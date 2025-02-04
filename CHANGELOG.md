@@ -1,4 +1,19 @@
 # Changelog
+## v0.2.13 - 04-02-2025
+## 🐛 Fixes
+
+- fix: changes in authController
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.9
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.2.9 - 03-02-2025
 ## 🐛 Fixes
 

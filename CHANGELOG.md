@@ -1,4 +1,26 @@
 # Changelog
+## v0.2.9 - 03-02-2025
+## 🐛 Fixes
+
+- fix: auth routes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.6
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.6 - 02-02-2025
+## 🚀 Features
+
+- feat: add conflict routes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.3
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.3 - 02-02-2025
 ## 🚀 Features
 

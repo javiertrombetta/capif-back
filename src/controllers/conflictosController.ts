@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from "sequelize";
 import { Productora, Conflicto, Fonograma, FonogramaParticipacion, ConflictoParte } from '../models';
 import { sendEmailWithErrorHandling } from '../services/emailService';
-import * as Err from "../utils/customErrors";
+
 import * as MESSAGES from "../utils/messages";
 
 export const crearConflicto = async (req: Request, res: Response): Promise<void> => {
@@ -76,8 +76,6 @@ export const crearConflicto = async (req: Request, res: Response): Promise<void>
             conflicto_id: nuevoConflicto.id_conflicto,
             participacion_id: participacion.id_participacion,
             estado: 'PENDIENTE',
-            fecha_confirmacion_inicio: participacion.fecha_participacion_inicio,
-            fecha_confirmacion_hasta: participacion.fecha_participacion_hasta,
             porcentaje_confirmado: null,
             is_documentos_enviados: false,
           });
@@ -206,18 +204,10 @@ export const obtenerConflicto = async (req: Request, res: Response): Promise<voi
   }
 };
 
-export const actualizarConflicto = async (req: Request, res: Response): Promise<void> => {
+export const actualizarEstadoConflicto = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const {
-      estado_conflicto,
-      fecha_periodo_desde,
-      fecha_periodo_hasta,
-      porcentaje_periodo,
-      fecha_inicio_conflicto,
-      fecha_segunda_instancia,
-      fecha_fin_conflicto,
-    } = req.body;
+    const { estado_conflicto } = req.body;
 
     // Buscar el conflicto por ID
     const conflicto = await Conflicto.findOne({ where: { id_conflicto: id } });
@@ -225,37 +215,7 @@ export const actualizarConflicto = async (req: Request, res: Response): Promise<
     if (!conflicto) {
       res.status(404).json({ message: `No se encontró el conflicto con ID ${id}` });
       return;
-    }
-
-    // Si se actualizan las fechas de período, volver a validar participaciones
-    let nuevaFechaDesde = fecha_periodo_desde ? new Date(fecha_periodo_desde) : conflicto.fecha_periodo_desde;
-    let nuevaFechaHasta = fecha_periodo_hasta ? new Date(fecha_periodo_hasta) : conflicto.fecha_periodo_hasta;
-
-    if (fecha_periodo_desde || fecha_periodo_hasta) {
-      const participaciones = await FonogramaParticipacion.findAll({
-        where: {
-          fonograma_id: conflicto.fonograma_id,
-          fecha_participacion_inicio: { [Op.lte]: nuevaFechaHasta },
-          fecha_participacion_hasta: { [Op.gte]: nuevaFechaDesde },
-        },
-      });
-
-      if (participaciones.length === 0) {
-        res.status(400).json({
-          message: `No existen participaciones registradas en el período seleccionado.`,
-        });
-        return;
-      }
-
-      const porcentajeTotal = participaciones.reduce((acc, curr) => acc + curr.porcentaje_participacion, 0);
-
-      if (porcentajeTotal <= 100) {
-        res.status(400).json({
-          message: `No se encontraron períodos con porcentaje de participación superior al 100% en el período seleccionado.`,
-        });
-        return;
-      }
-    }
+    }     
 
     // Validar que el estado del conflicto sea válido
     const TIPO_ESTADOS = [
@@ -273,24 +233,17 @@ export const actualizarConflicto = async (req: Request, res: Response): Promise<
       return;
     }
 
-    // Actualizar los campos permitidos
-    await conflicto.update({
-      estado_conflicto: estado_conflicto || conflicto.estado_conflicto,
-      fecha_periodo_desde: nuevaFechaDesde,
-      fecha_periodo_hasta: nuevaFechaHasta,
-      porcentaje_periodo: porcentaje_periodo !== undefined ? porcentaje_periodo : conflicto.porcentaje_periodo,
-      fecha_inicio_conflicto: fecha_inicio_conflicto ? new Date(fecha_inicio_conflicto) : conflicto.fecha_inicio_conflicto,
-      fecha_segunda_instancia: fecha_segunda_instancia ? new Date(fecha_segunda_instancia) : conflicto.fecha_segunda_instancia,
-      fecha_fin_conflicto: fecha_fin_conflicto ? new Date(fecha_fin_conflicto) : conflicto.fecha_fin_conflicto,
-    });
+    // Actualizar el estado del conflicto
+    await conflicto.update({ estado_conflicto });
 
     res.status(200).json({
-      message: 'Conflicto actualizado exitosamente',
+      message: 'Estado del conflicto actualizado exitosamente',
       conflicto,
     });
+
   } catch (error: any) {
-    console.error('Error al actualizar el conflicto:', error);
-    res.status(500).json({ message: 'Error al actualizar el conflicto', error: error.message });
+    console.error('Error al actualizar el estado del conflicto:', error);
+    res.status(500).json({ message: 'Error al actualizar el estado del conflicto', error: error.message });
   }
 };
 
@@ -306,18 +259,23 @@ export const desistirConflicto = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Cambiar el estado del conflicto a "CERRADO" sin modificar participaciones
+    // Cambiar el estado del conflicto a "CERRADO"
     await conflicto.update({
       estado_conflicto: 'CERRADO',
       fecha_fin_conflicto: new Date(),
     });
 
+    // Cambiar el estado de todas las partes del conflicto a "DESISTIDO"
+    await ConflictoParte.update(
+      { estado: 'DESISTIDO' },
+      { where: { conflicto_id: id } }
+    );
+
     res.status(200).json({
-      message: 'Conflicto cancelado exitosamente',
+      message: 'Conflicto cancelado exitosamente y todas sus partes marcadas como DESISTIDO',
       conflicto,
     });
   } catch (error: any) {
-    console.error('Error al cancelar el conflicto:', error);
     res.status(500).json({ message: 'Error al cancelar el conflicto', error: error.message });
   }
 };
@@ -349,7 +307,7 @@ export const eliminarConflicto = async (req: Request, res: Response): Promise<vo
   }
 };
 
-export const manejarSegundaInstancia = (req: Request, res: Response): void => {
+export const actualizarPorResolucion = (req: Request, res: Response): void => {
   res.status(200).json({ message: `Segunda instancia manejada para el conflicto con ID ${req.params.id}` });
 };
 

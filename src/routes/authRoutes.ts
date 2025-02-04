@@ -50,7 +50,7 @@ router.post(
 router.post(
   "/prods/primary/step-two",
   authenticate,
-  authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
+  authorizeRoles(["productor_principal"]),
   celebrate({ [Segments.BODY]: sendApplicationSchema }),
   sendApplication
 );

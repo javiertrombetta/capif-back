@@ -904,31 +904,128 @@ export const producersSchemas = {
       nombre_productora: {
         type: "string",
         description: "Nombre actualizado de la productora.",
-        example: "Productora Actualizada",
+        example: "Productora Actualizada"
       },
-      direccion: {
+      tipo_persona: {
         type: "string",
-        description: "Dirección actualizada de la productora.",
-        example: "Av. Siempre Viva 456",
+        enum: ["FISICA", "JURIDICA"],
+        description: "Tipo de persona: FISICA o JURIDICA.",
+        example: "JURIDICA"
       },
-      telefono: {
+      cuit_cuil: {
         type: "string",
-        description: "Teléfono actualizado de la productora.",
-        example: "+54 11 9876-5432",
+        pattern: "^[0-9]{11}$",
+        description: "CUIT o CUIL actualizado de la productora.",
+        example: "30876543212"
       },
       email: {
         type: "string",
         format: "email",
         description: "Correo electrónico actualizado de la productora.",
-        example: "actualizado@productora.com",
+        example: "actualizado@productora.com"
       },
-      cuit_cuil: {
+      calle: {
         type: "string",
-        description: "CUIT o CUIL actualizado de la productora.",
-        example: "30-87654321-2",
+        description: "Calle de la dirección de la productora.",
+        example: "Av. Siempre Viva"
       },
+      numero: {
+        type: "string",
+        description: "Número de la dirección de la productora.",
+        example: "456"
+      },
+      ciudad: {
+        type: "string",
+        description: "Ciudad de la productora.",
+        example: "Buenos Aires"
+      },
+      localidad: {
+        type: "string",
+        description: "Localidad de la productora.",
+        example: "Palermo"
+      },
+      provincia: {
+        type: "string",
+        description: "Provincia de la productora.",
+        example: "Buenos Aires"
+      },
+      codigo_postal: {
+        type: "string",
+        description: "Código postal de la productora.",
+        example: "C1425"
+      },
+      telefono: {
+        type: "string",
+        description: "Teléfono actualizado de la productora.",
+        example: "+54 11 9876-5432"
+      },
+      nacionalidad: {
+        type: "string",
+        description: "Nacionalidad de la productora.",
+        example: "Argentina"
+      },
+      alias_cbu: {
+        type: "string",
+        description: "Alias CBU actualizado de la productora.",
+        example: "miempresa.alias"
+      },
+      cbu: {
+        type: "string",
+        pattern: "^[0-9]{22}$",
+        description: "CBU actualizado de la productora.",
+        example: "2850590940090418135271"
+      },
+      denominacion_sello: {
+        type: "string",
+        nullable: true,
+        description: "Denominación del sello si corresponde.",
+        example: "Sello Actualizado"
+      },
+      datos_adicionales: {
+        type: "string",
+        nullable: true,
+        description: "Datos adicionales de la productora.",
+        example: "Empresa líder en distribución musical."
+      },
+      nombres: {
+        type: "string",
+        nullable: true,
+        description: "Nombres si la productora es una persona física.",
+        example: "Juan Carlos"
+      },
+      apellidos: {
+        type: "string",
+        nullable: true,
+        description: "Apellidos si la productora es una persona física.",
+        example: "Pérez"
+      },
+      razon_social: {
+        type: "string",
+        nullable: true,
+        description: "Razón social si la productora es una persona jurídica.",
+        example: "Productora S.A."
+      },
+      apellidos_representante: {
+        type: "string",
+        nullable: true,
+        description: "Apellidos del representante si es persona jurídica.",
+        example: "González"
+      },
+      nombres_representante: {
+        type: "string",
+        nullable: true,
+        description: "Nombres del representante si es persona jurídica.",
+        example: "Carlos Alberto"
+      },
+      cuit_representante: {
+        type: "string",
+        nullable: true,
+        pattern: "^[0-9]{11}$",
+        description: "CUIT del representante si es persona jurídica.",
+        example: "20345678901"
+      }
     },
-    required: ["nombre_productora", "direccion", "telefono", "email", "cuit_cuil"],
+    required: ["nombre_productora", "tipo_persona", "cuit_cuil", "email", "calle", "numero", "ciudad", "localidad", "provincia", "codigo_postal", "telefono", "nacionalidad", "alias_cbu", "cbu"]
   },
   DeleteProductora: {
     title: "Productoras - Eliminar Productora",

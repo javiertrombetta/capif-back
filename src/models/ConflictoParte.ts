@@ -17,8 +17,7 @@ class ConflictoParte extends Model {
   public conflicto_id!: string;
   public participacion_id!: string;
   public estado!: (typeof TIPO_ESTADOS)[number];
-  public fecha_confirmacion_inicio!: Date;
-  public fecha_confirmacion_hasta!: Date;
+  public porcentaje_anterior!: number | null;
   public porcentaje_confirmado!: number | null;
   public is_documentos_enviados!: boolean;
   public fecha_respuesta!: Date | null;
@@ -75,25 +74,20 @@ ConflictoParte.init(
       allowNull: false,
       defaultValue: 'PENDIENTE',
     },
-    fecha_confirmacion_inicio: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
+    porcentaje_anterior: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
       validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de inicio de participación debe ser una fecha válida.',
+        isDecimal: {
+          msg: 'El porcentaje confirmado debe ser un número entero positivo.',
         },
-      },
-    },
-    fecha_confirmacion_hasta: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: new Date('2099-12-20T00:00:00Z'),
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de finalización de participación debe ser una fecha válida.',
+        min: {
+          args: [0],
+          msg: 'El porcentaje confirmado no puede ser menor que 0.',
+        },
+        max: {
+          args: [100],
+          msg: 'El porcentaje confirmado no puede ser mayor que 100.',
         },
       },
     },

@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.16 - 05-02-2025
+## 🐛 Fixes
+
+- fix: change producers controller, joi and swagger
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.13
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.13 - 04-02-2025
 ## 🐛 Fixes
 

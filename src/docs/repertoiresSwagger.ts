@@ -1145,9 +1145,9 @@ export const repertoiresSwaggerDocs = {
                                                     example: "Álbum Ejemplo"
                                                 },
                                                 duracion: {
-                                                    type: "number",
-                                                    description: "Duración del fonograma en segundos.",
-                                                    example: 240
+                                                    type: "string",
+                                                    description: "Duración del fonograma en formato HH:MM:SS.",
+                                                    example: "00:03:36"
                                                 },
                                                 anio_lanzamiento: {
                                                     type: "integer",
@@ -1299,9 +1299,9 @@ export const repertoiresSwaggerDocs = {
                                         example: "Nuevo Álbum Ejemplo"
                                     },
                                     duracion: {
-                                        type: "number",
-                                        description: "Duración del fonograma en segundos.",
-                                        example: 300
+                                        type: "string",
+                                        description: "Duración del fonograma en formato HH:MM:SS.",
+                                        example: "00:03:36"
                                     },
                                     anio_lanzamiento: {
                                         type: "integer",
@@ -1361,9 +1361,9 @@ export const repertoiresSwaggerDocs = {
                                                     example: "Nuevo Álbum Ejemplo"
                                                 },
                                                 duracion: {
-                                                    type: "number",
-                                                    description: "Duración en segundos.",
-                                                    example: 300
+                                                    type: "string",
+                                                    description: "Duración del fonograma en formato HH:MM:SS.",
+                                                    example: "00:03:36"
                                                 },
                                                 anio_lanzamiento: {
                                                     type: "integer",
@@ -1780,9 +1780,9 @@ export const repertoiresSwaggerDocs = {
                                         example: "Álbum Ejemplo"
                                     },
                                     duracion: {
-                                        type: "number",
-                                        description: "Duración del fonograma en segundos.",
-                                        example: 240
+                                        type: "string",
+                                        description: "Duración del fonograma en formato HH:MM:SS.",
+                                        example: "00:03:36"
                                     },
                                     anio_lanzamiento: {
                                         type: "integer",
@@ -1892,8 +1892,8 @@ export const repertoiresSwaggerDocs = {
                                                     example: "Álbum Ejemplo"
                                                 },
                                                 duracion: {
-                                                    type: "number",
-                                                    example: 240
+                                                    type: "string",
+                                                    example: "00:03:36"
                                                 },
                                                 anio_lanzamiento: {
                                                     type: "integer",

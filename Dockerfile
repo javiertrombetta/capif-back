@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM node:20.17.0-alpine3.20 AS build-deps
+FROM --platform=$BUILDPLATFORM node:23.7-alpine3.21 AS build-deps
 WORKDIR /app
 
 COPY .sequelizerc ./
@@ -16,7 +16,7 @@ COPY entrypoint.sh /usr/src/app/entrypoint.sh
 
 RUN npm run build && ls -R ./dist
 
-FROM --platform=$BUILDPLATFORM node:20.17.0-alpine3.20 AS production
+FROM --platform=$BUILDPLATFORM node:23.7-alpine3.21 AS production
 WORKDIR /app
 
 COPY --from=builder /usr/src/app/entrypoint.sh /usr/src/app/entrypoint.sh

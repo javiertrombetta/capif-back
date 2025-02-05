@@ -163,8 +163,8 @@ export const createProductoraSchema = productoraBaseSchema.when("tipo_persona", 
   }),
 });
 
-// Document Schema (Optional)
-const documentSchema = Joi.object({
+// Document Schema
+export const documentSchema = Joi.object({
   nombre_documento: Joi.string().required().messages({
     'any.required': 'El campo nombre_documento es obligatorio.',
   }),
@@ -177,7 +177,16 @@ const documentSchema = Joi.object({
     }),
 });
 
+// Schema de duración HH:MM:SS
+export const duracionSchema = Joi.string()
+  .pattern(/^([0-9]{2}):([0-5][0-9]):([0-5][0-9])$/)
+  .required()
+  .messages({
+    "string.pattern.base": "El campo 'duracion' debe estar en formato HH:MM:SS.",
+    "any.required": "El campo 'duracion' es obligatorio.",
+  });
 
+  
 
 //  start of authRoutes
 
@@ -1249,9 +1258,8 @@ export const createFonogramaBodySchema = Joi.object({
   album: Joi.string().allow(null, "").messages({
     "string.base": "El campo 'album' debe ser una cadena de texto.",
   }),
-  duracion: Joi.number().min(1).required().messages({
-    "number.base": "El campo 'duracion' debe ser un número.",
-    "number.min": "El campo 'duracion' debe ser mayor a 0.",
+  duracion: duracionSchema.required().messages({
+    "string.pattern.base": "El campo 'duracion' debe estar en formato HH:MM:SS.",
     "any.required": "El campo 'duracion' es obligatorio.",
   }),
   anio_lanzamiento: Joi.number()
@@ -1365,9 +1373,9 @@ export const updateFonogramaBodySchema = Joi.object({
   album: Joi.string().allow(null, "").messages({
     "string.base": "El campo 'album' debe ser una cadena de texto.",
   }),
-  duracion: Joi.number().min(1).messages({
-    "number.base": "El campo 'duracion' debe ser un número.",
-    "number.min": "El campo 'duracion' debe ser mayor a 0.",
+ duracion: duracionSchema.optional().messages({
+    "string.pattern.base": "El campo 'duracion' debe estar en formato HH:MM:SS.",
+    "any.required": "El campo 'duracion' es obligatorio.",
   }),
   anio_lanzamiento: Joi.number()
     .integer()

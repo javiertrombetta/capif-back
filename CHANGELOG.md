@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.28 - 05-02-2025
+## 🐛 Fixes
+
+- fix: change relations in models
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.25
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.25 - 05-02-2025
 ## 🐛 Fixes
 

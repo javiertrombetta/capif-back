@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { Productora, ProductoraDocumento, ProductoraDocumentoTipo, ProductoraISRC, ProductoraMensaje, ProductoraPremio} from '../models'
+import { Productora, ProductoraDocumento, ProductoraDocumentoTipo, ProductoraISRC, ProductoraMensaje, ProductoraPremio, Usuario, UsuarioMaestro, UsuarioRol} from '../models'
 
 import * as MESSAGES from '../utils/messages';
 import * as Err from '../utils/customErrors';
@@ -26,14 +26,76 @@ export const createOrUpdateProductora = async (productoraData: any): Promise<Pro
   return productora;
 };
 
-// Servicio para obtener todas las productoras
-export const findAllProductoras = async () => {
+export const findAllProductoras = async (filters: {
+  nombre?: string;
+  cuit?: string;
+  estado?: string;
+}) => {
+  const { nombre, cuit, estado } = filters;
+
+  // Construir filtros dinámicos
+  const whereClause: any = {};
+
+  if (estado) {
+    if (estado === "Autorizada") {
+      whereClause.fecha_alta = { [Op.ne]: null }; // Autorizada: fecha_alta no es nula
+    } else if (estado === "Pendiente") {
+      whereClause.fecha_alta = { [Op.eq]: null }; // Pendiente: fecha_alta es nula
+    }
+  } else {
+    // Si no se pasa un estado y tampoco otros filtros, devuelve solo autorizadas
+    if (!nombre && !cuit) {
+      whereClause.fecha_alta = { [Op.ne]: null }; // solo Autorizadas
+    }
+  }
+
+  // Agregar filtros adicionales, si existen
+  if (nombre) {
+    whereClause.nombre_productora = { [Op.iLike]: `%${nombre}%` }; // Filtro parcial por nombre
+  }
+
+  if (cuit) {
+    whereClause.cuit_cuil = { [Op.eq]: cuit }; // Filtro exacto por CUIT
+  }
+
+  // Buscar usuarios con rol productor_principal
+  const usuariosPrincipales = await UsuarioMaestro.findAll({
+    include: [
+      {
+        model: Usuario,
+        as: "usuarioRegistrante",
+        attributes: ["id_usuario"],
+        include: [
+          {
+            model: UsuarioRol,
+            as: "rol",
+            attributes: ["nombre_rol"],
+            where: { nombre_rol: "productor_principal" },
+          },
+        ],
+      },
+    ],
+  });
+
+  // Mapear la relación productora <-> usuario_principal
+  const productoraUsuarioMap = new Map();
+  usuariosPrincipales.forEach((usuarioMaestro) => {
+    if (usuarioMaestro.productora_id && usuarioMaestro.usuarioRegistrante) {
+      productoraUsuarioMap.set(
+        usuarioMaestro.productora_id,
+        usuarioMaestro.usuarioRegistrante.id_usuario
+      );
+    }
+  });
+
+  // Buscar todas las productoras con filtros
   const productoras = await Productora.findAll({
+    where: whereClause,
     include: [
       {
         model: ProductoraISRC,
-        as: 'codigosDeLaProductora',
-        attributes: ['tipo', 'codigo_productora'],
+        as: "codigosDeLaProductora",
+        attributes: ["tipo", "codigo_productora"],
       },
     ],
   });
@@ -42,17 +104,29 @@ export const findAllProductoras = async () => {
     throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
   }
 
-  return productoras;
+  // Agregar el id_usuario del productor_principal y el estado a cada productora
+  const productorasConUsuario = productoras.map((productora) => {
+    const estado = productora.fecha_alta ? "Autorizada" : "Pendiente";
+
+    return {
+      usuarioPrincipal: productoraUsuarioMap.get(productora.id_productora) || null,
+      estado,
+      ...productora.toJSON(),
+    };
+  });
+
+  return productorasConUsuario;
 };
 
 // Servicio para obtener una productora por ID
 export const findProductoraById = async (id: string) => {
+  // Buscar la productora con sus códigos ISRC
   const productora = await Productora.findByPk(id, {
     include: [
       {
         model: ProductoraISRC,
-        as: 'codigosDeLaProductora',
-        attributes: ['tipo', 'codigo_productora'],
+        as: "codigosDeLaProductora",
+        attributes: ["tipo", "codigo_productora"],
       },
     ],
   });
@@ -61,7 +135,41 @@ export const findProductoraById = async (id: string) => {
     throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
   }
 
-  return productora;
+  // Buscar el productor principal asociado a esta productora
+  const productorPrincipal = await UsuarioMaestro.findOne({
+    where: { productora_id: id },
+    include: [
+      {
+        model: Usuario,
+        as: "usuarioRegistrante",
+        attributes: ["id_usuario", "nombre", "apellido", "email"],
+        include: [
+          {
+            model: UsuarioRol,
+            as: "rol",
+            attributes: ["nombre_rol"],
+            where: { nombre_rol: "productor_principal" },
+          },
+        ],
+      },
+    ],
+  });
+
+  // Extraer los datos del productor principal (si existe)
+  const productorPrincipalData = productorPrincipal?.usuarioRegistrante
+    ? {
+        id_usuario: productorPrincipal.usuarioRegistrante.id_usuario,
+        nombre: productorPrincipal.usuarioRegistrante.nombre,
+        apellido: productorPrincipal.usuarioRegistrante.apellido,
+        email: productorPrincipal.usuarioRegistrante.email,
+      }
+    : null;
+
+  // Agregar el productor principal al objeto de respuesta
+  return {
+    usuarioPrincipal: productorPrincipalData,
+    ...productora.toJSON(),    
+  };
 };
 
 // Servicio para crear una productora

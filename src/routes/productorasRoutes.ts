@@ -47,6 +47,7 @@ import {
   getISRCByIdSchema, 
   getPostulacionesByIdSchema, 
   getProductoraByIdParamsSchema, 
+  getProductorasQuerySchema, 
   updateDocumentoSchema, 
   updateISRCBodySchema, 
   updateISRCParamsSchema, 
@@ -252,6 +253,9 @@ router.get(
   "/",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.QUERY]: getProductorasQuerySchema,
+  }),
   getAllProductoras
 );
 

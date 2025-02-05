@@ -775,128 +775,558 @@ export const producersSchemas = {
     title: "Productoras - Obtener Productora por ID",
     type: "object",
     properties: {
-      id_productora: {
-        type: "string",
-        format: "uuid",
-        description: "ID único de la productora.",
-        example: "123e4567-e89b-12d3-a456-426614174000",
-      },
-      nombre_productora: {
-        type: "string",
-        description: "Nombre de la productora.",
-        example: "Productora Ejemplo",
-      },
-      direccion: {
-        type: "string",
-        description: "Dirección de la productora.",
-        example: "Av. Siempre Viva 123",
-      },
-      telefono: {
-        type: "string",
-        description: "Teléfono de contacto de la productora.",
-        example: "+54 11 1234-5678",
-      },
-      email: {
-        type: "string",
-        format: "email",
-        description: "Correo electrónico de la productora.",
-        example: "contacto@productora.com",
-      },
+        productora: {
+            type: "object",
+            properties: {
+                usuarioPrincipal: {
+                    type: "object",
+                    description: "Información del usuario principal asociado a la productora.",
+                    properties: {
+                        id_usuario: {
+                            type: "string",
+                            format: "uuid",
+                            description: "ID único del usuario principal.",
+                            example: "2c04a4fa-a049-48e5-8767-a6aba5b746d4",
+                        },
+                        nombre: {
+                            type: "string",
+                            description: "Nombre del usuario principal.",
+                            example: "Juan",
+                        },
+                        apellido: {
+                            type: "string",
+                            description: "Apellido del usuario principal.",
+                            example: "Pérez",
+                        },
+                        email: {
+                            type: "string",
+                            format: "email",
+                            description: "Correo electrónico del usuario principal.",
+                            example: "juanperez@dominio.com",
+                        },
+                    },
+                },
+                id_productora: {
+                    type: "string",
+                    format: "uuid",
+                    description: "ID único de la productora.",
+                    example: "b2e9c0d5-67f5-4dd0-84e3-261853bc7ba2",
+                },
+                nombre_productora: {
+                    type: "string",
+                    description: "Nombre de la productora.",
+                    example: "Productora Ejemplo",
+                },
+                tipo_persona: {
+                    type: "string",
+                    enum: ["FISICA", "JURIDICA"],
+                    description: "Tipo de persona jurídica de la productora.",
+                    example: "FISICA",
+                },
+                cuit_cuil: {
+                    type: "string",
+                    description: "Número de CUIT o CUIL de la productora.",
+                    example: "30123456789",
+                },
+                email: {
+                    type: "string",
+                    format: "email",
+                    description: "Correo electrónico de la productora.",
+                    example: "productora@ejemplo.com",
+                },
+                direccion: {
+                    type: "string",
+                    description: "Dirección de la productora.",
+                    example: "Av. Siempre Viva 123, Palermo, Buenos Aires, 1425",
+                },
+                telefono: {
+                    type: "string",
+                    description: "Teléfono de contacto de la productora.",
+                    example: "+54 11 1234-5678",
+                },
+                nacionalidad: {
+                    type: "string",
+                    description: "Nacionalidad de la productora.",
+                    example: "Argentina",
+                },
+                alias_cbu: {
+                    type: "string",
+                    description: "Alias del CBU de la productora.",
+                    example: "AliasCBUEjemplo",
+                },
+                cbu: {
+                    type: "string",
+                    description: "CBU de la productora.",
+                    example: "1234567890123456789012",
+                },
+                cantidad_fonogramas: {
+                    type: "integer",
+                    description: "Cantidad de fonogramas asociados a la productora.",
+                    example: 0,
+                },
+                denominacion_sello: {
+                    type: "string",
+                    description: "Denominación del sello de la productora.",
+                    example: "Sello Ejemplo",
+                },
+                datos_adicionales: {
+                    type: "string",
+                    description: "Información adicional sobre la productora.",
+                    example: "Productora especializada en música.",
+                },
+                fecha_alta: {
+                    type: "string",
+                    format: "date-time",
+                    description: "Fecha en que la productora fue autorizada.",
+                    example: "2025-02-05T13:29:51.610Z",
+                    nullable: true,
+                },
+                fecha_ultimo_fonograma: {
+                    type: "string",
+                    format: "date-time",
+                    description: "Fecha del último fonograma registrado.",
+                    example: null,
+                    nullable: true,
+                },
+                nombres: {
+                    type: "string",
+                    description: "Nombre del titular de la productora (si es persona física).",
+                    example: "Juan",
+                    nullable: true,
+                },
+                apellidos: {
+                    type: "string",
+                    description: "Apellido del titular de la productora (si es persona física).",
+                    example: "Pérez",
+                    nullable: true,
+                },
+                razon_social: {
+                    type: "string",
+                    description: "Razón social de la empresa (si es persona jurídica).",
+                    example: "Empresa S.A.",
+                    nullable: true,
+                },
+                apellidos_representante: {
+                    type: "string",
+                    description: "Apellido del representante legal (si es persona jurídica).",
+                    example: "García",
+                    nullable: true,
+                },
+                nombres_representante: {
+                    type: "string",
+                    description: "Nombre del representante legal (si es persona jurídica).",
+                    example: "Ana",
+                    nullable: true,
+                },
+                cuit_representante: {
+                    type: "string",
+                    description: "CUIT del representante legal (si es persona jurídica).",
+                    example: "20123456785",
+                    nullable: true,
+                },
+                codigosDeLaProductora: {
+                    type: "array",
+                    description: "Lista de códigos ISRC asociados a la productora.",
+                    items: {
+                        type: "object",
+                        properties: {
+                            tipo: {
+                                type: "string",
+                                description: "Tipo de código ISRC (AUDIO, VIDEO, etc.).",
+                                example: "AUDIO",
+                            },
+                            codigo_productora: {
+                                type: "string",
+                                description: "Código ISRC asociado a la productora.",
+                                example: "AAC",
+                            },
+                        },
+                        example: [
+                            {
+                                tipo: "AUDIO",
+                                codigo_productora: "AAC"
+                            },
+                            {
+                                tipo: "VIDEO",
+                                codigo_productora: "AAD"
+                            }
+                        ]
+                    },
+                },
+                createdAt: {
+                    type: "string",
+                    format: "date-time",
+                    description: "Fecha de creación del registro en el sistema.",
+                    example: "2025-02-05T13:25:19.689Z",
+                },
+                updatedAt: {
+                    type: "string",
+                    format: "date-time",
+                    description: "Fecha de la última actualización del registro.",
+                    example: "2025-02-05T13:29:51.610Z",
+                },
+            },
+        },
     },
   },
   GetAllProductoras: {
     title: "Productoras - Obtener Todas las Productoras",
     type: "object",
     properties: {
-      productoras: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            id_productora: {
-              type: "string",
-              format: "uuid",
-              description: "ID único de la productora.",
-              example: "123e4567-e89b-12d3-a456-426614174000",
-            },
-            nombre_productora: {
-              type: "string",
-              description: "Nombre de la productora.",
-              example: "Productora Ejemplo",
-            },
-            direccion: {
-              type: "string",
-              description: "Dirección de la productora.",
-              example: "Av. Siempre Viva 123",
-            },
-            telefono: {
-              type: "string",
-              description: "Teléfono de contacto de la productora.",
-              example: "+54 11 1234-5678",
-            },
-            email: {
-              type: "string",
-              format: "email",
-              description: "Correo electrónico de la productora.",
-              example: "contacto@productora.com",
-            },
-            codigosDeLaProductora: {
-              type: "array",
-              items: {
+        productoras: {
+            type: "array",
+            items: {
                 type: "object",
                 properties: {
-                  id_productora_isrc: {
-                    type: "string",
-                    format: "uuid",
-                    description: "ID del ISRC asociado a la productora.",
-                    example: "123e4567-e89b-12d3-a456-426614174001",
-                  },
-                  codigo_isrc: {
-                    type: "string",
-                    description: "Código ISRC.",
-                    example: "US-123-21-12345",
-                  },
+                    id_productora: {
+                        type: "string",
+                        format: "uuid",
+                        description: "ID único de la productora.",
+                        example: "b2e9c0d5-67f5-4dd0-84e3-261853bc7ba2",
+                    },
+                    nombre_productora: {
+                        type: "string",
+                        description: "Nombre de la productora.",
+                        example: "Productora Ejemplo",
+                    },
+                    tipo_persona: {
+                        type: "string",
+                        enum: ["FISICA", "JURIDICA"],
+                        description: "Tipo de persona jurídica de la productora.",
+                        example: "FISICA",
+                    },
+                    cuit_cuil: {
+                        type: "string",
+                        description: "Número de CUIT o CUIL de la productora.",
+                        example: "30123456789",
+                    },
+                    email: {
+                        type: "string",
+                        format: "email",
+                        description: "Correo electrónico de la productora.",
+                        example: "productora@ejemplo.com",
+                    },
+                    direccion: {
+                        type: "string",
+                        description: "Dirección de la productora.",
+                        example: "Av. Siempre Viva 123, Palermo, Buenos Aires, 1425",
+                    },
+                    telefono: {
+                        type: "string",
+                        description: "Teléfono de contacto de la productora.",
+                        example: "+54 11 1234-5678",
+                    },
+                    nacionalidad: {
+                        type: "string",
+                        description: "Nacionalidad de la productora.",
+                        example: "Argentina",
+                    },
+                    alias_cbu: {
+                        type: "string",
+                        description: "Alias del CBU de la productora.",
+                        example: "AliasCBUEjemplo",
+                    },
+                    cbu: {
+                        type: "string",
+                        description: "CBU de la productora.",
+                        example: "1234567890123456789012",
+                    },
+                    cantidad_fonogramas: {
+                        type: "integer",
+                        description: "Cantidad de fonogramas asociados a la productora.",
+                        example: 0,
+                    },
+                    denominacion_sello: {
+                        type: "string",
+                        description: "Denominación del sello de la productora.",
+                        example: "Sello Ejemplo",
+                    },
+                    datos_adicionales: {
+                        type: "string",
+                        description: "Información adicional sobre la productora.",
+                        example: "Productora especializada en música.",
+                    },
+                    fecha_alta: {
+                        type: "string",
+                        format: "date-time",
+                        description: "Fecha en que la productora fue autorizada.",
+                        example: "2025-02-05T13:29:51.610Z",
+                        nullable: true,
+                    },
+                    fecha_ultimo_fonograma: {
+                        type: "string",
+                        format: "date-time",
+                        description: "Fecha del último fonograma registrado.",
+                        example: null,
+                        nullable: true,
+                    },
+                    nombres: {
+                        type: "string",
+                        description: "Nombre del titular de la productora (si es persona física).",
+                        example: "Juan",
+                        nullable: true,
+                    },
+                    apellidos: {
+                        type: "string",
+                        description: "Apellido del titular de la productora (si es persona física).",
+                        example: "Pérez",
+                        nullable: true,
+                    },
+                    razon_social: {
+                        type: "string",
+                        description: "Razón social de la empresa (si es persona jurídica).",
+                        example: "Empresa S.A.",
+                        nullable: true,
+                    },
+                    apellidos_representante: {
+                        type: "string",
+                        description: "Apellido del representante legal (si es persona jurídica).",
+                        example: "García",
+                        nullable: true,
+                    },
+                    nombres_representante: {
+                        type: "string",
+                        description: "Nombre del representante legal (si es persona jurídica).",
+                        example: "Ana",
+                        nullable: true,
+                    },
+                    cuit_representante: {
+                        type: "string",
+                        description: "CUIT del representante legal (si es persona jurídica).",
+                        example: "20123456785",
+                        nullable: true,
+                    },
+                    usuarioPrincipal: {
+                        type: "string",
+                        format: "uuid",
+                        description: "ID del usuario principal asociado a la productora.",
+                        example: "2c04a4fa-a049-48e5-8767-a6aba5b746d4",
+                        nullable: true,
+                    },
+                    estado: {
+                        type: "string",
+                        enum: ["Autorizada", "Pendiente"],
+                        description: "Estado de la productora basado en su fecha de alta.",
+                        example: "Autorizada",
+                    },
+                    codigosDeLaProductora: {
+                        type: "array",
+                        description: "Lista de códigos ISRC asociados a la productora.",
+                        items: {
+                            type: "object",
+                            properties: {
+                                tipo: {
+                                    type: "string",
+                                    description: "Tipo de código ISRC (AUDIO, VIDEO, etc.).",
+                                    example: "AUDIO",
+                                },
+                                codigo_productora: {
+                                    type: "string",
+                                    description: "Código ISRC asociado a la productora.",
+                                    example: "AAC",
+                                },
+                            },
+                            example: [
+                                {
+                                    tipo: "AUDIO",
+                                    codigo_productora: "AAC"
+                                },
+                                {
+                                    tipo: "VIDEO",
+                                    codigo_productora: "AAD"
+                                }
+                            ]
+                        }
+                    },
+                    createdAt: {
+                        type: "string",
+                        format: "date-time",
+                        description: "Fecha de creación del registro en el sistema.",
+                        example: "2025-02-05T13:25:19.689Z",
+                    },
+                    updatedAt: {
+                        type: "string",
+                        format: "date-time",
+                        description: "Fecha de la última actualización del registro.",
+                        example: "2025-02-05T13:29:51.610Z",
+                    },
                 },
-              },
             },
-          },
         },
-      },
     },
   },
   CreateProductora: {
     title: "Productoras - Crear Productora",
     type: "object",
     properties: {
-      nombre_productora: {
-        type: "string",
-        description: "Nombre de la nueva productora.",
-        example: "Productora Ejemplo",
-      },
-      direccion: {
-        type: "string",
-        description: "Dirección de la productora.",
-        example: "Av. Siempre Viva 123",
-      },
-      telefono: {
-        type: "string",
-        description: "Teléfono de contacto de la productora.",
-        example: "+54 11 1234-5678",
-      },
-      email: {
-        type: "string",
-        format: "email",
-        description: "Correo electrónico de la productora.",
-        example: "contacto@productora.com",
-      },
-      cuit_cuil: {
-        type: "string",
-        description: "CUIT o CUIL de la productora.",
-        example: "30-12345678-9",
-      },
+        nombre_productora: {
+            type: "string",
+            description: "Nombre de la nueva productora.",
+            example: "Productora Ejemplo",
+        },
+        tipo_persona: {
+            type: "string",
+            enum: ["FISICA", "JURIDICA"],
+            description: "Tipo de persona jurídica de la productora.",
+            example: "FISICA",
+        },
+        cuit_cuil: {
+            type: "string",
+            description: "CUIT o CUIL de la productora.",
+            example: "30123456789",
+        },
+        email: {
+            type: "string",
+            format: "email",
+            description: "Correo electrónico de la productora.",
+            example: "productora@ejemplo.com",
+        },
+        calle: {
+            type: "string",
+            description: "Nombre de la calle de la dirección de la productora.",
+            example: "Av. Siempre Viva",
+        },
+        numero: {
+            type: "string",
+            description: "Número de la dirección de la productora.",
+            example: "123",
+        },
+        ciudad: {
+            type: "string",
+            description: "Ciudad donde se encuentra la productora.",
+            example: "Buenos Aires",
+        },
+        localidad: {
+            type: "string",
+            description: "Localidad donde se encuentra la productora.",
+            example: "Palermo",
+        },
+        provincia: {
+            type: "string",
+            description: "Provincia donde se encuentra la productora.",
+            example: "Buenos Aires",
+        },
+        codigo_postal: {
+            type: "string",
+            description: "Código postal de la productora.",
+            example: "1425",
+        },
+        telefono: {
+            type: "string",
+            description: "Teléfono de contacto de la productora.",
+            example: "+54 11 1234-5678",
+        },
+        nacionalidad: {
+            type: "string",
+            description: "Nacionalidad de la productora.",
+            example: "Argentina",
+        },
+        alias_cbu: {
+            type: "string",
+            description: "Alias del CBU de la productora.",
+            example: "AliasCBUEjemplo",
+        },
+        cbu: {
+            type: "string",
+            description: "CBU de la productora.",
+            example: "1234567890123456789012",
+        },
+        denominacion_sello: {
+            type: "string",
+            description: "Denominación del sello de la productora.",
+            example: "Sello Ejemplo",
+            nullable: true,
+        },
+        datos_adicionales: {
+            type: "string",
+            description: "Información adicional sobre la productora.",
+            example: "Productora especializada en música.",
+            nullable: true,
+        }
     },
-    required: ["nombre_productora", "direccion", "telefono", "email", "cuit_cuil"],
-  },
+    allOf: [
+        {
+            $ref: "#/components/schemas/ProductoraBase"
+        },
+        {
+            oneOf: [
+                {
+                    $ref: "#/components/schemas/ProductoraFisica"
+                },
+                {
+                    $ref: "#/components/schemas/ProductoraJuridica"
+                }
+            ]
+        }
+    ]
+},
+
+ProductoraBase: {
+    type: "object",
+    description: "Datos básicos que toda productora debe incluir.",
+    required: [
+        "nombre_productora",
+        "tipo_persona",
+        "cuit_cuil",
+        "email",
+        "calle",
+        "numero",
+        "ciudad",
+        "localidad",
+        "provincia",
+        "codigo_postal",
+        "telefono",
+        "nacionalidad",
+        "alias_cbu",
+        "cbu"
+    ]
+},
+
+ProductoraFisica: {
+    type: "object",
+    description: "Datos requeridos si la productora es una Persona Física.",
+    properties: {
+        nombres: {
+            type: "string",
+            description: "Nombre del titular de la productora (si es persona física).",
+            example: "Juan",
+        },
+        apellidos: {
+            type: "string",
+            description: "Apellido del titular de la productora (si es persona física).",
+            example: "Pérez",
+        }
+    },
+    required: ["nombres", "apellidos"]
+},
+
+ProductoraJuridica: {
+    type: "object",
+    description: "Datos requeridos si la productora es una Persona Jurídica.",
+    properties: {
+        razon_social: {
+            type: "string",
+            description: "Razón social de la empresa (si es persona jurídica).",
+            example: "Empresa S.A.",
+        },
+        apellidos_representante: {
+            type: "string",
+            description: "Apellido del representante legal (si es persona jurídica).",
+            example: "García",
+        },
+        nombres_representante: {
+            type: "string",
+            description: "Nombre del representante legal (si es persona jurídica).",
+            example: "Ana",
+        },
+        cuit_representante: {
+            type: "string",
+            description: "CUIT del representante legal (si es persona jurídica).",
+            example: "20123456785",
+        }
+    },
+    required: ["razon_social", "apellidos_representante", "nombres_representante", "cuit_representante"]
+  },  
   UpdateProductora: {
     title: "Productoras - Actualizar Productora",
     type: "object",

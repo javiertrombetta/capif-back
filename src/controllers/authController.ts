@@ -33,7 +33,7 @@ import { actualizarFechaFinSesion, registrarAuditoria, registrarSesion } from ".
 
 import * as Err from "../utils/customErrors";
 import * as MESSAGES from "../utils/messages";
-import { ProductoraDocumento } from "../models";
+import { ProductoraDocumento, Usuario } from "../models";
 
 
 // LOGIN
@@ -898,7 +898,7 @@ export const getRegistrosPendientes = async (
         );
       }
 
-      if (targetMaestros.length > 0) {
+      if (targetMaestros.length > 1) {
         logger.warn(
           `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
         );
@@ -1020,6 +1020,7 @@ export const approveApplication = async (
     }
     // Establecer la fecha de hoy para fecha_alta en Productora
     productora.fecha_alta = new Date();
+    await productora.save();
 
     // Llamar al servicio para generar códigos ISRC
     const productoraId = productora.id_productora;

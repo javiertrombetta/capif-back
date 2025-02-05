@@ -210,18 +210,6 @@ Cashflow.hasMany(CashflowTraspaso, {
 
 // Conflicto
 
-Conflicto.belongsTo(Productora, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'productoraDelConflicto',
-  onDelete: 'SET NULL',
-});
-
-Productora.hasMany(Conflicto, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'conflictosDeLaProductora',
-  onDelete: 'SET NULL',
-});
-
 Conflicto.belongsTo(Fonograma, {
   foreignKey: 'fonograma_id',
   as: 'fonogramaDelConflicto',
@@ -348,20 +336,6 @@ Fonograma.hasMany(FonogramaMaestro, {
   onDelete: 'RESTRICT',
 });
 
-FonogramaMaestro.belongsTo(Usuario, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'registranteDelMaestroDeFonograma',
-  onDelete: 'SET NULL',
-});
-
-Usuario.hasMany(FonogramaMaestro, {
-  foreignKey: 'usuario_registrante_id',
-  as: 'maestrosDeFonogramasDelRegistrante',
-  onDelete: 'SET NULL',
-});
-
-
-
 
 // FonogramaParticipacion
 
@@ -411,13 +385,13 @@ Fonograma.hasMany(FonogramaTerritorioMaestro, {
 });
 
 FonogramaTerritorioMaestro.belongsTo(FonogramaTerritorio, {
-  foreignKey: 'territorialidad_pais_id',
+  foreignKey: 'territorio_id',
   as: 'territorioDelVinculo',
   onDelete: 'RESTRICT',
 });
 
 FonogramaTerritorio.hasMany(FonogramaTerritorioMaestro, {
-  foreignKey: 'territorialidad_pais_id',
+  foreignKey: 'territorio_id',
   as: 'vinculosDelTerritorio',
   onDelete: 'RESTRICT',
 });

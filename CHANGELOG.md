@@ -1,4 +1,19 @@
 # Changelog
+## v0.2.32 - 05-02-2025
+## 🚀 Features
+
+- feat: add rimraf to uploads in package.json
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.28
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.2.28 - 05-02-2025
 ## 🐛 Fixes
 

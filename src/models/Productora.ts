@@ -297,20 +297,4 @@ Productora.init(
   }
 );
 
-Productora.beforeUpdate(async (productora) => {
-  if (productora.changed("tipo_persona")) {
-    if (productora.tipo_persona === "FISICA") {
-      // Si se cambia a FISICA, limpiar los campos de JURIDICA
-      productora.razon_social = null;
-      productora.nombres_representante = null;
-      productora.apellidos_representante = null;
-      productora.cuit_representante = null;
-    } else if (productora.tipo_persona === "JURIDICA") {
-      // Si se cambia a JURIDICA, limpiar los campos de FISICA
-      productora.nombres = null;
-      productora.apellidos = null;
-    }
-  }
-});
-
 export default Productora;

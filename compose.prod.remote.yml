@@ -1,27 +1,4 @@
 services:
-  postgres:
-    image: postgres:15.8-alpine3.20
-    container_name: postgres
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}      
-      TZ: ${TZ}
-    ports:
-      - "${DB_PORT}:${DB_PORT}"
-    volumes:
-      - postgresdata:/var/lib/postgresql/data
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
-      interval: 10s
-      retries: 5
-      start_period: 60s
-    restart: always
-
   app:
     build: .
     container_name: capif-back
@@ -50,7 +27,7 @@ services:
     restart: always
 
   redis:
-    image: redis:latest
+    image: redis:7.4.2-alpine3.21
     container_name: redis
     environment:
       TZ: ${TZ}
@@ -59,9 +36,6 @@ services:
     networks:
       - app-network
     restart: always
-
-volumes:
-  postgresdata:
 
 networks:
   app-network:

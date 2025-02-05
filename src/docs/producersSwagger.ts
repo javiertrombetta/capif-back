@@ -978,9 +978,39 @@ export const producersSwaggerDocs = {
             },
             get: {
                 summary: "Obtener todas las productoras",
-                description: "Devuelve una lista de todas las productoras con sus detalles e ISRCs asociados.",
+                description: "Devuelve una lista de todas las productoras con sus detalles e ISRCs asociados. Permite filtrar por nombre, CUIT y estado.",
                 tags: ["Productoras"],
                 security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        name: "nombre",
+                        in: "query",
+                        description: "Filtro opcional por nombre de la productora (búsqueda parcial).",
+                        schema: {
+                            type: "string",
+                            example: "Records",
+                        },
+                    },
+                    {
+                        name: "cuit",
+                        in: "query",
+                        description: "Filtro opcional por CUIT de la productora (búsqueda exacta).",
+                        schema: {
+                            type: "string",
+                            example: "20123456789",
+                        },
+                    },
+                    {
+                        name: "estado",
+                        in: "query",
+                        description: "Filtro opcional por estado de la productora ('Autorizada' o 'Pendiente').",
+                        schema: {
+                            type: "string",
+                            enum: ["Autorizada", "Pendiente"],
+                            example: "Autorizada",
+                        },
+                    },
+                ],
                 responses: {
                     200: {
                         description: "Lista de productoras obtenida exitosamente.",
@@ -992,6 +1022,7 @@ export const producersSwaggerDocs = {
                             },
                         },
                     },
+                    400: { description: "Parámetros de consulta inválidos." },
                     404: { description: "No se encontraron productoras." },
                     500: { description: "Error interno del servidor." },
                 },

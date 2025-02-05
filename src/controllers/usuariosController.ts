@@ -370,7 +370,7 @@ export const toggleUserViewStatus = async (
       throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
     }
 
-    if (!authMaestros.length) {
+    if (!authMaestros.length && authUser.rol.nombre_rol === "productor_principal") {
       throw new Err.InternalServerError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS);
     }
 

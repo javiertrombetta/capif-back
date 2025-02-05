@@ -39,13 +39,20 @@ export const getAllProductoras = async (req: Request, res: Response, next: NextF
   try {
     logger.info(`${req.method} ${req.originalUrl} - Solicitud para obtener todas las productoras.`);
 
-    const productoras = await productoraService.findAllProductoras();
+    // Capturar filtros desde los query params
+    const { nombre, cuit, estado } = req.query;
+
+    const productoras = await productoraService.findAllProductoras({
+      nombre: nombre as string,
+      cuit: cuit as string,
+      estado: estado as string,
+    });
 
     logger.info(`${req.method} ${req.originalUrl} - Se encontraron ${productoras.length} productoras.`);
     res.status(200).json({ productoras });
 
   } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error al obtener todas las productoras');
+    handleGeneralError(err, req, res, next, "Error al obtener todas las productoras");
   }
 };
 

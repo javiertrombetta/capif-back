@@ -467,19 +467,46 @@ export const toggleUserViewStatusService = async (
     throw new Error("Debe proporcionar un array de vistas.");
   }
 
+  // Buscar el rol del usuario
+  const usuario = await Usuario.findOne({
+    where: { id_usuario: usuarioId },
+    attributes: ["rol_id"],
+  });
+
+  if (!usuario || !usuario.rol_id) {
+    throw new Error(`No se encontró el usuario con ID: ${usuarioId} o no tiene rol asociado.`);
+  }
+
+  const rolId = usuario.rol_id;
+
   for (const vista of vistas) {
     if (!vista.nombre_vista || typeof vista.is_habilitado !== "boolean") {
       throw new Error("El formato de las vistas es incorrecto.");
     }
 
-    // Buscar el ID de la vista basada en el nombre
+    // Buscar el ID de la vista basada en el nombre y el rol_id
     const vistaData = await UsuarioVista.findOne({
-      where: { nombre_vista: vista.nombre_vista },
+      where: { 
+        nombre_vista: vista.nombre_vista,
+        rol_id: rolId,
+      },
       attributes: ["id_vista"],
     });
 
     if (!vistaData) {
-      throw new Error(`No se encontró una vista con el nombre: ${vista.nombre_vista}`);
+      throw new Error(`No se encontró una vista con el nombre: ${vista.nombre_vista} para el rol asociado al usuario.`);
+    }
+    
+    // Buscar o verificar la relación en UsuarioVistaMaestro
+    const existingVista = await UsuarioVistaMaestro.findOne({
+      where: {
+        usuario_id: usuarioId,
+        vista_id: vistaData.id_vista,
+      },
+    });
+
+    if (!existingVista) {
+      throw new Error(`No se encontró la relación entre el usuario y la vista.`);
     }
 
     // Actualizar el estado de la vista
@@ -491,7 +518,7 @@ export const toggleUserViewStatusService = async (
           vista_id: vistaData.id_vista,
         },
       }
-    );
+    ); 
   }
 };
 

@@ -244,7 +244,7 @@ export const ERROR = {
     INVALID_FILE_EXTENSION: 'Extensión de archivo inválida.',
   },
   PRODUCTORA: {
-    NOT_FOUND: 'Productor no encontrado.',
+    NOT_FOUND: 'Productora no encontrada.',
     CREATION_FAILED: 'No se pudo crear la productora de forma correcta.',
     ID_REQUIRED: "Se requiere el id de la productora",
     ALREADY_EXISTS: 'La productora ya existe.',

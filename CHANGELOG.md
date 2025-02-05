@@ -1,4 +1,12 @@
 # Changelog
+## v0.2.22 - 05-02-2025
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.19
+- chore(docs): update CHANGELOG.MD
+- chore: init deploy in Digital Ocean
+
+
 ## v0.2.19 - 05-02-2025
 ## 🛠️ Maintenance
 

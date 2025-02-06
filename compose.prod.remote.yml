@@ -1,42 +1,82 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: javiertrombetta/capif-back:latest
     container_name: capif-back
+    restart: always
+    ports:
+      - '${PORT}:8080'
+    depends_on:
+      redis:
+        condition: service_healthy
     environment:
+      # Base de Datos (PostgreSQL en Digital Ocean)
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSL: ${DB_SSL}
+
+      # Configuración de la Aplicación
       NODE_ENV: production
+      PORT: ${PORT}
+      GLOBAL_PREFIX: ${GLOBAL_PREFIX}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      COOKIE_MAX_AGE: ${COOKIE_MAX_AGE}
+      EMAIL_TOKEN_EXPIRATION: ${EMAIL_TOKEN_EXPIRATION}
+      RESET_TOKEN_EXPIRATION: ${RESET_TOKEN_EXPIRATION}
+      MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      CAPIF_EMAIL_RECEIVER: ${CAPIF_EMAIL_RECEIVER}
+
+      # Redis
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
+      REDIS_NAME: ${REDIS_NAME}
+
+      # Timezone
       TZ: ${TZ}
-    ports:
-      - "${APP_PORT}:${APP_PORT}"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    volumes:
-      - .:/app
+
+      # Transport
+      FRONTEND_URL: ${FRONTEND_URL}
+
+      # SMTP (Correo Electrónico)
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      EMAIL_FROM: ${EMAIL_FROM}
+
+      # FTP
+      FTP_HOST: ${FTP_HOST}
+      FTP_USER: ${FTP_USER}
+      FTP_PASSWORD: ${FTP_PASSWORD}
+      FTP_PORT: ${FTP_PORT}
+
     networks:
-      - app-network
-    restart: always
+      - capif-net
 
   redis:
     image: redis:7.4.2-alpine3.21
     container_name: redis
+    restart: always
+    ports:
+      - '${REDIS_PORT}:6379'
     environment:
       TZ: ${TZ}
-    ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
-      - app-network
-    restart: always
+      - capif-net
 
 networks:
-  app-network:
+  capif-net:
     driver: bridge

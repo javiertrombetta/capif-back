@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}      
+      POSTGRES_PASSWORD: ${DB_PASSWORD} 
       TZ: ${TZ}
     ports:
       - "${DB_PORT}:5432"
@@ -28,7 +28,7 @@ services:
     ports:
       - '6379:6379'
     environment:
-      TZ: ${TZ}    
+      TZ: ${TZ}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

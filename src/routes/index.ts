@@ -12,6 +12,10 @@ import usersRoutes from './usuariosRoutes';
 
 const router = express.Router();
 
+router.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 router.use('/audits', authenticate, authorizeRoles(['admin_principal','admin_secundario']), auditoriasRoutes);
 router.use('/auth', authRoutes);
 router.use('/cashflow', authenticate, authorizeRoles(['admin_principal','admin_secundario','productor_principal','productor_secundario']), cashflowRoutes);

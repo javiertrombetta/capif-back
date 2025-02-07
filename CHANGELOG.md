@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.43 - 07-02-2025
+## 🚀 Features
+
+- feat: add api health check
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.40
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.40 - 07-02-2025
 ## 🐛 Fixes
 

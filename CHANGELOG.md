@@ -1,4 +1,19 @@
 # Changelog
+## v0.2.36 - 06-02-2025
+## 🐛 Fixes
+
+- fix: change Dockerfile for Digital Ocean
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.32
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.2.32 - 05-02-2025
 ## 🚀 Features
 

@@ -1,6 +1,6 @@
 {
   "name": "capif-back",
-  "version": "v0.2.32",
+  "version": "v0.2.36",
   "main": "dist/app.js",
   "scripts": {
     "prepare": "husky install",

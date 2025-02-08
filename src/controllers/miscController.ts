@@ -126,13 +126,17 @@ export const resetDatabase = async (req: Request, res: Response) => {
         logger.info('[RESET DATABASE] Iniciando reinicio de la base de datos...');
         
         exec('npm run postgres:init', (error, stdout, stderr) => {
+            // Filtrar los mensajes de advertencia de npm que no son errores
+            const npmWarnings = /npm notice|npm WARN/;
+            const stderrFiltered = stderr && !npmWarnings.test(stderr) ? stderr : null;
+
             if (error) {
                 logger.error(`[RESET DATABASE] Error al ejecutar postgres:init: ${error.message}`);
                 return res.status(500).json({ message: 'Error al reiniciar la base de datos.', error: error.message });
             }
-            if (stderr) {
-                logger.error(`[RESET DATABASE] STDERR: ${stderr}`);
-                return res.status(500).json({ message: 'Error al reiniciar la base de datos.', error: stderr });
+            if (stderrFiltered) {
+                logger.error(`[RESET DATABASE] STDERR: ${stderrFiltered}`);
+                return res.status(500).json({ message: 'Error al reiniciar la base de datos.', error: stderrFiltered });
             }
 
             logger.info('[RESET DATABASE] Base de datos reiniciada correctamente.');

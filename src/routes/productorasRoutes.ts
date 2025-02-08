@@ -61,6 +61,16 @@ const router = express.Router();
 
 // Rutas para Documentos de Productoras
 router.get(
+  "/:id/documentos/zip",
+  authenticate,
+  authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: getAllDocumentosSchema,
+  }),
+  getAllDocumentos
+);
+
+router.get(
   "/:id/documentos/:docId",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
@@ -70,15 +80,6 @@ router.get(
   getDocumentoById
 );
 
-router.get(
-  "/:id/documentos/zip",
-  authenticate,
-  authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
-  celebrate({
-    [Segments.PARAMS]: getAllDocumentosSchema,
-  }),
-  getAllDocumentos
-);
 
 router.get(
   "/:id/documentos",

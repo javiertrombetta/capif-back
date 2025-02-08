@@ -38,5 +38,5 @@ USER appuser
 # Exponer el puerto dinámicamente para que funcione en local y Digital Ocean
 EXPOSE ${PORT}
 
-# Ejecutar primero npm run postres:init y después node dist/app.js
-CMD ["sh", "-c", "npm run postres:init && exec node dist/app.js --port ${PORT}"]
+# Ejecutar primero la inicialización de la base de datos y después iniciar la API
+CMD ["sh", "-c", "node dist/config/database/initPostgres.js && exec node dist/app.js --port ${PORT}"]

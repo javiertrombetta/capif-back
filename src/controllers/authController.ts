@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
-import { UPLOAD_DIR } from '../app';
-import path from "path";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import logger from "../config/logger";
 
@@ -33,7 +31,7 @@ import { actualizarFechaFinSesion, registrarAuditoria, registrarSesion } from ".
 
 import * as Err from "../utils/customErrors";
 import * as MESSAGES from "../utils/messages";
-import { ProductoraDocumento, Usuario } from "../models";
+import { ProductoraDocumento } from "../models";
 
 
 // LOGIN

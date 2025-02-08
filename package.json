@@ -1,30 +1,24 @@
 {
   "name": "capif-back",
-  "version": "v0.2.71",
+  "version": "v0.2.75",
   "main": "dist/app.js",
   "scripts": {
     "prepare": "husky install",
     "build": "tsc",
     "clean:dist": "rimraf dist",
     "clean:uploads": "rimraf uploads",
-
     "postgres:init": "node dist/config/database/initPostgres.js",
     "redis": "node dist/config/redis.js",
     "start": "node dist/app.js",
-
     "dev.local:up": "docker compose --env-file .env.dev.local -f compose.dev.local.yml up --build -d",
     "dev.local:down": "docker compose --env-file .env.dev.local -f compose.dev.local.yml down -v",
     "dev.local:restart": "npm run dev.local:down && npm run dev.local:up",
-
     "prod.local:up": "docker compose --env-file .env.prod.local -f compose.prod.local.yml up --build -d",
     "prod.local:down": "docker compose --env-file .env.prod.local -f compose.prod.local.yml down -v && docker rmi javiertrombetta/capif-back:latest",
     "prod.local:restart": "npm run prod.local:down && npm run prod.local:up",
-
     "init": "npm run dev.local:down && npm run clean:dist && npm run clean:uploads && npm run dev.local:up && npm run build && cross-env NODE_ENV=development npm run postgres:init",
-
     "dev": "cross-env NODE_ENV=development nodemon --watch src --exec ts-node src/app.ts",
     "debug": "cross-env NODE_ENV=development nodemon --watch src --exec node --inspect -r ts-node/register src/app.ts",
-
     "test": "echo \"No tests defined yet\""
   },
   "keywords": [],

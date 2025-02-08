@@ -8,20 +8,20 @@ if (env === 'development') {
   logger.info('Cargando variables de entorno desde .env.dev.local...');
   dotenv.config({ path: '.env.dev.local' });
   startFakeFtpServer();
+
 } else if (env === 'production.local') {
   logger.info('Cargando variables de entorno desde .env.prod.local...');
   dotenv.config({ path: '.env.prod.local' });
+
 } else if (env === 'production.remote') {
-  logger.info('Cargando variables de entorno desde .env.prod.remote...');
-  dotenv.config({ path: '.env.prod.remote' });
+  logger.info('Usando variables de entorno de DigitalOcean (sin cargar .env).');
+
 } else {
-  logger.warn(
-    `El entorno ${env} no está definido. Cargando las variables de entorno por defecto...`
-  );
+  logger.warn(`El entorno ${env} no está definido. Cargando las variables de entorno por defecto...`);
   dotenv.config();
 }
 
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import cors from 'cors';

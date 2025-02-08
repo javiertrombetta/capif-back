@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.55 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change app.ts for CORS with Digital Ocean
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.52
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.52 - 08-02-2025
 ## 🐛 Fixes
 

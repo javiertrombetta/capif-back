@@ -76,12 +76,38 @@ const limiter = rateLimit({
 });
 
 app.use(helmet());
+
+// CORS
+
+// app.use(
+//   cors({
+//     origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+//     credentials: true,
+//   })
+// );
+
+// app.use(
+//   cors({
+//     origin: env === 'development' ? true : 'https://tu-dominio.com', // CAMBIARLO PARA PRODUCCIÓN
+//     credentials: true,
+//   })
+// );
+
+const allowedOrigins = env === 'development' ? true : [process.env.FRONTEND_URL];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: (origin, callback) => {
+      if (allowedOrigins === true || allowedOrigins.includes(origin || '')) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS no permitido'));
+      }
+    },
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(limiter);
 
@@ -95,11 +121,11 @@ app.use(
   })
 );
 
+app.use(transactionMiddleware);
+
 // if (env === 'development') {
 //   setupSwagger(app); // Swagger solo disponible en entorno de desarrollo
 // }
-
-app.use(transactionMiddleware);
 
 setupSwagger(app);
 

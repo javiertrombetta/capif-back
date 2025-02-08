@@ -1,5 +1,5 @@
-import "./transactionContext";
 import { Sequelize } from 'sequelize';
+import namespace from "./transactionContext";
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 
@@ -7,6 +7,9 @@ import dotenv from 'dotenv';
 const env = process.env.NODE_ENV || 'development';
 const envFile = env === 'production' ? '.env.prod.remote' : '.env.dev.local';
 dotenv.config({ path: envFile });
+
+// Aplicar contexto de transacciones antes de instanciar sequelize
+Sequelize.useCLS(namespace);
 
 // Configurar conexión a PostgreSQL
 const sequelize = new Sequelize(

@@ -101,12 +101,26 @@ const initDatabase = async (): Promise<void> => {
   }
 };
 
-(async () => {
-  try {
-    await initDatabase();
+// (async () => {
+//   try {
+//     await initDatabase();
 
-  } catch (error) {
-    logger.error('Error crítico durante la inicialización:', error);
-    process.exit(1);
-  }
-})();
+//   } catch (error) {
+//     logger.error('Error crítico durante la inicialización:', error);
+//     process.exit(1);
+//   }
+// })();
+
+if (require.main === module) {
+  (async () => {
+    try {
+      logger.info('Iniciando inicialización manual de la base de datos...');
+      await initDatabase();
+      logger.info('Base de datos inicializada correctamente.');
+      process.exit(0);
+    } catch (error) {
+      logger.error('Error crítico durante la inicialización:', error);
+      process.exit(1);
+    }
+  })();
+}

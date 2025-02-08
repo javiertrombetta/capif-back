@@ -21,7 +21,7 @@ services:
       DB_SSL: ${DB_SSL}
 
       # Configuración de la Aplicación
-      NODE_ENV: production
+      NODE_ENV: production.remote
       PORT: ${PORT}
       GLOBAL_PREFIX: ${GLOBAL_PREFIX}
       JWT_SECRET: ${JWT_SECRET}

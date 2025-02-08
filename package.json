@@ -8,7 +8,7 @@
     "clean:dist": "rimraf dist",
     "clean:uploads": "rimraf uploads",
     "postgres:init": "node dist/config/database/initPostgres.js",
-    "postgres:init:remote": "NODE_ENV=production.local node dist/config/database/initPostgres.js",
+    "postgres:init:remote": "NODE_ENV=production.remote node dist/config/database/initPostgres.js",
     "redis": "node dist/config/redis.js",
     "start": "node dist/app.js",
     "dev.local:up": "docker compose --env-file .env.dev.local -f compose.dev.local.yml up --build -d",

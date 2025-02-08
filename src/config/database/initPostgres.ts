@@ -70,12 +70,13 @@ const initDatabase = async (): Promise<void> => {
     await sequelize.authenticate();
     logger.info('Conexión exitosa a la base de datos.');
 
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production.remote') {
       await sequelize.sync();
       logger.info('Modelos sincronizados con la base de datos.');
       await runSeeders();
 
-    } else if (process.env.NODE_ENV === 'production') {
+    }    
+    else if (process.env.NODE_ENV === 'production.local') {
       const tablesExist = await checkIfTablesExist();
       if (!tablesExist) {
         logger.info('Ejecutando migración inicial en producción...');

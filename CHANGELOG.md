@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.52 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change relations in models and initPostgres
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.49
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.49 - 08-02-2025
 ## 🐛 Fixes
 

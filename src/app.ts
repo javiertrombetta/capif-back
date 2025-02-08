@@ -137,11 +137,11 @@ app.use(
 
 app.use(transactionMiddleware);
 
-// if (env === 'development') {
-//   setupSwagger(app); // Swagger solo disponible en entorno de desarrollo
-// }
+if (env === 'development') {
+  setupSwagger(app);
+}
 
-setupSwagger(app);
+// setupSwagger(app);
 
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "ok" });

@@ -3,24 +3,41 @@ import logger from '../logger';
 
 const env = process.env.NODE_ENV || 'development';
 
+// Cargar variables de entorno según el entorno
 if (env === 'development') {
-  logger.info('Cargando variables de entorno desde .env.dev.local...');
+  logger.info('[INIT POSTGRES] Cargando variables de entorno desde .env.dev.local...');
   dotenv.config({ path: '.env.dev.local' });
 
 } else if (env === 'production.local') {
-  logger.info('Cargando variables de entorno desde .env.prod.local...');
+  logger.info('[INIT POSTGRES] Cargando variables de entorno desde .env.prod.local...');
   dotenv.config({ path: '.env.prod.local' });
 
 } else if (env === 'production.remote') {
-  logger.info('Usando variables de entorno de DigitalOcean (sin cargar .env).');
+  logger.info('[INIT POSTGRES] Utilizando variables de entorno de la nube (Digital Ocean)');
 
 } else {
-  logger.warn(`El entorno ${env} no está definido. Cargando las variables de entorno por defecto...`);
-  dotenv.config();
+  logger.error(`[INIT POSTGRES] ERROR: El entorno ${env} no está definido. Abortando.`);
+  process.exit(1);
 }
 
-import { exec } from 'child_process';
-import util from 'util';
+// Función para verificar que las variables críticas existen
+const requiredEnvVars = [
+  'DB_HOST',
+  'DB_PORT',
+  'DB_USER',
+  'DB_PASSWORD',
+  'DB_NAME',
+];
+
+const missingVars = requiredEnvVars.filter((key) => !process.env[key]);
+
+if (missingVars.length > 0) {
+  logger.error(`[INIT POSTGRES] ERROR: Las siguientes variables de entorno son requeridas pero no están definidas: ${missingVars.join(', ')}`);
+  process.exit(1); 
+}
+
+// import { exec } from 'child_process';
+// import util from 'util';
 import sequelize from './sequelize';
 import initSeed from '../../seeders/init.seed';
 import usersSeed from '../../seeders/usuarios.seed';
@@ -53,79 +70,89 @@ import producersSeed from '../../seeders/productoras.seed';
 
 const runSeeders = async (): Promise<void> => {
   try {
-    logger.info('Ejecutando seeders...');
+    logger.info('[INIT POSTGRES] Ejecutando seeders...');
     await initSeed();
     await usersSeed();
     await producersSeed();
-    logger.info('Seeders ejecutados exitosamente.');
+    logger.info('[INIT POSTGRES] Seeders ejecutados exitosamente.');
 
   } catch (error) {
-    logger.error('Error al ejecutar los seeders:', error);
+    logger.error('[INIT POSTGRES] Error al ejecutar los seeders:', error);
+    throw error;
+  }
+};
+
+const resetDatabase = async (): Promise<void> => {
+  try {
+    logger.info('[INIT POSTGRES] Eliminando todas las tablas de la base de datos...');
+   
+    await sequelize.query(`
+      DO $$ 
+      DECLARE 
+          r RECORD;
+      BEGIN
+          FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+              EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+          END LOOP;
+      END $$;
+    `);
+
+    logger.info('[INIT POSTGRES] Tablas eliminadas correctamente.');
+
+    logger.info('[INIT POSTGRES] Sincronizando modelos nuevamente...');
+    await sequelize.sync();
+
+    logger.info('[INIT POSTGRES] Modelos sincronizados correctamente.');
+    await runSeeders();
+
+  } catch (error) {
+    logger.error('[INIT POSTGRES] Error al reiniciar la base de datos:', error);
     throw error;
   }
 };
 
 const initDatabase = async (): Promise<void> => {
   try {
-    logger.info(`🚀 Iniciando la base de datos en entorno: ${env}`);
 
+    logger.info('[INIT POSTGRES] Verificando conexión con la base de datos...');
     await sequelize.authenticate();
-    logger.info('✅ Conexión exitosa a la base de datos.');
+    logger.info('[INIT POSTGRES] Conexión a la base de datos establecida correctamente.');
 
-    if (env === 'development' || env === 'production.remote' || env === 'production.local') {
-      logger.info(`🔄 Sincronizando modelos con la base de datos en entorno: ${env}`);
-      await sequelize.sync();
-      logger.info('✅ Modelos sincronizados con la base de datos.');
-
-      logger.info('🚀 Ejecutando seeders...');
-      await runSeeders();
-      logger.info('✅ Seeders ejecutados exitosamente.');
-    }    
+    if (env === 'development' || env === 'production.local' || env === 'production.remote') {      
+      await resetDatabase();
+    } 
     // else {
     //   const tablesExist = await checkIfTablesExist();
     //   if (!tablesExist) {
-    //     logger.info('🚀 Ejecutando migración inicial en producción...');
+    //     logger.info('[INIT POSTGRES] Ejecutando migración inicial en producción...');
     //     await runSpecificMigration('20241109000000-dummy.js');
+
     //   } else {
-    //     logger.info('✅ Migraciones ya aplicadas. No se requieren nuevas migraciones.');
+    //     logger.info('[INIT POSTGRES] Migraciones ya aplicadas. No se requieren nuevas migraciones.');
     //   }
     // }
   } catch (error) {
-    logger.error('❌ Error al inicializar la base de datos:', error);
-    process.exit(1);
+    logger.error('[INIT POSTGRES] Error al inicializar la base de datos:', error);
+    throw error;
 
   } finally {
     try {
       await sequelize.close();
-      logger.info('🔌 Conexión cerrada correctamente en la inicialización de Postgres.');
+      logger.info('[INIT POSTGRES] Conexión cerrada correctamente en la inicialización de Postgres.');
       process.exit(0);
+
     } catch (error) {
-      logger.error('❌ Error al cerrar la conexión:', error);
-      process.exit(1);
+      logger.error('[INIT POSTGRES] Error al cerrar la conexión:', error);
     }
   }
 };
 
 (async () => {
   try {
-    logger.info("🟢 Iniciando ejecución de initPostgres.js");
-    
-    // Verificar si env está bien definido
-    logger.info(`🌍 NODE_ENV detectado: ${env}`);
-
-    // Verificar si sequelize está exportando la instancia correctamente
-    logger.info("🔍 Probando conexión con la base de datos...");
-    await sequelize.authenticate();
-    logger.info("✅ Conexión a la base de datos exitosa.");
-
-    // Verificar si initDatabase se está llamando correctamente
-    logger.info("🚀 Llamando a initDatabase()...");
     await initDatabase();
 
-    logger.info("🎉 initDatabase() ejecutado correctamente.");
-
   } catch (error) {
-    logger.error("❌ Error crítico durante la inicialización:", error);
+    logger.error('[INIT POSTGRES] Error crítico durante la inicialización:', error);
     process.exit(1);
   }
 })();

@@ -138,7 +138,7 @@ export const login = async (
 
     res.cookie("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV?.startsWith("production"),
       sameSite: "strict",
       maxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000", 10),
     });
@@ -191,7 +191,7 @@ export const logout = async (
     // Limpiar la cookie de autenticación
     res.clearCookie("auth_token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV?.startsWith("production"),
       sameSite: "strict",
     });
 
@@ -199,7 +199,7 @@ export const logout = async (
     if (activeSesion) {
       res.clearCookie("active_sesion", {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV?.startsWith("production"),
         sameSite: "strict",
       });
 
@@ -548,7 +548,7 @@ export const selectAuthProductora = async (
       }),
       {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV?.startsWith("production"),
         sameSite: "strict",
         maxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000", 10),
       }
@@ -792,7 +792,7 @@ export const resetPassword = async (
     // Limpia la cookie de autenticación para cerrar sesión
     res.clearCookie("auth_token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV?.startsWith("production"),
       sameSite: "strict",
     });
 

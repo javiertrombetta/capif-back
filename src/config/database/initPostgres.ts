@@ -54,9 +54,9 @@ const runSeeders = async (): Promise<void> => {
     await initSeed();
     await usersSeed();
     await producersSeed();
-    logger.info('✅ Seeders ejecutados exitosamente.');
+    logger.info('Seeders ejecutados exitosamente.');
   } catch (error) {
-    logger.error('❌ Error al ejecutar los seeders:', error);
+    logger.error('Error al ejecutar los seeders:', error);
     throw error;
   }
 };
@@ -65,23 +65,23 @@ const runSeeders = async (): Promise<void> => {
 const initDatabase = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
-    logger.info('✅ Conexión exitosa a la base de datos.');
+    logger.info('Conexión exitosa a la base de datos.');
 
     if (process.env.NODE_ENV === 'development') {
       await sequelize.sync();
       logger.info('🔄 Modelos sincronizados con la base de datos.');
       await runSeeders();
-    } else if (process.env.NODE_ENV === 'production') {
+    } else if (process.env.NODE_ENV?.startsWith('production')) {
       const tablesExist = await checkIfTablesExist();
       if (!tablesExist) {
-        logger.info('🚀 Ejecutando migración inicial en producción...');
+        logger.info(`🚀 Ejecutando migración inicial en ${process.env.NODE_ENV}...`);
         await runSpecificMigration('20241109000000-dummy.js');
       } else {
-        logger.info('✅ Migraciones ya aplicadas. No se requieren nuevas migraciones.');
+        logger.info(`✅ Migraciones ya aplicadas en ${process.env.NODE_ENV}. No se requieren nuevas migraciones.`);
       }
     }
   } catch (error) {
-    logger.error('❌ Error al inicializar la base de datos:', error);
+    logger.error('Error al inicializar la base de datos:', error);
     throw error;
   } finally {
     try {
@@ -89,7 +89,7 @@ const initDatabase = async (): Promise<void> => {
       logger.info('🔌 Conexión cerrada correctamente en la inicialización de Postgres.');
       process.exit(0);
     } catch (error) {
-      logger.error('❌ Error al cerrar la conexión:', error);
+      logger.error('Error al cerrar la conexión:', error);
     }
   }
 };
@@ -98,11 +98,11 @@ const initDatabase = async (): Promise<void> => {
 if (require.main === module) {
   (async () => {
     try {
-      logger.info('🟢 Iniciando inicialización manual de la base de datos...');
+      logger.info('Iniciando inicialización manual de la base de datos...');
       await initDatabase();
-      logger.info('✅ Base de datos inicializada correctamente.');
+      logger.info('Base de datos inicializada correctamente.');
     } catch (error) {
-      logger.error('❌ Error crítico durante la inicialización:', error);
+      logger.error('Error crítico durante la inicialización:', error);
       process.exit(1);
     }
   })();

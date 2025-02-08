@@ -93,25 +93,39 @@ app.use(helmet());
 //   })
 // );
 
-const allowedOrigins = env === 'development' ? true : [process.env.FRONTEND_URL];
+// const allowedOrigins = env === 'development' ? true : [process.env.FRONTEND_URL];
+
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       if (!origin || allowedOrigins === true || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error('CORS no permitido'));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins === true || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('CORS no permitido'));
+      if (!origin) {
+        return callback(null, true); //Permitir requests sin origen
       }
+      callback(null, true); //Permitir cualquier origen dinámicamente
     },
-    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Permitir todos los métodos HTTP
+    allowedHeaders: ["Content-Type", "Authorization"], //Permitir estos headers
+    credentials: true, //Permitir cookies y autenticación con credenciales
   })
 );
 
 app.use(express.json());
 app.use(limiter);
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV?.startsWith('production');
 const skipSuccessLogs = (req: Request, res: Response) => res.statusCode < 400;
 
 app.use(

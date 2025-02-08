@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.81 - 08-02-2025
+## 🚀 Features
+
+- feat: add reset db by endpoint
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.78
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.78 - 08-02-2025
 ## 🚀 Features
 

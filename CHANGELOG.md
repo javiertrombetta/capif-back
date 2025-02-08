@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.64 - 08-02-2025
+## 🐛 Fixes
+
+- fix: chage env for Digital Ocean
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.61
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.61 - 08-02-2025
 ## 🐛 Fixes
 

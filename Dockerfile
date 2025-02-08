@@ -35,8 +35,8 @@ RUN addgroup -S appgroup && adduser --disabled-password -S appuser -G appgroup
 RUN chown -R appuser:appgroup /app
 USER appuser
 
-# 🔹 Exponer el puerto dinámicamente para que funcione en local y Digital Ocean
+# Exponer el puerto dinámicamente para que funcione en local y Digital Ocean
 EXPOSE ${PORT}
 
-# 🔹 Usar una variable de entorno para que funcione en ambos entornos
-CMD ["sh", "-c", "node dist/app.js --port ${PORT}"]
+# Ejecutar primero npm run postres:init y después node dist/app.js
+CMD ["sh", "-c", "npm run postres:init && exec node dist/app.js --port ${PORT}"]

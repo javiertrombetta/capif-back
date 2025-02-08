@@ -117,21 +117,30 @@ export const getVistaPorRol = async (req: AuthenticatedRequest, res: Response) =
 
 export const resetDatabase = async (req: Request, res: Response) => {
     try {
-        // Verificar que NODE_ENV sea "production.remote"
-        if (process.env.NODE_ENV !== 'production.remote') {
-            logger.warn(`[RESET DATABASE] Intento de ejecución no autorizado en entorno: ${process.env.NODE_ENV}`);
-            return res.status(403).json({ message: 'Acceso denegado. Solo puede ejecutarse en production.remote.' });
+        const env = process.env.NODE_ENV;
+        let command = '';
+
+        // Verificar que NODE_ENV sea development o production.remote
+        if (env === 'development') {
+            logger.info('[RESET DATABASE] Ejecutando `npm run init` en entorno de desarrollo...');
+            command = 'npm run init';
+        } else if (env === 'production.remote') {
+            logger.info('[RESET DATABASE] Ejecutando `npm run postgres:init` en entorno remoto...');
+            command = 'npm run postgres:init';
+        } else {
+            logger.warn(`[RESET DATABASE] Intento de ejecución no autorizado en entorno: ${env}`);
+            return res.status(403).json({ message: 'Acceso denegado. Solo puede ejecutarse en development o production.remote.' });
         }
 
-        logger.info('[RESET DATABASE] Iniciando reinicio de la base de datos...');
+        logger.info('[RESET DATABASE] Iniciando proceso de reinicio...');
         
-        exec('npm run postgres:init', (error, stdout, stderr) => {
+        exec(command, (error, stdout, stderr) => {
             // Filtrar los mensajes de advertencia de npm que no son errores
             const npmWarnings = /npm notice|npm WARN/;
             const stderrFiltered = stderr && !npmWarnings.test(stderr) ? stderr : null;
 
             if (error) {
-                logger.error(`[RESET DATABASE] Error al ejecutar postgres:init: ${error.message}`);
+                logger.error(`[RESET DATABASE] Error al ejecutar ${command}: ${error.message}`);
                 return res.status(500).json({ message: 'Error al reiniciar la base de datos.', error: error.message });
             }
             if (stderrFiltered) {
@@ -139,7 +148,7 @@ export const resetDatabase = async (req: Request, res: Response) => {
                 return res.status(500).json({ message: 'Error al reiniciar la base de datos.', error: stderrFiltered });
             }
 
-            logger.info('[RESET DATABASE] Base de datos reiniciada correctamente.');
+            logger.info(`[RESET DATABASE] Proceso completado exitosamente en entorno ${env}.`);
             res.status(200).json({ message: 'Base de datos reiniciada correctamente.', output: stdout });
         });
 

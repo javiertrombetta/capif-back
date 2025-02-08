@@ -5,14 +5,16 @@ import dotenv from "dotenv";
 
 // Cargar variables de entorno según el entorno
 const env = process.env.NODE_ENV || "development";
-const envFile =
-  env === "production.local"
-    ? ".env.prod.local"
-    : env === "production.remote"
-    ? ".env.prod.remote"
-    : ".env.dev.local";
 
-dotenv.config({ path: envFile });
+if (env === "development") {
+  dotenv.config({ path: ".env.dev.local" });
+} else if (env === "production.local") {
+  dotenv.config({ path: ".env.prod.local" });
+} else if (env === "production.remote") {
+  console.log("Usando variables de entorno de DigitalOcean (sin cargar .env)");
+} else {
+  dotenv.config(); // Si no hay un entorno definido, carga el .env por defecto
+}
 
 // Aplicar contexto de transacciones antes de instanciar sequelize
 Sequelize.useCLS(namespace);
@@ -48,7 +50,7 @@ sequelize.addHook("beforeBulkCreate", (instances: any[]) => {
   });
 });
 
-// Log para verificar que se cargó el archivo correcto
-console.log(`🚀 Sequelize cargado con configuración de: ${envFile}`);
+// Log para verificar qué configuración está cargando
+console.log(`Sequelize inicializado en entorno: ${env}`);
 
 export default sequelize;

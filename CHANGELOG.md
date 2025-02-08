@@ -1,4 +1,16 @@
 # Changelog
+## v0.2.71 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change sequelize
+- fix: change sequelize for cloud
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.67
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.67 - 08-02-2025
 ## 🐛 Fixes
 

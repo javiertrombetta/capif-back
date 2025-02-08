@@ -2,7 +2,7 @@ import multer from "multer";
 import * as fs from "fs";
 import * as path from "path";
 import { Request } from "express";
-import { UPLOAD_DIR } from "../app";
+import { UPLOAD_DIR } from "../config/paths";
 
 const allowedAudioTypes = [".mp3", ".wav", ".flac", ".aac"];
 

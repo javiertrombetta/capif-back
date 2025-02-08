@@ -35,8 +35,8 @@ RUN addgroup -S appgroup && adduser --disabled-password -S appuser -G appgroup
 RUN chown -R appuser:appgroup /app
 USER appuser
 
-# Exponer el puerto dinámicamente para que funcione en local y Digital Ocean
+# 🔹 Exponer el puerto dinámicamente para que funcione en local y Digital Ocean
 EXPOSE ${PORT}
 
-# Ejecutar primero la inicialización de la base de datos y después iniciar la API
-CMD ["sh", "-c", "node dist/config/database/initPostgres.js && exec node dist/app.js --port ${PORT}"]
+# 🔹 Usar una variable de entorno para que funcione en ambos entornos
+CMD ["sh", "-c", "node dist/app.js --port ${PORT}"]

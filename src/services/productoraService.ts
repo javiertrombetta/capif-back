@@ -5,7 +5,7 @@ import * as MESSAGES from '../utils/messages';
 import * as Err from '../utils/customErrors';
 import path from 'path';
 import { promises as fsPromises } from 'fs';
-import { UPLOAD_DIR } from '../app';
+import { UPLOAD_DIR } from '../config/paths';
 
 type ProductoraISRCData = {
   productora_id: string;

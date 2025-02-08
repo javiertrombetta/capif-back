@@ -37,6 +37,6 @@ export function handleEmailError(
     res.status(err.statusCode).json({ error: err.message });
   } else {
     logger.error(`${req.method} ${req.originalUrl} - ${customMessage}: ${errorMessage}`);
-    res.status(500).json({ error: MESSAGES.ERROR.EMAIL.TEMP_FAILED });
+    res.status(500).json({ error: MESSAGES.ERROR.EMAIL.SEND_FAILED });
   }
 }

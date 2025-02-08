@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.67 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change initPosrgres for production.remote
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.64
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.64 - 08-02-2025
 ## 🐛 Fixes
 

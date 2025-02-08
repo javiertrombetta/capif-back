@@ -1,4 +1,19 @@
 # Changelog
+## v0.2.75 - 08-02-2025
+## 🚀 Features
+
+- feat: add reset db by endpoint
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.71
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.2.71 - 08-02-2025
 ## 🐛 Fixes
 

@@ -93,34 +93,34 @@ app.use(helmet());
 //   })
 // );
 
-// const allowedOrigins = env === 'development' ? true : [process.env.FRONTEND_URL];
-
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-//       if (!origin || allowedOrigins === true || allowedOrigins.includes(origin)) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error('CORS no permitido'));
-//       }
-//     },
-//     credentials: true,
-//   })
-// );
+const allowedOrigins = env === 'development' ? true : [process.env.FRONTEND_URL];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) {
-        return callback(null, true); //Permitir requests sin origen
+      if (!origin || allowedOrigins === true || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS no permitido'));
       }
-      callback(null, true); //Permitir cualquier origen dinámicamente
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Permitir todos los métodos HTTP
-    allowedHeaders: ["Content-Type", "Authorization"], //Permitir estos headers
-    credentials: true, //Permitir cookies y autenticación con credenciales
+    credentials: true,
   })
 );
+
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       if (!origin) {
+//         return callback(null, true); //Permitir requests sin origen
+//       }
+//       callback(null, true); //Permitir cualquier origen dinámicamente
+//     },
+//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Permitir todos los métodos HTTP
+//     allowedHeaders: ["Content-Type", "Authorization"], //Permitir estos headers
+//     credentials: true, //Permitir cookies y autenticación con credenciales
+//   })
+// );
 
 app.use(express.json());
 app.use(limiter);

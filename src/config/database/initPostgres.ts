@@ -1,7 +1,10 @@
 import dotenv from 'dotenv';
 import logger from '../logger';
 
-const env = process.env.NODE_ENV || 'development';
+const env = process.env.NODE_ENV;
+
+// Registrar información del entorno detectado
+logger.info(`[INIT POSTGRES] Entorno detectado: ${env}`);
 
 // Cargar variables de entorno según el entorno
 if (env === 'development') {

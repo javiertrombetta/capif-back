@@ -185,8 +185,8 @@ export const ERROR = {
   EMAIL: {
     RECOVERY_FAILED:
       'No se pudo enviar el correo de recuperación. Por favor, verificar en los logs.',
-    TEMP_FAILED:
-      'No se pudo enviar el correo con la clave temporal. Por favor, verificar en los logs',
+    SEND_FAILED:
+      'No se pudo enviar el correo electrónico. Por favor, verificar en los logs',
     REJECTION_FAILED: 'No se pudo enviar el correo de rechazo. Por favor, verificar en los logs',
   },
   PASSWORD: {

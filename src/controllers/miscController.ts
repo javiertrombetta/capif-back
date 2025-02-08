@@ -4,6 +4,7 @@ import logger from '../config/logger';
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { UsuarioResponse } from '../interfaces/UsuarioResponse';
 import { getAuthenticatedUser } from '../services/authService';
+import { exec } from 'child_process';
 
 export const getTiposDeDocumentos = async (req: Request, res: Response) => {
     try {
@@ -109,6 +110,39 @@ export const getVistaPorRol = async (req: AuthenticatedRequest, res: Response) =
         logger.error('Error al obtener las vistas por rol:', error);
         res.status(500).json({
             message: 'Error al obtener las vistas por rol',
+            error: error instanceof Error ? error.message : 'Error desconocido',
+        });
+    }
+};
+
+export const resetDatabase = async (req: Request, res: Response) => {
+    try {
+        // Verificar que NODE_ENV sea "production.remote"
+        if (process.env.NODE_ENV !== 'production.remote') {
+            logger.warn(`[RESET DATABASE] Intento de ejecución no autorizado en entorno: ${process.env.NODE_ENV}`);
+            return res.status(403).json({ message: 'Acceso denegado. Solo puede ejecutarse en production.remote.' });
+        }
+
+        logger.info('[RESET DATABASE] Iniciando reinicio de la base de datos...');
+        
+        exec('npm run postgres:init', (error, stdout, stderr) => {
+            if (error) {
+                logger.error(`[RESET DATABASE] Error al ejecutar postgres:init: ${error.message}`);
+                return res.status(500).json({ message: 'Error al reiniciar la base de datos.', error: error.message });
+            }
+            if (stderr) {
+                logger.error(`[RESET DATABASE] STDERR: ${stderr}`);
+                return res.status(500).json({ message: 'Error al reiniciar la base de datos.', error: stderr });
+            }
+
+            logger.info('[RESET DATABASE] Base de datos reiniciada correctamente.');
+            res.status(200).json({ message: 'Base de datos reiniciada correctamente.', output: stdout });
+        });
+
+    } catch (error) {
+        logger.error('[RESET DATABASE] Error inesperado:', error);
+        res.status(500).json({
+            message: 'Error inesperado al reiniciar la base de datos.',
             error: error instanceof Error ? error.message : 'Error desconocido',
         });
     }

@@ -98,7 +98,7 @@ const allowedOrigins = env === 'development' ? true : [process.env.FRONTEND_URL]
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (allowedOrigins === true || allowedOrigins.includes(origin || '')) {
+      if (!origin || allowedOrigins === true || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('CORS no permitido'));
@@ -128,6 +128,10 @@ app.use(transactionMiddleware);
 // }
 
 setupSwagger(app);
+
+app.get("/health", (req: Request, res: Response) => {
+  res.status(200).json({ status: "ok" });
+});
 
 app.use(`/${globalPrefix}`, router);
 

@@ -3,7 +3,7 @@ import multer from "multer";
 import * as fs from "fs";
 import * as path from "path";
 import { Productora, ProductoraDocumentoTipo } from "../models";
-import { UPLOAD_DIR } from "../app";
+import { UPLOAD_DIR } from '../config/paths';
 import { validate as isUUID } from "uuid";
 
 const allowedFileTypes = [".pdf", ".png", ".jpg", ".jpeg"];

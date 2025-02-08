@@ -72,7 +72,7 @@ DB_HOST=postgres
 DB_PORT=5432
 
 # Aplicación
-NODE_ENV=production
+NODE_ENV=production.local
 JWT_SECRET=SistemaDeGestionDeTramites!
 PORT=3000
 RESET_TOKEN_EXPIRATION=1h

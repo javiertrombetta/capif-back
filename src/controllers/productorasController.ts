@@ -5,7 +5,7 @@ import fs from 'fs';
 import * as path from 'path';
 
 import logger from '../config/logger';
-import { UPLOAD_DIR } from '../app';
+import { UPLOAD_DIR } from '../config/paths';
 
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { UsuarioResponse } from '../interfaces/UsuarioResponse';

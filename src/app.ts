@@ -8,20 +8,20 @@ if (env === 'development') {
   logger.info('Cargando variables de entorno desde .env.dev.local...');
   dotenv.config({ path: '.env.dev.local' });
   startFakeFtpServer();
+
 } else if (env === 'production.local') {
   logger.info('Cargando variables de entorno desde .env.prod.local...');
   dotenv.config({ path: '.env.prod.local' });
+
 } else if (env === 'production.remote') {
-  logger.info('Cargando variables de entorno desde .env.prod.remote...');
-  dotenv.config({ path: '.env.prod.remote' });
+  logger.info('Usando variables de entorno de DigitalOcean (sin cargar .env).');
+
 } else {
-  logger.warn(
-    `El entorno ${env} no está definido. Cargando las variables de entorno por defecto...`
-  );
+  logger.warn(`El entorno ${env} no está definido. Cargando las variables de entorno por defecto...`);
   dotenv.config();
 }
 
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -76,16 +76,56 @@ const limiter = rateLimit({
 });
 
 app.use(helmet());
+
+// CORS
+
+// app.use(
+//   cors({
+//     origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+//     credentials: true,
+//   })
+// );
+
+// app.use(
+//   cors({
+//     origin: env === 'development' ? true : 'https://tu-dominio.com', // CAMBIARLO PARA PRODUCCIÓN
+//     credentials: true,
+//   })
+// );
+
+const allowedOrigins = env === 'development' ? true : [process.env.FRONTEND_URL];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins === true || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('CORS no permitido'));
+      }
+    },
     credentials: true,
   })
 );
+
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       if (!origin) {
+//         return callback(null, true); //Permitir requests sin origen
+//       }
+//       callback(null, true); //Permitir cualquier origen dinámicamente
+//     },
+//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], // Permitir todos los métodos HTTP
+//     allowedHeaders: ["Content-Type", "Authorization"], //Permitir estos headers
+//     credentials: true, //Permitir cookies y autenticación con credenciales
+//   })
+// );
+
 app.use(express.json());
 app.use(limiter);
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV?.startsWith('production');
 const skipSuccessLogs = (req: Request, res: Response) => res.statusCode < 400;
 
 app.use(
@@ -95,13 +135,17 @@ app.use(
   })
 );
 
-// if (env === 'development') {
-//   setupSwagger(app); // Swagger solo disponible en entorno de desarrollo
-// }
-
 app.use(transactionMiddleware);
 
-setupSwagger(app);
+if (env === 'development') {
+  setupSwagger(app);
+}
+
+// setupSwagger(app);
+
+app.get("/health", (req: Request, res: Response) => {
+  res.status(200).json({ status: "ok" });
+});
 
 app.use(`/${globalPrefix}`, router);
 

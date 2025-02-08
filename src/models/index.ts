@@ -268,23 +268,23 @@ Productora.hasMany(Fonograma, {
   onDelete: 'RESTRICT',
 });
 
-Fonograma.belongsTo(FonogramaArchivo, {
-  foreignKey: 'archivo_audio_id',
-  as: 'archivoDelFonograma',
-  onDelete: 'SET NULL',
-});
+// Fonograma.belongsTo(FonogramaArchivo, {
+//   foreignKey: 'archivo_audio_id',
+//   as: 'archivoAudioDelFonograma',
+//   onDelete: 'SET NULL',
+// });
 
-FonogramaArchivo.hasOne(Fonograma, {
-  foreignKey: 'archivo_audio_id',
-  as: 'fonogramaDelArchivo',
-  onDelete: 'SET NULL',
-});
+// FonogramaArchivo.hasOne(Fonograma, {
+//   foreignKey: 'archivo_audio_id',
+//   as: 'fonogramaDelArchivo',
+//   onDelete: 'SET NULL',
+// });
 
-Fonograma.belongsTo(FonogramaEnvio, {
-  foreignKey: 'envio_vericast_id',
-  as: 'envioDelFonograma',
-  onDelete: 'SET NULL',
-});
+// Fonograma.belongsTo(FonogramaEnvio, {
+//   foreignKey: 'envio_vericast_id',
+//   as: 'envioDelFonograma',
+//   onDelete: 'SET NULL',
+// });
 
 
 
@@ -298,7 +298,7 @@ FonogramaArchivo.belongsTo(Fonograma, {
 
 Fonograma.hasOne(FonogramaArchivo, {
   foreignKey: 'fonograma_id',
-  as: 'archivoAudioDelFonograma',
+  as: 'archivoDelFonograma',
   onDelete: 'RESTRICT',
 });
 

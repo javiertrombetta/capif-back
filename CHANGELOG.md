@@ -1,4 +1,141 @@
 # Changelog
+## v0.2.81 - 08-02-2025
+## 🚀 Features
+
+- feat: add reset db by endpoint
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.78
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.78 - 08-02-2025
+## 🚀 Features
+
+- feat: add reset db by endpoint
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.75
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.75 - 08-02-2025
+## 🚀 Features
+
+- feat: add reset db by endpoint
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.71
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
+## v0.2.71 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change sequelize
+- fix: change sequelize for cloud
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.67
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.67 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change initPosrgres for production.remote
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.64
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.64 - 08-02-2025
+## 🐛 Fixes
+
+- fix: chage env for Digital Ocean
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.61
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.61 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change production behaviour
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.58
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.58 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change CORS in app.ts
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.55
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.55 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change app.ts for CORS with Digital Ocean
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.52
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.52 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change relations in models and initPostgres
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.49
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.49 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change Dockerfile for init postgres
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.46
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.2.46 - 08-02-2025
+## 🐛 Fixes
+
+- fix: change CORS in app.ts and Dockerfile
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.43
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.43 - 07-02-2025
 ## 🚀 Features
 

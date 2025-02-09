@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.88 - 09-02-2025
+## 🐛 Fixes
+
+- fix: change controllers in producers and auth
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.85
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.85 - 08-02-2025
 ## 🐛 Fixes
 

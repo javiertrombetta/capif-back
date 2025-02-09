@@ -183,7 +183,7 @@ const initSeed = async () => {
     const vistas = await vistasData();
     await UsuarioVista.bulkCreate(vistas);
 
-    console.log("init.seed completado con éxito.");
+    console.log("[SEED] init.seed completado con éxito.");
   } catch (error) {
     console.error("Error al ejecutar init.seed:", error);
     throw error;

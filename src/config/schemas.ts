@@ -973,8 +973,24 @@ export const producersSchemas = {
     title: "Productoras - Obtener Todas las Productoras",
     type: "object",
     properties: {
-        productoras: {
+        total: {
+            type: "integer",
+            example: 25,
+            description: "Número total de productoras encontradas.",
+        },
+        totalPages: {
+            type: "integer",
+            example: 5,
+            description: "Cantidad total de páginas disponibles.",
+        },
+        currentPage: {
+            type: "integer",
+            example: 1,
+            description: "Página actual de la respuesta.",
+        },
+        data: {
             type: "array",
+            description: "Lista de productoras en la página actual.",
             items: {
                 type: "object",
                 properties: {
@@ -993,7 +1009,7 @@ export const producersSchemas = {
                         type: "string",
                         enum: ["FISICA", "JURIDICA"],
                         description: "Tipo de persona jurídica de la productora.",
-                        example: "FISICA",
+                        example: "JURIDICA",
                     },
                     cuit_cuil: {
                         type: "string",
@@ -1036,65 +1052,11 @@ export const producersSchemas = {
                         description: "Cantidad de fonogramas asociados a la productora.",
                         example: 0,
                     },
-                    denominacion_sello: {
+                    estado: {
                         type: "string",
-                        description: "Denominación del sello de la productora.",
-                        example: "Sello Ejemplo",
-                    },
-                    datos_adicionales: {
-                        type: "string",
-                        description: "Información adicional sobre la productora.",
-                        example: "Productora especializada en música.",
-                    },
-                    fecha_alta: {
-                        type: "string",
-                        format: "date-time",
-                        description: "Fecha en que la productora fue autorizada.",
-                        example: "2025-02-05T13:29:51.610Z",
-                        nullable: true,
-                    },
-                    fecha_ultimo_fonograma: {
-                        type: "string",
-                        format: "date-time",
-                        description: "Fecha del último fonograma registrado.",
-                        example: null,
-                        nullable: true,
-                    },
-                    nombres: {
-                        type: "string",
-                        description: "Nombre del titular de la productora (si es persona física).",
-                        example: "Juan",
-                        nullable: true,
-                    },
-                    apellidos: {
-                        type: "string",
-                        description: "Apellido del titular de la productora (si es persona física).",
-                        example: "Pérez",
-                        nullable: true,
-                    },
-                    razon_social: {
-                        type: "string",
-                        description: "Razón social de la empresa (si es persona jurídica).",
-                        example: "Empresa S.A.",
-                        nullable: true,
-                    },
-                    apellidos_representante: {
-                        type: "string",
-                        description: "Apellido del representante legal (si es persona jurídica).",
-                        example: "García",
-                        nullable: true,
-                    },
-                    nombres_representante: {
-                        type: "string",
-                        description: "Nombre del representante legal (si es persona jurídica).",
-                        example: "Ana",
-                        nullable: true,
-                    },
-                    cuit_representante: {
-                        type: "string",
-                        description: "CUIT del representante legal (si es persona jurídica).",
-                        example: "20123456785",
-                        nullable: true,
+                        enum: ["Autorizada", "Pendiente"],
+                        description: "Estado de la productora basado en su fecha de alta.",
+                        example: "Autorizada",
                     },
                     usuarioPrincipal: {
                         type: "string",
@@ -1103,11 +1065,25 @@ export const producersSchemas = {
                         example: "2c04a4fa-a049-48e5-8767-a6aba5b746d4",
                         nullable: true,
                     },
-                    estado: {
-                        type: "string",
-                        enum: ["Autorizada", "Pendiente"],
-                        description: "Estado de la productora basado en su fecha de alta.",
-                        example: "Autorizada",
+                    documentos: {
+                        type: "array",
+                        description: "Lista de documentos asociados a la productora.",
+                        items: {
+                            type: "object",
+                            properties: {
+                                nombre: {
+                                    type: "string",
+                                    description: "Tipo de documento.",
+                                    example: "contrato_social",
+                                },
+                                ruta: {
+                                    type: "string",
+                                    format: "uri",
+                                    description: "URL del documento.",
+                                    example: "https://example.com/documentos/contrato_social.pdf",
+                                },
+                            },
+                        },
                     },
                     codigosDeLaProductora: {
                         type: "array",

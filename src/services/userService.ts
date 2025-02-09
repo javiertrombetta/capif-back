@@ -307,7 +307,7 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
   const usuarios = await Usuario.findAll({
     where: whereUsuario,
     include: includeUsuario,
-    limit: filters.limit ?? 50,
+    limit: filters.limit ?? 10,
     offset: filters.offset ?? 0,
   });
 

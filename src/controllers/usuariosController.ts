@@ -21,6 +21,7 @@ import { handleGeneralError } from "../services/errorService";
 
 import * as MESSAGES from "../utils/messages";
 import * as Err from "../utils/customErrors";
+import { formatUserResponse } from "../utils/formatResponse";
 
 
 // HABILITAR O DESHABILITAR EL TIPO REGISTRO DE UN USUARIO
@@ -162,28 +163,7 @@ export const getUsers = async (
     }
 
     // Filtrar y mapear las vistas asociadas para devolver solo los campos requeridos
-    const filteredUsers = usuarios.users.map((usuario) => ({
-      id: usuario.user.id_usuario,
-      email: usuario.user.email,
-      nombre: usuario.user.nombre,
-      apellido: usuario.user.apellido,
-      telefono: usuario.user.telefono,
-      rol: usuario.user.rol?.nombre_rol || null,
-      estado: usuario.user.tipo_registro,
-      isBloqueado: usuario.user.is_bloqueado,
-      productoras: usuario.maestros.map((maestro) => ({
-        id: maestro.productora?.id_productora,
-        productora: maestro.productora?.nombre_productora,
-      })),
-      vistas: usuario.vistas
-        .filter((vistaMaestro) => vistaMaestro.vista)
-        .map((vistaMaestro) => ({
-          id_vista_maestro: vistaMaestro.id_vista_maestro,
-          is_habilitado: vistaMaestro.is_habilitado,
-          nombre_vista: vistaMaestro.vista?.nombre_vista,
-          nombre_vista_superior: vistaMaestro.vista?.nombre_vista_superior,
-        })),
-    }));
+    const filteredUsers = usuarios.users.map(formatUserResponse);
 
     res.status(200).json({
       total: usuarios.total,

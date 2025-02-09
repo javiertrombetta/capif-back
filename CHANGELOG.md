@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.95 - 09-02-2025
+## 🐛 Fixes
+
+- fix: change npm version
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.92
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.92 - 09-02-2025
 ## 🚀 Features
 

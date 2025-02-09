@@ -20,6 +20,7 @@ import { repertoiresSwaggerDocs } from '../docs/repertoiresSwagger';
 import { conflictsSwaggerDocs } from '../docs/conflictsSwagger';
 import { cashflowSwaggerDocs } from '../docs/cashflowSwagger';
 import { auditsSwaggerDocs } from '../docs/auditsSwagger';
+import { miscSwaggerDocs } from '../docs/miscSwagger';
 
 const DOMAIN = process.env.FRONTEND_URL;
 const PORT = process.env.PORT;
@@ -57,6 +58,7 @@ const swaggerOptions = {
         ...conflictsSchemas,
         ...cashflowSchemas,
         ...auditsSchemas,
+        ...miscSwaggerDocs,
       },
     },
     servers: [
@@ -72,6 +74,7 @@ const swaggerOptions = {
       ...conflictsSwaggerDocs.tags,
       ...cashflowSwaggerDocs.tags,
       ...auditsSwaggerDocs.tags,
+      ...miscSwaggerDocs.tags,
     ],
     paths: {
       ...authSwaggerDocs.paths,
@@ -81,6 +84,7 @@ const swaggerOptions = {
       ...conflictsSwaggerDocs.paths,
       ...cashflowSwaggerDocs.paths,
       ...auditsSwaggerDocs.paths,
+      ...miscSwaggerDocs.paths
     },
   },
   apis: ['./src/routes/*.ts'],

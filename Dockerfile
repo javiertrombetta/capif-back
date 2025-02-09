@@ -1,11 +1,11 @@
-FROM --platform=$BUILDPLATFORM node:23.7-alpine3.21 AS build-deps
+FROM --platform=$BUILDPLATFORM node:23.7.0-alpine3.21 AS build-deps
 WORKDIR /app
 
 COPY .sequelizerc ./
 COPY package*.json ./
 
 RUN apk add --no-cache postgresql-client
-
+RUN npm install -g npm@11.1.0 && npm cache clean --force
 RUN npm install --frozen-lockfile && npm cache clean --force
 
 FROM build-deps AS builder
@@ -16,7 +16,7 @@ COPY tsconfig.json ./
 
 RUN npm run build && ls -R ./dist
 
-FROM --platform=$BUILDPLATFORM node:23.7-alpine3.21 AS production
+FROM --platform=$BUILDPLATFORM node:23.7.0-alpine3.21 AS production
 WORKDIR /app
 
 # COPY --from=builder /usr/src/app/entrypoint.sh /usr/src/app/entrypoint.sh

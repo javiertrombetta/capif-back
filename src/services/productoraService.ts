@@ -30,8 +30,10 @@ export const findAllProductoras = async (filters: {
   nombre?: string;
   cuit?: string;
   estado?: string;
+  page?: number;
+  limit?: number;
 }) => {
-  const { nombre, cuit, estado } = filters;
+  const { nombre, cuit, estado, page = 1, limit = 10 } = filters;
 
   // Construir filtros dinámicos
   const whereClause: any = {};
@@ -41,11 +43,6 @@ export const findAllProductoras = async (filters: {
       whereClause.fecha_alta = { [Op.ne]: null }; // Autorizada: fecha_alta no es nula
     } else if (estado === "Pendiente") {
       whereClause.fecha_alta = { [Op.eq]: null }; // Pendiente: fecha_alta es nula
-    }
-  } else {
-    // Si no se pasa un estado y tampoco otros filtros, devuelve solo autorizadas
-    if (!nombre && !cuit) {
-      whereClause.fecha_alta = { [Op.ne]: null }; // solo Autorizadas
     }
   }
 
@@ -57,6 +54,9 @@ export const findAllProductoras = async (filters: {
   if (cuit) {
     whereClause.cuit_cuil = { [Op.eq]: cuit }; // Filtro exacto por CUIT
   }
+
+  // Calcular paginación
+  const offset = (page - 1) * limit;
 
   // Buscar usuarios con rol productor_principal
   const usuariosPrincipales = await UsuarioMaestro.findAll({
@@ -88,9 +88,14 @@ export const findAllProductoras = async (filters: {
     }
   });
 
-  // Buscar todas las productoras con filtros
+  // Contar total de registros sin paginación
+  const totalProductoras = await Productora.count({ where: whereClause });
+
+  // Buscar productoras con paginación
   const productoras = await Productora.findAll({
     where: whereClause,
+    limit,
+    offset,
     include: [
       {
         model: ProductoraISRC,
@@ -100,24 +105,52 @@ export const findAllProductoras = async (filters: {
     ],
   });
 
-  if (!productoras || productoras.length === 0) {
+  // Si la base de datos está completamente vacía, lanzar error
+  if (!productoras.length && totalProductoras === 0) {
     throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
   }
 
-  // Agregar el id_usuario del productor_principal y el estado a cada productora
+  // Obtener los documentos por separado y mapearlos por productora
+  const documentos = await ProductoraDocumento.findAll({
+    include: [
+      {
+        model: ProductoraDocumentoTipo,
+        as: "tipoDeDocumento",
+        attributes: ["nombre_documento"],
+      },
+    ],
+  });
+
+  const documentosPorProductora = new Map();
+  documentos.forEach((doc) => {
+    if (!documentosPorProductora.has(doc.productora_id)) {
+      documentosPorProductora.set(doc.productora_id, []);
+    }
+    documentosPorProductora.get(doc.productora_id).push({
+      nombre: doc.tipoDeDocumento?.nombre_documento,
+      ruta: doc.ruta_archivo_documento,
+    });
+  });
+
+  // Agregar el id_usuario del productor_principal, el estado y documentos a cada productora
   const productorasConUsuario = productoras.map((productora) => {
     const estado = productora.fecha_alta ? "Autorizada" : "Pendiente";
 
     return {
       usuarioPrincipal: productoraUsuarioMap.get(productora.id_productora) || null,
       estado,
+      documentos: documentosPorProductora.get(productora.id_productora) || [],
       ...productora.toJSON(),
     };
   });
 
-  return productorasConUsuario;
+  return {
+    total: totalProductoras,
+    totalPages: Math.ceil(totalProductoras / limit),
+    currentPage: page,
+    data: productorasConUsuario,
+  };
 };
-
 // Servicio para obtener una productora por ID
 export const findProductoraById = async (id: string) => {
   // Buscar la productora con sus códigos ISRC
@@ -229,13 +262,24 @@ export const getDocumentosMetadata = async (productoraId: string) => {
   const documentos = await ProductoraDocumento.findAll({
     where: { productora_id: productoraId },
     attributes: ["id_documento", "ruta_archivo_documento"],
+    include: [
+      {
+        model: ProductoraDocumentoTipo,
+        as: "tipoDeDocumento",
+        attributes: ["nombre_documento"],
+      },
+    ],
   });
 
   if (!documentos || documentos.length === 0) {
     throw new Err.NotFoundError(MESSAGES.ERROR.DOCUMENTOS.NOT_FOUND);
   }
 
-  return documentos;
+  return documentos.map((doc) => ({
+    id_documento: doc.id_documento,
+    ruta_archivo_documento: doc.ruta_archivo_documento,
+    tipo_documento: doc.tipoDeDocumento?.nombre_documento || "Desconocido",
+  }));
 };
 
 // Servicio para obtener un documento puntual de una productora

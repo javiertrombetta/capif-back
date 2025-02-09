@@ -2,13 +2,17 @@ import { Productora, ProductoraDocumento, ProductoraDocumentoTipo, ProductoraPre
 
 const seedProductoraData = async () => {
   try {
-    // Obtener una productora existente
-    const productora = await Productora.findOne({
-      where: { nombre_productora: 'WARNER MUSIC ARGENTINA SA' },
+    // Obtener las productoras existentes
+    const productoraWarner = await Productora.findOne({
+      where: { nombre_productora: 'WARNER MUSIC ARGENTINA S.A.' },
     });
 
-    if (!productora) {
-      throw new Error('La productora WARNER MUSIC ARGENTINA SA no fue encontrada.');
+    const productoraSony = await Productora.findOne({
+      where: { nombre_productora: 'SONY MUSIC ENTERTAINMENT ARGENTINA S.A.' },
+    });
+
+    if (!productoraWarner || !productoraSony) {
+      throw new Error('No se encontraron todas las productoras requeridas (WARNER y SONY).');
     }
 
     // Buscar los tipos de documentos existentes
@@ -24,37 +28,50 @@ const seedProductoraData = async () => {
       throw new Error('Los tipos de documento contrato_social o comprobante_ISRC no fueron encontrados.');
     }
 
-    // Crear documentos para la productora con los tipos existentes
+    // Crear documentos para ambas productoras
     await ProductoraDocumento.bulkCreate([
       {
-        productora_id: productora.id_productora,
+        productora_id: productoraWarner.id_productora,
         tipo_documento_id: contratoSocial.id_documento_tipo,
-        ruta_archivo_documento: 'https://example.com/documentos/contrato_social.pdf',
+        ruta_archivo_documento: 'https://example.com/documentos/warner_contrato_social.pdf',
       },
       {
-        productora_id: productora.id_productora,
+        productora_id: productoraWarner.id_productora,
         tipo_documento_id: comprobanteISRC.id_documento_tipo,
-        ruta_archivo_documento: 'https://example.com/documentos/comprobante_ISRC.pdf',
+        ruta_archivo_documento: 'https://example.com/documentos/warner_comprobante_ISRC.pdf',
+      },
+      {
+        productora_id: productoraSony.id_productora,
+        tipo_documento_id: contratoSocial.id_documento_tipo,
+        ruta_archivo_documento: 'https://example.com/documentos/sony_contrato_social.pdf',
+      },
+      {
+        productora_id: productoraSony.id_productora,
+        tipo_documento_id: comprobanteISRC.id_documento_tipo,
+        ruta_archivo_documento: 'https://example.com/documentos/sony_comprobante_ISRC.pdf',
       },
     ]);
 
-    // Crear postulaciones para la productora
+    console.log('Documentos asignados a WARNER MUSIC y SONY MUSIC ENTRETAINMENT.');
+
+    // Crear postulaciones solo para WARNER
     const fechaAsignacion = new Date();
 
     await ProductoraPremio.bulkCreate([
       {
-        productora_id: productora.id_productora,
+        productora_id: productoraWarner.id_productora,
         codigo_postulacion: 'POST001',
         fecha_asignacion: fechaAsignacion,
       },
       {
-        productora_id: productora.id_productora,
+        productora_id: productoraWarner.id_productora,
         codigo_postulacion: 'POST002',
         fecha_asignacion: fechaAsignacion,
       },
     ]);
 
-    console.log('productoras.seed completado con éxito.');
+    console.log('Premios creados: POST001 y POST002 para WARNER MUSIC ARGENTINA S.A.');
+    console.log('[SEED] productoras.seed completado con éxito.');
 
   } catch (error) {
     console.error('Error durante el seeding de productoras.seed: ', error);

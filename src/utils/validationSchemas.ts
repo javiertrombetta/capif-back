@@ -752,6 +752,7 @@ export const getProductorasQuerySchema = Joi.object({
       "string.max": "El nombre no puede superar los 255 caracteres.",
       "string.pattern.base": "El nombre solo puede contener letras, números y espacios.",
     }),
+
   cuit: Joi.string()
     .length(11)
     .regex(/^\d+$/)
@@ -761,11 +762,34 @@ export const getProductorasQuerySchema = Joi.object({
       "string.length": "El CUIT debe tener exactamente 11 dígitos.",
       "string.pattern.base": "El CUIT solo puede contener números.",
     }),
+
   estado: Joi.string()
     .valid("Autorizada", "Pendiente")
     .optional()
     .messages({
       "any.only": "El estado debe ser 'Autorizada' o 'Pendiente'.",
+    }),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .optional()
+    .messages({
+      "number.base": "El número de página debe ser un número válido.",
+      "number.integer": "El número de página debe ser un entero.",
+      "number.min": "El número de página debe ser al menos 1.",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(50)
+    .optional()
+    .messages({
+      "number.base": "El límite debe ser un número válido.",
+      "number.integer": "El límite debe ser un número entero.",
+      "number.min": "El límite debe ser al menos 1.",
+      "number.max": "El límite no puede ser mayor a 50.",
     }),
 });
 

@@ -45,6 +45,7 @@ import sequelize from './sequelize';
 import initSeed from '../../seeders/init.seed';
 import usersSeed from '../../seeders/usuarios.seed';
 import producersSeed from '../../seeders/productoras.seed';
+import repertoiresSeed from '../../seeders/fonogramas.seed';
 
 // const execPromise = util.promisify(exec);
 
@@ -77,6 +78,7 @@ const runSeeders = async (): Promise<void> => {
     await initSeed();
     await usersSeed();
     await producersSeed();
+    await repertoiresSeed();
     logger.info('[INIT POSTGRES] Seeders ejecutados exitosamente.');
 
   } catch (error) {

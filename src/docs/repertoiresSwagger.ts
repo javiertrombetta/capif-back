@@ -1436,6 +1436,42 @@ export const repertoiresSwaggerDocs = {
                 }
             }
         },
+        "/repertoires/isrc/prefix": {
+            get: {
+                summary: "Obtener prefijo ISRC",
+                description:
+                "Devuelve los primeros 7 caracteres de un ISRC basado en la productora del usuario autenticado. El usuario debe tener el rol adecuado para acceder a esta información.",
+                tags: ["Repertorios"],
+                security: [{ bearerAuth: [] }],
+                responses: {
+                200: {
+                    description: "Prefijo ISRC obtenido exitosamente.",
+                    content: {
+                    "application/json": {
+                        schema: {
+                        type: "object",
+                        properties: {
+                            message: {
+                            type: "string",
+                            example: "Prefijo ISRC obtenido parar la productora ID: 987e6543-e21b-11d3-b456-426614174000",
+                            },
+                            data: {
+                            type: "string",
+                            description: "Los primeros 7 caracteres de un ISRC.",
+                            example: "AR98725",
+                            },
+                        },
+                        },
+                    },
+                    },
+                },
+                400: { description: "Datos inválidos o falta el ID de la productora en el token." },
+                401: { description: "Usuario no autenticado." },
+                403: { description: "Usuario no autorizado para obtener el prefijo ISRC." },
+                500: { description: "Error interno del servidor." },
+                },
+            },
+         },
         "/repertoires/isrc/validate": {
             post: {
                 summary: "Validar ISRC",

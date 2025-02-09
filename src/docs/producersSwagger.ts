@@ -6,7 +6,7 @@ export const producersSwaggerDocs = {
         },
     ],
     paths: {
-        "/producers/{id}/documentos/{docId}": {
+        "/producers/{id}/docs/{docId}": {
             put: {
                 summary: "Actualizar un documento específico por ID",
                 description: "Actualiza los detalles de un documento asociado a una productora por su ID.",
@@ -161,7 +161,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/producers/{id}/documentos/zip": {
+        "/producers/{id}/docs/zip": {
             get: {
                 summary: "Obtener todos los archivos de una productora",
                 description: "Devuelve un archivo ZIP con todos los documentos asociados a la productora por su ID.",
@@ -189,10 +189,10 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/producers/{id}/documentos": {
+        "/producers/{id}/docs": {
             post: {
-                summary: "Crear un documento para una productora",
-                description: "Permite subir un archivo asociado a una productora.",
+                summary: "Subir un documento para una productora",
+                description: "Permite subir un documento asociado a una productora. Si ya existe un documento del mismo tipo, se sobrescribe con el nuevo archivo.",
                 tags: ["Productoras"],
                 security: [{ bearerAuth: [] }],
                 parameters: [
@@ -227,8 +227,8 @@ export const producersSwaggerDocs = {
                                             "comprobante_ISRC",
                                             "contrato_social",
                                         ],
-                                        description: "Tipo de documento a subir.",
-                                    },                                   
+                                        description: "Tipo de documento a subir. Solo se permite un archivo por tipo.",
+                                    },
                                 },
                                 required: ["documento", "tipoDocumento"],
                             },
@@ -236,16 +236,71 @@ export const producersSwaggerDocs = {
                     },
                 },
                 responses: {
-                    201: { description: "Documento creado exitosamente." },
-                    400: { description: "Datos inválidos o archivo faltante." },
+                    201: {
+                        description: "Documento creado o actualizado exitosamente.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: {
+                                            type: "string",
+                                            example: "Documentos creados exitosamente.",
+                                        },
+                                        documentos: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    id_documento: {
+                                                        type: "string",
+                                                        format: "uuid",
+                                                        description: "ID del documento.",
+                                                        example: "123e4567-e89b-12d3-a456-426614174000",
+                                                    },
+                                                    tipo_documento: {
+                                                        type: "string",
+                                                        description: "Tipo de documento subido.",
+                                                        example: "Contrato Social",
+                                                    },
+                                                    ruta_archivo_documento: {
+                                                        type: "string",
+                                                        format: "uri",
+                                                        description: "URL o ruta donde se almacenó el documento.",
+                                                        example: "https://example.com/documentos/documento.pdf",
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    400: {
+                        description: "Solicitud incorrecta. Puede deberse a un archivo faltante o un tipo de documento inválido.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: {
+                                            type: "string",
+                                            example: "Error: Debe subir al menos un archivo.",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     401: { description: "Usuario no autenticado." },
-                    403: { description: "Usuario no autorizado." },
+                    403: { description: "Usuario no autorizado para realizar esta acción." },
                     500: { description: "Error interno del servidor." },
                 },
             },
             get: {
                 summary: "Obtener metadatos de todos los documentos de una productora",
-                description: "Devuelve los IDs y las rutas de los documentos asociados a la productora.",
+                description: "Devuelve los metadatos de los documentos asociados a una productora, incluyendo el tipo de documento.",
                 tags: ["Productoras"],
                 security: [{ bearerAuth: [] }],
                 parameters: [
@@ -261,31 +316,38 @@ export const producersSwaggerDocs = {
                     },
                 ],
                 responses: {
-                200: {
-                    description: "Metadatos de documentos obtenidos exitosamente.",
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "object",
-                                properties: {
-                                    message: {
-                                        type: "string",
-                                        example: "Metadatos de documentos obtenidos exitosamente.",
-                                    },
-                                    documentos: {
-                                        type: "array",
-                                        items: {
-                                            type: "object",
-                                            properties: {
-                                                id_documento: {
-                                                    type: "string",
-                                                    description: "ID del documento.",
-                                                    example: "123e4567-e89b-12d3-a456-426614174000",
-                                                },
-                                                ruta_archivo_documento: {
-                                                    type: "string",
-                                                    description: "Ruta del archivo del documento.",
-                                                    example: "/uploads/documento.pdf",
+                    200: {
+                        description: "Metadatos de documentos obtenidos exitosamente.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: {
+                                            type: "string",
+                                            example: "Metadatos de documentos obtenidos exitosamente.",
+                                        },
+                                        documentos: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    id_documento: {
+                                                        type: "string",
+                                                        format: "uuid",
+                                                        description: "ID del documento.",
+                                                        example: "123e4567-e89b-12d3-a456-426614174000",
+                                                    },
+                                                    ruta_archivo_documento: {
+                                                        type: "string",
+                                                        description: "Ruta del archivo del documento.",
+                                                        example: "https://example.com/documentos/documento.pdf",
+                                                    },
+                                                    tipo_documento: {
+                                                        type: "string",
+                                                        description: "Tipo de documento.",
+                                                        example: "Contrato Social",
+                                                    },
                                                 },
                                             },
                                         },
@@ -294,7 +356,6 @@ export const producersSwaggerDocs = {
                             },
                         },
                     },
-                },
                     400: { description: "Parámetros inválidos." },
                     401: { description: "Usuario no autenticado." },
                     403: { description: "Usuario no autorizado." },
@@ -549,7 +610,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/producers/{id}/postulaciones": {
+        "/producers/{id}/awards": {
             get: {
                 summary: "Obtener postulaciones de una productora",
                 description: "Devuelve las postulaciones asociadas a una productora por su ID.",
@@ -682,7 +743,7 @@ export const producersSwaggerDocs = {
                 },
             },
         },
-        "/producers/postulaciones": {
+        "/producers/awards": {
             post: {
                 summary: "Crear postulaciones masivamente",
                 description: "Crea postulaciones para productoras filtrando por un rango de fechas.",
@@ -978,7 +1039,7 @@ export const producersSwaggerDocs = {
             },
             get: {
                 summary: "Obtener todas las productoras",
-                description: "Devuelve una lista de todas las productoras con sus detalles e ISRCs asociados. Permite filtrar por nombre, CUIT y estado.",
+                description: "Devuelve una lista paginada de todas las productoras con sus detalles, documentos e ISRCs asociados. Permite filtrar por nombre, CUIT y estado.",
                 tags: ["Productoras"],
                 security: [{ bearerAuth: [] }],
                 parameters: [
@@ -1008,6 +1069,27 @@ export const producersSwaggerDocs = {
                             type: "string",
                             enum: ["Autorizada", "Pendiente"],
                             example: "Autorizada",
+                        },
+                    },
+                    {
+                        name: "page",
+                        in: "query",
+                        description: "Número de página para la paginación (por defecto 1).",
+                        schema: {
+                            type: "integer",
+                            example: 1,
+                            minimum: 1,
+                        },
+                    },
+                    {
+                        name: "limit",
+                        in: "query",
+                        description: "Cantidad de registros por página (máximo 100).",
+                        schema: {
+                            type: "integer",
+                            example: 10,
+                            minimum: 1,
+                            maximum: 50,
                         },
                     },
                 ],

@@ -9,7 +9,7 @@ import Client from "ftp";
 
 import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 
-import { Fonograma, FonogramaArchivo, FonogramaEnvio, FonogramaMaestro, FonogramaParticipacion, FonogramaTerritorio, FonogramaTerritorioMaestro, Productora, ProductoraISRC, Usuario, UsuarioMaestro } from "../models";
+import { Fonograma, FonogramaArchivo, FonogramaEnvio, FonogramaMaestro, FonogramaParticipacion, FonogramaTerritorio, FonogramaTerritorioMaestro, Productora, ProductoraISRC } from "../models";
 
 import { getAuthenticatedUser, getTargetUser } from "./authService";
 import { registrarAuditoria } from "./auditService";
@@ -552,6 +552,23 @@ export const getFonogramaById = async (id: string) => {
 
     // Devolver el fonograma encontrado
     return fonograma;
+};
+
+export const generateISRCPrefix = async (productoraId: string): Promise<string> => {
+  if (!productoraId || typeof productoraId !== "string") {
+    throw new Err.BadRequestError(MESSAGES.ERROR.PRODUCTORA.ID_REQUIRED);
+  }
+
+  const productoraISRC = await ProductoraISRC.findOne({
+    where: { productora_id: productoraId, tipo: "AUDIO" },
+  });
+
+  if (!productoraISRC) {
+    throw new Err.NotFoundError(MESSAGES.ERROR.ISRC.ISRC_PRODUCTORA_INVALID);
+  }
+
+  const currentYear = new Date().getFullYear().toString().slice(-2);
+  return `AR${productoraISRC.codigo_productora}${currentYear}`;
 };
 
 export const updateFonograma = async (id: string, req: any) => {

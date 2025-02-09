@@ -31,7 +31,8 @@ import { actualizarFechaFinSesion, registrarAuditoria, registrarSesion } from ".
 
 import * as Err from "../utils/customErrors";
 import * as MESSAGES from "../utils/messages";
-import { ProductoraDocumento } from "../models";
+import { formatUserResponse } from "../utils/formatResponse";
+import { ProductoraDocumento, ProductoraDocumentoTipo } from "../models";
 
 
 // LOGIN
@@ -877,92 +878,123 @@ export const getRegistrosPendientes = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    logger.info(
-      `${req.method} ${req.originalUrl} - Solicitud recibida para obtener registro(s) pendiente(s).`
-    );
+    logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para obtener registro(s) pendiente(s).`);
 
-    const { usuarioId } = req.query;;
+    const { usuarioId } = req.query;
 
     if (usuarioId) {
       // Obtener datos del usuario pasado como parámetro
       const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ userId: usuarioId as string }, req);
 
       if (targetUser.tipo_registro !== "ENVIADO") {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Usuario no tiene registro pendiente.`
-        );
-        return next(
-          new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS)
-        );
+        logger.warn(`${req.method} ${req.originalUrl} - Usuario no tiene registro pendiente.`);
+        return next(new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS));
       }
 
       if (targetMaestros.length > 1) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`
-        );
-        return next(
-          new Err.NotFoundError(
-            MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
-          )
-        );
+        logger.warn(`${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`);
+        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL));
       }
 
-      const productoras = targetMaestros
-        .filter((maestro) => maestro.productora)
-        .map((maestro) => maestro.productora);
-
-      if (productoras.length === 0) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - No se encontraron productoras asociadas para el usuario.`
-        );
-        return next(
-          new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS)
-        );
+      if (targetMaestros.length === 0) {
+        logger.warn(`${req.method} ${req.originalUrl} - No se encontraron productoras asociadas para el usuario.`);
+        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS));
       }
+
+      // Obtener documentos de la productora asociada al usuario
+      const productoraId = targetMaestros[0].productora_id;
+      const documentos = await ProductoraDocumento.findAll({
+        where: { productora_id: productoraId },
+        include: [
+          {
+            model: ProductoraDocumentoTipo,
+            as: "tipoDeDocumento",
+            attributes: ["nombre_documento"],
+          },
+        ],
+      });
+
+      const documentosFormatted = documentos.map((doc) => ({
+        nombre: doc.tipoDeDocumento?.nombre_documento,
+        ruta: doc.ruta_archivo_documento,
+      }));
 
       return res.status(200).json({
-        message: MESSAGES.SUCCESS.APPLICATION.SAVED,
-        data: { targetUser, productoras },
+        total: 1,
+        totalPages: 1,
+        currentPage: 1,
+        data: [
+          {
+            ...formatUserResponse({ user: targetUser, maestros: targetMaestros, vistas: [] }),
+            documentos: documentosFormatted, // ✅ Agregamos los documentos aquí
+          },
+        ],
       });
     } else {
       // Obtener datos de todos los usuarios pendientes
       const pendingUsersData = await findUsuarios({ tipo_registro: "ENVIADO" });
 
       if (!pendingUsersData || !pendingUsersData.users.length) {
-        logger.info(
-          `${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes.`
-        );
-        return next(
-          new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS)
-        );
+        logger.info(`${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes.`);
+        return next(new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS));
       }
 
-      const usersWithSingleMaestro = pendingUsersData.users.filter(
-        (user) => user.hasSingleMaestro
-      );
+      const usersWithSingleMaestro = pendingUsersData.users.filter((user) => user.hasSingleMaestro);
 
       if (usersWithSingleMaestro.length === 0) {
-        logger.info(
-          `${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes con un único maestro asociado.`
-        );
-        return next(
-          new Err.NotFoundError(
-            MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL
-          )
-        );
+        logger.info(`${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes con un único maestro.`);
+        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL));
       }
 
-      logger.info(
-        `${req.method} ${req.originalUrl} - ${usersWithSingleMaestro.length} usuarios pendientes encontrados.`
-      );
+      // Obtener todas las productoras asociadas a los usuarios pendientes
+      const productoraIds = usersWithSingleMaestro.map((user) => user.maestros[0]?.productora_id).filter(Boolean);
+
+      // Obtener documentos de todas las productoras asociadas
+      const documentos = await ProductoraDocumento.findAll({
+        where: { productora_id: productoraIds },
+        include: [
+          {
+            model: ProductoraDocumentoTipo,
+            as: "tipoDeDocumento",
+            attributes: ["nombre_documento"],
+          },
+        ],
+      });
+
+      // Crear un mapa de documentos por productora
+      const documentosPorProductora = new Map();
+      documentos.forEach((doc) => {
+        if (!documentosPorProductora.has(doc.productora_id)) {
+          documentosPorProductora.set(doc.productora_id, []);
+        }
+        documentosPorProductora.get(doc.productora_id).push({
+          nombre: doc.tipoDeDocumento?.nombre_documento,
+          ruta: doc.ruta_archivo_documento,
+        });
+      });
+
+      // Formatear los usuarios y agregar documentos
+      const formattedUsers = usersWithSingleMaestro.map((user) => ({
+        ...formatUserResponse(user),
+        documentos: documentosPorProductora.get(user.maestros[0]?.productora_id) || [],
+      }));
+
+      const totalUsers = formattedUsers.length;
+      const limit = Number(req.query.limit) || 50;
+      const totalPages = Math.ceil(totalUsers / limit);
+      const currentPage = Number(req.query.page) || 1;
+
+      logger.info(`${req.method} ${req.originalUrl} - ${totalUsers} usuarios pendientes con un único maestro encontrados.`);
 
       return res.status(200).json({
-        message: MESSAGES.SUCCESS.APPLICATION.FOUND,
-        data: usersWithSingleMaestro,
+        total: totalUsers,
+        totalPages,
+        currentPage,
+        data: formattedUsers,
       });
     }
   } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error al obtener los registros pendientes');    
+    handleGeneralError(err, req, res, next, "Error al obtener los registros pendientes");
   }
 };
 

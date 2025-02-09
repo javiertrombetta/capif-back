@@ -63,6 +63,23 @@ export const getFonogramaById = async (req: Request, res: Response, next: NextFu
   }
 };
 
+export const getISRCPrefix = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    logger.info(`${req.method} ${req.originalUrl} - Obteniendo prefijo ISRC.`);
+
+    if (!req.productoraId) {
+      throw new Error("No se encontró el ID de la productora en el token.");
+    }
+
+    const isrcPrefix = await repertorioService.generateISRCPrefix(req.productoraId);
+
+    return res.status(200).json({ message: `Prefijo ISRC obtenido parar la productora ID: ${req.productoraId}`, data: isrcPrefix });
+
+  } catch (err) {
+    handleGeneralError(err, req, res, next, "Error al obtener el prefijo ISRC");
+  }
+};
+
 export const updateFonograma = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     logger.info(`${req.method} ${req.originalUrl} - Actualizando fonograma con ID: ${req.params.id}`);

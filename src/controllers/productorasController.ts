@@ -40,21 +40,26 @@ export const getAllProductoras = async (req: Request, res: Response, next: NextF
     logger.info(`${req.method} ${req.originalUrl} - Solicitud para obtener todas las productoras.`);
 
     // Capturar filtros desde los query params
-    const { nombre, cuit, estado } = req.query;
+    const { nombre, cuit, estado, page, limit } = req.query;
 
-    const productoras = await productoraService.findAllProductoras({
+    const result = await productoraService.findAllProductoras({
       nombre: nombre as string,
       cuit: cuit as string,
       estado: estado as string,
+      page: Number(page) || 1,
+      limit: Number(limit) || 10,
     });
 
-    logger.info(`${req.method} ${req.originalUrl} - Se encontraron ${productoras.length} productoras.`);
-    res.status(200).json({ productoras });
+    logger.info(
+      `${req.method} ${req.originalUrl} - Se encontraron ${result.total} productoras en ${result.totalPages} páginas.`
+    );
+
+    res.status(200).json(result);
 
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al obtener todas las productoras");
   }
-};
+}; 
 
 // Crear una productora por ID
 export const createProductora = async (req: Request, res: Response, next: NextFunction) => {

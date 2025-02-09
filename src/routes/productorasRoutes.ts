@@ -61,7 +61,7 @@ const router = express.Router();
 
 // Rutas para Documentos de Productoras
 router.get(
-  "/:id/documentos/zip",
+  "/:id/docs/zip",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
   celebrate({
@@ -71,7 +71,7 @@ router.get(
 );
 
 router.get(
-  "/:id/documentos/:docId",
+  "/:id/docs/:docId",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
   celebrate({
@@ -82,7 +82,7 @@ router.get(
 
 
 router.get(
-  "/:id/documentos",
+  "/:id/docs",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
   celebrate({
@@ -92,7 +92,7 @@ router.get(
 );
 
 router.post(
-  "/:id/documentos",
+  "/:id/docs",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal", "admin_secundario"]),
   uploadDocuments,
@@ -100,7 +100,7 @@ router.post(
 );
 
 router.put(
-  "/:id/documentos/:docId",
+  "/:id/docs/:docId",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal"]),
   celebrate({
@@ -111,7 +111,7 @@ router.put(
 );
 
 router.delete(
-  "/:id/documentos/:docId",
+  "/:id/docs/:docId",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal"]),
   celebrate({
@@ -121,7 +121,7 @@ router.delete(
 );
 
 router.delete(
-  "/:id/documentos",
+  "/:id/docs",
   authenticate,
   authorizeRoles(["productor_principal", "admin_principal"]),
   celebrate({
@@ -182,7 +182,7 @@ router.delete(
 
 // Rutas para Postulaciones de Premios
 router.get(
-  "/:id/postulaciones",
+  "/:id/awards",
   authenticate,
   authorizeRoles(["productor_principal", "productor_secundario", "admin_principal", "admin_secundario"]),
   celebrate({
@@ -192,7 +192,7 @@ router.get(
 );
 
 router.get(
-  "/postulaciones",
+  "/awards",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({
@@ -202,7 +202,7 @@ router.get(
 );
 
 router.post(
-  "/postulaciones",
+  "/awards",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({
@@ -212,7 +212,7 @@ router.post(
 );
 
 router.put(
-  "/:id/postulaciones",
+  "/:id/awards",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({
@@ -223,7 +223,7 @@ router.put(
 );
 
 router.delete(
-  "/:id/postulaciones",
+  "/:id/awards",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({
@@ -233,7 +233,7 @@ router.delete(
 );
 
 router.delete(
-  "/postulaciones",
+  "/awards",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   deleteAllPostulaciones

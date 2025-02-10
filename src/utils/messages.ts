@@ -33,11 +33,19 @@ export const SUCCESS = {
   },
   CONFLICTO: {
     CONFLICTO_CREATED: 'Conflicto creado exitosamente.',
+    CONFLICTO_FETCHED: 'Conflicto obtenido exitosamente.',
     CONFLICTO_RESOLVED: 'Conflicto resuelto exitosamente.',
+    CONFLICTO_CANCELED: 'Conflicto cancelado exitosamente.',
+    STATUS_UPDATED: 'El estado del conflicto fue actualizado exitosamente',
     COMENTARIO_ADDED: 'Comentario agregado exitosamente.',
     INVOLUCRADO_ADDED: 'Involucrado agregado exitosamente.',
     DECISION_ADDED: 'Decisión agregada exitosamente.',
     CONFLICTO_DELETED: 'Conflicto eliminado exitosamente.',
+    RESOLUTION_APPLIED: 'Resolución aplicada exitosamente.',
+    EXTENSION_GRANTED: 'Prórroga otorgada exitosamente.',
+    PARTICIPATION_CONFIRMED_PENDING: 'Confirmación de porcentaje de titularidad aplicado exitosamente.',
+    DOCUMENTS_SENT: 'Documentos enviados exitosamente.',
+    REPORT_GENERATED: 'Reporte generado exitosamente.',
   },
   PRODUCTORA: {
     PRODUCTORA_CREATED: 'Productora creado exitosamente.',
@@ -139,7 +147,8 @@ export const ERROR = {
     TERRITORIO_ALREADY_EXIST: 'El territorio ya está asociado a este fonograma.',
     TERRITORIO_STATUS_NOT_FOUND: 'El campo is_activo debe ser true o false.',
     ENVIO_STATE_INVALID: 'El estado proporcionado no es válido.',
-    NO_CSV_FOUND: 'No se proporcionó un archivo CSV.'
+    NO_CSV_FOUND: 'No se proporcionó un archivo CSV.',
+    DATES_INVALID: 'Las fechas proporcionadas son inválidas.'
   },
   REGISTER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
@@ -210,7 +219,15 @@ export const ERROR = {
   },
   CONFLICTO: {
     NOT_FOUND: 'El conflicto no fue encontrado.',
-    INVALID_TYPE: 'El tipo de conflicto es inválido.',
+    NO_CONFLICTS_FOUND: 'No se encontraron conflictos',
+    INVALID_STATE: 'El estado del conflicto es inválido.',
+    NO_SUPERPOSITION_FOUND: 'No se encontraron períodos con porcentaje de participación superior al 100%',
+    PART_NOT_FOUND: ' No se encontró la participación en conflicto.',
+    EXCEEDS_100_PERCENT: 'Existen titularidades que simultáneamente superan el 100% de participación.',
+    CANNOT_EXTEND: 'No se puede extender otra instancia a la actual.',
+    NO_DOCUMENTS_ATTACHED: 'No se adjuntaron documentos.',
+    MAIN_EMAIL_NOT_CONFIGURED: 'No se encontraron los parámetros del correo electrónico a enviar.',
+    INVALID_REPORT_FORMAT: 'Formato de reporte inválido',
   },
   ESTADO: {
     NOT_FOUND: 'El estado no fue encontrado.',

@@ -17,10 +17,11 @@ class ConflictoParte extends Model {
   public conflicto_id!: string;
   public participacion_id!: string;
   public estado!: (typeof TIPO_ESTADOS)[number];
-  public porcentaje_anterior!: number | null;
+  public porcentaje_declarado!: number | null;
   public porcentaje_confirmado!: number | null;
   public is_documentos_enviados!: boolean;
-  public fecha_respuesta!: Date | null;
+  public fecha_respuesta_confirmacion!: Date | null;
+  public fecha_respuesta_documentacion!: Date | null;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -74,7 +75,7 @@ ConflictoParte.init(
       allowNull: false,
       defaultValue: 'PENDIENTE',
     },
-    porcentaje_anterior: {
+    porcentaje_declarado: {
       type: DataTypes.INTEGER,
       allowNull: true,
       validate: {
@@ -113,9 +114,21 @@ ConflictoParte.init(
       allowNull: false,
       defaultValue: false,
     },
-    fecha_respuesta: {
+    fecha_respuesta_confirmacion: {
       type: DataTypes.DATE,
       allowNull: true,
+      defaultValue: null,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de respuesta debe ser una fecha válida.',
+        },
+      },
+    },
+    fecha_respuesta_documentacion: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
       validate: {
         isDate: {
           args: true,

@@ -7,6 +7,7 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  DIGITAL_OCEAN_API_TOKEN: ${{ secrets.DIGITAL_OCEAN_API_TOKEN }}
   CI_COMMIT_MESSAGE: Automatic CI for push on main and Docker Hub
 
 jobs:
@@ -238,3 +239,19 @@ jobs:
           --push \
           --cache-from=type=local,src=/tmp/.buildx-cache \
           --cache-to=type=local,dest=/tmp/.buildx-cache .
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
+      - name: Deploy to Digital Ocean
+        env:
+          DIGITAL_OCEAN_API_TOKEN: ${{ secrets.DIGITAL_OCEAN_API_TOKEN }}
+          IMAGE_TAG: ${{ needs.semantic_version.outputs.version_tag }}
+        run: |
+          echo "Forzando despliegue en Digital Ocean..."
+          curl -X POST "https://api.digitalocean.com/v2/apps/d403a38b-2237-431d-a7fe-7947aa726049/deployments" \
+            -H "Authorization: Bearer $DIGITAL_OCEAN_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+          echo "Despliegue iniciado en Digital Ocean"

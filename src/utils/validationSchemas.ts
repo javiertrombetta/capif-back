@@ -1428,3 +1428,288 @@ export const deleteFonogramaParamsSchema = Joi.object({
       "any.required": "El parámetro 'id' es obligatorio.",
     }),
 });
+
+//  end of repertoiresRoutes
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// strart of conflictsRoutes
+
+// Esquema para validar los parámetros de la URL en el envío de documentos
+export const enviarDocumentosParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+    "string.uuid": "El ID del conflicto debe ser un UUID válido.",
+    "any.required": "El ID del conflicto es obligatorio.",
+  }),
+});
+
+// Esquema para validar el cuerpo de la solicitud en el envío de documentos
+export const enviarDocumentosBodySchema = Joi.object({
+  nombre_participante: Joi.string().min(3).max(100).required().messages({
+    "string.min": "El nombre del participante debe tener al menos 3 caracteres.",
+    "string.max": "El nombre del participante no puede exceder los 100 caracteres.",
+    "any.required": "El nombre del participante es obligatorio.",
+  }),
+});
+
+
+// Esquema para validar los parámetros de la URL en la confirmación de porcentaje
+export const confirmarPorcentajeParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+    "string.uuid": "El ID del conflicto debe ser un UUID válido.",
+    "any.required": "El ID del conflicto es obligatorio.",
+  }),
+});
+
+// Esquema para validar el cuerpo de la solicitud en la confirmación de porcentaje
+export const confirmarPorcentajeBodySchema = Joi.object({
+  participacion_id: uuidSchema.messages({
+    "string.uuid": "El ID de la participación debe ser un UUID válido.",
+    "any.required": "El ID de la participación es obligatorio.",
+  }),
+  porcentaje_confirmado: Joi.number()
+    .min(0)
+    .max(100)
+    .required()
+    .messages({
+      "number.min": "El porcentaje confirmado no puede ser menor a 0.",
+      "number.max": "El porcentaje confirmado no puede ser mayor a 100.",
+      "any.required": "El porcentaje confirmado es obligatorio.",
+    }),
+});
+
+
+// Esquema para validar el cuerpo de la solicitud en la creación de un conflicto
+export const crearConflictoBodySchema = Joi.object({
+  isrc: Joi.string()
+    .length(12)
+    .regex(/^[A-Z]{2}[A-Z0-9]{10}$/)
+    .required()
+    .messages({
+      "string.length": "El ISRC debe tener exactamente 12 caracteres.",
+      "string.pattern.base": "El ISRC debe comenzar con dos letras seguidas de 10 caracteres alfanuméricos.",
+      "any.required": "El ISRC es obligatorio.",
+    }),
+  fecha_periodo_desde: Joi.date()
+    .iso()
+    .required()
+    .messages({
+      "date.base": "La fecha de inicio debe ser una fecha válida.",
+      "date.format": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD).",
+      "any.required": "La fecha de inicio es obligatoria.",
+    }),
+  fecha_periodo_hasta: Joi.date()
+    .iso()
+    .greater(Joi.ref("fecha_periodo_desde"))
+    .required()
+    .messages({
+      "date.base": "La fecha de finalización debe ser una fecha válida.",
+      "date.format": "La fecha de finalización debe estar en formato ISO (YYYY-MM-DD).",
+      "date.greater": "La fecha de finalización debe ser posterior a la fecha de inicio.",
+      "any.required": "La fecha de finalización es obligatoria.",
+    }),
+});
+
+
+// Esquema para validar la consulta en la generación de reportes de conflictos
+export const generarReporteConflictosQuerySchema = Joi.object({
+  fecha_desde: Joi.date()
+    .iso()
+    .optional()
+    .messages({
+      "date.base": "La fecha de inicio debe ser una fecha válida.",
+      "date.format": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD).",
+    }),
+  fecha_hasta: Joi.date()
+    .iso()
+    .greater(Joi.ref("fecha_desde"))
+    .optional()
+    .messages({
+      "date.base": "La fecha de finalización debe ser una fecha válida.",
+      "date.format": "La fecha de finalización debe estar en formato ISO (YYYY-MM-DD).",
+      "date.greater": "La fecha de finalización debe ser posterior a la fecha de inicio.",
+    }),
+  estado: Joi.string()
+    .valid("PENDIENTE CAPIF", "PRIMERA INSTANCIA", "PRIMERA PRORROGA", "SEGUNDA INSTANCIA", "SEGUNDA PRORROGA", "VENCIDO", "CERRADO")
+    .optional()
+    .messages({
+      "any.only": "El estado debe ser uno de los siguientes: PENDIENTE CAPIF, PRIMERA INSTANCIA, PRIMERA PRORROGA, SEGUNDA INSTANCIA, SEGUNDA PRORROGA, VENCIDO o CERRADO.",
+    }),
+  isrc: Joi.string()
+    .length(12)
+    .regex(/^[A-Z]{2}[A-Z0-9]{10}$/)
+    .optional()
+    .messages({
+      "string.length": "El ISRC debe tener exactamente 12 caracteres.",
+      "string.pattern.base": "El ISRC debe comenzar con dos letras seguidas de 10 caracteres alfanuméricos.",
+    }),
+  productora_id: uuidSchema.optional(),
+  formato: Joi.string()
+    .valid("json", "csv")
+    .optional()
+    .messages({
+      "any.only": "El formato debe ser 'json' o 'csv'.",
+    }),
+});
+
+// Esquema para validar los parámetros de la URL en la obtención de un conflicto
+export const obtenerConflictoParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+    "string.uuid": "El ID del conflicto debe ser un UUID válido.",
+    "any.required": "El ID del conflicto es obligatorio.",
+  }),
+});
+
+
+// Esquema para validar la consulta en la obtención de conflictos
+export const obtenerConflictosQuerySchema = Joi.object({
+  fecha_desde: Joi.date()
+    .iso()
+    .optional()
+    .messages({
+      "date.base": "La fecha de inicio debe ser una fecha válida.",
+      "date.format": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD).",
+    }),
+  fecha_hasta: Joi.date()
+    .iso()
+    .greater(Joi.ref("fecha_desde"))
+    .optional()
+    .messages({
+      "date.base": "La fecha de finalización debe ser una fecha válida.",
+      "date.format": "La fecha de finalización debe estar en formato ISO (YYYY-MM-DD).",
+      "date.greater": "La fecha de finalización debe ser posterior a la fecha de inicio.",
+    }),
+  estado: Joi.string()
+    .valid("PENDIENTE CAPIF", "PRIMERA INSTANCIA", "PRIMERA PRORROGA", "SEGUNDA INSTANCIA", "SEGUNDA PRORROGA", "VENCIDO", "CERRADO", "en curso")
+    .optional()
+    .messages({
+      "any.only": "El estado debe ser uno de los siguientes: PENDIENTE CAPIF, PRIMERA INSTANCIA, PRIMERA PRORROGA, SEGUNDA INSTANCIA, SEGUNDA PRORROGA, VENCIDO, CERRADO o 'en curso'.",
+    }),
+  isrc: Joi.string()
+    .length(12)
+    .regex(/^[A-Z]{2}[A-Z0-9]{10}$/)
+    .optional()
+    .messages({
+      "string.length": "El ISRC debe tener exactamente 12 caracteres.",
+      "string.pattern.base": "El ISRC debe comenzar con dos letras seguidas de 10 caracteres alfanuméricos.",
+    }),
+  productora_id: uuidSchema.optional(),
+});
+
+
+// Esquema para validar los parámetros de la URL en la cancelación (desistir) de un conflicto
+export const desistirConflictoParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+    "string.uuid": "El ID del conflicto debe ser un UUID válido.",
+    "any.required": "El ID del conflicto es obligatorio.",
+  }),
+});
+
+// Esquema para validar los parámetros de la URL en la otorgación de prórroga de un conflicto
+export const otorgarProrrogaParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+    "string.uuid": "El ID del conflicto debe ser un UUID válido.",
+    "any.required": "El ID del conflicto es obligatorio.",
+  }),
+});
+
+// Esquema para validar los parámetros de la URL en la actualización del estado de un conflicto
+export const actualizarEstadoConflictoParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+    "string.uuid": "El ID del conflicto debe ser un UUID válido.",
+    "any.required": "El ID del conflicto es obligatorio.",
+  }),
+});
+
+// Esquema para validar el cuerpo de la solicitud en la actualización del estado de un conflicto
+export const actualizarEstadoConflictoBodySchema = Joi.object({
+  estado_conflicto: Joi.string()
+    .valid(
+      "PENDIENTE CAPIF",
+      "PRIMERA INSTANCIA",
+      "PRIMERA PRORROGA",
+      "SEGUNDA INSTANCIA",
+      "SEGUNDA PRORROGA",
+      "VENCIDO",
+      "CERRADO"
+    )
+    .required()
+    .messages({
+      "any.only":
+        "El estado debe ser uno de los siguientes: PENDIENTE CAPIF, PRIMERA INSTANCIA, PRIMERA PRORROGA, SEGUNDA INSTANCIA, SEGUNDA PRORROGA, VENCIDO o CERRADO.",
+      "any.required": "El estado del conflicto es obligatorio.",
+    }),
+});
+
+// Esquema para validar los parámetros de la URL en la actualización de resolución de un conflicto
+export const actualizarPorResolucionParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+    "string.uuid": "El ID del conflicto debe ser un UUID válido.",
+    "any.required": "El ID del conflicto es obligatorio.",
+  }),
+});
+
+// Esquema para validar el cuerpo de la solicitud en la actualización de resolución de un conflicto
+export const actualizarPorResolucionBodySchema = Joi.object({
+  resoluciones: Joi.array()
+    .items(
+      Joi.object({
+        id_conflicto_participacion: uuidSchema.messages({
+          "string.uuid": "El ID de la participación en conflicto debe ser un UUID válido.",
+          "any.required": "El ID de la participación en conflicto es obligatorio.",
+        }),
+        porcentaje_participacion: Joi.number()
+          .min(0)
+          .max(100)
+          .required()
+          .messages({
+            "number.min": "El porcentaje de participación no puede ser menor a 0.",
+            "number.max": "El porcentaje de participación no puede ser mayor a 100.",
+            "any.required": "El porcentaje de participación es obligatorio.",
+          }),
+        fecha_participacion_inicio: Joi.date()
+          .iso()
+          .required()
+          .messages({
+            "date.base": "La fecha de inicio de participación debe ser una fecha válida.",
+            "date.format": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD).",
+            "any.required": "La fecha de inicio de participación es obligatoria.",
+          }),
+        fecha_participacion_hasta: Joi.date()
+          .iso()
+          .greater(Joi.ref("fecha_participacion_inicio"))
+          .required()
+          .messages({
+            "date.base": "La fecha de finalización de participación debe ser una fecha válida.",
+            "date.format": "La fecha de finalización debe estar en formato ISO (YYYY-MM-DD).",
+            "date.greater": "La fecha de finalización debe ser posterior a la fecha de inicio.",
+            "any.required": "La fecha de finalización de participación es obligatoria.",
+          }),
+      })
+    )
+    .min(1)
+    .required()
+    .messages({
+      "array.min": "Debe haber al menos una resolución en la solicitud.",
+      "any.required": "La lista de resoluciones es obligatoria.",
+    }),
+});
+
+// Esquema para validar los parámetros de la URL en la eliminación de un conflicto
+export const eliminarConflictoParamsSchema = Joi.object({
+  id: uuidSchema.messages({
+    "string.uuid": "El ID del conflicto debe ser un UUID válido.",
+    "any.required": "El ID del conflicto es obligatorio.",
+  }),
+});
+
+
+//  end of conflictsRoutes
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// strart of cashflowRoutes

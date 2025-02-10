@@ -1,4 +1,19 @@
 # Changelog
+## v0.3.17 - 10-02-2025
+## 🐛 Fixes
+
+- fix: change cookies for secure
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.13
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.3.13 - 10-02-2025
 ## 🚀 Features
 

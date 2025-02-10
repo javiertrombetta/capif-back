@@ -46,6 +46,7 @@ import initSeed from '../../seeders/init.seed';
 import usersSeed from '../../seeders/usuarios.seed';
 import producersSeed from '../../seeders/productoras.seed';
 import repertoiresSeed from '../../seeders/fonogramas.seed';
+import conflictsSeed from '../../seeders/conflictos.seed';
 
 // const execPromise = util.promisify(exec);
 
@@ -79,6 +80,7 @@ const runSeeders = async (): Promise<void> => {
     await usersSeed();
     await producersSeed();
     await repertoiresSeed();
+    await conflictsSeed();
     logger.info('[INIT POSTGRES] Seeders ejecutados exitosamente.');
 
   } catch (error) {

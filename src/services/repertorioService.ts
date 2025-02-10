@@ -9,7 +9,7 @@ import Client from "ftp";
 
 import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 
-import { Fonograma, FonogramaArchivo, FonogramaEnvio, FonogramaMaestro, FonogramaParticipacion, FonogramaTerritorio, FonogramaTerritorioMaestro, Productora, ProductoraISRC } from "../models";
+import { Conflicto, ConflictoParte, Fonograma, FonogramaArchivo, FonogramaEnvio, FonogramaMaestro, FonogramaParticipacion, FonogramaTerritorio, FonogramaTerritorioMaestro, Productora, ProductoraISRC } from "../models";
 
 import { getAuthenticatedUser, getTargetUser } from "./authService";
 import { registrarAuditoria } from "./auditService";
@@ -18,6 +18,7 @@ import * as MESSAGES from "../utils/messages";
 import * as Err from "../utils/customErrors";
 import { sendEmailWithErrorHandling } from "./emailService";
 import { createProductoraMessage } from "./productoraService";
+import { crearConflicto } from "./conflictosService";
 
 
 export const validateISRC = async (isrc: string) => {
@@ -186,6 +187,9 @@ export const createFonograma = async (req: any) => {
             overlappingPeriods.push(
                 `Entre ${fecha_inicio} y ${fecha_hasta} se supera el 100% con un total de ${porcentajeSuperpuesto}%`
             );
+
+            // Llamar automáticamente a crearConflicto cuando se detecte exceso de participación
+            await crearConflicto(req, isrc, fecha_inicio, fecha_hasta);
         }
     }    
 
@@ -440,6 +444,9 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                             conflictos.push(
                                 `Conflicto en el fonograma con ISRC '${isrc}': El porcentaje total supera el 100% entre ${fecha_inicio} y ${fecha_hasta} (${porcentajeSuperpuesto}%)`
                             );
+
+                            // Llamar automáticamente a crearConflicto cuando se detecte exceso de participación
+                            await crearConflicto(req, isrc, fecha_inicio, fecha_hasta);
                         }
                     }
                 }                
@@ -635,7 +642,6 @@ export const updateFonograma = async (id: string, req: any) => {
 };
 
 export const deleteFonograma = async (id: string, req: any) => {
-
     // Verifica el usuario autenticado
     const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
@@ -647,34 +653,47 @@ export const deleteFonograma = async (id: string, req: any) => {
     }
 
     try {
-      // Eliminar asociaciones relacionadas
-      await Promise.all([
-      FonogramaArchivo.destroy({ where: { fonograma_id: id } }),
-      FonogramaEnvio.destroy({ where: { fonograma_id: id } }),
-      FonogramaMaestro.destroy({ where: { fonograma_id: id } }),
-      FonogramaParticipacion.destroy({ where: { fonograma_id: id } }),
-      FonogramaTerritorioMaestro.destroy({ where: { fonograma_id: id } }),
-    ]);
+        // Obtener conflictos asociados al fonograma
+        const conflictos = await Conflicto.findAll({ where: { fonograma_id: id } });
 
-      // Eliminar el fonograma
-      await fonograma.destroy();
+        if (conflictos.length > 0) {
+            // Obtener IDs de los conflictos para eliminar sus partes
+            const conflictoIds = conflictos.map(conflicto => conflicto.id_conflicto);
 
-      // Registrar auditoría
-      await registrarAuditoria({
-          usuario_originario_id: authUser.id_usuario,
-          usuario_destino_id: null,
-          modelo: "Fonograma",
-          tipo_auditoria: "BAJA",
-          detalle: `El fonograma con ID '${id}' y todas sus asociaciones han sido eliminados.`,
-      });
+            // Eliminar partes de conflictos asociadas
+            await ConflictoParte.destroy({ where: { conflicto_id: conflictoIds } });
 
-      return {
-          message: `El fonograma con ID '${id}' y sus asociaciones han sido eliminados exitosamente.`,
-      };
+            // Eliminar conflictos
+            await Conflicto.destroy({ where: { fonograma_id: id } });
+        }
+
+        // Eliminar asociaciones relacionadas con el fonograma
+        await Promise.all([
+            FonogramaArchivo.destroy({ where: { fonograma_id: id } }),
+            FonogramaEnvio.destroy({ where: { fonograma_id: id } }),
+            FonogramaMaestro.destroy({ where: { fonograma_id: id } }),
+            FonogramaParticipacion.destroy({ where: { fonograma_id: id } }),
+            FonogramaTerritorioMaestro.destroy({ where: { fonograma_id: id } }),
+        ]);
+
+        // Eliminar el fonograma
+        await fonograma.destroy();
+
+        // Registrar auditoría
+        await registrarAuditoria({
+            usuario_originario_id: authUser.id_usuario,
+            usuario_destino_id: null,
+            modelo: "Fonograma",
+            tipo_auditoria: "BAJA",
+            detalle: `El fonograma con ID '${id}', sus conflictos y todas sus asociaciones han sido eliminados.`,
+        });
+
+        return {
+            message: `El fonograma con ID '${id}', sus conflictos y asociaciones han sido eliminados exitosamente.`,
+        };
     } catch (err: any) {
         throw new Error(`Error al eliminar el fonograma con ID '${id}': ${err.message}`);
     }
-
 };
 
 export const listFonogramas = async (search?: string) => {
@@ -1280,6 +1299,9 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
             overlappingPeriods.push(
                 `Entre ${fecha_inicio} y ${fecha_hasta} se supera el 100% con un total de ${porcentajeSuperpuesto}%`
             );
+
+            // Llamar automáticamente a crearConflicto cuando se detecte exceso de participación
+            await crearConflicto(req, fonograma.isrc, fecha_inicio, fecha_hasta);
         }
     }    
 
@@ -1358,7 +1380,7 @@ export const cargarParticipacionesMasivo = async (req: any) => {
   );
 
   // 4. Validar superposición de períodos
-  participacionesValidas.forEach((participacion, index) => {
+  for (const [index, participacion] of participacionesValidas.entries()) {
     const { isrc, cuit, fecha_inicio, fecha_hasta, porcentaje_titularidad } = participacion;
     const existing = participacionesExistentes[index];
 
@@ -1378,8 +1400,10 @@ export const cargarParticipacionesMasivo = async (req: any) => {
       overlappingPeriods.push(
         `Entre ${fecha_inicio} y ${fecha_hasta}, el porcentaje total (${porcentajeTotal}%) supera el 100%.`
       );
+      // Llamar automáticamente a crearConflicto cuando se detecte exceso de participación
+      await crearConflicto(req, isrc, fecha_inicio, fecha_hasta);
     }
-  });
+  }
 
   // 5. Crear nuevas participaciones en paralelo
   await Promise.all(

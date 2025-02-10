@@ -148,9 +148,10 @@ export const getUsers = async (
 
       const mappedKey = queryMapping[key] || key;
       filters[mappedKey] = ["limit", "offset"].includes(key) ? Number(value) : value;
-    }
+    }    
 
-    const usuarios = await findUsuarios(filters);
+    // Obtener usuarios con los filtros aplicados
+    const usuarios = await findUsuarios(filters);    
 
     if (usuarios.users.length < 1) {
       logger.warn(`${req.method} ${req.originalUrl} - No se encontraron usuarios con los filtros proporcionados.`);
@@ -160,10 +161,10 @@ export const getUsers = async (
     }    
     else{
       logger.info(`${req.method} ${req.originalUrl} - Se encontron ${usuarios.users.length} usuarios.`);
-    }
+    }   
 
     // Filtrar y mapear las vistas asociadas para devolver solo los campos requeridos
-    const filteredUsers = usuarios.users.map(formatUserResponse);
+    const filteredUsers = usuarios.users.map(formatUserResponse);    
 
     res.status(200).json({
       total: usuarios.total,

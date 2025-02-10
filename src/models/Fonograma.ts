@@ -19,7 +19,6 @@ class Fonograma extends Model {
   public anio_lanzamiento!: number;
   public is_dominio_publico!: boolean;
   public cantidad_conflictos_activos!: number;
-  public porcentaje_titularidad_total!: number;
   public archivo_audio_id!: string | null;
   public envio_vericast_id!: string | null;
 
@@ -162,18 +161,7 @@ Fonograma.init(
           msg: 'La cantidad de conflictos activos no puede ser negativa.',
         },
       },
-    },
-    porcentaje_titularidad_total: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-      validate: {
-        min: {
-          args: [0],
-          msg: 'El porcentaje de titularidad total no puede ser menor que 0.',
-        },
-      },
-    },
+    },    
     archivo_audio_id: {
       type: DataTypes.UUID,
       allowNull: true,

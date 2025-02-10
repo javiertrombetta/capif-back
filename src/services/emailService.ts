@@ -2,11 +2,14 @@ import { Request, Response, NextFunction } from 'express';
 import transporter from '../config/nodemailer';
 import logger from '../config/logger';
 import { handleEmailError } from './errorService';
+import { SendMailOptions } from "nodemailer";
 
-interface MailOptions {
+
+interface MailOptions extends SendMailOptions {
   to: string;
   subject: string;
   html: string;
+  attachments?: { filename: string; content: Buffer }[];
 }
 
 /**
@@ -23,18 +26,23 @@ interface MailOptions {
  * });
  */
 export const sendEmail = async (options: MailOptions): Promise<void> => {
-  const mailOptions = {
+  const mailOptions: any = {
     from: process.env.EMAIL_FROM,
     to: options.to,
     subject: options.subject,
     html: options.html,
   };
 
+  // Agregar adjuntos solo si existen
+  if (options.attachments && options.attachments.length > 0) {
+    mailOptions.attachments = options.attachments;
+  }
+
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Correo enviado con éxito:', info.messageId);
+    console.log("Correo enviado con éxito:", info.messageId);
   } catch (error) {
-    console.error('Error al enviar el correo:', error);
+    console.error("Error al enviar el correo:", error);
     throw error;
   }
 };
@@ -45,6 +53,7 @@ interface EmailOptions {
   html: string;
   successLog: string;
   errorLog: string;
+  attachments?: { filename: string; content: Buffer }[];
 }
 
 /**
@@ -76,6 +85,7 @@ export const sendEmailWithErrorHandling = async (
       to: options.to,
       subject: options.subject,
       html: options.html,
+      attachments: options.attachments,
     });
 
     logger.info(`${String(req.method)} ${String(req.originalUrl)} -- ${options.successLog}`);

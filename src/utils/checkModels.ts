@@ -60,29 +60,6 @@ export function calculateLoteAndOrdenPago(lastLote: number | null, lastOrdenCoun
   return { currentLote, ordenPago };
 }
 
-export async function updatePorcentajeTitularidad(
-  fonogramaId: string,
-  FonogramaModel: any,
-  FonogramaParticipacionModel: any
-) {
-  const fonograma = await FonogramaModel.findByPk(fonogramaId);
-  if (fonograma) {
-    const participaciones = await FonogramaParticipacionModel.findAll({
-      where: { fonograma_id: fonogramaId },
-    });
-
-    const totalParticipacion = participaciones.reduce(
-      (total: number, participacion: { porcentaje_participacion: number }) =>
-        total + parseFloat(participacion.porcentaje_participacion.toString()),
-      0
-    );
-
-    fonograma.porcentaje_titularidad_total = totalParticipacion;
-
-    await fonograma.save();
-  }
-}
-
 export async function updateConflictosActivos(fonogramaId: string, ConflictoModel: any, FonogramaModel: any) {
   const conflictosActivosCount = await ConflictoModel.count({
     where: { fonograma_id: fonogramaId, fecha_fin_conflicto: null }

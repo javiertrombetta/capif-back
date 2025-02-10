@@ -2,7 +2,6 @@ import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Fonograma from './Fonograma';
 import Productora from './Productora';
-import { updatePorcentajeTitularidad } from '../utils/checkModels';
 
 class FonogramaParticipacion extends Model {
   public id_participacion!: string;
@@ -123,17 +122,5 @@ FonogramaParticipacion.init(
     ],
   }
 );
-
-FonogramaParticipacion.afterCreate(async (participacion) => {
-  await updatePorcentajeTitularidad(participacion.fonograma_id, Fonograma, FonogramaParticipacion);
-});
-
-FonogramaParticipacion.afterUpdate(async (participacion) => {
-  await updatePorcentajeTitularidad(participacion.fonograma_id, Fonograma, FonogramaParticipacion);
-});
-
-FonogramaParticipacion.afterDestroy(async (participacion) => {
-  await updatePorcentajeTitularidad(participacion.fonograma_id, Fonograma, FonogramaParticipacion);
-});
 
 export default FonogramaParticipacion;

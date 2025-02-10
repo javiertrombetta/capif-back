@@ -187,19 +187,7 @@ export const createFonograma = async (req: any) => {
                 `Entre ${fecha_inicio} y ${fecha_hasta} se supera el 100% con un total de ${porcentajeSuperpuesto}%`
             );
         }
-    }
-
-    // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy para el modelo Productora
-    const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
-        where: {
-            fonograma_id: fonograma.id_fonograma,
-            fecha_participacion_inicio: { [Op.lte]: new Date() },
-            fecha_participacion_hasta: { [Op.gte]: new Date() },
-        },
-    });
-
-        fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
-        await fonograma.save();
+    }    
 
     // Verificar si hubo períodos superpuestos y cargalos como mensaje de retorno
     const message = overlappingPeriods.length > 0
@@ -454,19 +442,7 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                             );
                         }
                     }
-                }
-
-                // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy
-                const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
-                    where: {
-                        fonograma_id: fonograma.id_fonograma,
-                        fecha_participacion_inicio: { [Op.lte]: new Date() },
-                        fecha_participacion_hasta: { [Op.gte]: new Date() },
-                    },
-                });
-
-                fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
-                await fonograma.save();
+                }                
 
                 // Registrar territorios
                 const territoriosHabilitados = await FonogramaTerritorio.findAll({ where: { is_habilitado: true } });
@@ -1305,19 +1281,7 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
                 `Entre ${fecha_inicio} y ${fecha_hasta} se supera el 100% con un total de ${porcentajeSuperpuesto}%`
             );
         }
-    }
-
-    // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy
-    const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
-        where: {
-            fonograma_id: fonograma.id_fonograma,
-            fecha_participacion_inicio: { [Op.lte]: new Date() },
-            fecha_participacion_hasta: { [Op.gte]: new Date() },
-        },
-    });
-
-    fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
-    await fonograma.save();
+    }    
 
     // Responder con mensaje de éxito o advertencias
     const message = overlappingPeriods.length > 0
@@ -1441,25 +1405,9 @@ export const cargarParticipacionesMasivo = async (req: any) => {
         detalle: `Se registró la participación de la productora con CUIT '${cuit}' en el fonograma '${isrc}'`,
       })
     )
-  );
+  ); 
 
-  // 7. Recalcular porcentaje total de titularidad de cada fonograma
-  await Promise.all(
-    fonogramas.map(async (fonograma) => {
-      const totalParticipationToday = await FonogramaParticipacion.sum("porcentaje_participacion", {
-        where: {
-          fonograma_id: fonograma.id_fonograma,
-          fecha_participacion_inicio: { [Op.lte]: new Date() },
-          fecha_participacion_hasta: { [Op.gte]: new Date() },
-        },
-      });
-
-      fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
-      await fonograma.save();
-    })
-  );
-
-  // 8. Devolver respuesta final
+  // 7. Devolver respuesta final
   const message =
     overlappingPeriods.length > 0
       ? `Carga completada con advertencias: ${overlappingPeriods.join("; ")}`
@@ -1599,19 +1547,7 @@ export const updateParticipacion = async (fonogramaId: string, participacionId: 
         modelo: "FonogramaParticipacion",
         tipo_auditoria: "CAMBIO",
         detalle: `Se actualizó la participación de la productora con CUIT '${participacion.productoraDeParticipante?.cuit_cuil}' para el fonograma con ID '${fonogramaId}'`,
-    });
-
-    // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy
-    const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
-        where: {
-            fonograma_id: fonogramaId,
-            fecha_participacion_inicio: { [Op.lte]: new Date() },
-            fecha_participacion_hasta: { [Op.gte]: new Date() },
-        },
-    });
-
-    fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
-    await fonograma.save();
+    });  
 
     return {
         message: "Participación actualizada exitosamente.",
@@ -1664,19 +1600,7 @@ export const deleteParticipacion = async (fonogramaId: string, participacionId: 
                 { fecha_participacion_hasta: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } }
             ]
         }
-    });
-
-    // Recalcular y actualizar el porcentaje total de titularidad del fonograma al día de hoy
-    const totalParticipationToday = await FonogramaParticipacion.sum('porcentaje_participacion', {
-        where: {
-            fonograma_id: fonogramaId,
-            fecha_participacion_inicio: { [Op.lte]: new Date() },
-            fecha_participacion_hasta: { [Op.gte]: new Date() },
-        },
-    });
-
-    fonograma.porcentaje_titularidad_total = totalParticipationToday || 0;
-    await fonograma.save();
+    });   
 
     // Mensaje de advertencia si el total en el período sigue siendo mayor al 100%
     let warningMessage = null;

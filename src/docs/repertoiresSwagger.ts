@@ -1942,11 +1942,7 @@ export const repertoiresSwaggerDocs = {
                                                 estado_fonograma: {
                                                     type: "string",
                                                     example: "ACTIVO"
-                                                },
-                                                porcentaje_titularidad_total: {
-                                                    type: "number",
-                                                    example: 100.0
-                                                }
+                                                },                                                
                                             }
                                         }
                                     }

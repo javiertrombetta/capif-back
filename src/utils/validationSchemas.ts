@@ -1257,7 +1257,7 @@ export const deleteTerritorioParamsSchema = Joi.object({
 export const validateISRCBodySchema = Joi.object({
   isrc: Joi.string()
     .length(12)
-    .pattern(/^AR\d{10}$/)
+    .pattern(/^AR[A-Z0-9]{3}\d{7}$/)
     .required()
     .messages({
       "string.base": "El campo 'isrc' debe ser una cadena de texto.",

@@ -57,7 +57,7 @@ if (!fs.existsSync(UPLOAD_DIR)) {
   const subdirPath = path.join(UPLOAD_DIR, subdir);
   if (!fs.existsSync(subdirPath)) {
     fs.mkdirSync(subdirPath, { recursive: true });
-    logger.info(`📂 Subdirectorio creado en ${subdirPath}`);
+    logger.info(`Subdirectorio creado en ${subdirPath}`);
   }
 });
 

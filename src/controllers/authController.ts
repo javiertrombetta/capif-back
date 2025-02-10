@@ -19,7 +19,7 @@ import {
   linkUserToProductora,
   updateUserRegistrationState,
 } from "../services/userService";
-import { deleteAuditoriasByUsuario, deleteProductoraById, deleteProductoraDocumentos, deleteProductoraMensajes, deleteUsuarioVistaMaestro, getAuthenticatedUser, getTargetUser } from "../services/authService";
+import { confirmProductoraDocuments, createCashflowForProductora, deleteAuditoriasByUsuario, deleteProductoraById, deleteProductoraDocumentos, deleteProductoraMensajes, deleteUsuarioVistaMaestro, getAuthenticatedUser, getDocumentsForPendingUsers, getProductoraDocuments, getTargetUser } from "../services/authService";
 import { createOrUpdateProductora, createProductoraMessage, generarCodigosISRC, getLastRejectionMessage, processDocuments } from "../services/productoraService";
 import { handleGeneralError } from "../services/errorService";
 import {
@@ -32,7 +32,6 @@ import { actualizarFechaFinSesion, registrarAuditoria, registrarSesion } from ".
 import * as Err from "../utils/customErrors";
 import * as MESSAGES from "../utils/messages";
 import { formatUserResponse } from "../utils/formatResponse";
-import { ProductoraDocumento, ProductoraDocumentoTipo } from "../models";
 
 
 // LOGIN
@@ -884,7 +883,10 @@ export const getRegistrosPendientes = async (
 
     if (usuarioId) {
       // Obtener datos del usuario pasado como parámetro
-      const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ userId: usuarioId as string }, req);
+      const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser(
+        { userId: usuarioId as string }, 
+        req
+      );
 
       if (targetUser.tipo_registro !== "ENVIADO") {
         logger.warn(`${req.method} ${req.originalUrl} - Usuario no tiene registro pendiente.`);
@@ -901,23 +903,13 @@ export const getRegistrosPendientes = async (
         return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS));
       }
 
-      // Obtener documentos de la productora asociada al usuario
       const productoraId = targetMaestros[0].productora_id;
-      const documentos = await ProductoraDocumento.findAll({
-        where: { productora_id: productoraId },
-        include: [
-          {
-            model: ProductoraDocumentoTipo,
-            as: "tipoDeDocumento",
-            attributes: ["nombre_documento"],
-          },
-        ],
-      });
+      if (!productoraId) {
+        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS));
+      }
 
-      const documentosFormatted = documentos.map((doc) => ({
-        nombre: doc.tipoDeDocumento?.nombre_documento,
-        ruta: doc.ruta_archivo_documento,
-      }));
+      // Obtener documentos de la productora asociada al usuario
+      const documentos = await getProductoraDocuments(productoraId);
 
       return res.status(200).json({
         total: 1,
@@ -926,7 +918,7 @@ export const getRegistrosPendientes = async (
         data: [
           {
             ...formatUserResponse({ user: targetUser, maestros: targetMaestros, vistas: [] }),
-            documentos: documentosFormatted, // ✅ Agregamos los documentos aquí
+            documentos,
           },
         ],
       });
@@ -934,44 +926,25 @@ export const getRegistrosPendientes = async (
       // Obtener datos de todos los usuarios pendientes
       const pendingUsersData = await findUsuarios({ tipo_registro: "ENVIADO" });
 
-      if (!pendingUsersData || !pendingUsersData.users.length) {
-        logger.info(`${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes.`);
-        return next(new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS));
-      }
+      // if (!pendingUsersData || !pendingUsersData.users.length) {
+      //   logger.info(`${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes.`);
+      //   return next(new Err.NotFoundError(MESSAGES.ERROR.REGISTER.NO_PENDING_USERS));
+      // }
 
       const usersWithSingleMaestro = pendingUsersData.users.filter((user) => user.hasSingleMaestro);
 
-      if (usersWithSingleMaestro.length === 0) {
-        logger.info(`${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes con un único maestro.`);
-        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL));
-      }
+      // if (usersWithSingleMaestro.length === 0) {
+      //   logger.info(`${req.method} ${req.originalUrl} - No se encontraron usuarios pendientes con un único maestro.`);
+      //   return next(new Err.NotFoundError(MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL));
+      // }
 
       // Obtener todas las productoras asociadas a los usuarios pendientes
-      const productoraIds = usersWithSingleMaestro.map((user) => user.maestros[0]?.productora_id).filter(Boolean);
+      const productoraIds = usersWithSingleMaestro
+        .map((user) => user.maestros[0]?.productora_id)
+        .filter((id): id is string => id !== null);
 
       // Obtener documentos de todas las productoras asociadas
-      const documentos = await ProductoraDocumento.findAll({
-        where: { productora_id: productoraIds },
-        include: [
-          {
-            model: ProductoraDocumentoTipo,
-            as: "tipoDeDocumento",
-            attributes: ["nombre_documento"],
-          },
-        ],
-      });
-
-      // Crear un mapa de documentos por productora
-      const documentosPorProductora = new Map();
-      documentos.forEach((doc) => {
-        if (!documentosPorProductora.has(doc.productora_id)) {
-          documentosPorProductora.set(doc.productora_id, []);
-        }
-        documentosPorProductora.get(doc.productora_id).push({
-          nombre: doc.tipoDeDocumento?.nombre_documento,
-          ruta: doc.ruta_archivo_documento,
-        });
-      });
+      const documentosPorProductora = await getDocumentsForPendingUsers(productoraIds);
 
       // Formatear los usuarios y agregar documentos
       const formattedUsers = usersWithSingleMaestro.map((user) => ({
@@ -1056,25 +1029,14 @@ export const approveApplication = async (
     const productoraId = productora.id_productora;
     const isrcs = await generarCodigosISRC(productoraId);
 
-    // Actualizar los documentos asociados con fecha_confirmado
-    const documentos = await ProductoraDocumento.findAll({
-      where: { productora_id: productoraId },
-    });
-
-    if (documentos && documentos.length > 0) {
-      const fechaConfirmacion = new Date();
-      await Promise.all(
-        documentos.map((documento) =>
-          documento.update({ fecha_confirmado: fechaConfirmacion })
-        )
-      );
-      logger.info(
-        `${req.method} ${req.originalUrl} - Documentos confirmados exitosamente para la productora: ${productoraId}`
-      );
-    }
+    // Se mueve la lógica de confirmación de documentos a `authService.ts`
+    await confirmProductoraDocuments(productoraId);
 
     // Actualizar el tipo_registro del usuario a HABILITADO
     await targetUser.update({ tipo_registro: "HABILITADO" });
+    
+    // Crear Cashflow para la productora
+    await createCashflowForProductora(productora);
     
     // Crear relaciones en UsuarioVistasMaestro  
     await assignVistasToUser(targetUser.id_usuario, targetUser.rol_id);
@@ -1098,6 +1060,14 @@ export const approveApplication = async (
       modelo: "ProductoraISRC",
       tipo_auditoria: "ALTA",
       detalle: `Generación de códigos ISRC para la Productora: (${productora.id_productora})`,
+    });
+
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: targetUser.id_usuario,
+      modelo: "Cashflow",
+      tipo_auditoria: "ALTA",
+      detalle: `Generación del cashflow para la Productora: (${productora.id_productora})`,
     });
 
     const validIsrcs = isrcs.map((isrc) => ({

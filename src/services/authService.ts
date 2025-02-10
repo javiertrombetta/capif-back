@@ -5,8 +5,33 @@ import { findUsuarios } from './userService';
 import * as MESSAGES from "../utils/messages";
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { UsuarioResponse } from '../interfaces/UsuarioResponse';
-import { AuditoriaCambio, AuditoriaSesion, Productora, ProductoraDocumento, ProductoraMensaje, UsuarioVistaMaestro } from '../models';
+import { AuditoriaCambio, AuditoriaSesion, Cashflow, Productora, ProductoraDocumento, ProductoraDocumentoTipo, ProductoraMensaje, UsuarioVistaMaestro } from '../models';
 import { Op } from 'sequelize';
+
+/**
+ * Crea un registro de Cashflow para una productora aprobada.
+ * @param productora La productora aprobada
+ */
+export const createCashflowForProductora = async (productora: Productora) => {
+  try {
+    const cashflow = await Cashflow.create({
+      productora_id: productora.id_productora,
+      saldo_actual_productora: 0, // Saldo inicial en 0
+    });
+
+    logger.info(
+      `Cashflow creado con éxito para la Productora: ${productora.id_productora}`
+    );
+
+    return cashflow;
+  } catch (error) {
+    logger.error(
+      `Error al crear Cashflow para la Productora: ${productora.id_productora}`,
+      error
+    );
+    throw new Error('Error al crear Cashflow para la Productora.');
+  }
+};
 
 /**
  * Obtiene y valida al usuario autenticado basado en el token.
@@ -92,6 +117,98 @@ export const getTargetUser = async (
   }
 
   return userData.users[0];
+};
+
+/**
+ * Obtiene los documentos asociados a una productora.
+ * @param productoraId ID de la productora.
+ */
+export const getProductoraDocuments = async (productoraId: string) => {
+  try {
+    const documentos = await ProductoraDocumento.findAll({
+      where: { productora_id: productoraId },
+      include: [
+        {
+          model: ProductoraDocumentoTipo,
+          as: "tipoDeDocumento",
+          attributes: ["nombre_documento"],
+        },
+      ],
+    });
+
+    return documentos.map((doc) => ({
+      nombre: doc.tipoDeDocumento?.nombre_documento,
+      ruta: doc.ruta_archivo_documento,
+    }));
+  } catch (error) {
+    logger.error(
+      `Error al obtener documentos para la productora ${productoraId}:`,
+      error
+    );
+    throw new Error('Error al obtener documentos de la productora.');
+  }
+};
+
+/**
+ * Obtiene los documentos de todas las productoras asociadas a usuarios pendientes.
+ * @param productoraIds Lista de IDs de productoras.
+ */
+export const getDocumentsForPendingUsers = async (productoraIds: string[]) => {
+  try {
+    const documentos = await ProductoraDocumento.findAll({
+      where: { productora_id: productoraIds },
+      include: [
+        {
+          model: ProductoraDocumentoTipo,
+          as: "tipoDeDocumento",
+          attributes: ["nombre_documento"],
+        },
+      ],
+    });
+
+    const documentosPorProductora = new Map();
+    documentos.forEach((doc) => {
+      if (!documentosPorProductora.has(doc.productora_id)) {
+        documentosPorProductora.set(doc.productora_id, []);
+      }
+      documentosPorProductora.get(doc.productora_id).push({
+        nombre: doc.tipoDeDocumento?.nombre_documento,
+        ruta: doc.ruta_archivo_documento,
+      });
+    });
+
+    return documentosPorProductora;
+  } catch (error) {
+    logger.error("Error al obtener documentos de productoras pendientes:", error);
+    throw new Error("Error al obtener documentos de productoras pendientes.");
+  }
+};
+
+/**
+ * Actualiza los documentos asociados a una productora con la fecha de confirmación.
+ * @param productoraId ID de la productora.
+ */
+export const confirmProductoraDocuments = async (productoraId: string) => {
+  try {
+    const documentos = await ProductoraDocumento.findAll({
+      where: { productora_id: productoraId },
+    });
+
+    if (!documentos.length) {
+      logger.info(`No hay documentos para actualizar en la productora: ${productoraId}`);
+      return;
+    }
+
+    const fechaConfirmacion = new Date();
+    await Promise.all(
+      documentos.map((documento) => documento.update({ fecha_confirmado: fechaConfirmacion }))
+    );
+
+    logger.info(`Documentos confirmados exitosamente para la productora: ${productoraId}`);
+  } catch (error) {
+    logger.error(`Error al actualizar documentos para la productora: ${productoraId}`, error);
+    throw new Error('Error al actualizar los documentos de la productora.');
+  }
 };
 
 // Eliminar la productora por ID

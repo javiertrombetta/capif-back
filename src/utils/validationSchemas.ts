@@ -121,46 +121,50 @@ export const productoraBaseSchema = Joi.object({
 });
 
 // Validaciones condicionales para FISICA o JURIDICA
-export const createProductoraSchema = productoraBaseSchema.when("tipo_persona", {
+export const createProductoraSchema = Joi.alternatives().conditional("tipo_persona", {
   is: "FISICA",
-  then: Joi.object({
-    nombres: Joi.string().required().messages({
-      "string.base": "El nombre debe ser un texto.",
-      "string.empty": "El nombre no puede estar vacío.",
-      "any.required": "El nombre es obligatorio para personas físicas.",
-    }),
-    apellidos: Joi.string().required().messages({
-      "string.base": "El apellido debe ser un texto.",
-      "string.empty": "El apellido no puede estar vacío.",
-      "any.required": "El apellido es obligatorio para personas físicas.",
-    }),
-  }),
-  otherwise: Joi.object({
-    razon_social: Joi.string().required().messages({
-      "string.base": "La razón social debe ser un texto.",
-      "string.empty": "La razón social no puede estar vacía.",
-      "any.required": "La razón social es obligatoria para personas jurídicas.",
-    }),
-    nombres_representante: Joi.string().required().messages({
-      "string.base": "El nombre del representante debe ser un texto.",
-      "string.empty": "El nombre del representante no puede estar vacío.",
-      "any.required": "El nombre del representante es obligatorio para personas jurídicas.",
-    }),
-    apellidos_representante: Joi.string().required().messages({
-      "string.base": "El apellido del representante debe ser un texto.",
-      "string.empty": "El apellido del representante no puede estar vacío.",
-      "any.required": "El apellido del representante es obligatorio para personas jurídicas.",
-    }),
-    cuit_representante: Joi.string()
-      .length(11)
-      .required()
-      .messages({
-        "string.base": "El CUIT del representante debe ser un texto.",
-        "string.empty": "El CUIT del representante no puede estar vacío.",
-        "string.length": "El CUIT del representante debe tener exactamente 11 caracteres.",
-        "any.required": "El CUIT del representante es obligatorio para personas jurídicas.",
+  then: productoraBaseSchema.concat(
+    Joi.object({
+      nombres: Joi.string().required().messages({
+        "string.base": "El nombre debe ser un texto.",
+        "string.empty": "El nombre no puede estar vacío.",
+        "any.required": "El nombre es obligatorio para personas físicas.",
       }),
-  }),
+      apellidos: Joi.string().required().messages({
+        "string.base": "El apellido debe ser un texto.",
+        "string.empty": "El apellido no puede estar vacío.",
+        "any.required": "El apellido es obligatorio para personas físicas.",
+      }),
+    })
+  ),
+  otherwise: productoraBaseSchema.concat(
+    Joi.object({
+      razon_social: Joi.string().required().messages({
+        "string.base": "La razón social debe ser un texto.",
+        "string.empty": "La razón social no puede estar vacía.",
+        "any.required": "La razón social es obligatoria para personas jurídicas.",
+      }),
+      nombres_representante: Joi.string().required().messages({
+        "string.base": "El nombre del representante debe ser un texto.",
+        "string.empty": "El nombre del representante no puede estar vacío.",
+        "any.required": "El nombre del representante es obligatorio para personas jurídicas.",
+      }),
+      apellidos_representante: Joi.string().required().messages({
+        "string.base": "El apellido del representante debe ser un texto.",
+        "string.empty": "El apellido del representante no puede estar vacío.",
+        "any.required": "El apellido del representante es obligatorio para personas jurídicas.",
+      }),
+      cuit_representante: Joi.string()
+        .length(11)
+        .required()
+        .messages({
+          "string.base": "El CUIT del representante debe ser un texto.",
+          "string.empty": "El CUIT del representante no puede estar vacío.",
+          "string.length": "El CUIT del representante debe tener exactamente 11 caracteres.",
+          "any.required": "El CUIT del representante es obligatorio para personas jurídicas.",
+        }),
+    })
+  ),
 });
 
 // Document Schema

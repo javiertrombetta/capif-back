@@ -138,7 +138,7 @@ export const login = async (
 
     res.cookie("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV?.startsWith("production"),
+      secure: true,
       sameSite: "none",
       maxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000", 10),
     });
@@ -548,7 +548,7 @@ export const selectAuthProductora = async (
       }),
       {
         httpOnly: true,
-        secure: process.env.NODE_ENV?.startsWith("production"),
+        secure: true,
         sameSite: "none",
         maxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000", 10),
       }

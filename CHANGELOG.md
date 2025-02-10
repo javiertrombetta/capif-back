@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.20 - 10-02-2025
+## 🐛 Fixes
+
+- fix: change validate ISRC
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.17
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.17 - 10-02-2025
 ## 🐛 Fixes
 

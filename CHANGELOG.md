@@ -1,4 +1,19 @@
 # Changelog
+## v0.3.27 - 10-02-2025
+## 🐛 Fixes
+
+- fix: getFonogramaById keys
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.23
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.3.23 - 10-02-2025
 ## 🐛 Fixes
 

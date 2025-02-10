@@ -1,4 +1,12 @@
 # Changelog
+## v0.2.101 - 10-02-2025
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.98
+- chore(docs): update CHANGELOG.MD
+- chore: disabled conflicts
+
+
 ## v0.2.98 - 10-02-2025
 ## 🐛 Fixes
 

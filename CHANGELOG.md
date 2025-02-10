@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.4 - 10-02-2025
+## 🐛 Fixes
+
+- fix: change ci for automatic deploy in host
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.1
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.1 - 10-02-2025
 ## 🚀 Features
 

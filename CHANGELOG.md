@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.13 - 10-02-2025
+## 🚀 Features
+
+- feat: add cashflow schema routes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.10
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.10 - 10-02-2025
 ## 🐛 Fixes
 

@@ -160,3 +160,36 @@ export const resetDatabase = async (req: Request, res: Response) => {
         });
     }
 };
+
+
+export const testCommit = async (req: Request, res: Response) => {
+  try {
+    console.log("[TEST] Insertando datos...");
+    await req.transaction.query(
+      "INSERT INTO Usuario (id_usuario, email, clave) VALUES (gen_random_uuid(), 'test@example.com', 'password123')"
+    );
+
+    res.status(200).json({ message: "Commit realizado con éxito" });
+
+  } catch (error: any) {
+    console.error("[TEST] Error detectado en testCommit:", error);
+    res.status(500).json({ error: "Error en la transacción", details: error.message });
+  }
+};
+
+
+export const testRollback = async (req: Request, res: Response) => {
+  try {
+    console.log("[TEST] Insertando datos...");
+    await req.transaction.query(
+      "INSERT INTO Usuario (id_usuario, email, clave) VALUES (gen_random_uuid(), 'test@example.com', 'password123')"
+    );
+
+    console.log("[TEST] Generando error intencional...");
+    throw new Error("Fallo forzado en la transacción");
+
+  } catch (error: any) {
+    console.error("[TEST] Error detectado en testRollback:", error);
+    res.status(500).json({ error: "Error en la transacción", details: error.message });
+  }
+};

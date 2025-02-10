@@ -494,14 +494,14 @@ export const getFonogramaById = async (id: string) => {
       include: [
         {
           model: FonogramaArchivo,
-          as: "archivos",
-          attributes: ["id_fonograma_archivo", "ruta_archivo_audio"],
+          as: "archivoDelFonograma",
+          attributes: ["id_archivo", "ruta_archivo_audio"],
         },
         {
           model: FonogramaParticipacion,
-          as: "participaciones",
+          as: "participantesDelFonograma",
           attributes: [
-            "id_fonograma_participacion",
+            "id_participacion",
             "productora_id",
             "porcentaje_participacion",
             "fecha_participacion_inicio",
@@ -510,7 +510,7 @@ export const getFonogramaById = async (id: string) => {
         },
         {
           model: FonogramaTerritorioMaestro,
-          as: "territorios",
+          as: "vinculosDelFonograma",
           attributes: ["id_territorio_maestro", "territorio_id", "is_activo"],
         },
       ],

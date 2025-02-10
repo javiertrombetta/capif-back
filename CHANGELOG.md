@@ -1,4 +1,15 @@
 # Changelog
+## v0.2.98 - 10-02-2025
+## 🐛 Fixes
+
+- fix: change res.cookie for none sameSite
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.95
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.2.95 - 09-02-2025
 ## 🐛 Fixes
 

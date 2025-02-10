@@ -247,11 +247,10 @@ jobs:
       - name: Deploy to Digital Ocean
         env:
           DIGITAL_OCEAN_API_TOKEN: ${{ secrets.DIGITAL_OCEAN_API_TOKEN }}
-          IMAGE_TAG: ${{ needs.semantic_version.outputs.version_tag }}
         run: |
-          echo "Forzando despliegue en Digital Ocean..."
+          echo "Forzando reconstrucción y despliegue en Digital Ocean..."
           curl -X POST "https://api.digitalocean.com/v2/apps/d403a38b-2237-431d-a7fe-7947aa726049/deployments" \
             -H "Authorization: Bearer $DIGITAL_OCEAN_API_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{}'
-          echo "Despliegue iniciado en Digital Ocean"
+            -d '{"force_build": true}'
+          echo "Reconstrucción y despliegue iniciados en Digital Ocean"

@@ -270,6 +270,7 @@ export const ERROR = {
     ROLE_NOT_FOUND: 'Rol de productor no encontrado en el sistema.',
     INVALID_TIPO_COMPANIA: 'El tipo de compañía proporcionado no es válido.',
     INVALID_ESTADO: 'El estado proporcionado no es válido.',
+    NO_ENTRIES: 'No existen productoras registradas.'
   },
   DOCUMENTOS: {
     NOT_FOUND: 'No se encontron documentos.',

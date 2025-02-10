@@ -105,11 +105,6 @@ export const findAllProductoras = async (filters: {
     ],
   });
 
-  // Si la base de datos está completamente vacía, lanzar error
-  if (!productoras.length && totalProductoras === 0) {
-    throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
-  }
-
   // Obtener los documentos por separado y mapearlos por productora
   const documentos = await ProductoraDocumento.findAll({
     include: [
@@ -151,6 +146,7 @@ export const findAllProductoras = async (filters: {
     data: productorasConUsuario,
   };
 };
+
 // Servicio para obtener una productora por ID
 export const findProductoraById = async (id: string) => {
   // Buscar la productora con sus códigos ISRC

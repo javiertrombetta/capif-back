@@ -1,161 +1,154 @@
-// import express from "express";
-// import { celebrate, Segments } from "celebrate";
+import express from "express";
+import { celebrate, Segments } from "celebrate";
 
-// import { authenticate, authorizeRoles } from "../middlewares/auth";
-// import { sendFiles } from "../middlewares/conflicto";
+import { authenticate, authorizeRoles } from "../middlewares/auth";
+import { sendFiles } from "../middlewares/conflicto";
 
-// import {
-//   crearConflicto,
-//   obtenerConflictos,
-//   obtenerConflicto,
-//   actualizarEstadoConflicto,
-//   desistirConflicto,
-//   eliminarConflicto,
-//   actualizarPorResolucion,
-//   otorgarProrroga,
-//   confirmarPorcentaje,
-//   enviarDocumentos,
-//   generarReporteConflictos,
-// } from "../controllers/conflictosController";
+import {
+  crearConflicto,
+  obtenerConflictos,
+  obtenerConflicto,
+  actualizarEstadoConflicto,
+  desistirConflicto,
+  eliminarConflicto,
+  actualizarPorResolucion,
+  otorgarProrroga,
+  confirmarPorcentaje,
+  enviarDocumentos,
+  generarReporteConflictos,
+} from "../controllers/conflictosController";
 
-// import {
-//   actualizarEstadoConflictoParamsSchema,
-//   actualizarPorResolucionParamsSchema,
-//   actualizarPorResolucionBodySchema,
-//   confirmarPorcentajeParamsSchema,
-//   confirmarPorcentajeBodySchema,
-//   crearConflictoBodySchema,
-//   desistirConflictoParamsSchema,
-//   eliminarConflictoParamsSchema,
-//   enviarDocumentosParamsSchema,
-//   enviarDocumentosBodySchema,
-//   generarReporteConflictosQuerySchema,
-//   obtenerConflictoParamsSchema,
-//   obtenerConflictosQuerySchema,
-//   otorgarProrrogaParamsSchema,
-// } from "../utils/validationSchemas";
+import {
+  actualizarEstadoConflictoParamsSchema,
+  actualizarPorResolucionParamsSchema,
+  actualizarPorResolucionBodySchema,
+  confirmarPorcentajeParamsSchema,
+  confirmarPorcentajeBodySchema,
+  crearConflictoBodySchema,
+  desistirConflictoParamsSchema,
+  eliminarConflictoParamsSchema,
+  enviarDocumentosParamsSchema,
+  enviarDocumentosBodySchema,
+  generarReporteConflictosQuerySchema,
+  obtenerConflictoParamsSchema,
+  obtenerConflictosQuerySchema,
+  otorgarProrrogaParamsSchema,
+} from "../utils/validationSchemas";
 
-// const router = express.Router();
+const router = express.Router();
 
-// router.post(
-//   "/:id/docs",
-//   authenticate,
-//   authorizeRoles(["productor_principal", "productor_secundario"]),
-//   celebrate({
-//     [Segments.PARAMS]: enviarDocumentosParamsSchema,
-//     [Segments.BODY]: enviarDocumentosBodySchema,
-//   }),
-//   sendFiles,
-//   enviarDocumentos
-// );
+router.post(
+  "/:id/desist",
+  authenticate,
+  authorizeRoles(["productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: desistirConflictoParamsSchema,
+  }),
+  desistirConflicto
+);
 
-// router.post(
-//   "/:id/validate-porcentage",
-//   authenticate,
-//   authorizeRoles(["productor_principal", "productor_secundario"]),
-//   celebrate({
-//     [Segments.PARAMS]: confirmarPorcentajeParamsSchema,
-//     [Segments.BODY]: confirmarPorcentajeBodySchema,
-//   }),
-//   confirmarPorcentaje
-// );
+router.post(
+  "/:id/docs",
+  authenticate,
+  authorizeRoles(["productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: enviarDocumentosParamsSchema,
+    [Segments.BODY]: enviarDocumentosBodySchema,
+  }),
+  sendFiles,
+  enviarDocumentos
+);
 
-// router.post(
-//   "/",
-//   authenticate,
-//   authorizeRoles(["admin_principal", "admin_secundario"]),
-//   celebrate({
-//     [Segments.BODY]: crearConflictoBodySchema,
-//   }),
-//   crearConflicto
-// );
+router.post(
+  "/:id/extension",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: otorgarProrrogaParamsSchema,
+  }),
+  otorgarProrroga
+);
 
-// router.get(
-//   "/reports",
-//   authenticate,
-//   authorizeRoles(["admin_principal", "admin_secundario"]),
-//   celebrate({
-//     [Segments.QUERY]: generarReporteConflictosQuerySchema,
-//   }),
-//   generarReporteConflictos
-// );
+router.post(
+  "/:id/validate-porcentage",
+  authenticate,
+  authorizeRoles(["productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: confirmarPorcentajeParamsSchema,
+    [Segments.BODY]: confirmarPorcentajeBodySchema,
+  }),
+  confirmarPorcentaje
+);
 
-// router.get(
-//   "/:id",
-//   authenticate,
-//   authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
-//   celebrate({
-//     [Segments.PARAMS]: obtenerConflictoParamsSchema,
-//   }),
-//   obtenerConflicto
-// );
+router.post(
+  "/:id",
+  authenticate,
+  authorizeRoles(["admin_principal"]),
+  celebrate({
+    [Segments.PARAMS]: actualizarPorResolucionParamsSchema,
+    [Segments.BODY]: actualizarPorResolucionBodySchema,
+  }),
+  actualizarPorResolucion
+);
 
-// router.get(
-//   "/",
-//   authenticate,
-//   authorizeRoles(["admin_principal", "admin_secundario"]),
-//   celebrate({
-//     [Segments.QUERY]: obtenerConflictosQuerySchema,
-//   }),
-//   obtenerConflictos
-// );
+router.post(
+  "/",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.BODY]: crearConflictoBodySchema,
+  }),
+  crearConflicto
+);
 
-// router.put(
-//   "/:id/desist",
-//   authenticate,
-//   authorizeRoles(["productor_principal", "productor_secundario"]),
-//   celebrate({
-//     [Segments.PARAMS]: desistirConflictoParamsSchema,
-//   }),
-//   desistirConflicto
-// );
+router.get(
+  "/reports",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.QUERY]: generarReporteConflictosQuerySchema,
+  }),
+  generarReporteConflictos
+);
 
-// router.put(
-//   "/:id/extension",
-//   authenticate,
-//   authorizeRoles(["admin_principal", "admin_secundario"]),
-//   celebrate({
-//     [Segments.PARAMS]: otorgarProrrogaParamsSchema,
-//   }),
-//   otorgarProrroga
-// );
+router.get(
+  "/:id",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: obtenerConflictoParamsSchema,
+  }),
+  obtenerConflicto
+);
 
-// router.put(
-//   "/:id/status",
-//   authenticate,
-//   authorizeRoles(["admin_principal", "admin_secundario"]),
-//   celebrate({
-//     [Segments.PARAMS]: actualizarEstadoConflictoParamsSchema,
-//   }),
-//   actualizarEstadoConflicto
-// );
+router.get(
+  "/",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.QUERY]: obtenerConflictosQuerySchema,
+  }),
+  obtenerConflictos
+);
 
-// router.put(
-//   "/:id",
-//   authenticate,
-//   authorizeRoles(["admin_principal"]),
-//   celebrate({
-//     [Segments.PARAMS]: actualizarPorResolucionParamsSchema,
-//     [Segments.BODY]: actualizarPorResolucionBodySchema,
-//   }),
-//   actualizarPorResolucion
-// );
+router.put(
+  "/:id/status",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: actualizarEstadoConflictoParamsSchema,
+  }),
+  actualizarEstadoConflicto
+);
 
-// router.delete(
-//   "/:id",
-//   authenticate,
-//   authorizeRoles(["admin_principal"]),
-//   celebrate({
-//     [Segments.PARAMS]: eliminarConflictoParamsSchema,
-//   }),
-//   eliminarConflicto
-// );
+router.delete(
+  "/:id",
+  authenticate,
+  authorizeRoles(["admin_principal"]),
+  celebrate({
+    [Segments.PARAMS]: eliminarConflictoParamsSchema,
+  }),
+  eliminarConflicto
+);
 
-
-
-
-
-
-
-
-// export default router;
+export default router;

@@ -1,4 +1,19 @@
 # Changelog
+## v0.3.1 - 10-02-2025
+## 🚀 Features
+
+- feat(MINOR): add conflict endpoints
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.2.101
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch feature_conflicts of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.2.101 - 10-02-2025
 ## 🛠️ Maintenance
 

@@ -710,8 +710,8 @@ export const listFonogramas = async (search?: string) => {
 
     // Consultar los fonogramas con el filtro
     const fonogramas = await Fonograma.findAll({
-      where: whereClause,
-      attributes: [
+    where: whereClause,
+    attributes: [
         "id_fonograma",
         "titulo",
         "isrc",
@@ -719,8 +719,14 @@ export const listFonogramas = async (search?: string) => {
         "album",
         "anio_lanzamiento",
         "estado_fonograma",
-      ],
-      order: [["titulo", "ASC"]], // Ordenar alfabéticamente por título
+    ],
+    include: [
+        {
+        model: FonogramaArchivo,
+        as: "archivoDelFonograma",
+        },
+    ],
+    order: [["titulo", "ASC"]],
     });
 
     // Devolver la lista de fonogramas

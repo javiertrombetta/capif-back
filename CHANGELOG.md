@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.30 - 11-02-2025
+## 🐛 Fixes
+
+- fix: change get repertoires, logger, get users and get producers
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.27
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.27 - 10-02-2025
 ## 🐛 Fixes
 

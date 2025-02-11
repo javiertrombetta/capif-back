@@ -128,7 +128,7 @@ export const updateUsuarioById = async (userId: string, updateData: any) => {
 
 export const updateUserRegistrationState = async (
   user: Usuario,
-  newState: string
+  newState: string,
 ): Promise<void> => {
   await user.update({ tipo_registro: newState });
 };
@@ -530,9 +530,9 @@ export const validateUserRegistrationState = (tipoRegistro: string): void => {
 
 export const linkUserToProductora = async (
   userId: string,
-  productoraId: string
+  productoraId: string,
 ): Promise<void> => {
-  // Verificar si la relación ya existe
+  // Verificar si la relación ya existe dentro de la transacción
   const existingRelation = await UsuarioMaestro.findOne({
     where: {
       usuario_id: userId,
@@ -540,21 +540,15 @@ export const linkUserToProductora = async (
     },
   });
 
-  if (existingRelation) {
-    // Si la relación ya existe, no es necesario crearla nuevamente
-    console.info(
-      `Relación existente encontrada: usuario_id=${userId}, productora_id=${productoraId}`
-    );
+  if (existingRelation) {    
     return;
   }
 
-  // Crear una nueva relación
-  await UsuarioMaestro.create({
-    usuario_id: userId,
-    productora_id: productoraId,
-  });
-
-  console.info(
-    `Relación Usuario-Productora creada exitosamente: usuario_id=${userId}, productora_id=${productoraId}`
-  );
+  // Crear una nueva relación dentro de la transacción
+  await UsuarioMaestro.create(
+    {
+      usuario_id: userId,
+      productora_id: productoraId,
+    },
+  );  
 };

@@ -14,8 +14,12 @@ type ProductoraISRCData = {
 };
 
 // Servicio para crear o actualizar una productora
-export const createOrUpdateProductora = async (productoraData: any): Promise<Productora> => {
-  let productora = await Productora.findOne({ where: { cuit_cuil: productoraData.cuit_cuil } });
+export const createOrUpdateProductora = async (
+  productoraData: any, 
+): Promise<Productora> => {
+  let productora = await Productora.findOne({ 
+    where: { cuit_cuil: productoraData.cuit_cuil }, 
+  });
 
   if (productora) {
     await productora.update(productoraData);

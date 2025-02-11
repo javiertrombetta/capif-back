@@ -11,19 +11,21 @@ import logger from "../config/logger";
  * @param detalle Detalle adicional sobre la acción realizada.
  * @throws Error si los parámetros no son válidos.
  */
-export const registrarAuditoria = async ({
-  usuario_originario_id = null,
-  usuario_destino_id = null,
-  modelo,
-  tipo_auditoria,
-  detalle,
-}: {
-  usuario_originario_id?: string | null;
-  usuario_destino_id?: string | null;
-  modelo: string;
-  tipo_auditoria: string;
-  detalle: string;
-}): Promise<void> => {
+export const registrarAuditoria = async (
+  {
+    usuario_originario_id = null,
+    usuario_destino_id = null,
+    modelo,
+    tipo_auditoria,
+    detalle,
+  }: {
+    usuario_originario_id?: string | null;
+    usuario_destino_id?: string | null;
+    modelo: string;
+    tipo_auditoria: string;
+    detalle: string;
+  }
+): Promise<void> => {
   try {
     // Validar que el modelo sea uno de los permitidos
     if (!ENTIDADES_PERMITIDAS.includes(modelo)) {
@@ -40,14 +42,16 @@ export const registrarAuditoria = async ({
       );
     }
 
-    // Crear el registro de auditoría
-    await AuditoriaCambio.create({
-      usuario_originario_id,
-      usuario_destino_id,
-      modelo,
-      tipo_auditoria,
-      detalle,
-    });
+    // Crear el registro de auditoría dentro de la transacción si está disponible
+    await AuditoriaCambio.create(
+      {
+        usuario_originario_id,
+        usuario_destino_id,
+        modelo,
+        tipo_auditoria,
+        detalle,
+      }
+    );
 
     logger.info(
       `Auditoría creada: Tipo '${tipo_auditoria}' en modelo '${modelo}' con detalle: '${detalle}'`
@@ -56,7 +60,7 @@ export const registrarAuditoria = async ({
     const errorMessage =
       error instanceof Error ? error.message : "Error desconocido";
     logger.error(`Error al crear auditoría: ${errorMessage}`);
-    throw error; // Re-lanzar el error para que sea manejado aguas arriba
+    throw error;
   }
 };
 

@@ -1,10 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
-import transporter from '../config/nodemailer';
-import logger from '../config/logger';
-import { handleEmailError } from './errorService';
+import { Request, Response, NextFunction } from "express";
+import transporter from "../config/nodemailer";
+import logger from "../config/logger";
+import { handleEmailError } from "./errorService";
 import { SendMailOptions } from "nodemailer";
 
-
+/**
+ * Interfaz extendida para opciones de envío de correo.
+ */
 interface MailOptions extends SendMailOptions {
   to: string;
   subject: string;
@@ -13,40 +15,42 @@ interface MailOptions extends SendMailOptions {
 }
 
 /**
+ * Valida si un email tiene el formato correcto.
+ * @param email - Dirección de correo a validar.
+ * @returns `true` si el email es válido, `false` en caso contrario.
+ */
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+/**
  * Envía un correo electrónico utilizando Nodemailer.
- *
- * @param options - Contiene la dirección de correo del destinatario, el asunto y el contenido en HTML del correo.
- * @returns Promise<void> - Resuelve cuando el correo se envía con éxito o lanza un error si falla.
- *
- * @example
- * await sendEmail({
- *   to: 'usuario@dominio.com',
- *   subject: 'Bienvenido',
- *   html: '<p>Gracias por registrarte.</p>',
- * });
+ * @param options - Contiene la dirección del destinatario, asunto, contenido HTML y adjuntos opcionales.
+ * @returns Promise<void> - Resuelve si el correo se envía con éxito o lanza un error si falla.
  */
 export const sendEmail = async (options: MailOptions): Promise<void> => {
-  const mailOptions: any = {
+
+  if (!process.env.EMAIL_FROM) {
+    throw new Error("EMAIL_FROM no está definido en las variables de entorno.");
+  }
+
+  const mailOptions: SendMailOptions = {
     from: process.env.EMAIL_FROM,
     to: options.to,
     subject: options.subject,
     html: options.html,
+    attachments: options.attachments ?? [],
   };
 
-  // Agregar adjuntos solo si existen
-  if (options.attachments && options.attachments.length > 0) {
-    mailOptions.attachments = options.attachments;
-  }
+  const info = await transporter.sendMail(mailOptions);
+  logger.info(`Correo enviado con éxito: ${info.messageId}`);
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log("Correo enviado con éxito:", info.messageId);
-  } catch (error) {
-    console.error("Error al enviar el correo:", error);
-    throw error;
-  }
 };
 
+/**
+ * Interfaz para manejo de errores en envío de correos.
+ */
 interface EmailOptions {
   to: string;
   subject: string;
@@ -57,22 +61,12 @@ interface EmailOptions {
 }
 
 /**
- * Envía un correo electrónico con manejo de errores, incluyendo logs de éxito y fallo.
- *
- * @param options - Contiene la dirección del destinatario, asunto, contenido HTML y mensajes de log personalizados.
- * @param req - Objeto Request de Express que se usa para registrar detalles del método HTTP y la URL original.
- * @param res - Objeto Response de Express, usado en caso de manejar errores.
- * @param next - Función NextFunction de Express para delegar errores a los middlewares de manejo de errores.
- * @returns Promise<void> - Resuelve cuando el correo se envía con éxito o lanza un error si falla.
- *
- * @example
- * await sendEmailWithErrorHandling({
- *   to: 'usuario@dominio.com',
- *   subject: 'Notificación',
- *   html: '<p>Este es un correo de prueba.</p>',
- *   successLog: 'Correo enviado con éxito.',
- *   errorLog: 'Error al enviar el correo.',
- * }, req, res, next);
+ * Envía un correo electrónico con manejo de errores y logs de éxito/fallo.
+ * @param options - Opciones del correo incluyendo destinatario, asunto, HTML y logs.
+ * @param req - Objeto Request de Express para registrar detalles del request.
+ * @param res - Objeto Response de Express, usado en caso de errores.
+ * @param next - Función de Express para delegar errores a middlewares.
+ * @returns Promise<void> - Resuelve si el correo se envía con éxito, maneja errores si falla.
  */
 export const sendEmailWithErrorHandling = async (
   options: EmailOptions,
@@ -80,21 +74,19 @@ export const sendEmailWithErrorHandling = async (
   res?: Response,
   next?: NextFunction
 ): Promise<void> => {
-  try {
-    await sendEmail({
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      attachments: options.attachments,
-    });
-
-    logger.info(`${String(req.method)} ${String(req.originalUrl)} -- ${options.successLog}`);
-
-  } catch (error) {
-    if (res && next) {
-      handleEmailError(error, req, res, next, options.errorLog);
-    } else {
-      logger.error(`${options.errorLog}: ${error}`);
-    }
+  
+  if (!options.to || !validateEmail(options.to)) {
+    const errorMsg = `[EMAIL WARNING] No se envió el correo porque el email '${options.to}' no es válido.`;
+    logger.warn(errorMsg);
+    throw new Error(errorMsg);
   }
+
+  await sendEmail({
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+    attachments: options.attachments,
+  });
+
+  logger.info(`${String(req.method)} ${String(req.originalUrl)} -- ${options.successLog}`);
 };

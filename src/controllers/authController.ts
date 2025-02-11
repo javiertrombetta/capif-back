@@ -1433,7 +1433,7 @@ export const sendApplication = async (
       detalle: `Solicitud de aplicación enviada por ${authUser.email} para la productora ${productora.id_productora}`,
     });
 
-    logger.info(`${req.method} ${req.originalUrl} - Auditoría registrada.`);
+    logger.info(`${req.method} ${req.originalUrl} - Auditoría registrada.`);    
 
     // Enviar correo de notificación al usuario
     await sendEmailWithErrorHandling(

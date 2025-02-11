@@ -29,8 +29,12 @@ export function handleEmailError(
   next: NextFunction,
   customMessage: string
 ): void {
-  const errorMessage =
-    err instanceof Error ? err.message : 'Error desconocido';
+  const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+
+  if (res.headersSent) {
+    logger.error(`${req.method} ${req.originalUrl} - ${customMessage}: ${errorMessage} (No se envió respuesta porque ya fue enviada)`);
+    return;
+  }
 
   if (err instanceof Err.CustomError) {
     logger.warn(`${req.method} ${req.originalUrl} - ${customMessage}: ${errorMessage}`);

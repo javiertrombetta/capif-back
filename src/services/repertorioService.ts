@@ -696,44 +696,64 @@ export const deleteFonograma = async (id: string, req: any) => {
     }
 };
 
-export const listFonogramas = async (search?: string) => {
+export const listFonogramas = async (queryParams: any) => {
+  // Construcción del filtro de búsqueda dinámico
+  const whereClause: any = {};
 
-    // Construir el filtro de búsqueda
-    const whereClause: any = {};
+  if (queryParams.isrc) whereClause.isrc = { [Op.iLike]: `%${queryParams.isrc}%` };
+  if (queryParams.titulo) whereClause.titulo = { [Op.iLike]: `%${queryParams.titulo}%` };
+  if (queryParams.artista) whereClause.artista = { [Op.iLike]: `%${queryParams.artista}%` };
+  if (queryParams.album) whereClause.album = { [Op.iLike]: `%${queryParams.album}%` };
+  if (queryParams.anio_lanzamiento) whereClause.anio_lanzamiento = queryParams.anio_lanzamiento;
+  
+  // Filtro parcial para `sello_discografico` (puede contener varios nombres separados por comas)
+  if (queryParams.sello_discografico) {
+    whereClause.sello_discografico = { [Op.iLike]: `%${queryParams.sello_discografico}%` };
+  }
 
-    if (search && typeof search === "string") {
-      whereClause[Op.or] = [
-        { titulo: { [Op.like]: `%${search}%` } },
-        { isrc: { [Op.like]: `%${search}%` } },
-      ];
-    }
-
-    // Consultar los fonogramas con el filtro
-    const fonogramas = await Fonograma.findAll({
+  // Configuración de la búsqueda en la base de datos
+  const fonogramas = await Fonograma.findAll({
     where: whereClause,
     attributes: [
-        "id_fonograma",
-        "titulo",
-        "isrc",
-        "artista",
-        "album",
-        "anio_lanzamiento",
-        "estado_fonograma",
+      "id_fonograma",
+      "titulo",
+      "isrc",
+      "artista",
+      "album",
+      "anio_lanzamiento",
+      "estado_fonograma",
+      "sello_discografico",
     ],
     include: [
-        {
-        model: FonogramaArchivo,
-        as: "archivoDelFonograma",
-        },
+      {
+        model: Productora,
+        as: "productoraDelFonograma",
+        attributes: ["nombre_productora"],
+        where: queryParams.nombre_productora
+          ? { nombre_productora: { [Op.iLike]: `%${queryParams.nombre_productora}%` } }
+          : undefined,
+      },
     ],
     order: [["titulo", "ASC"]],
-    });
+  });
 
-    // Devolver la lista de fonogramas
-    return {
-        data: fonogramas,
-        total: fonogramas.length,
-    };  
+  // Formatear la respuesta incluyendo nombre_productora
+  const formattedFonogramas = fonogramas.map((fonograma) => ({
+    id_fonograma: fonograma.id_fonograma,
+    titulo: fonograma.titulo,
+    isrc: fonograma.isrc,
+    artista: fonograma.artista,
+    album: fonograma.album,
+    anio_lanzamiento: fonograma.anio_lanzamiento,
+    estado_fonograma: fonograma.estado_fonograma,
+    sello_discografico: fonograma.sello_discografico,
+    nombre_productora: fonograma.productoraDelFonograma?.nombre_productora || "Desconocido",
+  }));
+
+  return {
+    data: formattedFonogramas,
+    total: formattedFonogramas.length,
+  };
 };
 
 export const addArchivoToFonograma = async (id: string, req: any) => {

@@ -1960,19 +1960,65 @@ export const repertoiresSwaggerDocs = {
             },
             get: {
                 summary: "Listar fonogramas",
-                description: "Obtiene una lista de fonogramas, permitiendo la búsqueda por título o ISRC.",
+                description: "Obtiene una lista de fonogramas, permitiendo la búsqueda por título, ISRC, artista, álbum, año de lanzamiento, sello discográfico y productora.",
                 tags: ["Repertorios"],
                 security: [{ bearerAuth: [] }],
                 parameters: [
                     {
                         in: "query",
-                        name: "search",
+                        name: "titulo",
                         required: false,
-                        schema: {
-                            type: "string"
-                        },
-                        description: "Texto de búsqueda para filtrar fonogramas por título o ISRC.",
+                        schema: { type: "string" },
+                        description: "Filtrar fonogramas por título.",
                         example: "Canción Ejemplo"
+                    },
+                    {
+                        in: "query",
+                        name: "isrc",
+                        required: false,
+                        schema: { type: "string" },
+                        description: "Filtrar fonogramas por código ISRC.",
+                        example: "ARABC2412345"
+                    },
+                    {
+                        in: "query",
+                        name: "artista",
+                        required: false,
+                        schema: { type: "string" },
+                        description: "Filtrar fonogramas por nombre del artista.",
+                        example: "Artista Ejemplo"
+                    },
+                    {
+                        in: "query",
+                        name: "album",
+                        required: false,
+                        schema: { type: "string" },
+                        description: "Filtrar fonogramas por nombre del álbum.",
+                        example: "Álbum Ejemplo"
+                    },
+                    {
+                        in: "query",
+                        name: "anio_lanzamiento",
+                        required: false,
+                        schema: { type: "integer" },
+                        description: "Filtrar fonogramas por año de lanzamiento.",
+                        example: 2024
+                    },
+                    {
+                        in: "query",
+                        name: "sello_discografico",
+                        required: false,
+                        schema: { type: "string" },
+                        description: "Filtrar fonogramas por sello discográfico (puede buscar coincidencias parciales).",
+                        example: "Sello Ejemplo"
+                    },
+                    {
+                        in: "query",
+                        name: "nombre_productora",
+                        required: false,
+                        schema: { type: "string" },
+                        description: "Filtrar fonogramas por nombre de la productora propietaria.",
+                        example: "Productora Ejemplo"
                     }
                 ],
                 responses: {
@@ -2024,6 +2070,16 @@ export const repertoiresSwaggerDocs = {
                                                         type: "string",
                                                         description: "Estado actual del fonograma.",
                                                         example: "ACTIVO"
+                                                    },
+                                                    sello_discografico: {
+                                                        type: "string",
+                                                        description: "Sello discográfico del fonograma.",
+                                                        example: "Sello Ejemplo"
+                                                    },
+                                                    nombre_productora: {
+                                                        type: "string",
+                                                        description: "Nombre de la productora propietaria del fonograma.",
+                                                        example: "Productora Ejemplo"
                                                     }
                                                 }
                                             }
@@ -2043,7 +2099,7 @@ export const repertoiresSwaggerDocs = {
                     403: { description: "Usuario no autorizado." },
                     500: { description: "Error interno del servidor." }
                 }
-            },
+            }
         }
     }
 };

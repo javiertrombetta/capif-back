@@ -121,50 +121,38 @@ export const productoraBaseSchema = Joi.object({
 });
 
 // Validaciones condicionales para FISICA o JURIDICA
-export const createProductoraSchema = Joi.alternatives().conditional("tipo_persona", {
-  is: "FISICA",
-  then: productoraBaseSchema.concat(
-    Joi.object({
-      nombres: Joi.string().required().messages({
-        "string.base": "El nombre debe ser un texto.",
-        "string.empty": "El nombre no puede estar vacío.",
-        "any.required": "El nombre es obligatorio para personas físicas.",
-      }),
-      apellidos: Joi.string().required().messages({
-        "string.base": "El apellido debe ser un texto.",
-        "string.empty": "El apellido no puede estar vacío.",
-        "any.required": "El apellido es obligatorio para personas físicas.",
-      }),
-    })
-  ),
-  otherwise: productoraBaseSchema.concat(
-    Joi.object({
-      razon_social: Joi.string().required().messages({
-        "string.base": "La razón social debe ser un texto.",
-        "string.empty": "La razón social no puede estar vacía.",
-        "any.required": "La razón social es obligatoria para personas jurídicas.",
-      }),
-      nombres_representante: Joi.string().required().messages({
-        "string.base": "El nombre del representante debe ser un texto.",
-        "string.empty": "El nombre del representante no puede estar vacío.",
-        "any.required": "El nombre del representante es obligatorio para personas jurídicas.",
-      }),
-      apellidos_representante: Joi.string().required().messages({
-        "string.base": "El apellido del representante debe ser un texto.",
-        "string.empty": "El apellido del representante no puede estar vacío.",
-        "any.required": "El apellido del representante es obligatorio para personas jurídicas.",
-      }),
-      cuit_representante: Joi.string()
-        .length(11)
-        .required()
-        .messages({
-          "string.base": "El CUIT del representante debe ser un texto.",
-          "string.empty": "El CUIT del representante no puede estar vacío.",
-          "string.length": "El CUIT del representante debe tener exactamente 11 caracteres.",
-          "any.required": "El CUIT del representante es obligatorio para personas jurídicas.",
-        }),
-    })
-  ),
+export const createProductoraSchema = productoraBaseSchema.keys({
+  tipo_persona: Joi.string()
+    .valid("FISICA", "JURIDICA")
+    .required()
+    .messages({
+      "any.only": "El tipo de persona debe ser FISICA o JURIDICA.",
+      "any.required": "El tipo de persona es obligatorio.",
+    }),
+}).when(Joi.object({ tipo_persona: Joi.valid("FISICA") }).unknown(), {
+  then: Joi.object({
+    nombres: Joi.string().required().messages({
+      "any.required": "El campo 'nombres' es obligatorio para personas físicas.",
+    }),
+    apellidos: Joi.string().required().messages({
+      "any.required": "El campo 'apellidos' es obligatorio para personas físicas.",
+    }),
+  }),
+}).when(Joi.object({ tipo_persona: Joi.valid("JURIDICA") }).unknown(), {
+  then: Joi.object({
+    razon_social: Joi.string().required().messages({
+      "any.required": "La razón social es obligatoria para personas jurídicas.",
+    }),
+    nombres_representante: Joi.string().required().messages({
+      "any.required": "El nombre del representante es obligatorio para personas jurídicas.",
+    }),
+    apellidos_representante: Joi.string().required().messages({
+      "any.required": "El apellido del representante es obligatorio para personas jurídicas.",
+    }),
+    cuit_representante: Joi.string().length(11).required().messages({
+      "any.required": "El CUIT del representante es obligatorio para personas jurídicas.",
+    }),
+  }),
 });
 
 // Document Schema
@@ -282,8 +270,9 @@ export const getUsuariosQuerySchema = Joi.object({
       "CONFIRMADO",
       "PENDIENTE",
       "ENVIADO",
+      "RECHAZADO",
       "HABILITADO",
-      "DESHABILITADO"
+      "DESHABILITADO",
     )
     .optional()
     .messages({
@@ -359,7 +348,7 @@ export const rejectApplicationBodySchema = Joi.object({
 
 // Main Schema for sendApplication
 export const sendApplicationSchema = Joi.object({
-  productoraData: productoraBaseSchema.required().messages({
+  productoraData: createProductoraSchema.required().messages({
     'any.required': 'El campo productoraData es obligatorio.',
   }),
 
@@ -1374,12 +1363,14 @@ export const getFonogramaByIdParamsSchema = Joi.object({
 });
 
 export const listFonogramasQuerySchema = Joi.object({
-  search: Joi.string()
-    .allow("")
-    .messages({
-      "string.base": "El parámetro 'search' debe ser una cadena de texto.",
-    }),
-});
+  isrc: Joi.string().optional(),
+  titulo: Joi.string().optional(),
+  artista: Joi.string().optional(),
+  album: Joi.string().optional(),
+  sello_discografico: Joi.string().optional(),
+  anio_lanzamiento: Joi.number().integer().min(1900).max(new Date().getFullYear()).optional(),
+  nombre_productora: Joi.string().optional(),
+}).options({ allowUnknown: false });
 
 export const updateFonogramaParamsSchema = Joi.object({
   id: uuidSchema.messages({

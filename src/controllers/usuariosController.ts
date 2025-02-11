@@ -127,7 +127,7 @@ export const blockOrUnblockUser = async (
 
 // OBTENER TODOS LOS USUARIOS SEGÚN CONDICIONES
 export const getUsers = async (
-  req: Request<{}, {}, {}, { [key: string]: string | undefined }>,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -148,27 +148,52 @@ export const getUsers = async (
 
       const mappedKey = queryMapping[key] || key;
       filters[mappedKey] = ["limit", "offset"].includes(key) ? Number(value) : value;
-    }    
+    }
+
+    // Obtener el usuario autenticado con su información de productora
+    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    if (!authUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado`);
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED));
+    }
+
+    // Si el usuario autenticado es `productor_principal`, filtrar solo los productores_secundarios de su productora
+    if (authUser.rol.nombre_rol === "productor_principal") {
+      if (!authMaestros.length || !authMaestros[0].productora) {
+        logger.warn(`${req.method} ${req.originalUrl} - Productor principal sin productora asignada`);
+        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NO_PRODUCTORA_PRINCIPAL));
+      }
+
+      // Obtener el ID de la productora a la que pertenece el productor_principal
+      const productoraId = authMaestros[0].productora.id_productora;
+
+      // Aplicar los filtros para que solo se devuelvan `productores_secundarios` de la misma productora
+      filters.productoraId = productoraId;
+      filters.rolNombre = "productor_secundario";
+
+      logger.info(`${req.method} ${req.originalUrl} - Filtrando productores_secundarios de la productora ${productoraId}`);
+    }
 
     // Obtener usuarios con los filtros aplicados
-    const usuarios = await findUsuarios(filters);    
+    const usuarios = await findUsuarios(filters);
 
     if (usuarios.users.length < 1) {
       logger.warn(`${req.method} ${req.originalUrl} - No se encontraron usuarios con los filtros proporcionados.`);
-    }
-    else if(usuarios.users.length == 1){
+    } else if (usuarios.users.length === 1) {
       logger.info(`${req.method} ${req.originalUrl} - Se encontró ${usuarios.users.length} usuario.`);
-    }    
-    else{
-      logger.info(`${req.method} ${req.originalUrl} - Se encontron ${usuarios.users.length} usuarios.`);
-    }   
+    } else {
+      logger.info(`${req.method} ${req.originalUrl} - Se encontraron ${usuarios.users.length} usuarios.`);
+    }
 
-    // Filtrar y mapear las vistas asociadas para devolver solo los campos requeridos
-    const filteredUsers = usuarios.users.map(formatUserResponse);    
+    // Filtrar para **remover al usuario autenticado** de la respuesta
+    const filteredUsers = usuarios.users
+      .filter((user) => user.user.id_usuario !== authUser.id_usuario) // Excluye al usuario autenticado
+      .map(formatUserResponse);
 
     res.status(200).json({
-      total: usuarios.total,
-      totalPages: Math.ceil(usuarios.total / (filters.limit || 50)),
+      total: filteredUsers.length,
+      totalPages: Math.ceil(filteredUsers.length / (filters.limit || 50)),
       currentPage: filters.offset ? Math.floor(filters.offset / (filters.limit || 50)) + 1 : 1,
       data: filteredUsers,
     });

@@ -110,7 +110,7 @@ export const listFonogramas = async (req: Request, res: Response, next: NextFunc
   try {
     logger.info(`${req.method} ${req.originalUrl} - Listando fonogramas.`);
 
-    const response = await repertorioService.listFonogramas(req.query.search as string);
+    const response = await repertorioService.listFonogramas(req.query);
 
     return res.status(200).json(response);
 

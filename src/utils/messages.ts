@@ -173,6 +173,7 @@ export const ERROR = {
     CANNOT_MODIFY_DISABLED_USER:
       'EL usuario está deshabilitado. No se puede cambiar el estado de inicio de sesión.',
     NO_ASSOCIATED_PRODUCTORAS: 'Productoras no asociadas al usuario.',
+    NO_PRODUCTORA_PRINCIPAL: 'El usuario no tiene una productora asociada.',
     CANNOT_DELETE_SELF: 'No podés eliminar tu propia cuenta.',
     CANNOT_DELETE_PRINCIPAL_WITH_PRODUCTORA: 'El usuario tiene productoras asociadas y no puede ser eliminado.',
     ROLE_NOT_ASSIGNED: 'El usuario autenticado no tiene un rol asignado.',

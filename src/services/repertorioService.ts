@@ -191,13 +191,7 @@ export const createFonograma = async (req: any) => {
             // Llamar automáticamente a crearConflicto cuando se detecte exceso de participación
             await crearConflicto(req, isrc, fecha_inicio, fecha_hasta);
         }
-    }    
-
-    // Verificar si hubo períodos superpuestos y cargalos como mensaje de retorno
-    const message = overlappingPeriods.length > 0
-        ? `Fonograma creado con éxito, pero hay períodos donde se supera el 100% de participación: ${overlappingPeriods.join("; ")}`
-        : "Fonograma creado exitosamente";
-
+    }
 
     // Registrar los territorios habilitados en FonogramaTerritorioMaestro (obligatorio)
     // Validar territorios activos
@@ -236,9 +230,31 @@ export const createFonograma = async (req: any) => {
         detalle: `Se registró el alta del fonograma ID: '${fonograma.id_fonograma}'`,
     });
 
+    const registrarEnvio = await FonogramaEnvio.create({
+        fonograma_id: fonograma.id_fonograma,
+        tipo_estado: 'PENDIENTE DE ENVIO',
+        tipo_contenido: 'DATOS',
+        fecha_envio_inicial: null,
+        fecha_envio_ultimo: null,
+    });
+
+    // Asignar el ID del envío a la propiedad correcta en el fonograma
+    fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
+    await fonograma.save();
+
+    await registrarAuditoria({
+        usuario_originario_id: authUser.id_usuario,
+        usuario_destino_id: null,
+        modelo: "FonogramaEnvio",
+        tipo_auditoria: "ALTA",
+        detalle: `Se registró el envío del fonograma con ID: '${fonograma.id_fonograma}' en estado 'PENDIENTE DE ENVIO' y contenido 'DATOS'.`,
+    });
+
     return {
         fonograma,
-        message: "Fonograma creado exitosamente",
+        message: overlappingPeriods.length > 0
+            ? `Fonograma creado con éxito, pero hay períodos donde se supera el 100% de participación: ${overlappingPeriods.join("; ")}`
+            : "Fonograma creado exitosamente",
     };
 };
 
@@ -355,33 +371,25 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                     });
                 }
 
-                // Verificar si ya existe un Fonograma en estado "PENDIENTE DE ENVIO" sin cargarlo
-                const existingEnvio = await FonogramaEnvio.findOne({
-                    where: {
-                        fonograma_id: fonograma.id_fonograma,
-                        tipo_estado: "PENDIENTE DE ENVIO",
-                    },
+                const registrarEnvio = await FonogramaEnvio.create({
+                    fonograma_id: fonograma.id_fonograma,
+                    tipo_estado: 'PENDIENTE DE ENVIO',
+                    tipo_contenido: 'DATOS',
+                    fecha_envio_inicial: null,
+                    fecha_envio_ultimo: null,
                 });
 
-                if (!existingEnvio) {
-                    const registrarEnvio = await FonogramaEnvio.create({
-                        fonograma_id: fonograma.id_fonograma,
-                        tipo_estado: "PENDIENTE DE ENVIO",
-                        fecha_envio_inicial: null,
-                        fecha_envio_ultimo: null,
-                    });
-                    // Asignar el ID del envío a la propiedad correcta en el fonograma
-                    fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
-                    await fonograma.save();
+                // Asignar el ID del envío a la propiedad correcta en el fonograma
+                fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
+                await fonograma.save();
 
-                    await registrarAuditoria({
-                        usuario_originario_id: authUser.id_usuario,
-                        usuario_destino_id: null,
-                        modelo: "FonogramaEnvio",
-                        tipo_auditoria: "ALTA",
-                        detalle: `Se creó un envío en estado PENDIENTE DE ENVIO para el fonograma con ISRC '${isrc}'`,
-                    });
-                }
+                await registrarAuditoria({
+                    usuario_originario_id: authUser.id_usuario,
+                    usuario_destino_id: null,
+                    modelo: "FonogramaEnvio",
+                    tipo_auditoria: "ALTA",
+                    detalle: `Se registró el envío del fonograma con ID: '${fonograma.id_fonograma}' en estado 'PENDIENTE DE ENVIO' y contenido 'DATOS'.`,
+                });
 
                 // Registrar participaciones y calcular conflictos
                 for (const participacion of parsedParticipaciones) {
@@ -609,23 +617,25 @@ export const updateFonograma = async (id: string, req: any) => {
         detalle: `Se registró el cambio de los datos del fonograma ID: '${fonograma.id_fonograma}'`,
     });
 
-    // Verificar si ya existe un FonogramaEnvio en estado "PENDIENTE DE ENVIO"
+    // Verificar si ya existe un Fonograma en estado "PENDIENTE DE ENVIO" sin cargarlo
     const existingEnvio = await FonogramaEnvio.findOne({
-      where: {
-          fonograma_id: fonograma.id_fonograma,
-          tipo_estado: "PENDIENTE DE ENVIO",
-      },
+        where: {
+            fonograma_id: fonograma.id_fonograma,
+            tipo_estado: "PENDIENTE DE ENVIO",
+        },
     });
 
     if (!existingEnvio) {
+        // Crear un nuevo registro en FonogramaEnvio si no existe
         const registrarEnvio = await FonogramaEnvio.create({
             fonograma_id: fonograma.id_fonograma,
             tipo_estado: "PENDIENTE DE ENVIO",
+            tipo_contenido: "DATOS",
             fecha_envio_inicial: null,
             fecha_envio_ultimo: null,
         });
 
-        // Asignar el ID del envío a la propiedad correcta en el fonograma
+        // Asignar el ID del envío al fonograma y guardarlo
         fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
         await fonograma.save();
 
@@ -634,7 +644,7 @@ export const updateFonograma = async (id: string, req: any) => {
             usuario_destino_id: null,
             modelo: "FonogramaEnvio",
             tipo_auditoria: "ALTA",
-            detalle: `Se creó un envío en estado PENDIENTE DE ENVIO para el fonograma con ISRC '${fonograma.isrc}'`,
+            detalle: `Se registró el envío del fonograma con ID: '${fonograma.id_fonograma}' en estado 'PENDIENTE DE ENVIO' y contenido 'DATOS'.`,
         });
     }
 
@@ -846,7 +856,7 @@ export const addArchivoToFonograma = async (id: string, req: any) => {
       });      
     }
 
-    // Verificar si ya existe un FonogramaEnvio en estado "PENDIENTE DE ENVIO"
+    // Verificar si ya existe un Fonograma en estado "PENDIENTE DE ENVIO" sin cargarlo
     const existingEnvio = await FonogramaEnvio.findOne({
         where: {
             fonograma_id: fonograma.id_fonograma,
@@ -855,14 +865,16 @@ export const addArchivoToFonograma = async (id: string, req: any) => {
     });
 
     if (!existingEnvio) {
+        // Crear un nuevo registro en FonogramaEnvio si no existe
         const registrarEnvio = await FonogramaEnvio.create({
             fonograma_id: fonograma.id_fonograma,
             tipo_estado: "PENDIENTE DE ENVIO",
+            tipo_contenido: "COMPLETO",
             fecha_envio_inicial: null,
             fecha_envio_ultimo: null,
         });
 
-        // Asignar el ID del envío a la propiedad correcta en el fonograma
+        // Asignar el ID del envío al fonograma y guardarlo
         fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
         await fonograma.save();
 
@@ -871,7 +883,19 @@ export const addArchivoToFonograma = async (id: string, req: any) => {
             usuario_destino_id: null,
             modelo: "FonogramaEnvio",
             tipo_auditoria: "ALTA",
-            detalle: `Se creó un envío en estado PENDIENTE DE ENVIO para el fonograma con ISRC '${fonograma.isrc}'`,
+            detalle: `Se registró el envío del fonograma con ID: '${fonograma.id_fonograma}' en estado 'PENDIENTE DE ENVIO' y contenido 'COMPLETO'.`,
+        });
+    } else if (existingEnvio && existingEnvio.tipo_contenido !== "COMPLETO"){
+        // Si ya existe un envío en estado "PENDIENTE DE ENVIO" y distinto a "COMPLETO", actualizarlo
+        existingEnvio.tipo_contenido = "COMPLETO";
+        await existingEnvio.save();
+
+        await registrarAuditoria({
+            usuario_originario_id: authUser.id_usuario,
+            usuario_destino_id: null,
+            modelo: "FonogramaEnvio",
+            tipo_auditoria: "CAMBIO",
+            detalle: `Se actualizó el envío del fonograma con ID: '${fonograma.id_fonograma}' en estado 'PENDIENTE DE ENVIO' y contenido 'COMPLETO'.`,
         });
     }
 
@@ -975,9 +999,13 @@ export const enviarFonograma = async (req: any) => {
         throw new Err.BadRequestError(MESSAGES.ERROR.FONOGRAMA.NOT_SEND_PENDING);
     }
 
+    const observaciones: string[] = [];
+
     // Procesar cada fonograma
     for (const fonograma of fonogramas) {
-        const archivoAudio = fonograma.archivoDelFonograma?.ruta_archivo_audio ?? "";
+        const envio = enviosPendientes.find(e => e.fonograma_id === fonograma.id_fonograma);
+        if (!envio) continue; // Si por alguna razón no se encuentra el fonograma, ignorar
+
         const isrc = fonograma.isrc;
         const codigoEnvio = new Date().toISOString().replace(/[-T:]/g, '').slice(0, 14);
         const zipPath = path.join("/tmp", `${isrc}_${codigoEnvio}.zip`);
@@ -990,10 +1018,17 @@ export const enviarFonograma = async (req: any) => {
         }
 
         // Verificar si el archivo de audio existe
+        const archivoAudio = fonograma.archivoDelFonograma?.ruta_archivo_audio ?? "";
         let audioExists = false;
         if (archivoAudio && fs.existsSync(archivoAudio)) {
-          audioExists = true;
-          fs.copyFileSync(archivoAudio, path.join(resourcesDir, path.basename(archivoAudio)));
+            audioExists = true;
+            fs.copyFileSync(archivoAudio, path.join(resourcesDir, path.basename(archivoAudio)));
+        }
+
+        // Si el fonograma es COMPLETO pero no tiene archivo de audio, se omite el envío
+        if (envio.tipo_contenido === "COMPLETO" && !audioExists) {
+            observaciones.push(`El fonograma con ISRC '${isrc}' se marcó como contenido completo pero no existe un archivo de audio asociado. No se realizó el envío.`);
+            continue; // Saltar al siguiente fonograma sin procesar el actual
         }
 
         // Crear metadata.xls
@@ -1029,10 +1064,13 @@ export const enviarFonograma = async (req: any) => {
         archive.pipe(output);
         archive.file(metadataPath, { name: "metadata.xls" });
 
-        if (audioExists) {
+        // Agregar archivo de audio si aplica
+        if (envio.tipo_contenido === "COMPLETO" && audioExists) {
             archive.file(path.join(resourcesDir, path.basename(archivoAudio)), {
                 name: `resources/${path.basename(archivoAudio)}`,
             });
+        } else {
+            observaciones.push(`El fonograma con ISRC '${isrc}' se envió sin audio porque está marcado como contenido de datos.`);
         }
 
         await archive.finalize();
@@ -1041,7 +1079,7 @@ export const enviarFonograma = async (req: any) => {
         await subirArchivoFTP(zipPath, isrc, codigoEnvio, FTP_CONFIG);
 
         // Marcar el fonograma como ENVIADO CON AUDIO o ENVIADO SIN AUDIO
-        const tipoEstado = audioExists ? "ENVIADO CON AUDIO" : "ENVIADO SIN AUDIO";
+        const tipoEstado = (envio.tipo_contenido === "COMPLETO" && audioExists) ? "ENVIADO CON AUDIO" : "ENVIADO SIN AUDIO";
         await FonogramaEnvio.update(
           { tipo_estado: tipoEstado, fecha_envio_ultimo: new Date() },
           { where: { fonograma_id: fonograma.id_fonograma } }
@@ -1054,28 +1092,9 @@ export const enviarFonograma = async (req: any) => {
           tipo_auditoria: "CAMBIO",
           detalle: `El fonograma con ISRC '${isrc}' fue enviado con estado '${tipoEstado}'.`,
         });
-
-        // Actualizar registros en FonogramaMaestro
-        await FonogramaMaestro.update(
-          { isProcesado: true },
-          {
-            where: {
-              fonograma_id: fonograma.id_fonograma,
-              isProcesado: false,
-            },
-          }
-        );
-
-        await registrarAuditoria({
-          usuario_originario_id: authUser.id_usuario,
-          usuario_destino_id: null,
-          modelo: "FonogramaMaestro",
-          tipo_auditoria: "CAMBIO",
-          detalle: `Se marcaron como procesadas todas las operaciones pendientes para el fonograma con ISRC '${isrc}'.`,
-        });       
     }
 
-    return { message: "Fonogramas enviados correctamente." };
+    return { message: "Fonogramas enviados correctamente.", observaciones };
 };
 
 export const cambiarEstadoEnvioFonograma = async (fonogramaId: string, sendId: string, nuevoEstado: typeof FonogramaEnvio.prototype.tipo_estado, comentario: string | undefined, req: any) => {
@@ -1152,62 +1171,80 @@ export const cambiarEstadoEnvioFonograma = async (fonogramaId: string, sendId: s
 };
 
 export const getNovedadesFonograma = async (query: any) => {
-
     // Definir los valores permitidos para operación
-    const OPERACIONES_VALIDAS = ["ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION", "BAJA"] as const;  
- 
+    const OPERACIONES_VALIDAS = ["ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION", "BAJA"] as const;
+
     // Obtener los parámetros de la query
-    let { operacion, isProcesado } = query;
+    let { operacion, fonogramaId, fecha_desde, fecha_hasta, page = 1, limit = 50 } = query;
 
-    // Si no se especifica isProcesado, por defecto es false
-    let isProcesadoFilter = false;
-    if (typeof isProcesado === "string") {
-      isProcesadoFilter = isProcesado.toLowerCase() === "true";
-    }
+    // Manejo de filtros
+    let whereCondition: any = {};
 
-    // Manejar filtro de operación: si se pasa en la query, verificar que exista en OPERACIONES_VALIDAS
-    let operacionFilter;
+    // Filtrar por operación si se pasa en la query
     if (operacion) {
-      const operacionArray = Array.isArray(operacion)
-        ? operacion.map(op => op.toString())
-        : [operacion.toString()];
+        const operacionArray = Array.isArray(operacion)
+            ? operacion.map(op => op.toString())
+            : [operacion.toString()];
 
-      // Filtrar operaciones que sean válidas según la constante OPERACIONES_VALIDAS
-      const operacionesValidas = operacionArray.filter((op): op is typeof OPERACIONES_VALIDAS[number] =>
-        OPERACIONES_VALIDAS.includes(op as typeof OPERACIONES_VALIDAS[number])
-      );
+        // Filtrar operaciones que sean válidas según la constante OPERACIONES_VALIDAS
+        const operacionesValidas = operacionArray.filter((op): op is typeof OPERACIONES_VALIDAS[number] =>
+            OPERACIONES_VALIDAS.includes(op as typeof OPERACIONES_VALIDAS[number])
+        );
 
-      if (operacionesValidas.length === 0) {
-          throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.OPERATIONS_INVALID);
-      }
+        if (operacionesValidas.length === 0) {
+            throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.OPERATIONS_INVALID);
+        }
 
-      operacionFilter = { [Op.in]: operacionesValidas };
+        whereCondition.operacion = { [Op.in]: operacionesValidas };
     }
 
-    // Obtener registros filtrados por operacion e isProcesado
-    const novedades = await FonogramaMaestro.findAll({
-      where: {
-        ...(operacionFilter ? { operacion: operacionFilter } : {}),
-        isProcesado: isProcesadoFilter,
-      },
-      include: [
-        {
-          model: Fonograma,
-          as: "fonogramaDelMaestroDeFonograma",
-          attributes: ["id_fonograma", "titulo", "isrc", "artista", "album"],
-        },
-      ],
-      attributes: ["id_fonograma_maestro", "fonograma_id", "operacion", "fecha_operacion", "isProcesado"],
-      order: [["fecha_operacion", "DESC"]],
+    // Agregar filtro por fonograma si se proporciona
+    if (fonogramaId) {
+        whereCondition.fonograma_id = fonogramaId;
+    }
+
+    // Filtrar por fecha de operación si se proporcionan `fecha_desde` y/o `fecha_hasta`
+    if (fecha_desde || fecha_hasta) {
+        whereCondition.fecha_operacion = {};
+        if (fecha_desde) {
+            whereCondition.fecha_operacion[Op.gte] = new Date(fecha_desde);
+        }
+        if (fecha_hasta) {
+            whereCondition.fecha_operacion[Op.lte] = new Date(fecha_hasta);
+        }
+    }
+
+    // Convertir `page` y `limit` a enteros y calcular `offset`
+    page = parseInt(page, 10);
+    limit = parseInt(limit, 10);
+    const offset = (page - 1) * limit;
+
+    // Obtener registros filtrados con paginación
+    const { count, rows: novedades } = await FonogramaMaestro.findAndCountAll({
+        where: whereCondition,
+        include: [
+            {
+                model: Fonograma,
+                as: "fonogramaDelMaestroDeFonograma",
+                attributes: ["id_fonograma", "titulo", "isrc"],
+            },
+        ],
+        attributes: ["id_fonograma_maestro", "fonograma_id", "operacion", "fecha_operacion"],
+        order: [["fecha_operacion", "DESC"]],
+        limit,
+        offset,
     });
 
     // Verificar si hay novedades
-    if (novedades.length === 0) {
+    if (count === 0) {
         return { message: "No hay novedades pendientes de procesamiento." };
     }
 
     return {
         message: "Novedades encontradas.",
+        total: count,
+        page,
+        limit,
         data: novedades,
     };
 };

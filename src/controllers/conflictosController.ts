@@ -181,7 +181,7 @@ export const enviarDocumentos = async (
 
     logger.info(`${req.method} ${req.originalUrl} - Enviando documentos para el conflicto ID: ${id}`);
 
-    const resultado = await conflictosService.enviarDocumentos(req, id, nombre_participante, req.files as Express.Multer.File[]);
+    const resultado = await conflictosService.enviarDocumentos(req, id, req.files as Express.Multer.File[]);
 
     res.status(200).json(resultado);
   } catch (error) {

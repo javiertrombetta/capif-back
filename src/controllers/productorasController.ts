@@ -375,13 +375,13 @@ export const getAllISRCs = async (req: Request, res: Response, next: NextFunctio
   try {
     logger.info(`${req.method} ${req.originalUrl} - Obteniendo todos los ISRC.`);
 
-    const isrcs = await productoraService.getAllISRCs();
+    const response = await productoraService.getAllISRCs(req.query);
 
-    logger.info(`${req.method} ${req.originalUrl} - Total de ISRCs encontrados: ${isrcs.length}.`);
-    res.status(200).json({ isrcs });
+    logger.info(`${req.method} ${req.originalUrl} - Total de ISRCs encontrados: ${response.total}.`);
+    res.status(200).json(response);
 
   } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error al obtener todos los ISRC');
+    handleGeneralError(err, req, res, next, "Error al obtener todos los ISRC");
   }
 };
 
@@ -458,40 +458,41 @@ export const getPostulacionById = async (req: Request, res: Response, next: Next
 // Obtener todas las postulaciones y OPCIONAL entre fechas definidas
 export const getAllPostulaciones = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { startDate, endDate, productoraName } = req.query;
+    const { startDate, endDate, productoraName, page, limit } = req.query;
 
     const start = startDate ? parseISO(startDate as string) : undefined;
     const end = endDate ? parseISO(endDate as string) : undefined;
 
     if (startDate && !isValid(start)) {
-      return res.status(400).json({ error: 'La fecha de inicio (startDate) no es válida.' });
+      return res.status(400).json({ error: "La fecha de inicio (startDate) no es válida." });
     }
 
     if (endDate && !isValid(end)) {
-      return res.status(400).json({ error: 'La fecha de fin (endDate) no es válida.' });
+      return res.status(400).json({ error: "La fecha de fin (endDate) no es válida." });
     }
 
     logger.info(
       `${req.method} ${req.originalUrl} - Obteniendo todas las postulaciones ${
         start || end || productoraName
-          ? `con filtros ${start ? `desde ${start.toISOString()}` : ''} ${
-              end ? `hasta ${end.toISOString()}` : ''
-            } ${productoraName ? `por nombre de productora: ${productoraName}` : ''}`
-          : 'sin filtros'
+          ? `con filtros ${start ? `desde ${start.toISOString()}` : ""} ${
+              end ? `hasta ${end.toISOString()}` : ""
+            } ${productoraName ? `por nombre de productora: ${productoraName}` : ""}`
+          : "sin filtros"
       }.`
     );
 
-    const postulaciones = await productoraService.getAllPostulaciones({
+    const response = await productoraService.getAllPostulaciones({
       startDate: start?.toISOString(),
       endDate: end?.toISOString(),
       productoraName: productoraName as string | undefined,
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 10,
     });
 
-    logger.info(`${req.method} ${req.originalUrl} - Total de postulaciones encontradas: ${postulaciones.length}.`);
-    res.status(200).json({ postulaciones });
-
+    logger.info(`${req.method} ${req.originalUrl} - Total de postulaciones encontradas: ${response.total}.`);
+    res.status(200).json(response);
   } catch (err) {
-    handleGeneralError(err, req, res, next, 'Error al obtener todas las postulaciones');
+    handleGeneralError(err, req, res, next, "Error al obtener todas las postulaciones");
   }
 };
 

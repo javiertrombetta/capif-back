@@ -28,7 +28,6 @@ import {
   desistirConflictoParamsSchema,
   eliminarConflictoParamsSchema,
   enviarDocumentosParamsSchema,
-  enviarDocumentosBodySchema,
   generarReporteConflictosQuerySchema,
   obtenerConflictoParamsSchema,
   obtenerConflictosQuerySchema,
@@ -53,7 +52,6 @@ router.post(
   authorizeRoles(["productor_principal", "productor_secundario"]),
   celebrate({
     [Segments.PARAMS]: enviarDocumentosParamsSchema,
-    [Segments.BODY]: enviarDocumentosBodySchema,
   }),
   sendFiles,
   enviarDocumentos

@@ -81,6 +81,7 @@ const seedFonogramas = async () => {
         id_envio_vericast: uuidv4(),
         fonograma_id: fonogramaId,
         tipo_estado: "PENDIENTE DE ENVIO",
+        tipo_contenido: "DATOS",
         fecha_envio_inicial: new Date(),
         fecha_envio_ultimo: new Date(),
       });
@@ -91,7 +92,6 @@ const seedFonogramas = async () => {
         fonograma_id: fonogramaId,
         operacion: "ALTA",
         fecha_operacion: new Date(),
-        isProcesado: true,
       });
 
       // Crear la participación de la productora en el fonograma creado

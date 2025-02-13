@@ -539,9 +539,29 @@ export const producersSchemas = {
     },
   },
   GetAllISRCs: {
-    title: "Productoras - Obtener Todos los ISRC",
+    title: "Productoras - Obtener Todos los ISRCs",
     type: "object",
     properties: {
+      message: {
+        type: "string",
+        description: "Mensaje de estado de la respuesta.",
+        example: "ISRCs obtenidos exitosamente",
+      },
+      total: {
+        type: "integer",
+        description: "Número total de ISRCs en la base de datos.",
+        example: "100"
+      },
+      page: {
+        type: "integer",
+        description: "Número de página actual.",
+        example: "1"
+      },
+      limit: {
+        type: "integer",
+        description: "Número de resultados por página.",
+        example: "10"
+      },
       isrcs: {
         type: "array",
         items: {
@@ -551,23 +571,35 @@ export const producersSchemas = {
               type: "string",
               format: "uuid",
               description: "ID del ISRC.",
-              example: "123e4567-e89b-12d3-a456-426614174001",
+              example: "123e4567-e89b-12d3-a456-426614174001"
             },
             codigo: {
               type: "string",
               description: "Código ISRC.",
-              example: "US-123-21-12345",
+              example: "AR1232512345"
             },
             productora_id: {
               type: "string",
               format: "uuid",
               description: "ID de la productora asociada.",
-              example: "123e4567-e89b-12d3-a456-426614174000",
+              example: "123e4567-e89b-12d3-a456-426614174000"
             },
-          },
-        },
-      },
-    },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              description: "Fecha de creación del ISRC.",
+              example: "2024-02-12T10:00:00.000Z"
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              description: "Última fecha de actualización del ISRC.",
+              example: "2024-02-12T10:00:00.000Z"
+            }
+          }
+        }
+      }
+    }
   },
   CreateISRC: {
     title: "Productoras - Crear ISRC",
@@ -662,6 +694,26 @@ export const producersSchemas = {
     title: "Productoras - Obtener Todas las Postulaciones",
     type: "object",
     properties: {
+      message: {
+        type: "string",
+        description: "Mensaje de estado de la respuesta.",
+        example: "Postulaciones obtenidas exitosamente."
+      },
+      total: {
+        type: "integer",
+        description: "Número total de postulaciones en la base de datos.",
+        example: 100
+      },
+      page: {
+        type: "integer",
+        description: "Número de página actual.",
+        example: 1
+      },
+      limit: {
+        type: "integer",
+        description: "Número de resultados por página.",
+        example: 10
+      },
       postulaciones: {
         type: "array",
         items: {
@@ -671,18 +723,18 @@ export const producersSchemas = {
               type: "string",
               format: "uuid",
               description: "ID del premio o postulación.",
-              example: "987e6543-e21b-11d3-b456-426614174000",
+              example: "987e6543-e21b-11d3-b456-426614174000"
             },
             nombre_premio: {
               type: "string",
               description: "Nombre del premio o postulación.",
-              example: "Mejor Álbum del Año",
+              example: "Mejor Álbum del Año"
             },
             fecha_asignacion: {
               type: "string",
               format: "date-time",
               description: "Fecha en que se realizó la asignación del premio.",
-              example: "2023-01-15T10:00:00Z",
+              example: "2023-01-15T10:00:00Z"
             },
             productora: {
               type: "object",
@@ -691,19 +743,19 @@ export const producersSchemas = {
                   type: "string",
                   format: "uuid",
                   description: "ID de la productora.",
-                  example: "123e4567-e89b-12d3-a456-426614174000",
+                  example: "123e4567-e89b-12d3-a456-426614174000"
                 },
                 nombre_productora: {
                   type: "string",
                   description: "Nombre de la productora asociada.",
-                  example: "Productora Ejemplo",
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+                  example: "Productora Ejemplo"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   },
   CreatePostulaciones: {
     title: "Productoras - Crear Postulaciones Masivamente",

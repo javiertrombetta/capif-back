@@ -597,6 +597,18 @@ export const getISRCByIdSchema = Joi.object({
   }),
 });
 
+export const getAllISRCsQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'page' debe ser un número entero.",
+    "number.min": "El campo 'page' debe ser un número mayor o igual a 1.",
+  }),
+  
+  limit: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'limit' debe ser un número entero.",
+    "number.min": "El campo 'limit' debe ser un número mayor o igual a 1.",
+  })
+});
+
 export const createISRCBodySchema = Joi.object({
   codigo_productora: Joi.string().required().messages({
     "string.base": "El código ISRC debe ser un texto.",
@@ -664,14 +676,26 @@ export const getPostulacionesByIdSchema = Joi.object({
 export const getAllPostulacionesQuerySchema = Joi.object({
   startDate: Joi.date().iso().optional().messages({
     "date.base": "La fecha de inicio debe ser válida.",
-    "date.format": "La fecha de inicio debe estar en formato ISO.",
+    "date.format": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD o ISO 8601).",
   }),
+
   endDate: Joi.date().iso().optional().messages({
     "date.base": "La fecha de fin debe ser válida.",
-    "date.format": "La fecha de fin debe estar en formato ISO.",
+    "date.format": "La fecha de fin debe estar en formato ISO (YYYY-MM-DD o ISO 8601).",
   }),
-  productoraName: Joi.string().optional().messages({
+
+  productoraName: Joi.string().trim().optional().messages({
     "string.base": "El nombre de la productora debe ser un texto.",
+  }),
+
+  page: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'page' debe ser un número entero.",
+    "number.min": "El campo 'page' debe ser un número mayor o igual a 1.",
+  }),
+
+  limit: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'limit' debe ser un número entero.",
+    "number.min": "El campo 'limit' debe ser un número mayor o igual a 1.",
   }),
 });
 
@@ -1024,15 +1048,40 @@ export const getEnviosByFonogramaParamsSchema = Joi.object({
 });
 
 export const getNovedadesFonogramaQuerySchema = Joi.object({
-  operacion: Joi.alternatives().try(
-    Joi.string().valid("ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION", "BAJA"),
-    Joi.array().items(Joi.string().valid("ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION", "BAJA"))
-  ).messages({
-    "string.base": "El campo 'operacion' debe ser una cadena de texto.",
-    "any.only": "Operación inválida. Valores permitidos: ALTA, DATOS, ARCHIVO, TERRITORIO, PARTICIPACION, BAJA.",
+  operacion: Joi.alternatives()
+    .try(
+      Joi.string().valid("ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION", "BAJA"),
+      Joi.array().items(Joi.string().valid("ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION", "BAJA"))
+    )
+    .optional()
+    .messages({
+      "string.base": "El campo 'operacion' debe ser una cadena de texto.",
+      "any.only": "Operación inválida. Valores permitidos: ALTA, DATOS, ARCHIVO, TERRITORIO, PARTICIPACION, BAJA.",
+    }),
+
+  fonogramaId: uuidSchema.optional().messages({
+    "string.base": "El ID del fonograma debe ser un string.",
+    "string.guid": "El ID del fonograma debe ser un UUID válido.",
   }),
-  isProcesado: Joi.boolean().messages({
-    "boolean.base": "El campo 'isProcesado' debe ser un valor booleano (true o false).",
+
+  fecha_desde: Joi.date().iso().optional().messages({
+    "date.base": "El campo 'fecha_desde' debe ser una fecha válida.",
+    "date.format": "El campo 'fecha_desde' debe estar en formato ISO (YYYY-MM-DD o ISO 8601).",
+  }),
+
+  fecha_hasta: Joi.date().iso().optional().messages({
+    "date.base": "El campo 'fecha_hasta' debe ser una fecha válida.",
+    "date.format": "El campo 'fecha_hasta' debe estar en formato ISO (YYYY-MM-DD o ISO 8601).",
+  }),
+
+  page: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'page' debe ser un número entero.",
+    "number.min": "El campo 'page' debe ser un número mayor o igual a 1.",
+  }),
+
+  limit: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'limit' debe ser un número entero.",
+    "number.min": "El campo 'limit' debe ser un número mayor o igual a 1.",
   }),
 });
 
@@ -1439,16 +1488,6 @@ export const enviarDocumentosParamsSchema = Joi.object({
     "any.required": "El ID del conflicto es obligatorio.",
   }),
 });
-
-// Esquema para validar el cuerpo de la solicitud en el envío de documentos
-export const enviarDocumentosBodySchema = Joi.object({
-  nombre_participante: Joi.string().min(3).max(100).required().messages({
-    "string.min": "El nombre del participante debe tener al menos 3 caracteres.",
-    "string.max": "El nombre del participante no puede exceder los 100 caracteres.",
-    "any.required": "El nombre del participante es obligatorio.",
-  }),
-});
-
 
 // Esquema para validar los parámetros de la URL en la confirmación de porcentaje
 export const confirmarPorcentajeParamsSchema = Joi.object({

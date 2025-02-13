@@ -644,7 +644,7 @@ export const confirmarPorcentaje = async (req: AuthenticatedRequest, id: string,
  
 };
 
-export const enviarDocumentos = async (req: AuthenticatedRequest, id: string, nombre_participante: string, archivos: Express.Multer.File[]) => {
+export const enviarDocumentos = async (req: AuthenticatedRequest, id: string, archivos: Express.Multer.File[]) => {
     // Verificar usuario autenticado
     const { user: authUser } = await getAuthenticatedUser(req);
  
@@ -655,7 +655,7 @@ export const enviarDocumentos = async (req: AuthenticatedRequest, id: string, no
     // Convertir los archivos de memoria en adjuntos para el correo
     const archivosAdjuntos = archivos.map((file) => ({
       filename: file.originalname,
-      content: file.buffer, // Se envía el contenido en memoria, sin guardarlo
+      content: file.buffer,
     }));
 
     // Verificar si el conflicto existe antes de actualizar
@@ -687,7 +687,7 @@ export const enviarDocumentos = async (req: AuthenticatedRequest, id: string, no
     }
 
     // Obtener el contenido del correo desde messages.ts
-    const emailContent = MESSAGES.EMAIL_BODY.SEND_DOCUMENTS_NOTIFICATION(nombre_participante, id);
+    const emailContent = MESSAGES.EMAIL_BODY.SEND_DOCUMENTS_NOTIFICATION(authUser.nombre!, id);
 
     // Enviar correo utilizando emailService
     await sendEmailWithErrorHandling(

@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.45 - 13-02-2025
+## 🐛 Fixes
+
+- fix: change reset database endpoint
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.42
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.42 - 13-02-2025
 ## 🐛 Fixes
 

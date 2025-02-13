@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.39 - 13-02-2025
+## 🚀 Features
+
+- feat: add pagination to endpoints till confclits
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.36
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.36 - 13-02-2025
 ## 🐛 Fixes
 

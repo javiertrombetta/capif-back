@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.42 - 13-02-2025
+## 🐛 Fixes
+
+- fix: change Dockerfile
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.39
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.39 - 13-02-2025
 ## 🚀 Features
 

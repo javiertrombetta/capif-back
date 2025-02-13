@@ -683,7 +683,7 @@ export const repertoiresSwaggerDocs = {
                 }
             }
         },
-        "/repertoires/shares/massive": {
+        "/repertoires/shares/bulk": {
             post: {
                 summary: "Carga masiva de participaciones",
                 description: "Permite la carga masiva de participaciones en fonogramas a partir de un archivo CSV.",
@@ -1533,7 +1533,7 @@ export const repertoiresSwaggerDocs = {
                 }
             }
         },
-        "/repertoires/massive": {
+        "/repertoires/bulk": {
             post: {
                 summary: "Carga masiva de repertorios",
                 description: "Permite cargar múltiples repertorios mediante un archivo CSV, registrando fonogramas, participaciones y territorios.",
@@ -1670,9 +1670,9 @@ export const repertoiresSwaggerDocs = {
                     500: { description: "Error interno del servidor." }
                 }
             },
-            get: {
+            "get": {
                 summary: "Obtener novedades de fonogramas",
-                description: "Recupera las novedades de fonogramas filtradas por operación e indicador de procesamiento.",
+                description: "Recupera las novedades de fonogramas filtradas por operación, fecha de operación, ID del fonograma y paginación.",
                 tags: ["Repertorios"],
                 security: [{ bearerAuth: [] }],
                 parameters: [
@@ -1691,12 +1691,53 @@ export const repertoiresSwaggerDocs = {
                     },
                     {
                         in: "query",
-                        name: "isProcesado",
+                        name: "fonogramaId",
                         schema: {
-                            type: "boolean"
+                            type: "string",
+                            format: "uuid"
                         },
-                        description: "Indica si se deben recuperar solo los fonogramas procesados o no procesados.",
-                        example: false
+                        description: "ID del fonograma para filtrar las novedades específicas de un fonograma.",
+                        example: "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    {
+                        in: "query",
+                        name: "fecha_desde",
+                        schema: {
+                            type: "string",
+                            format: "date"
+                        },
+                        description: "Fecha desde la cual se buscarán novedades (formato ISO: YYYY-MM-DD).",
+                        example: "2024-01-01"
+                    },
+                    {
+                        in: "query",
+                        name: "fecha_hasta",
+                        schema: {
+                            type: "string",
+                            format: "date"
+                        },
+                        description: "Fecha hasta la cual se buscarán novedades (formato ISO: YYYY-MM-DD).",
+                        example: "2024-12-31"
+                    },
+                    {
+                        in: "query",
+                        name: "page",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        description: "Número de página para la paginación. Debe ser un número entero mayor o igual a 1.",
+                        example: 1
+                    },
+                    {
+                        in: "query",
+                        name: "limit",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        description: "Número máximo de resultados por página. Debe ser un número entero mayor o igual a 1.",
+                        example: 10
                     }
                 ],
                 responses: {
@@ -1710,6 +1751,21 @@ export const repertoiresSwaggerDocs = {
                                         message: {
                                             type: "string",
                                             example: "Novedades encontradas."
+                                        },
+                                        total: {
+                                            type: "integer",
+                                            description: "Número total de registros encontrados.",
+                                            example: 25
+                                        },
+                                        page: {
+                                            type: "integer",
+                                            description: "Número de página actual.",
+                                            example: 1
+                                        },
+                                        limit: {
+                                            type: "integer",
+                                            description: "Número de resultados por página.",
+                                            example: 10
                                         },
                                         data: {
                                             type: "array",
@@ -1735,10 +1791,6 @@ export const repertoiresSwaggerDocs = {
                                                         type: "string",
                                                         format: "date-time",
                                                         description: "Fecha en la que se realizó la operación."
-                                                    },
-                                                    isProcesado: {
-                                                        type: "boolean",
-                                                        description: "Indica si la operación ya ha sido procesada."
                                                     },
                                                     fonogramaDelMaestroDeFonograma: {
                                                         type: "object",
@@ -1774,10 +1826,10 @@ export const repertoiresSwaggerDocs = {
                             }
                         }
                     },
-                    400: { description: "Datos inválidos o parámetros incorrectos en la consulta." },
-                    401: { description: "Usuario no autenticado." },
-                    403: { description: "Usuario no autorizado." },
-                    500: { description: "Error interno del servidor." }
+                    "400": { "description": "Datos inválidos o parámetros incorrectos en la consulta." },
+                    "401": { "description": "Usuario no autenticado." },
+                    "403": { "description": "Usuario no autorizado." },
+                    "500": { "description": "Error interno del servidor." }
                 }
             }
         },

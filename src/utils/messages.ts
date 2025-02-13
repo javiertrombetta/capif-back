@@ -216,7 +216,7 @@ export const ERROR = {
     NOT_FOUND: 'El repetorio no fue encontrado.',
     NOT_FOUND_MULTIPLE: 'Uno o más repertorios no fueron encontrados.',
     TYPE_NOT_FOUND: 'El tipo de repertorio no fue encontrado.',
-    NOT_SEND_PENDING: 'Uno o más fonogramas no están en estado PENDIENTE DE ENVIO.'
+    NOT_SEND_PENDING: 'Uno o más repertorios a enviar no están en estado PENDIENTE DE ENVIO.'
   },
   CONFLICTO: {
     NOT_FOUND: 'El conflicto no fue encontrado.',

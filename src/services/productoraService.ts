@@ -420,14 +420,33 @@ export const getISRCById = async (productoraId: string) => {
   return isrcs;
 };
 
-export const getAllISRCs = async () => {
-  const isrcs = await ProductoraISRC.findAll();
+export const getAllISRCs = async (query: any) => {
 
-  if (!isrcs || isrcs.length === 0) {
+  let { page = 1, limit = 50 } = query;
+
+  // Convertir a números enteros y calcular offset
+  page = parseInt(page, 10);
+  limit = parseInt(limit, 10);
+  const offset = (page - 1) * limit;
+
+  // Obtener datos paginados
+  const { count, rows: isrcs } = await ProductoraISRC.findAndCountAll({
+    limit,
+    offset,
+    order: [["createdAt", "DESC"]],
+  });
+
+  if (count === 0) {
     throw new Err.NotFoundError(MESSAGES.ERROR.ISRC.NOT_FOUND);
   }
 
-  return isrcs;
+  return {
+    message: "ISRCs obtenidos exitosamente.",
+    total: count,
+    page,
+    limit,
+    data: isrcs,
+  };
 };
 
 // Servicio para crear un nuevo ISRC a a una productora
@@ -492,9 +511,16 @@ export const getPostulacionById = async (productoraId: string) => {
   return postulaciones;
 };
 
-// Servicio para obtener todas las postulaciones y OPCIONAL entre fechas definidas
-export const getAllPostulaciones = async (filters: { startDate?: string; endDate?: string; productoraName?: string }) => {
+// Servicio para obtener todas las postulaciones y OPCIONAL entre fechas definidas y paginación
+export const getAllPostulaciones = async (filters: {
+  startDate?: string;
+  endDate?: string;
+  productoraName?: string;
+  page?: number;
+  limit?: number;
+}) => {
   const where: any = {};
+  const include: any[] = [];
 
   // Filtro por fechas
   if (filters.startDate || filters.endDate) {
@@ -503,7 +529,7 @@ export const getAllPostulaciones = async (filters: { startDate?: string; endDate
     if (filters.startDate) {
       const startDate = new Date(filters.startDate);
       if (isNaN(startDate.getTime())) {
-        throw new Error('La fecha de inicio (startDate) no es válida.');
+        throw new Error("La fecha de inicio (startDate) no es válida.");
       }
       fechaAsignacion[Op.gte] = startDate;
     }
@@ -511,7 +537,7 @@ export const getAllPostulaciones = async (filters: { startDate?: string; endDate
     if (filters.endDate) {
       const endDate = new Date(filters.endDate);
       if (isNaN(endDate.getTime())) {
-        throw new Error('La fecha de fin (endDate) no es válida.');
+        throw new Error("La fecha de fin (endDate) no es válida.");
       }
       fechaAsignacion[Op.lte] = endDate;
     }
@@ -522,11 +548,10 @@ export const getAllPostulaciones = async (filters: { startDate?: string; endDate
   }
 
   // Filtro por nombre de productora
-  const include: any[] = [];
   if (filters.productoraName) {
     include.push({
       model: Productora,
-      as: 'productoraDelPremio',
+      as: "productoraDelPremio",
       required: true,
       where: {
         nombre_productora: {
@@ -537,17 +562,32 @@ export const getAllPostulaciones = async (filters: { startDate?: string; endDate
   } else {
     include.push({
       model: Productora,
-      as: 'productoraDelPremio',
+      as: "productoraDelPremio",
       required: true,
     });
   }
 
-  const postulaciones = await ProductoraPremio.findAll({
+  // Paginación
+  const page = filters.page || 1;
+  const limit = filters.limit || 10;
+  const offset = (page - 1) * limit;
+
+  // Obtener datos paginados
+  const { count, rows: postulaciones } = await ProductoraPremio.findAndCountAll({
     where,
     include,
+    limit,
+    offset,
+    order: [["fecha_asignacion", "DESC"]],
   });
 
-  return postulaciones || [];
+  return {
+    message: "Postulaciones obtenidas exitosamente.",
+    total: count,
+    page,
+    limit,
+    data: postulaciones,
+  };
 };
 
 // Servicio para crear una postulación a una productora

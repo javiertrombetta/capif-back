@@ -589,9 +589,31 @@ export const producersSwaggerDocs = {
         "/producers/isrc": {
             get: {
                 summary: "Obtener todos los ISRCs",
-                description: "Devuelve una lista de todos los ISRCs registrados en el sistema.",
+                description: "Devuelve una lista paginada de todos los ISRCs registrados en el sistema.",
                 tags: ["Productoras"],
-                security: [{ bearerAuth: [] }],
+                security: [{ "bearerAuth": [] }],
+                parameters: [
+                    {
+                        in: "query",
+                        name: "page",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        description: "Número de página para la paginación. Debe ser un número entero mayor o igual a 1.",
+                        example: 1
+                    },
+                    {
+                        in: "query",
+                        name: "limit",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        description: "Número máximo de resultados por página. Debe ser un número entero mayor o igual a 1.",
+                        example: 50
+                    }
+                ],
                 responses: {
                     200: {
                         description: "ISRCs encontrados exitosamente.",
@@ -802,39 +824,64 @@ export const producersSwaggerDocs = {
             },
             get: {
                 summary: "Obtener todas las postulaciones",
-                description: "Devuelve una lista de todas las postulaciones con soporte para filtros opcionales.",
+                description: "Devuelve una lista de todas las postulaciones con soporte para filtros opcionales y paginación.",
                 tags: ["Productoras"],
                 security: [{ bearerAuth: [] }],
                 parameters: [
-                {
-                    name: "startDate",
-                    in: "query",
-                    required: false,
-                    description: "Fecha de inicio para filtrar postulaciones.",
-                    schema: {
-                        type: "string",
-                        format: "date-time",
+                    {
+                        name: "startDate",
+                        in: "query",
+                        required: false,
+                        description: "Fecha de inicio para filtrar postulaciones (formato ISO: YYYY-MM-DD).",
+                        schema: {
+                            type: "string",
+                            format: "date",
+                        },
+                        example: "2024-01-01"
                     },
-                },
-                {
-                    name: "endDate",
-                    in: "query",
-                    required: false,
-                    description: "Fecha de fin para filtrar postulaciones.",
-                    schema: {
-                        type: "string",
-                        format: "date-time",
+                    {
+                        name: "endDate",
+                        in: "query",
+                        required: false,
+                        description: "Fecha de fin para filtrar postulaciones (formato ISO: YYYY-MM-DD).",
+                        schema: {
+                            type: "string",
+                            format: "date",
+                        },
+                        example: "2024-12-31"
                     },
-                },
-                {
-                    name: "productoraName",
-                    in: "query",
-                    required: false,
-                    description: "Nombre parcial o completo de la productora.",
-                    schema: {
-                        type: "string",
+                    {
+                        name: "productoraName",
+                        in: "query",
+                        required: false,
+                        description: "Nombre parcial o completo de la productora.",
+                        schema: {
+                            type: "string",
+                        },
+                        example: "Sony Music"
                     },
-                },
+                    {
+                        name: "page",
+                        in: "query",
+                        required: false,
+                        description: "Número de página para la paginación. Debe ser un número entero mayor o igual a 1.",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        example: 1
+                    },
+                    {
+                        name: "limit",
+                        in: "query",
+                        required: false,
+                        description: "Número máximo de resultados por página. Debe ser un número entero mayor o igual a 1.",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        example: 10
+                    }
                 ],
                 responses: {
                     200: {

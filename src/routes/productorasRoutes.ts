@@ -41,6 +41,7 @@ import {
   deleteProductoraParamsSchema, 
   documentoParamsSchema, 
   getAllDocumentosSchema, 
+  getAllISRCsQuerySchema, 
   getAllPostulacionesQuerySchema, 
   getDocumentoByIdSchema, 
   getDocumentosMetadataSchema, 
@@ -145,6 +146,7 @@ router.get(
   "/isrc",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.QUERY]: getAllISRCsQuerySchema }),
   getAllISRCs
 );
 

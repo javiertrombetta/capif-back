@@ -140,7 +140,7 @@ router.post(
 );
 
 router.post(
-  "/shares/massive",
+  "/shares/bulk",
   authenticate,
   authorizeRoles(["admin_principal"]),
   uploadCSV.single("sharesFile"),
@@ -234,7 +234,7 @@ router.post(
 );
 
 router.post(
-  "/massive",
+  "/bulk",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   uploadCSV.single("repertoiresFile"),

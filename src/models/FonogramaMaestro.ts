@@ -9,7 +9,6 @@ class FonogramaMaestro extends Model {
   public fonograma_id!: string;
   public operacion!: (typeof OPERACIONES_PERMITIDAS)[number];
   public fecha_operacion!: Date;
-  public isProcesado!: Boolean;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -70,17 +69,6 @@ FonogramaMaestro.init(
         },
       },
     },
-    isProcesado: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-      validate: {
-        isIn: {
-          args: [[true, false]],
-          msg: 'El campo isProcesado debe ser un booleano.',
-        },
-      },
-    },
   },
   {
     sequelize,
@@ -95,10 +83,6 @@ FonogramaMaestro.init(
       {
         fields: ['operacion'],
         name: 'idx_maestro_operacion',
-      },
-      {
-        fields: ['isProcesado'],
-        name: 'idx_maestro_is_procesado',
       },
     ],
   }

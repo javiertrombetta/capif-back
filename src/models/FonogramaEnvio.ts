@@ -10,10 +10,16 @@ const ESTADO_ENVIO = [
   'ERROR EN EL ENVIO',
 ] as const;
 
+const CONTENIDO = [
+  'DATOS',
+  'COMPLETO',
+] as const;
+
 class FonogramaEnvio extends Model {
   public id_envio_vericast!: string;
   public fonograma_id!: string;
   public tipo_estado!: (typeof ESTADO_ENVIO)[number];
+  public tipo_contenido!: (typeof CONTENIDO)[number];
   public fecha_envio_inicial!: Date | null;
   public fecha_envio_ultimo!: Date | null;
   public readonly createdAt!: Date;
@@ -64,6 +70,16 @@ FonogramaEnvio.init(
         },
       },
     },
+    tipo_contenido: {
+      type: DataTypes.ENUM(...CONTENIDO),
+      allowNull: false,
+      validate: {
+        isIn: {
+          args: [CONTENIDO],
+          msg: 'El tipo de contenido no es válido.',
+        },
+      },
+    },
     fecha_envio_inicial: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -94,11 +110,15 @@ FonogramaEnvio.init(
       {
         fields: ['fonograma_id'],
         name: 'idx_envio_fonograma_id',
-      },      
+      },
       {
         fields: ['tipo_estado'],
         name: 'idx_envio_tipo_estado',
-      },      
+      },
+      {
+        fields: ['tipo_contenido'],
+        name: 'idx_envio_tipo_contenido',
+      },
     ],
   }
 );

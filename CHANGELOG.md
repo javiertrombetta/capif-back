@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.48 - 13-02-2025
+## 🚀 Features
+
+- feat: add recaptcha
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.45
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.45 - 13-02-2025
 ## 🐛 Fixes
 

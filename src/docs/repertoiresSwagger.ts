@@ -2012,7 +2012,7 @@ export const repertoiresSwaggerDocs = {
             },
             get: {
                 summary: "Listar fonogramas",
-                description: "Obtiene una lista de fonogramas, permitiendo la búsqueda por título, ISRC, artista, álbum, año de lanzamiento, sello discográfico y productora.",
+                description: "Obtiene una lista de fonogramas, permitiendo la búsqueda por título, ISRC, artista, álbum, año de lanzamiento, sello discográfico y productora, con soporte para paginación.",
                 tags: ["Repertorios"],
                 security: [{ bearerAuth: [] }],
                 parameters: [
@@ -2061,7 +2061,7 @@ export const repertoiresSwaggerDocs = {
                         name: "sello_discografico",
                         required: false,
                         schema: { type: "string" },
-                        description: "Filtrar fonogramas por sello discográfico (puede buscar coincidencias parciales).",
+                        description: "Filtrar fonogramas por sello discográfico (coincidencias parciales permitidas).",
                         example: "Sello Ejemplo"
                     },
                     {
@@ -2071,6 +2071,22 @@ export const repertoiresSwaggerDocs = {
                         schema: { type: "string" },
                         description: "Filtrar fonogramas por nombre de la productora propietaria.",
                         example: "Productora Ejemplo"
+                    },
+                    {
+                        in: "query",
+                        name: "page",
+                        required: false,
+                        schema: { type: "integer", minimum: 1 },
+                        description: "Número de página para la paginación. Debe ser un número entero mayor o igual a 1.",
+                        example: 1
+                    },
+                    {
+                        in: "query",
+                        name: "limit",
+                        required: false,
+                        schema: { type: "integer", minimum: 1 },
+                        description: "Número máximo de resultados por página. Debe ser un número entero mayor o igual a 1.",
+                        example: 50
                     }
                 ],
                 responses: {
@@ -2081,6 +2097,21 @@ export const repertoiresSwaggerDocs = {
                                 schema: {
                                     type: "object",
                                     properties: {
+                                        total: {
+                                            type: "integer",
+                                            description: "Cantidad total de fonogramas encontrados.",
+                                            example: 5
+                                        },
+                                        page: {
+                                            type: "integer",
+                                            description: "Número de página actual.",
+                                            example: 1
+                                        },
+                                        limit: {
+                                            type: "integer",
+                                            description: "Número de resultados por página.",
+                                            example: 50
+                                        },
                                         data: {
                                             type: "array",
                                             description: "Lista de fonogramas encontrados.",
@@ -2135,11 +2166,6 @@ export const repertoiresSwaggerDocs = {
                                                     }
                                                 }
                                             }
-                                        },
-                                        total: {
-                                            type: "integer",
-                                            description: "Cantidad total de fonogramas encontrados.",
-                                            example: 5
                                         }
                                     }
                                 }

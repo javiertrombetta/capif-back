@@ -721,8 +721,13 @@ export const listFonogramas = async (queryParams: any) => {
     whereClause.sello_discografico = { [Op.iLike]: `%${queryParams.sello_discografico}%` };
   }
 
-  // Configuración de la búsqueda en la base de datos
-  const fonogramas = await Fonograma.findAll({
+  // Paginación
+  const page = queryParams.page ? parseInt(queryParams.page, 10) : 1;
+  const limit = queryParams.limit ? parseInt(queryParams.limit, 10) : 50;
+  const offset = (page - 1) * limit;
+
+  // Obtener datos paginados
+  const { count, rows: fonogramas } = await Fonograma.findAndCountAll({
     where: whereClause,
     attributes: [
       "id_fonograma",
@@ -745,6 +750,8 @@ export const listFonogramas = async (queryParams: any) => {
       },
     ],
     order: [["titulo", "ASC"]],
+    limit,
+    offset,
   });
 
   // Formatear la respuesta incluyendo nombre_productora
@@ -761,8 +768,11 @@ export const listFonogramas = async (queryParams: any) => {
   }));
 
   return {
+    message: "Fonogramas obtenidos exitosamente.",
+    total: count,
+    page,
+    limit,
     data: formattedFonogramas,
-    total: formattedFonogramas.length,
   };
 };
 

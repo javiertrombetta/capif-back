@@ -140,96 +140,107 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
     };
 };
 
-export const obtenerConflictos = async (filtros: {fecha_desde?: string; fecha_hasta?: string; estado?: string; isrc?: string; productora_id?: string;}) => {
+export const obtenerConflictos = async (filtros: {
+  fecha_desde?: string;
+  fecha_hasta?: string;
+  estado?: string;
+  isrc?: string;
+  productora_id?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const { fecha_desde, fecha_hasta, estado, isrc, productora_id, page = 1, limit = 10 } = filtros;
 
-    const { fecha_desde, fecha_hasta, estado, isrc, productora_id } = filtros;
+  // Filtros iniciales
+  const where: any = {};
 
-    // Filtros iniciales
-    const where: any = {};
+  // Filtro por fechas de período
+  if (fecha_desde || fecha_hasta) {
+    where.fecha_periodo_desde = fecha_desde ? { [Op.gte]: new Date(fecha_desde) } : undefined;
+    where.fecha_periodo_hasta = fecha_hasta ? { [Op.lte]: new Date(fecha_hasta) } : undefined;
+  }
 
-    // Filtro por fechas de período
-    if (fecha_desde || fecha_hasta) {
-      where.fecha_periodo_desde = {
-        ...(fecha_desde ? { [Op.gte]: new Date(fecha_desde) } : {}),
+  // Filtro por estado del conflicto
+  if (estado) {
+    if (estado === "en curso") {
+      where.estado_conflicto = {
+        [Op.in]: [
+          "PENDIENTE CAPIF",
+          "PRIMERA INSTANCIA",
+          "PRIMERA PRORROGA",
+          "SEGUNDA INSTANCIA",
+          "SEGUNDA PRORROGA",
+        ],
       };
-      where.fecha_periodo_hasta = {
-        ...(fecha_hasta ? { [Op.lte]: new Date(fecha_hasta) } : {}),
-      };
+    } else if (estado === "cerrado") {
+      where.estado_conflicto = "CERRADO";
+    } else if (estado === "vencido") {
+      where.estado_conflicto = "VENCIDO";
     }
+  }
 
-    // Filtro por estado del conflicto
-    if (estado) {
-      if (estado === "en curso") {
-        where.estado_conflicto = {
-          [Op.in]: [
-            "PENDIENTE CAPIF",
-            "PRIMERA INSTANCIA",
-            "PRIMERA PRORROGA",
-            "SEGUNDA INSTANCIA",
-            "SEGUNDA PRORROGA",
+  // Construcción de condiciones para incluir relaciones
+  const include: any[] = [
+    {
+      model: Fonograma,
+      as: "fonogramaDelConflicto",
+      attributes: ["id_fonograma", "isrc", "titulo", "artista"],
+      where: isrc ? { isrc } : undefined,
+    },
+    {
+      model: Productora,
+      as: "productoraDelConflicto",
+      attributes: ["id_productora", "nombre"],
+      where: productora_id ? { id_productora: productora_id } : undefined,
+    },
+    {
+      model: ConflictoParte,
+      as: "partesDelConflicto",
+      attributes: [
+        "id_conflicto_participacion",
+        "estado",
+        "porcentaje_declarado",
+        "porcentaje_confirmado",
+        "is_documentos_enviados",
+      ],
+      include: [
+        {
+          model: FonogramaParticipacion,
+          as: "participacionDeLaParte",
+          attributes: [
+            "id_participacion",
+            "porcentaje_participacion",
+            "fecha_participacion_inicio",
+            "fecha_participacion_hasta",
           ],
-        };
-      } else if (estado === "cerrado") {
-        where.estado_conflicto = "CERRADO";
-      } else if (estado === "vencido") {
-        where.estado_conflicto = "VENCIDO";
-      }
-    }
+        },
+      ],
+    },
+  ].filter((inc) => !inc.where || Object.keys(inc.where).length > 0);
 
-    // Construcción de condiciones para incluir relaciones
-    const include: any[] = [
-      {
-        model: Fonograma,
-        as: "fonogramaDelConflicto",
-        attributes: ["id_fonograma", "isrc", "titulo", "artista"],
-        where: isrc ? { isrc } : undefined,
-      },
-      {
-        model: Productora,
-        as: "productoraDelConflicto",
-        attributes: ["id_productora", "nombre"],
-        where: productora_id ? { id_productora: productora_id } : undefined,
-      },
-      {
-        model: ConflictoParte,
-        as: "partesDelConflicto",
-        attributes: [
-          "id_conflicto_participacion",
-          "estado",
-          "porcentaje_declarado",
-          "porcentaje_confirmado",
-          "is_documentos_enviados",
-        ],
-        include: [
-          {
-            model: FonogramaParticipacion,
-            as: "participacionDeLaParte",
-            attributes: [
-              "id_participacion",
-              "porcentaje_participacion",
-              "fecha_participacion_inicio",
-              "fecha_participacion_hasta",
-            ],
-          },
-        ],
-      },
-    ].filter((inc) => !inc.where || Object.keys(inc.where).length > 0);
+  // Paginación
+  const offset = (page - 1) * limit;
 
-    // Consulta a la base de datos
-    const conflictos = await Conflicto.findAll({
-      where,
-      include,
-      order: [["fecha_inicio_conflicto", "DESC"]],
-    });
+  // Consulta a la base de datos
+  const { count, rows: conflictos } = await Conflicto.findAndCountAll({
+    where,
+    include,
+    order: [["fecha_inicio_conflicto", "DESC"]],
+    limit,
+    offset,
+  });
 
-    if (!conflictos.length) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.CONFLICTO.NOT_FOUND);
-    }
+  if (!conflictos.length) {
+    throw new Err.NotFoundError(MESSAGES.ERROR.CONFLICTO.NOT_FOUND);
+  }
 
-    return {
-      message: MESSAGES.SUCCESS.CONFLICTO.CONFLICTO_FETCHED,
-      data: conflictos,
-    };
+  return {
+    message: MESSAGES.SUCCESS.CONFLICTO.CONFLICTO_FETCHED,
+    total: count,
+    page,
+    limit,
+    data: conflictos,
+  };
 };
 
 export const obtenerConflicto = async (id: string) => {

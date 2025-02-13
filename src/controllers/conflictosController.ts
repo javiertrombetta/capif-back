@@ -23,7 +23,7 @@ export const crearConflicto = async (req: AuthenticatedRequest, res: Response, n
 
 export const obtenerConflictos = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { fecha_desde, fecha_hasta, estado, isrc, productora_id } = req.query;
+    const { fecha_desde, fecha_hasta, estado, isrc, productora_id, page, limit } = req.query;
 
     logger.info(`${req.method} ${req.originalUrl} - Obteniendo conflictos con filtros`);
 
@@ -33,6 +33,8 @@ export const obtenerConflictos = async (req: Request, res: Response, next: NextF
       estado: estado as string,
       isrc: isrc as string,
       productora_id: productora_id as string,
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 10,
     });
 
     res.status(200).json(resultado);

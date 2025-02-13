@@ -5,7 +5,7 @@ COPY .sequelizerc ./
 COPY package*.json ./
 
 RUN apk add --no-cache postgresql-client
-RUN npm install -g npm@11.1.0 && npm cache clean --force
+RUN npm install -g npm@latest && npm cache clean --force
 RUN npm install --frozen-lockfile && npm cache clean --force
 
 FROM build-deps AS builder

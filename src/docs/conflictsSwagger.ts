@@ -867,7 +867,7 @@ export const conflictsSwaggerDocs = {
             },
             get: {
                 summary: "Obtener lista de conflictos",
-                description: "Recupera una lista de conflictos con la posibilidad de aplicar filtros como fecha, estado, ISRC y productora.",
+                description: "Recupera una lista de conflictos con la posibilidad de aplicar filtros como fecha, estado, ISRC y productora, con soporte para paginación.",
                 tags: ["Conflictos"],
                 security: [{ bearerAuth: [] }],
                 parameters: [
@@ -876,30 +876,30 @@ export const conflictsSwaggerDocs = {
                         name: "fecha_desde",
                         schema: {
                             type: "string",
-                            format: "date",
+                            format: "date"
                         },
                         description: "Fecha de inicio del rango de búsqueda (ISO 8601: YYYY-MM-DD).",
-                        example: "2024-01-01",
+                        example: "2024-01-01"
                     },
                     {
                         in: "query",
                         name: "fecha_hasta",
                         schema: {
                             type: "string",
-                            format: "date",
+                            format: "date"
                         },
                         description: "Fecha de finalización del rango de búsqueda (ISO 8601: YYYY-MM-DD).",
-                        example: "2024-06-30",
+                        example: "2024-06-30"
                     },
                     {
                         in: "query",
                         name: "estado",
                         schema: {
                             type: "string",
-                            enum: ["PENDIENTE CAPIF", "PRIMERA INSTANCIA", "PRIMERA PRORROGA", "SEGUNDA INSTANCIA", "SEGUNDA PRORROGA", "VENCIDO", "CERRADO", "en curso"],
+                            enum: ["PENDIENTE CAPIF", "PRIMERA INSTANCIA", "PRIMERA PRORROGA", "SEGUNDA INSTANCIA", "SEGUNDA PRORROGA", "VENCIDO", "CERRADO", "en curso"]
                         },
                         description: "Estado del conflicto para filtrar.",
-                        example: "CERRADO",
+                        example: "CERRADO"
                     },
                     {
                         in: "query",
@@ -907,21 +907,41 @@ export const conflictsSwaggerDocs = {
                         schema: {
                             type: "string",
                             minLength: 12,
-                            maxLength: 12,
+                            maxLength: 12
                         },
                         description: "Código ISRC del fonograma en conflicto.",
-                        example: "ARZZ12345678",
+                        example: "AR1232512345"
                     },
                     {
                         in: "query",
                         name: "productora_id",
                         schema: {
                             type: "string",
-                            format: "uuid",
+                            format: "uuid"
                         },
                         description: "UUID de la productora asociada al conflicto.",
-                        example: "550e8400-e29b-41d4-a716-446655440000",
+                        example: "550e8400-e29b-41d4-a716-446655440000"
                     },
+                    {
+                        in: "query",
+                        name: "page",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        description: "Número de página para la paginación. Debe ser un número entero mayor o igual a 1.",
+                        example: 1
+                    },
+                    {
+                        in: "query",
+                        name: "limit",
+                        schema: {
+                            type: "integer",
+                            minimum: 1
+                        },
+                        description: "Número máximo de resultados por página. Debe ser un número entero mayor o igual a 1.",
+                        example: 10
+                    }
                 ],
                 responses: {
                     200: {
@@ -933,76 +953,92 @@ export const conflictsSwaggerDocs = {
                                     properties: {
                                         message: {
                                             type: "string",
-                                            example: "Conflictos obtenidos exitosamente.",
-                                            },
-                                            data: {
+                                            example: "Conflictos obtenidos exitosamente."
+                                        },
+                                        total: {
+                                            type: "integer",
+                                            description: "Cantidad total de conflictos encontrados.",
+                                            example: 5
+                                        },
+                                        page: {
+                                            type: "integer",
+                                            description: "Número de página actual.",
+                                            example: 1
+                                        },
+                                        limit: {
+                                            type: "integer",
+                                            description: "Número de resultados por página.",
+                                            example: 10
+                                        },
+                                        data: {
                                             type: "array",
+                                            description: "Lista de conflictos encontrados.",
                                             items: {
                                                 type: "object",
                                                 properties: {
                                                     id_conflicto: {
                                                         type: "string",
                                                         format: "uuid",
-                                                        example: "550e8400-e29b-41d4-a716-446655440000",
+                                                        example: "550e8400-e29b-41d4-a716-446655440000"
                                                     },
                                                     estado_conflicto: {
                                                         type: "string",
-                                                        example: "PRIMERA INSTANCIA",
+                                                        example: "PRIMERA INSTANCIA"
                                                     },
                                                     fonograma: {
                                                         type: "object",
                                                         properties: {
-                                                        id_fonograma: {
-                                                            type: "string",
-                                                            format: "uuid",
-                                                            example: "12d3e456-789b-12d3-a456-426614174000",
-                                                        },
-                                                        isrc: {
-                                                            type: "string",
-                                                            example: "ARZZ12345678",
-                                                        },
-                                                        titulo: {
-                                                            type: "string",
-                                                            example: "Canción Ejemplo",
-                                                        },
-                                                        artista: {
-                                                            type: "string",
-                                                            example: "Artista Ejemplo",
-                                                        },
-                                                        },
+                                                            id_fonograma: {
+                                                                type: "string",
+                                                                format: "uuid",
+                                                                example: "12d3e456-789b-12d3-a456-426614174000"
+                                                            },
+                                                            isrc: {
+                                                                type: "string",
+                                                                example: "AR1232512345"
+                                                            },
+                                                            titulo: {
+                                                                type: "string",
+                                                                example: "Canción Ejemplo"
+                                                            },
+                                                            artista: {
+                                                                type: "string",
+                                                                example: "Artista Ejemplo"
+                                                            }
+                                                        }
                                                     },
                                                     productora: {
                                                         type: "object",
                                                         properties: {
-                                                        id_productora: {
-                                                            type: "string",
-                                                            format: "uuid",
-                                                            example: "3a4b567c-8901-12d3-a456-426655440000",
-                                                        },
-                                                        nombre: {
-                                                            type: "string",
-                                                            example: "Productora Ejemplo",
-                                                        },
-                                                        },
+                                                            id_productora: {
+                                                                type: "string",
+                                                                format: "uuid",
+                                                                example: "3a4b567c-8901-12d3-a456-426655440000"
+                                                            },
+                                                            nombre: {
+                                                                type: "string",
+                                                                example: "Productora Ejemplo"
+                                                            }
+                                                        }
                                                     },
                                                     porcentaje_periodo: {
                                                         type: "number",
-                                                        example: 105.5,
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
+                                                        example: 105.5
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     400: { description: "Datos inválidos o filtros incorrectos." },
                     401: { description: "Usuario no autenticado." },
                     403: { description: "Usuario no autorizado." },
                     404: { description: "No se encontraron conflictos con los filtros aplicados." },
-                    500: { description: "Error interno del servidor." },
-                },
+                    500: { description: "Error interno del servidor." }
+                }
             },
         },
     },

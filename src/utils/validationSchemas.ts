@@ -1412,13 +1412,37 @@ export const getFonogramaByIdParamsSchema = Joi.object({
 });
 
 export const listFonogramasQuerySchema = Joi.object({
-  isrc: Joi.string().optional(),
-  titulo: Joi.string().optional(),
-  artista: Joi.string().optional(),
-  album: Joi.string().optional(),
-  sello_discografico: Joi.string().optional(),
-  anio_lanzamiento: Joi.number().integer().min(1900).max(new Date().getFullYear()).optional(),
-  nombre_productora: Joi.string().optional(),
+  isrc: Joi.string().trim().optional().messages({
+    "string.base": "El ISRC debe ser un texto.",
+  }),
+  titulo: Joi.string().trim().optional().messages({
+    "string.base": "El título debe ser un texto.",
+  }),
+  artista: Joi.string().trim().optional().messages({
+    "string.base": "El nombre del artista debe ser un texto.",
+  }),
+  album: Joi.string().trim().optional().messages({
+    "string.base": "El nombre del álbum debe ser un texto.",
+  }),
+  sello_discografico: Joi.string().trim().optional().messages({
+    "string.base": "El sello discográfico debe ser un texto.",
+  }),
+  anio_lanzamiento: Joi.number().integer().min(1900).max(new Date().getFullYear()).optional().messages({
+    "number.base": "El año de lanzamiento debe ser un número.",
+    "number.min": "El año de lanzamiento no puede ser menor a 1900.",
+    "number.max": `El año de lanzamiento no puede ser mayor a ${new Date().getFullYear()}.`,
+  }),
+  nombre_productora: Joi.string().trim().optional().messages({
+    "string.base": "El nombre de la productora debe ser un texto.",
+  }),
+  page: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'page' debe ser un número entero.",
+    "number.min": "El campo 'page' debe ser un número mayor o igual a 1.",
+  }),
+  limit: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'limit' debe ser un número entero.",
+    "number.min": "El campo 'limit' debe ser un número mayor o igual a 1.",
+  }),
 }).options({ allowUnknown: false });
 
 export const updateFonogramaParamsSchema = Joi.object({
@@ -1606,6 +1630,7 @@ export const obtenerConflictosQuerySchema = Joi.object({
       "date.base": "La fecha de inicio debe ser una fecha válida.",
       "date.format": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD).",
     }),
+
   fecha_hasta: Joi.date()
     .iso()
     .greater(Joi.ref("fecha_desde"))
@@ -1615,22 +1640,48 @@ export const obtenerConflictosQuerySchema = Joi.object({
       "date.format": "La fecha de finalización debe estar en formato ISO (YYYY-MM-DD).",
       "date.greater": "La fecha de finalización debe ser posterior a la fecha de inicio.",
     }),
+
   estado: Joi.string()
-    .valid("PENDIENTE CAPIF", "PRIMERA INSTANCIA", "PRIMERA PRORROGA", "SEGUNDA INSTANCIA", "SEGUNDA PRORROGA", "VENCIDO", "CERRADO", "en curso")
+    .valid(
+      "PENDIENTE CAPIF",
+      "PRIMERA INSTANCIA",
+      "PRIMERA PRORROGA",
+      "SEGUNDA INSTANCIA",
+      "SEGUNDA PRORROGA",
+      "VENCIDO",
+      "CERRADO",
+      "en curso"
+    )
     .optional()
     .messages({
-      "any.only": "El estado debe ser uno de los siguientes: PENDIENTE CAPIF, PRIMERA INSTANCIA, PRIMERA PRORROGA, SEGUNDA INSTANCIA, SEGUNDA PRORROGA, VENCIDO, CERRADO o 'en curso'.",
+      "any.only":
+        "El estado debe ser uno de los siguientes: PENDIENTE CAPIF, PRIMERA INSTANCIA, PRIMERA PRORROGA, SEGUNDA INSTANCIA, SEGUNDA PRORROGA, VENCIDO, CERRADO o 'en curso'.",
     }),
+
   isrc: Joi.string()
     .length(12)
     .regex(/^[A-Z]{2}[A-Z0-9]{10}$/)
     .optional()
     .messages({
       "string.length": "El ISRC debe tener exactamente 12 caracteres.",
-      "string.pattern.base": "El ISRC debe comenzar con dos letras seguidas de 10 caracteres alfanuméricos.",
+      "string.pattern.base":
+        "El ISRC debe comenzar con dos letras seguidas de 10 caracteres alfanuméricos.",
     }),
-  productora_id: uuidSchema.optional(),
-});
+
+  productora_id: uuidSchema.optional().messages({
+    "string.base": "El ID de la productora debe ser un UUID válido.",
+  }),
+
+  page: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'page' debe ser un número entero.",
+    "number.min": "El campo 'page' debe ser un número mayor o igual a 1.",
+  }),
+
+  limit: Joi.number().integer().min(1).optional().messages({
+    "number.base": "El campo 'limit' debe ser un número entero.",
+    "number.min": "El campo 'limit' debe ser un número mayor o igual a 1.",
+  }),
+}).options({ allowUnknown: false });
 
 
 // Esquema para validar los parámetros de la URL en la cancelación (desistir) de un conflicto

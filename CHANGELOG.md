@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.36 - 13-02-2025
+## 🐛 Fixes
+
+- fix: change repertoires and pagination in users and producers
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.33
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.33 - 11-02-2025
 ## 🐛 Fixes
 

@@ -89,7 +89,7 @@ app.use(
     skip: skipSuccessLogs,
   })
 );
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100, keyGenerator: (req) => req.ip || 'unknown' }));
+// app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100, keyGenerator: (req) => req.ip || 'unknown' }));
 
 // Middleware de transacciones antes de la validación de rutas
 app.use(transactionMiddleware);

@@ -91,3 +91,6 @@ out/
 
 # Postgres
 /postgres
+
+# FTP for dev
+/ftp-root

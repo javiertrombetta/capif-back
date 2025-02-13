@@ -2,6 +2,7 @@ import express from "express";
 import { celebrate, Segments } from "celebrate";
 
 import { authenticate, authorizeRoles } from "../middlewares/auth";
+import verifyRecaptcha from "../middlewares/recaptcha";
 
 import {
   registerSecondaryProductor,
@@ -89,7 +90,7 @@ router.post(
 
 router.post("/logout", authenticate, logout);
 
-router.post("/login", celebrate({ [Segments.BODY]: loginSchema }), login);
+router.post("/login", celebrate({ [Segments.BODY]: loginSchema }), verifyRecaptcha, login);
 
 router.post(
   "/admins/secondary",

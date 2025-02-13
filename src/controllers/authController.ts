@@ -153,11 +153,28 @@ export const login = async (
     });
 
     // Registro de sesión
+    const obtenerIp = (req: Request): string => {
+    const xForwardedFor = req.headers["x-forwarded-for"];
+    
+    if (Array.isArray(xForwardedFor)) {
+        return xForwardedFor[0]; // Si es un array, toma el primer valor
+    }
+
+    if (typeof xForwardedFor === "string") {
+        return xForwardedFor.split(",")[0].trim(); // Si es un string, separa por comas por si hay varias IP
+    }
+
+    // Si la IP es ::1 (IPv6 localhost), convertirla a 127.0.0.1
+    const ip = req.ip || "IP desconocida";    
+    return ip === "::1" ? "127.0.0.1" : ip; // Usa req.ip si no hay X-Forwarded-For. Si todo es undefined, devuelve IP desconocida
+    };
+
+    // Uso en registrarSesion:
     await registrarSesion({
-      usuarioRegistranteId: targetUser.id_usuario,
-      ipOrigen: req.ip || "IP desconocida",
-      navegador: req.headers["user-agent"] || "Navegador desconocido",
-      fechaInicioSesion: new Date(),
+        usuarioRegistranteId: targetUser.id_usuario,
+        ipOrigen: obtenerIp(req),
+        navegador: req.headers["user-agent"] || "Navegador desconocido",
+        fechaInicioSesion: new Date(),
     });
 
     logger.info(

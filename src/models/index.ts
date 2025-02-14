@@ -211,15 +211,27 @@ Cashflow.hasMany(CashflowTraspaso, {
 // Conflicto
 
 Conflicto.belongsTo(Fonograma, {
-  foreignKey: 'fonograma_id',
-  as: 'fonogramaDelConflicto',
-  onDelete: 'RESTRICT',
+  foreignKey: "fonograma_id",
+  as: "fonogramaDelConflicto",
+  onDelete: "RESTRICT",
 });
 
 Fonograma.hasMany(Conflicto, {
-  foreignKey: 'fonograma_id',
-  as: 'conflictosDelFonograma',
-  onDelete: 'RESTRICT',
+  foreignKey: "fonograma_id",
+  as: "conflictosDelFonograma",
+  onDelete: "RESTRICT",
+});
+
+Productora.hasMany(Conflicto, {
+  foreignKey: "productora_conflicto_id",
+  as: "conflictosDeProductora",
+  onDelete: "RESTRICT",
+});
+
+Conflicto.belongsTo(Productora, {
+  foreignKey: "productora_conflicto_id",
+  as: "productoraDelConflicto",
+  onDelete: "RESTRICT",
 });
 
 

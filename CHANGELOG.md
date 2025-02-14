@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.57 - 14-02-2025
+## 🐛 Fixes
+
+- fix: change login for no recaptcha
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.54
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.54 - 14-02-2025
 ## 🚀 Features
 

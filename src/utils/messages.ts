@@ -313,11 +313,14 @@ export const ERROR = {
   },
 };
 
+const frontendUrl = process.env.FRONTEND_URL || "http://localhost";
+const baseUrl = new URL(frontendUrl).origin;
+
 export const EMAIL_BODY = {
   PASSWORD_RECOVERY: (resetLink: string) => `
     <h1>Recuperación de contraseña</h1>
     <p>Hacé clic en el siguiente enlace para restablecer tu contraseña:</p>
-    <a href="http://localhost:3001/password-recovery/${resetLink}">http://localhost:3001/password-recovery/${resetLink}</a>
+    <a href="${baseUrl}/password-recovery/${resetLink}">${baseUrl}/password-recovery/${resetLink}</a>
     <p>Este enlace expira en 1 hora.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
@@ -325,7 +328,7 @@ export const EMAIL_BODY = {
   VALIDATE_ACCOUNT: (validationLink: string) => `
     <h1>Confirmá tu cuenta</h1>
     <p>Hacé clic en el siguiente enlace para validar tu correo electrónico:</p>
-    <a href="http://localhost:3001/confirm-account/${validationLink}">http://localhost:3001/confirm-account/${validationLink}</a>    
+    <a href="${baseUrl}/verify-account/${validationLink}">${baseUrl}/verify-account/${validationLink}</a>    
     <p>Este enlace expira en 24 horas.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
@@ -349,7 +352,7 @@ export const EMAIL_BODY = {
   VALIDATE_ACCOUNT_WITH_TEMP_PASSWORD: (validationLink: string, tempPassword: string) => `
     <h1>Registro en el sistema GIT</h1>
     <p>Tu cuenta fue creada con éxito. Para activarla tenés que hacer clic en el siguiente enlace:</p>
-    <a href="http://localhost:3001/confirm-account/${validationLink}">http://localhost:3001/confirm-account/${validationLink}</a>    
+    <a href="${baseUrl}/verify-account/${validationLink}">${baseUrl}/verify-account/${validationLink}</a>    
     <p>Este enlace expira en 24 horas.</p>
     <p>Usá la siguiente contraseña temporal para ingresar por primera vez:</p>
     <p><strong>${tempPassword}</strong></p>

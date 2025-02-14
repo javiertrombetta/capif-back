@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.51 - 14-02-2025
+## 🚀 Features
+
+- feat: add logs for postman
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.48
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.48 - 13-02-2025
 ## 🚀 Features
 

@@ -3,7 +3,7 @@ import { celebrate, Segments } from "celebrate";
 
 import { authenticate, authorizeRoles } from "../middlewares/auth";
 import { uploadAudio } from '../middlewares/audio';
-import uploadCSV from '../middlewares/csv';
+import uploadCSV from '../middlewares/csvFromMemory';
 
 import {
   createFonograma,

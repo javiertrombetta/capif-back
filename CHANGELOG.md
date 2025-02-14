@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.63 - 14-02-2025
+## 🐛 Fixes
+
+- fix: add relations to Conflicto model
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.60
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.60 - 14-02-2025
 ## 🐛 Fixes
 

@@ -92,6 +92,7 @@ type VistaData = {
     // { nombreVista: "Usuarios" },
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
+    { nombreVista: "Habilitar Deshabilitar", vistaSuperior: "Usuarios" },
 
     // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
@@ -121,6 +122,7 @@ type VistaData = {
     // { nombreVista: "Usuarios" },
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
+    { nombreVista: "Habilitar Deshabilitar", vistaSuperior: "Usuarios" },
 
     // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
@@ -148,6 +150,7 @@ type VistaData = {
     // { nombreVista: "Usuarios" },
     { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
+    { nombreVista: "Habilitar Deshabilitar", vistaSuperior: "Usuarios" },
 
     // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },

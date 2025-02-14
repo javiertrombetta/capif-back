@@ -176,16 +176,16 @@ export const resetDatabase = async (req: Request, res: Response) => {
 };
 
 export const getLogs = (req: Request, res: Response) => {
-  const { level, date, startTime, endTime, search, lines = 100 } = req.query;
+  const { level, date, startTime, endTime, search, lines = 100, order = 'desc' } = req.query;
 
-  // Obtener la fecha en la zona horaria de Argentina (UTC-3)
+  // 📌 Obtener la fecha en la zona horaria de Argentina (UTC-3)
   const localDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' })
     .format(new Date()); // Formato YYYY-MM-DD
 
   const logDate = date ? date.toString() : localDate;
   const logPath = path.join(__dirname, `../../logs/combined-${logDate}.log`);
 
-  // Verificar si el archivo existe antes de leerlo
+  // 📌 Verificar si el archivo existe antes de leerlo
   if (!fs.existsSync(logPath)) {
     return res.status(404).json({ message: `No se encontraron logs para la fecha ${logDate}` });
   }
@@ -221,6 +221,12 @@ export const getLogs = (req: Request, res: Response) => {
       );
     });
 
+    // 📌 Ordenar los logs según el parámetro `order`
+    if (order.toString().toLowerCase() === 'asc') {
+      logs = logs.reverse(); // Poner los logs en orden ascendente
+    }
+
+    // 📌 Limitar el número de líneas
     logs = logs.slice(-Number(lines));
 
     res.setHeader('Content-Type', 'text/plain');

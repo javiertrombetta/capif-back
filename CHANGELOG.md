@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.75 - 14-02-2025
+## 🚀 Features
+
+- feat: add enable and disable users
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.72
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.72 - 14-02-2025
 ## 🐛 Fixes
 

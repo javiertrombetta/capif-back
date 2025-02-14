@@ -200,6 +200,19 @@ export const getEnviosByFonograma = async (req: Request, res: Response, next: Ne
   }
 };
 
+export const getAllEnvios = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    logger.info(`${req.method} ${req.originalUrl} - Obteniendo todos los envíos con filtros`);
+
+    const response = await repertorioService.getAllEnvios(req.query);
+
+    return res.status(200).json(response);
+    
+  } catch (err) {
+    handleGeneralError(err, req, res, next, "Error al obtener los envíos de fonogramas");
+  }
+};
+
 export const addParticipacionToFonograma = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     logger.info(`${req.method} ${req.originalUrl} - Agregando participaciones al fonograma con ID: ${req.params.id}`);

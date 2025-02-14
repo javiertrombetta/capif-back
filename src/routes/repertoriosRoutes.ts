@@ -29,6 +29,7 @@ import {
   cambiarEstadoEnvioFonograma,
   cargarParticipacionesMasivo,
   getISRCPrefix,
+  getAllEnvios,
 } from '../controllers/repertoriosController';
 
 import { 
@@ -58,7 +59,8 @@ import {
   updateTerritorioBodySchema,
   updateTerritorioParamsSchema,
   validateISRCBodySchema,
-  cambiarEstadoEnvioFonogramaBodySchema
+  cambiarEstadoEnvioFonogramaBodySchema,
+  getAllEnviosSchema
 } from "../utils/validationSchemas";
 
 const router = express.Router();
@@ -96,7 +98,15 @@ router.get(
 );
 
 router.get(
-  "/send",
+  '/send',
+  authenticate,
+  authorizeRoles(['admin_principal', 'admin_secundario']),
+  celebrate({ [Segments.QUERY]: getAllEnviosSchema }),
+  getAllEnvios
+);
+
+router.get(
+  "/updates",
   authenticate,
   authorizeRoles(["admin_principal", "admin_secundario"]),
   celebrate({

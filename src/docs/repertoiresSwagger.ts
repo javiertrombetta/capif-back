@@ -1670,7 +1670,101 @@ export const repertoiresSwaggerDocs = {
                     500: { description: "Error interno del servidor." }
                 }
             },
-            "get": {
+            get: {
+                summary: "Obtener lista de envíos de fonogramas",
+                description: "Devuelve una lista de envíos de fonogramas, permitiendo filtrar por nombre del tema, estado de envío y rango de fechas. Soporta paginación.",
+                tags: ["Repertorios"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        in: "query",
+                        name: "nombre_tema",
+                        schema: { type: "string" },
+                        description: "Filtrar por nombre del tema.",
+                        example: "Mi Canción"
+                    },
+                    {
+                        in: "query",
+                        name: "estado_envio",
+                        schema: {
+                            type: "string",
+                            enum: ["PENDIENTE", "ENVIADO", "RECHAZADO", "ERROR"]
+                        },
+                        description: "Filtrar por estado del envío.",
+                        example: "ENVIADO"
+                    },
+                    {
+                        in: "query",
+                        name: "fecha_desde",
+                        schema: { type: "string", format: "date" },
+                        description: "Filtrar envíos desde una fecha específica (formato ISO 8601).",
+                        example: "2024-01-01"
+                    },
+                    {
+                        in: "query",
+                        name: "fecha_hasta",
+                        schema: { type: "string", format: "date" },
+                        description: "Filtrar envíos hasta una fecha específica (formato ISO 8601).",
+                        example: "2024-02-01"
+                    },
+                    {
+                        in: "query",
+                        name: "page",
+                        schema: { type: "integer", minimum: 1, default: 1 },
+                        description: "Número de página para la paginación.",
+                        example: 1
+                    },
+                    {
+                        in: "query",
+                        name: "limit",
+                        schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
+                        description: "Cantidad de registros por página.",
+                        example: 10
+                    }
+                ],
+                responses: {
+                    200: {
+                        description: "Lista de envíos obtenida exitosamente.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: { type: "string", example: "Envíos obtenidos exitosamente." },
+                                        total: { type: "integer", example: 25 },
+                                        totalPages: { type: "integer", example: 3 },
+                                        currentPage: { type: "integer", example: 1 },
+                                        limit: { type: "integer", example: 10 },
+                                        data: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    id_envio_vericast: { type: "integer", example: 12345 },
+                                                    nombre_tema: { type: "string", example: "Mi Canción" },
+                                                    tipo_estado: { type: "string", example: "ENVIADO" },
+                                                    fecha_envio_inicial: { type: "string", format: "date-time", example: "2024-01-15T10:00:00.000Z" },
+                                                    fecha_envio_ultimo: { type: "string", format: "date-time", example: "2024-02-01T12:00:00.000Z" },
+                                                    createdAt: { type: "string", format: "date-time", example: "2024-01-01T08:30:00.000Z" },
+                                                    updatedAt: { type: "string", format: "date-time", example: "2024-02-01T12:00:00.000Z" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    400: { description: "Solicitud con parámetros inválidos." },
+                    401: { description: "Usuario no autenticado." },
+                    403: { description: "Usuario no autorizado." },
+                    404: { description: "No se encontraron envíos con los filtros aplicados." },
+                    500: { description: "Error interno del servidor." }
+                }
+            }
+        },
+        "/repertoires/updates": {
+            get: {
                 summary: "Obtener novedades de fonogramas",
                 description: "Recupera las novedades de fonogramas filtradas por operación, fecha de operación, ID del fonograma y paginación.",
                 tags: ["Repertorios"],

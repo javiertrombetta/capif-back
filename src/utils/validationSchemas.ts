@@ -211,9 +211,10 @@ export const registerSecondarySchema = Joi.object({
 export const loginSchema = Joi.object({
   email: Joi.string().email().required().messages(VALIDATION_AUTH.email),
   password: Joi.string().min(8).required().messages(VALIDATION_AUTH.password),
-  recaptchaToken: process.env.NODE_ENV === "development" 
-    ? Joi.string().optional()
-    : Joi.string().required().messages({ "any.required": "El token de reCAPTCHA es obligatorio" }),
+  recaptchaToken: Joi.string().allow("").optional(),
+//   recaptchaToken: process.env.NODE_ENV === "development" 
+//     ? Joi.string().optional()
+//     : Joi.string().required().messages({ "any.required": "El token de reCAPTCHA es obligatorio" }),
 });
 
 export const selectProductoraSchema = Joi.object({

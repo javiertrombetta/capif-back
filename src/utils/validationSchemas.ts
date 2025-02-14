@@ -1051,6 +1051,58 @@ export const getEnviosByFonogramaParamsSchema = Joi.object({
     }),
 });
 
+export const getAllEnviosSchema = Joi.object({
+  nombre_tema: Joi.string()
+    .optional()
+    .messages({
+      "string.base": "El nombre del tema debe ser un texto.",
+      "string.empty": "El nombre del tema no puede estar vacío.",
+    }),
+    
+  estado_envio: Joi.string()
+    .valid('PENDIENTE', 'ENVIADO', 'RECHAZADO', 'ERROR')
+    .optional()
+    .messages({
+      "any.only": "El estado de envío debe ser uno de los siguientes valores: PENDIENTE, ENVIADO, RECHAZADO, ERROR.",
+    }),
+
+  fecha_desde: Joi.date()
+    .iso()
+    .optional()
+    .messages({
+      "date.base": "La fecha desde debe ser una fecha válida.",
+      "date.format": "La fecha desde debe estar en formato ISO 8601 (YYYY-MM-DD).",
+    }),
+
+  fecha_hasta: Joi.date()
+    .iso()
+    .optional()
+    .messages({
+      "date.base": "La fecha hasta debe ser una fecha válida.",
+      "date.format": "La fecha hasta debe estar en formato ISO 8601 (YYYY-MM-DD).",
+    }),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1)
+    .messages({
+      "number.base": "El número de página debe ser un número entero.",
+      "number.min": "La página debe ser al menos 1.",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(100)
+    .default(10)
+    .messages({
+      "number.base": "El límite debe ser un número entero.",
+      "number.min": "El límite debe ser al menos 1.",
+      "number.max": "El límite no puede ser mayor a 100.",
+    }),
+});
+
 export const getNovedadesFonogramaQuerySchema = Joi.object({
   operacion: Joi.alternatives()
     .try(

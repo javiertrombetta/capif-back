@@ -1290,6 +1290,58 @@ export const getEnviosByFonograma = async (fonogramaId: string) => {
     };
 };
 
+
+export const getAllEnvios = async (filters: any) => {
+
+    const { nombre_tema, estado_envio, fecha_desde, fecha_hasta, page = 1, limit = 10 } = filters;
+
+    const whereCondition: any = {};
+
+    if (nombre_tema) {
+        whereCondition.nombre_tema = { [Op.iLike]: `%${nombre_tema}%` };
+    }
+    if (estado_envio) {
+        whereCondition.tipo_estado = estado_envio;
+    }
+    if (fecha_desde) {
+        whereCondition.fecha_envio_inicial = { [Op.gte]: new Date(fecha_desde) };
+    }
+    if (fecha_hasta) {
+        whereCondition.fecha_envio_ultimo = { [Op.lte]: new Date(fecha_hasta) };
+    }
+
+    const offset = (Number(page) - 1) * Number(limit);
+
+    const { rows: envios, count: total } = await FonogramaEnvio.findAndCountAll({
+        where: whereCondition,
+        attributes: [
+        "id_envio_vericast",
+        "nombre_tema",
+        "tipo_estado",
+        "fecha_envio_inicial",
+        "fecha_envio_ultimo",
+        "createdAt",
+        "updatedAt",
+        ],
+        order: [["fecha_envio_ultimo", "DESC"]],
+        limit: Number(limit),
+        offset,
+    });
+
+    if (!envios.length) {    
+        return { message: "No se encontraron envíos con los criterios dados.", data: [], total, totalPages: 0 };
+    }
+
+    return {
+        message: "Envíos obtenidos exitosamente.",
+        data: envios,
+        total,
+        totalPages: Math.ceil(total / Number(limit)),
+        currentPage: Number(page),
+        limit: Number(limit),
+    };
+};
+
 export const addParticipacionToFonograma = async (fonogramaId: string, req: any) => {
     const { participaciones } = req.body;
 
@@ -1539,7 +1591,7 @@ export const listParticipaciones = async (fonogramaId: string, query: any) => {
             {
                 model: Productora,
                 as: "productoraDeParticipante",
-                attributes: ["id_productora", "nombre", "cuit_cuil"]
+                attributes: ["id_productora", "nombre_productora", "cuit_cuil"]
             }
         ],
         order: [["fecha_participacion_inicio", "ASC"], ["fecha_participacion_hasta", "ASC"]]

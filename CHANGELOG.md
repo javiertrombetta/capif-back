@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.78 - 14-02-2025
+## 🐛 Fixes
+
+- fix: change init seed for bulk repertoires
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.75
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.75 - 14-02-2025
 ## 🚀 Features
 

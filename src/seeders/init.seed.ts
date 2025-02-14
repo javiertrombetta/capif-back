@@ -79,7 +79,8 @@ type VistaData = {
 
   agregarVistasPorRol("admin_principal", [
     // { nombreVista: "Repertorio" },
-    { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
+    // { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Declaración Bulk Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
     { nombreVista: "Envío Archivo Audio", vistaSuperior: "Repertorio" },
@@ -109,7 +110,8 @@ type VistaData = {
 
   agregarVistasPorRol("admin_secundario", [
     // { nombreVista: "Repertorio" },
-    { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
+    // { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
+    { nombreVista: "Declaración Bulk Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
     { nombreVista: "Envío Archivo Audio", vistaSuperior: "Repertorio" },

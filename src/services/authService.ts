@@ -119,6 +119,20 @@ export const getTargetUser = async (
   return userData.users[0];
 };
 
+export const validateCuit = async (cuit: string, req: Request) => {
+  logger.info(`${req.method} ${req.originalUrl} - Validando CUIT de productora: ${cuit}`);
+
+  const existingProductora = await Productora.findOne({ where: { cuit_cuil: cuit } });
+
+  if (existingProductora) {
+    logger.warn(`${req.method} ${req.originalUrl} - El CUIT ${cuit} ya está registrado en el sistema`);
+    return { status: 409, message: MESSAGES.ERROR.VALIDATION.CUIT_ALREADY_EXISTS };
+  }
+
+  logger.info(`${req.method} ${req.originalUrl} - El CUIT ${cuit} está disponible`);
+  return { status: 200, message: MESSAGES.SUCCESS.AUTH.CUIT_AVAILABLE };
+};
+
 /**
  * Obtiene los documentos asociados a una productora.
  * @param productoraId ID de la productora.

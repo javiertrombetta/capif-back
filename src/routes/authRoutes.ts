@@ -19,6 +19,7 @@ import {
   resetPassword,
   requestPasswordReset,
   deleteApplication,
+  validateCuitProductora,
 } from "../controllers/authController";
 
 import {
@@ -36,6 +37,7 @@ import {
   resetPasswordSchema,
   requestPasswordSchema,
   deleteApplicationSchema,
+  validateCuitSchema,
 } from "../utils/validationSchemas";
 
 const router = express.Router();
@@ -109,8 +111,14 @@ router.get(
   getRegistrosPendientes
 );
 
+router.get(
+  "/validate/:id",
+  celebrate({ [Segments.PARAMS]: validateCuitSchema}),
+  validateCuitProductora
+);
+
 router.put(
-  "/validate/:token",
+  "/validate/:id",
   celebrate({ [Segments.PARAMS]: validateEmailSchema }),
   validateEmail
 );

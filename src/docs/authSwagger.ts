@@ -273,27 +273,7 @@ export const authSwaggerDocs = {
                     500: { description: "Error interno del servidor." }
                 }
             }
-        },
-        "/auth/validate/{token}": {
-            put: {
-                summary: "Validar correo electrónico",
-                tags: ["Autenticación"],
-                parameters: [
-                {
-                    in: "path",
-                    name: "token",
-                    required: true,
-                    schema: {
-                        type: "string",
-                        description: "Token de validación de correo"
-                    }
-                }
-                ],
-                responses: {
-                    200: { description: "Correo validado exitosamente" }
-                }
-            }
-        },
+        },        
         "/auth/password/reset": {
             put: {
                 summary: "Restablecer contraseña",
@@ -364,6 +344,77 @@ export const authSwaggerDocs = {
                     500: { description: "Error interno del servidor." }
                 }
             }
-        }
+        },
+        "/auth/validate/{id}": {
+            put: {
+                summary: "Validar correo electrónico",
+                tags: ["Autenticación"],
+                parameters: [
+                {
+                    in: "path",
+                    name: "id",
+                    required: true,
+                    schema: {
+                        type: "string",
+                        description: "Token de validación de correo"
+                    }
+                }
+                ],
+                responses: {
+                    200: { description: "Correo validado exitosamente" }
+                }
+            },
+            get: {
+                summary: "Validar CUIT de productora",
+                tags: ["Autenticación"],
+                parameters: [
+                    {
+                        in: "path",
+                        name: "cuit",
+                        required: true,
+                        schema: {
+                            type: "string",
+                            pattern: "^[0-9]{11}$",
+                            description: "Número de CUIT de la productora (11 dígitos sin guiones)",
+                            example: "30123456789",
+                        },
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "El CUIT está disponible para registro",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: {
+                                            type: "string",
+                                            example: "El CUIT está disponible para registro.",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    409: {
+                        description: "El CUIT ya está registrado en el sistema",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                type: "object",
+                                properties: {
+                                        message: {
+                                            type: "string",
+                                            example: "El CUIT ya está registrado en el sistema.",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
     }
 }

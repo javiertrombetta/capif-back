@@ -19,8 +19,8 @@ import {
   linkUserToProductora,
   updateUserRegistrationState,
 } from "../services/userService";
-import { confirmProductoraDocuments, createCashflowForProductora, deleteAuditoriasByUsuario, deleteProductoraById, deleteProductoraDocumentos, deleteProductoraMensajes, deleteUsuarioVistaMaestro, getAuthenticatedUser, getDocumentsForPendingUsers, getProductoraDocuments, getTargetUser } from "../services/authService";
-import { createOrUpdateProductora, createProductoraMessage, generarCodigosISRC, getLastRejectionMessage, processDocuments } from "../services/productoraService";
+import { confirmProductoraDocuments, createCashflowForProductora, deleteAuditoriasByUsuario, deleteProductoraById, deleteProductoraDocumentos, deleteProductoraMensajes, deleteUsuarioVistaMaestro, getAuthenticatedUser, getDocumentsForPendingUsers, getProductoraDocuments, getTargetUser, validateCuit } from "../services/authService";
+import { createOrUpdateProductora, createProductoraMessage, generarCodigosISRC, getLastRejectionMessage } from "../services/productoraService";
 import { handleGeneralError } from "../services/errorService";
 import {
   hashPassword,
@@ -208,16 +208,16 @@ export const logout = async (
     // Limpiar la cookie de autenticación
     res.clearCookie("auth_token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV?.startsWith("production"),
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
     });
 
     // Limpiar la cookie de sesión activa
     if (activeSesion) {
       res.clearCookie("active_sesion", {
         httpOnly: true,
-        secure: process.env.NODE_ENV?.startsWith("production"),
-        sameSite: "strict",
+        secure: true,
+        sameSite: "none",
       });
 
       logger.info(
@@ -710,13 +710,13 @@ export const validateEmail = async (
   try {
     logger.info(`${req.method} ${req.originalUrl} - Solicitud recibida para validar el email`);
 
-    const { token } = req.params;
+    const { id } = req.params;
     
     // Verificar el token usando handleTokenVerification
     let decoded: JwtPayload;
     try {
       decoded = handleTokenVerification(
-        token,
+        id,
         process.env.JWT_SECRET!
       ) as JwtPayload;
     } catch (err) {
@@ -728,7 +728,7 @@ export const validateEmail = async (
     const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: decoded.id_usuario }, req);
 
     // Verificar que el token no esté expirado
-    if (targetUser.email_verification_token !== token || targetUser.email_verification_token_expires! < new Date()) {
+    if (targetUser.email_verification_token !== id || targetUser.email_verification_token_expires! < new Date()) {
       logger.warn(`${req.method} ${req.originalUrl} - Token inválido o expirado.`);
       throw new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.INVALID_TOKEN);
     }
@@ -985,6 +985,20 @@ export const getRegistrosPendientes = async (
     }
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al obtener los registros pendientes");
+  }
+};
+
+export const validateCuitProductora = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const result = await validateCuit(id, req);
+    res.status(result.status).json({ message: result.message });
+  } catch (err) {
+    handleGeneralError(err, req, res, next, "Error al validar CUIT de productora");
   }
 };
 

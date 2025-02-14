@@ -226,7 +226,7 @@ export const requestPasswordSchema = Joi.object({
 });
 
 export const validateEmailSchema = Joi.object({
-  token: Joi.string().required().messages(VALIDATION_AUTH.token),
+  id: Joi.string().required().messages(VALIDATION_AUTH.token),
 });
 
 export const resetPasswordSchema = Joi.object({
@@ -327,6 +327,15 @@ export const createAdminSchema = Joi.object({
 export const getRegistrosPendientesSchema = Joi.object({
   usuarioId: uuidSchema.optional(),
 });
+
+
+export const validateCuitSchema = {
+  id: Joi.string().regex(/^\d{11}$/).required().messages({
+    "string.pattern.base": "El CUIT debe tener exactamente 11 dígitos numéricos.",
+    "string.empty": "El CUIT no puede estar vacío.",
+    "any.required": "El CUIT es un campo obligatorio.",
+  }), 
+};
 
 // Schema for approving an application
 export const approveApplicationSchema = Joi.object({

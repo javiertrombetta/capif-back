@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.66 - 14-02-2025
+## 🐛 Fixes
+
+- fix: change messages for emails in step-one
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.63
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.63 - 14-02-2025
 ## 🐛 Fixes
 

@@ -17,6 +17,7 @@ export const SUCCESS = {
     PASSWORD_RESET_REQUESTED: 'Solicitud de restablecimiento de contraseña enviada.',
     LOGOUT: 'La sesión se cerró exitosamente',
     USER_DELETED: 'Usuario eliminado correctamente.',
+    CUIT_AVAILABLE: "El CUIT está disponible para registro.",
   },
   USUARIO: {
     USUARIO_UPDATED: 'Los datos del usuario fueron actualizados exitosamente.',
@@ -148,7 +149,8 @@ export const ERROR = {
     TERRITORIO_STATUS_NOT_FOUND: 'El campo is_activo debe ser true o false.',
     ENVIO_STATE_INVALID: 'El estado proporcionado no es válido.',
     NO_CSV_FOUND: 'No se proporcionó un archivo CSV.',
-    DATES_INVALID: 'Las fechas proporcionadas son inválidas.'
+    DATES_INVALID: 'Las fechas proporcionadas son inválidas.',
+    CUIT_ALREADY_EXISTS: "El CUIT ya está registrado en el sistema.",
   },
   REGISTER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',

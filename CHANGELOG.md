@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.72 - 14-02-2025
+## 🐛 Fixes
+
+- fix: change get users for include self user
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.69
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.69 - 14-02-2025
 ## 🚀 Features
 

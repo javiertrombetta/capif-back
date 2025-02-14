@@ -1,10 +1,14 @@
 import { Request, Response } from 'express';
-import { ProductoraDocumentoTipo, FonogramaTerritorio, UsuarioRol, UsuarioVista } from '../models';
+import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 import logger from '../config/logger';
+
+import { ProductoraDocumentoTipo, FonogramaTerritorio, UsuarioRol, UsuarioVista } from '../models';
+
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { UsuarioResponse } from '../interfaces/UsuarioResponse';
 import { getAuthenticatedUser } from '../services/authService';
-import { exec, spawn } from 'child_process';
 
 export const getTiposDeDocumentos = async (req: Request, res: Response) => {
     try {
@@ -169,4 +173,57 @@ export const resetDatabase = async (req: Request, res: Response) => {
             error: error instanceof Error ? error.message : 'Error desconocido',
         });
     }
+};
+
+export const getLogs = (req: Request, res: Response) => {
+  const { level, date, startTime, endTime, search, lines = 100 } = req.query;
+
+  // Obtener la fecha en la zona horaria de Argentina (UTC-3)
+  const localDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' })
+    .format(new Date()); // Formato YYYY-MM-DD
+
+  const logDate = date ? date.toString() : localDate;
+  const logPath = path.join(__dirname, `../../logs/combined-${logDate}.log`);
+
+  // Verificar si el archivo existe antes de leerlo
+  if (!fs.existsSync(logPath)) {
+    return res.status(404).json({ message: `No se encontraron logs para la fecha ${logDate}` });
+  }
+
+  fs.readFile(logPath, 'utf8', (err, data) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error al leer los logs', error: err.message });
+    }
+
+    let logs = data.split('\n').filter(line => line.trim() !== '');
+
+    logs = logs.map(log => {
+      try {
+        const logObject = JSON.parse(log);
+        return `[${logObject.level.toUpperCase()}] ${logObject.timestamp} - ${logObject.message}`;
+      } catch (e) {
+        return log;
+      }
+    });
+
+    logs = logs.filter(log => {
+      const lowerLog = log.toLowerCase();
+
+      // Extraer la hora del log (asumiendo formato `YYYY-MM-DD HH:mm:ss`)
+      const logTimeMatch = log.match(/\d{4}-\d{2}-\d{2} (\d{2}:\d{2}:\d{2})/);
+      const logTime = logTimeMatch ? logTimeMatch[1] : null;
+
+      return (
+        (!level || log.includes(`[${level.toString().toUpperCase()}]`)) &&
+        (!search || lowerLog.includes(search.toString().toLowerCase())) &&
+        (!logTime || (!startTime || logTime >= startTime.toString())) &&
+        (!logTime || (!endTime || logTime <= endTime.toString()))
+      );
+    });
+
+    logs = logs.slice(-Number(lines));
+
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(logs.join('\n'));
+  });
 };

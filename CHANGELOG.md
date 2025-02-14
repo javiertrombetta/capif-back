@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.60 - 14-02-2025
+## 🐛 Fixes
+
+- fix: change repertoires for shares and get all shares
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.57
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.57 - 14-02-2025
 ## 🐛 Fixes
 

@@ -186,9 +186,8 @@ export const getUsers = async (
       logger.info(`${req.method} ${req.originalUrl} - Se encontraron ${usuarios.users.length} usuarios.`);
     }
 
-    // Filtrar para **remover al usuario autenticado** de la respuesta
+    // Filtrar para mapear la respuesta
     const filteredUsers = usuarios.users
-      .filter((user) => user.user.id_usuario !== authUser.id_usuario) // Excluye al usuario autenticado
       .map(formatUserResponse);
 
     res.status(200).json({

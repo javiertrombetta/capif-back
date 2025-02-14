@@ -149,16 +149,14 @@ export const obtenerConflictos = async (filtros: {
   page?: number;
   limit?: number;
 }) => {
-  const { fecha_desde, fecha_hasta, estado, isrc, productora_id, page = 1, limit = 10 } = filtros;
+  const { fecha_desde, fecha_hasta, estado, isrc, productora_id, page = 1, limit = 50 } = filtros;
 
   // Filtros iniciales
   const where: any = {};
 
   // Filtro por fechas de período
-  if (fecha_desde || fecha_hasta) {
-    where.fecha_periodo_desde = fecha_desde ? { [Op.gte]: new Date(fecha_desde) } : undefined;
-    where.fecha_periodo_hasta = fecha_hasta ? { [Op.lte]: new Date(fecha_hasta) } : undefined;
-  }
+  if (fecha_desde) where.fecha_periodo_desde = { [Op.gte]: new Date(fecha_desde) };
+  if (fecha_hasta) where.fecha_periodo_hasta = { [Op.lte]: new Date(fecha_hasta) };
 
   // Filtro por estado del conflicto
   if (estado) {
@@ -190,8 +188,8 @@ export const obtenerConflictos = async (filtros: {
     {
       model: Productora,
       as: "productoraDelConflicto",
-      attributes: ["id_productora", "nombre"],
-      where: productora_id ? { id_productora: productora_id } : undefined,
+      attributes: ["id_productora", "nombre_productora"],
+      where: productora_id ? { id_productora: productora_id } : undefined
     },
     {
       model: ConflictoParte,

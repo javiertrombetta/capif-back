@@ -332,6 +332,43 @@ export const usersSwaggerDocs = {
                 }
             }
         },
+        "/users/{usuarioId}/relationship": {
+            delete: {
+                summary: "Eliminar la relación de un usuario con una productora.",
+                tags: ["Usuarios"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        in: "path",
+                        name: "usuarioId",
+                        required: true,
+                        schema: {
+                            type: "string",
+                            format: "uuid",
+                        },
+                        description: "UUID del usuario al que se le eliminará la relación.",
+                    },
+                ],
+                requestBody: {
+                    required: false,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/DeleteRelationshipBody",
+                            },
+                        },
+                    },
+                },
+                responses: {
+                    200: { description: "Relación eliminada exitosamente." },
+                    400: { description: "Datos inválidos." },
+                    401: { description: "Usuario no autenticado." },
+                    403: { description: "Usuario no autorizado." },
+                    404: { description: "Usuario o relación no encontrada." },
+                    500: { description: "Error interno del servidor." },
+                },
+            },
+        },
         "/users/{usuarioId}": {
             put: {
                 summary: "Actualizar información del usuario.",

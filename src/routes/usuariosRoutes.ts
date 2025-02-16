@@ -14,6 +14,7 @@ import {
   changeUserPassword,
   updateUser,
   deleteUser,
+  removeUsuarioMaestroRelation,
 } from "../controllers/usuariosController";
 
 import {
@@ -31,6 +32,8 @@ import {
   updateUserBodySchema,
   updateUserParamsSchema,
   deleteUserSchema,
+  deleteRelationshipParamsSchema,
+  deleteRelationshipBodySchema,
 } from "../utils/validationSchemas";
 
 const router = Router();
@@ -116,6 +119,17 @@ router.put(
     [Segments.BODY]: updateUserBodySchema,
   }),
   updateUser
+);
+
+router.delete(
+  "/:usuarioId/relationship",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal"]),
+  celebrate({
+    [Segments.PARAMS]: deleteRelationshipParamsSchema,
+    [Segments.BODY]: deleteRelationshipBodySchema,
+  }),
+  removeUsuarioMaestroRelation
 );
 
 router.delete(

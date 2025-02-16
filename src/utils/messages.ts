@@ -177,6 +177,7 @@ export const ERROR = {
     NO_ASSOCIATED_PRODUCTORAS: 'Productoras no asociadas al usuario.',
     NO_PRODUCTORA_PRINCIPAL: 'El usuario no tiene una productora asociada.',
     CANNOT_DELETE_SELF: 'No podés eliminar tu propia cuenta.',
+    CANNOT_DELETE_OTHERS: 'Solo podés eliminar usuarios relacionados con tu misma productora.',
     CANNOT_DELETE_PRINCIPAL_WITH_PRODUCTORA: 'El usuario tiene productoras asociadas y no puede ser eliminado.',
     ROLE_NOT_ASSIGNED: 'El usuario autenticado no tiene un rol asignado.',
   },
@@ -312,6 +313,7 @@ export const ERROR = {
     NOT_FOUND: 'El territorio no existe o no está habilitado.',
     NOT_ASSIGNED: 'No hay territorios asociados a este fonograma.',
     INVALID_TYPE: 'El tipo de trámite es inválido.',
+    NOT_ENABLED: ' El territorio no se encuentra habilitado.'
   },
 };
 

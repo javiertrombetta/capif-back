@@ -423,6 +423,18 @@ export const userSchemas = {
     },
     required: ['vistas'],
   },
+  DeleteRelationshipBody: {
+    type: "object",
+    properties: {
+      productoraId: {
+        type: "string",
+        format: "uuid",
+        description: "UUID de la productora a la que se eliminará la relación. Solo requerido para administradores.",
+      },
+    },
+    required: [],
+    description: "Body opcional. Solo los administradores deben proporcionar `productoraId`.",
+  },  
 };
 
 export const producersSchemas = {

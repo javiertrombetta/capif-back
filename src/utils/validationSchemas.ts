@@ -1881,11 +1881,58 @@ export const eliminarConflictoParamsSchema = Joi.object({
 
 // start of miscRoutes
 
+export const territorialityReportSchema = {
+  query: Joi.object({
+    fecha_desde: Joi.date()
+      .optional()
+      .messages({
+        "date.base": "La fecha desde debe ser una fecha válida.",
+      }),
+    fecha_hasta: Joi.date()
+      .optional()
+      .messages({
+        "date.base": "La fecha hasta debe ser una fecha válida.",
+      }),
+    titulo: Joi.string()
+      .min(2)
+      .max(150)
+      .optional()
+      .messages({
+        "string.base": "El título debe ser un texto.",
+        "string.min": "El título debe tener al menos 2 caracteres.",
+        "string.max": "El título debe tener un máximo de 150 caracteres.",
+      }),
+    isrc: Joi.string()
+      .min(2)
+      .max(12)
+      .optional()
+      .messages({
+        "string.base": "El ISRC debe ser un texto.",
+        "string.min": "El ISRC debe tener al menos 2 caracteres.",
+        "string.max": "El ISRC debe tener un máximo de 12 caracteres.",
+      }),
+    productora: Joi.string()
+      .min(2)
+      .max(100)
+      .optional()
+      .messages({
+        "string.base": "El nombre de la productora debe ser un texto.",
+        "string.min": "El nombre de la productora debe tener al menos 2 caracteres.",
+        "string.max": "El nombre de la productora debe tener un máximo de 100 caracteres.",
+      }),
+    tipo_modificacion: Joi.string()
+      .valid("ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION")
+      .optional()
+      .messages({
+        "string.base": "El tipo de modificación debe ser un texto válido.",
+        "any.only": "El tipo de modificación debe ser uno de: ALTA, DATOS, ARCHIVO, TERRITORIO, PARTICIPACION.",
+      }),
+  }),
+};
+
 export const updateIsHabilitadoSchema = {
   params: Joi.object({
-    territoryId: Joi.string()
-      .uuid()
-      .required()
+    territoryId: uuidSchema
       .messages({
         "string.base": "El ID del territorio debe ser un texto.",
         "string.empty": "El ID del territorio no puede estar vacío.",
@@ -1934,7 +1981,7 @@ export const createTerritorioSchema = Joi.object({
 });
 
 export const deleteTerritorioSchema = Joi.object({
-  id_territorio: uuidSchema
+  territoryId: uuidSchema
     .messages({
       "string.base": "El ID del territorio debe ser un texto.",
       "string.empty": "El ID del territorio no puede estar vacío.",

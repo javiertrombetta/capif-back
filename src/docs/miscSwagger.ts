@@ -145,7 +145,7 @@ export const miscSwaggerDocs = {
                 },
             },
         },
-        "/misc/territories/:territoryId/status": {
+        "/misc/territories/{territoryId}/status": {
             put: {
                 summary: "Modificar el estado de habilitación de un territorio.",
                 tags: ["Misc"],
@@ -236,7 +236,7 @@ export const miscSwaggerDocs = {
                 },
             },
         },
-        "/territorios/{id_territorio}": {
+        "/territories/{territoryId}": {
             delete: {
                 summary: "Eliminar un territorio.",
                 tags: ["Misc"],
@@ -259,6 +259,92 @@ export const miscSwaggerDocs = {
                     401: { description: "Usuario no autenticado." },
                     403: { description: "Usuario no autorizado." },
                     404: { description: "El territorio no existe." },
+                    500: { description: "Error interno del servidor." },
+                },
+            },
+        },
+        "/territories/reports": {
+            get: {
+                summary: "Generar reporte de territorialidad en CSV.",
+                tags: ["Misc"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        in: "query",
+                        name: "fecha_desde",
+                        schema: {
+                            type: "string",
+                            format: "date",
+                            example: "2024-01-01",
+                        },
+                        description: "Filtrar reportes desde esta fecha (YYYY-MM-DD).",
+                    },
+                    {
+                        in: "query",
+                        name: "fecha_hasta",
+                        schema: {
+                            type: "string",
+                            format: "date",
+                            example: "2024-12-31",
+                        },
+                        description: "Filtrar reportes hasta esta fecha (YYYY-MM-DD).",
+                    },
+                    {
+                        in: "query",
+                        name: "titulo",
+                        schema: {
+                            type: "string",
+                            example: "Ejemplo de Tema",
+                        },
+                        description: "Filtrar por título del fonograma (búsqueda parcial).",
+                    },
+                    {
+                        in: "query",
+                        name: "isrc",
+                        schema: {
+                            type: "string",
+                            example: "ARABC2100001",
+                        },
+                        description: "Filtrar por ISRC del fonograma (búsqueda parcial).",
+                    },
+                    {
+                        in: "query",
+                        name: "productora",
+                        schema: {
+                            type: "string",
+                            example: "Sello Discográfico XYZ",
+                        },
+                        description: "Filtrar por nombre de la productora (búsqueda parcial).",
+                    },
+                    {
+                        in: "query",
+                        name: "tipo_modificacion",
+                        schema: {
+                            type: "string",
+                            enum: ["ALTA", "DATOS", "ARCHIVO", "TERRITORIO", "PARTICIPACION"],
+                        },
+                        description: "Filtrar por tipo de modificación.",
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Reporte generado exitosamente en formato CSV.",
+                        content: {
+                            "text/csv": {
+                                schema: {
+                                    type: "string",
+                                    format: "binary",
+                                },
+                                example: `"Nombre del Tema","Artista","Duración","Fecha de Lanzamiento","ISRC","Sello Originario","Participación Desde","Participación Hasta","Porcentaje de Titularidad","Tipo de Modificación","Fecha de última modificación"
+"Ejemplo de Canción","Artista 1","03:45","2024","ABC123456789","Sello Ejemplo","2024-01-01","2025-01-01",50,"ALTA DE FONOGRAMA","2024-02-16 10:00:00"
+                                `,
+                            },
+                        },
+                    },
+                    400: { description: "Parámetros inválidos." },
+                    401: { description: "Usuario no autenticado." },
+                    403: { description: "Usuario no autorizado." },
+                    404: { description: "No hay datos para el reporte." },
                     500: { description: "Error interno del servidor." },
                 },
             },

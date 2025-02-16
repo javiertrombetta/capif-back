@@ -19,7 +19,7 @@ router.post(
   createTerritorio
 );
 
-router.get('/documents', authenticate, getTiposDeDocumentos);
+router.get('/documents', authenticate, authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]), getTiposDeDocumentos);
 
 router.get(
   "/territories/reports",
@@ -29,9 +29,9 @@ router.get(
   generateTerritorialityReport
 );
 
-router.get('/territories', authenticate, getTerritorios);
+router.get('/territories', authenticate, authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]), getTerritorios);
 
-router.get('/views', authenticate, getVistaPorRol);
+router.get('/views', authenticate, authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]), getVistaPorRol);
 
 router.get('/logs', authenticate, authorizeRoles(['admin_principal']), getLogs);
 

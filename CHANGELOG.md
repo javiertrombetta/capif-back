@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.87 - 16-02-2025
+## 🐛 Fixes
+
+- fix: map query inputs in getAlEnvios
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.84
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.84 - 16-02-2025
 ## 🚀 Features
 

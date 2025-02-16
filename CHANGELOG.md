@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.90 - 16-02-2025
+## 🐛 Fixes
+
+- fix: change tabulations
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.87
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.87 - 16-02-2025
 ## 🐛 Fixes
 

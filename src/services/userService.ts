@@ -552,3 +552,15 @@ export const linkUserToProductora = async (
     },
   );  
 };
+
+
+export const removeUsuarioMaestro = async (productoraId: string, usuarioId: string) => {
+  
+  // Buscar y eliminar la relación en UsuarioMaestro
+  await UsuarioMaestro.destroy({
+    where: {
+      usuario_id: usuarioId,
+      productora_id: productoraId
+    },
+  });
+};

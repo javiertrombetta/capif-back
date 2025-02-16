@@ -14,6 +14,7 @@ import {
   deleteUserRelations,
   deleteUsuarioById,
   findVistasByUsuario,
+  removeUsuarioMaestro,
 } from "../services/userService";
 import { getAuthenticatedUser, getTargetUser } from "../services/authService";
 import { registrarAuditoria } from "../services/auditService";
@@ -541,5 +542,82 @@ export const getUser = async (
     });
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al obtener los datos del usuario");
+  }
+};
+
+export const removeUsuarioMaestroRelation = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { usuarioId } = req.params;
+    const { productoraId: bodyProductoraId } = req.body;
+
+    // Obtener información del usuario autenticado
+    const { user: authUser, maestros: authMaestros, hasSingleMaestro: hasAuthSingleMaestro }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    // Obtener información del usuario objetivo
+    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);
+
+    // Validar que ambos usuarios tengan roles asignados
+    if (!authUser.rol || !targetUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado`);
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED));
+    }
+
+    let productoraIdToRemove: string | null = null;
+
+    // Si el usuario es administrador, usa la productoraId del body
+    if (["admin_principal", "admin_secundario"].includes(authUser.rol.nombre_rol)) {
+      if (!bodyProductoraId) {
+        throw new Err.BadRequestError("Debes proporcionar una productora_id al eliminar la relación.");
+      }
+      productoraIdToRemove = bodyProductoraId;
+    } 
+    // Si el usuario es productor principal, obtiene la productoraId de su maestro
+    else if (authUser.rol.nombre_rol === "productor_principal") {
+      if (!hasAuthSingleMaestro || authMaestros.length !== 1) {
+        logger.warn(`${req.method} ${req.originalUrl} - El usuario tiene múltiples maestros asociados.`);
+        return next(new Err.NotFoundError(MESSAGES.ERROR.USER.MULTIPLE_MASTERS_FOR_PRINCIPAL));
+      }
+
+      productoraIdToRemove = authMaestros[0].productora_id;
+
+      if (!productoraIdToRemove) {
+        logger.warn(`${req.method} ${req.originalUrl} - Productora no encontrada para el usuario autenticado.`);
+        throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.PRODUCTORA_ID_REQUIRED);
+      }
+
+      // Validar que el usuario objetivo sea productor_secundario
+      if (targetUser.rol.nombre_rol !== "productor_secundario") {
+        throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+      }
+
+      // Validar que la productora del usuario autenticado se encuentre en los maestros del usuario objetivo
+      const targetProductoraIds = targetMaestros.map(maestro => maestro.productora_id);
+      if (!targetProductoraIds.includes(productoraIdToRemove)) {
+        throw new Err.ForbiddenError(MESSAGES.ERROR.USER.CANNOT_DELETE_OTHERS);
+      }
+    } else {
+      throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+    }
+
+    // Validar que productoraIdToRemove no sea null antes de llamar al servicio
+    if (!productoraIdToRemove) {
+      throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.PRODUCTORA_ID_REQUIRED);
+    }
+
+    // Llamar al servicio para eliminar la relación
+    await removeUsuarioMaestro(productoraIdToRemove, usuarioId);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Relación UsuarioMaestro eliminada exitosamente: Usuario ${usuarioId}, Productora ${productoraIdToRemove}`
+    );
+
+    res.status(200).json({ message: "Relación eliminada exitosamente." });
+
+  } catch (err) {
+    next(err);
   }
 };

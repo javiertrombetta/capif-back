@@ -494,55 +494,62 @@ export const cargarRepertoriosMasivo = async (req: any) => {
     };
 };
 
-export const getFonogramaById = async (id: string) => {  
+export const getFonogramaById = async (id: string) => {
+  // Buscar el fonograma por ID
+  const fonograma = await Fonograma.findOne({
+    where: { id_fonograma: id },
+    include: [
+      {
+        model: FonogramaArchivo,
+        as: "archivoDelFonograma",
+        attributes: ["id_archivo", "ruta_archivo_audio"],
+      },
+      {
+        model: FonogramaParticipacion,
+        as: "participantesDelFonograma",
+        attributes: [
+          "id_participacion",
+          "productora_id",
+          "porcentaje_participacion",
+          "fecha_participacion_inicio",
+          "fecha_participacion_hasta",
+        ],
+      },
+      {
+        model: FonogramaTerritorioMaestro,
+        as: "vinculosDelFonograma",
+        attributes: ["id_territorio_maestro", "territorio_id", "is_activo"],
+        include: [
+          {
+            model: FonogramaTerritorio,
+            as: "territorioDelVinculo",
+            attributes: ["id_territorio", "nombre_pais", "codigo_iso", "is_habilitado"],
+            where: { is_habilitado: true }, // Solo territorios habilitados
+          },
+        ],
+      },
+    ],
+    attributes: [
+      "id_fonograma",
+      "titulo",
+      "isrc",
+      "artista",
+      "album",
+      "duracion",
+      "anio_lanzamiento",
+      "sello_discografico",
+      "is_dominio_publico",
+      "estado_fonograma",
+    ],
+  });
 
-    // Buscar el fonograma por ID
-    const fonograma = await Fonograma.findOne({
-      where: { id_fonograma: id },
-      include: [
-        {
-          model: FonogramaArchivo,
-          as: "archivoDelFonograma",
-          attributes: ["id_archivo", "ruta_archivo_audio"],
-        },
-        {
-          model: FonogramaParticipacion,
-          as: "participantesDelFonograma",
-          attributes: [
-            "id_participacion",
-            "productora_id",
-            "porcentaje_participacion",
-            "fecha_participacion_inicio",
-            "fecha_participacion_hasta",
-          ],
-        },
-        {
-          model: FonogramaTerritorioMaestro,
-          as: "vinculosDelFonograma",
-          attributes: ["id_territorio_maestro", "territorio_id", "is_activo"],
-        },
-      ],
-      attributes: [
-        "id_fonograma",
-        "titulo",
-        "isrc",
-        "artista",
-        "album",
-        "duracion",
-        "anio_lanzamiento",
-        "sello_discografico",
-        "is_dominio_publico",
-        "estado_fonograma",
-      ],
-    });
+  // Verificar si el fonograma existe
+  if (!fonograma) {
+    throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
+  }
 
-    // Verificar si el fonograma existe
-    if (!fonograma) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
-    }
-
-    // Devolver el fonograma encontrado
-    return fonograma;
+  // Devolver el fonograma encontrado
+  return fonograma;
 };
 
 export const generateISRCPrefix = async (productoraId: string): Promise<string> => {
@@ -1292,14 +1299,10 @@ export const getEnviosByFonograma = async (fonogramaId: string) => {
 
 
 export const getAllEnvios = async (filters: any) => {
-
     const { nombre_tema, estado_envio, fecha_desde, fecha_hasta, page = 1, limit = 10 } = filters;
 
     const whereCondition: any = {};
 
-    if (nombre_tema) {
-        whereCondition.nombre_tema = { [Op.iLike]: `%${nombre_tema}%` };
-    }
     if (estado_envio) {
         whereCondition.tipo_estado = estado_envio;
     }
@@ -1315,13 +1318,20 @@ export const getAllEnvios = async (filters: any) => {
     const { rows: envios, count: total } = await FonogramaEnvio.findAndCountAll({
         where: whereCondition,
         attributes: [
-        "id_envio_vericast",
-        "nombre_tema",
-        "tipo_estado",
-        "fecha_envio_inicial",
-        "fecha_envio_ultimo",
-        "createdAt",
-        "updatedAt",
+            "id_envio_vericast",
+            "tipo_estado",
+            "fecha_envio_inicial",
+            "fecha_envio_ultimo",
+            "createdAt",
+            "updatedAt",
+        ],
+        include: [
+            {
+                model: Fonograma,
+                as: "fonogramaDelEnvio",
+                attributes: ["titulo"],
+                where: nombre_tema ? { titulo: { [Op.iLike]: `%${nombre_tema}%` } } : undefined,
+            },
         ],
         order: [["fecha_envio_ultimo", "DESC"]],
         limit: Number(limit),
@@ -1776,7 +1786,7 @@ export const addTerritorioToFonograma = async (fonogramaId: string, req: any) =>
         throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
     }
 
-    // Verificar si el territorio existe en FonogramaTerritorio
+    // Verificar si el territorio existe en FonogramaTerritorio y se encuentra habilitado
     const territorio = await FonogramaTerritorio.findOne({ where: { codigo_iso, is_habilitado: true } });
     if (!territorio) {
         throw new Err.NotFoundError(MESSAGES.ERROR.TERRITORIO.NOT_FOUND);
@@ -1827,14 +1837,15 @@ export const listTerritorios = async (fonogramaId: string) => {
         throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
     }
 
-    // Obtener todos los territorios vinculados a este fonograma
+    // Obtener todos los territorios habilitados vinculados a este fonograma
     const territorios = await FonogramaTerritorioMaestro.findAll({
         where: { fonograma_id: fonogramaId },
         include: [
             {
                 model: FonogramaTerritorio,
                 as: "territorioDelVinculo",
-                attributes: ["id_territorio", "nombre_pais", "codigo_iso", "is_habilitado"]
+                attributes: ["id_territorio", "nombre_pais", "codigo_iso", "is_habilitado"],
+                where: { is_habilitado: true } // Filtrar solo los territorios habilitados
             }
         ],
         order: [["createdAt", "ASC"]] // Ordenar por fecha de vinculación
@@ -1876,6 +1887,17 @@ export const updateTerritorio = async (fonogramaId: string, territorioId: string
 
     // Verifica el usuario autenticado
     const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+    
+    // Verificar si el territorio está habilitado en FonogramaTerritorio
+    const territorio = await FonogramaTerritorio.findByPk(territorioId);
+
+    if (!territorio) {
+        throw new Err.NotFoundError(MESSAGES.ERROR.TERRITORIO.NOT_FOUND);
+    }
+
+    if (!territorio.is_habilitado) {
+        throw new Err.ForbiddenError(MESSAGES.ERROR.TERRITORIO.NOT_ENABLED);
+    }
 
     // Verificar si el territorio está vinculado al fonograma en FonogramaTerritorioMaestro
     const territorioVinculado = await FonogramaTerritorioMaestro.findOne({

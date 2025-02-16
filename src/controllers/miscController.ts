@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -9,6 +9,7 @@ import { ProductoraDocumentoTipo, FonogramaTerritorio, UsuarioRol, UsuarioVista 
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { UsuarioResponse } from '../interfaces/UsuarioResponse';
 import { getAuthenticatedUser } from '../services/authService';
+import { createTerritorioService, deleteTerritorioService, updateStatusService } from '../services/miscService';
 
 export const getTiposDeDocumentos = async (req: Request, res: Response) => {
     try {
@@ -232,4 +233,74 @@ export const getLogs = (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/plain');
     res.send(logs.join('\n'));
   });
+};
+
+export const updateStatus = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id_territorio } = req.params;
+    const { is_habilitado } = req.body;
+
+    const updatedTerritorio = await updateStatusService(id_territorio, is_habilitado);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Estado actualizado exitosamente en FonogramaTerritorio: ${id_territorio}`
+    );
+
+    res.status(200).json({ message: "Estado actualizado exitosamente.", data: updatedTerritorio });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createTerritorio = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { nombre_pais, codigo_iso, is_habilitado } = req.body;
+
+    const newTerritorio = await createTerritorioService({
+      nombre_pais,
+      codigo_iso,
+      is_habilitado,
+    });
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Nuevo territorio agregado exitosamente: ${newTerritorio.id_territorio}`
+    );
+
+    res.status(201).json({
+      message: "Territorio agregado exitosamente.",
+      data: newTerritorio,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteTerritorio = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id_territorio } = req.params;
+
+    await deleteTerritorioService(id_territorio);
+
+    logger.info(
+      `${req.method} ${req.originalUrl} - Territorio eliminado exitosamente: ${id_territorio}`
+    );
+
+    res.status(200).json({
+      message: "Territorio eliminado exitosamente.",
+    });
+  } catch (err) {
+    next(err);
+  }
 };

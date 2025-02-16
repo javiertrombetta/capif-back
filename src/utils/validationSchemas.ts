@@ -431,12 +431,29 @@ export const updateUserBodySchema = Joi.object({
     }),
 });
 
+// Schema for deleting a realtionship Params
+export const deleteRelationshipParamsSchema = Joi.object({
+  usuarioId: uuidSchema.messages({
+    "string.base": "El ID del usuario debe ser un texto.",
+    "string.empty": "El ID del usuario no puede estar vacío.",
+    "string.uuid": "El ID del usuario debe ser un UUID válido.",
+    "any.required": "El ID del usuario es obligatorio.",
+  }),
+});
+// Schema for deleting a realtionship Body
+export const deleteRelationshipBodySchema = Joi.object({
+  productoraId: uuidSchema.optional().messages({
+      "string.base": "El ID de la productora debe ser un texto.",
+      "string.uuid": "El ID de la productora debe ser un UUID válido.",
+    }),
+});
+
 // Schema for deleting a user
 export const deleteUserSchema = Joi.object({
-  usuarioId: uuidSchema
-}).required().messages({
-  'object.base': 'Los datos proporcionados deben ser un objeto válido.',
-  'any.required': 'Los datos para eliminar un usuario son obligatorios.',
+  usuarioId: uuidSchema.messages({
+    'object.base': 'Los datos proporcionados deben ser un objeto válido.',
+    'any.required': 'Los datos para eliminar un usuario son obligatorios.',
+  })
 });
 
 // Schema for updating user's views
@@ -1862,4 +1879,74 @@ export const eliminarConflictoParamsSchema = Joi.object({
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-// strart of cashflowRoutes
+// start of miscRoutes
+
+export const updateIsHabilitadoSchema = {
+  params: Joi.object({
+    territoryId: Joi.string()
+      .uuid()
+      .required()
+      .messages({
+        "string.base": "El ID del territorio debe ser un texto.",
+        "string.empty": "El ID del territorio no puede estar vacío.",
+        "string.uuid": "El ID del territorio debe ser un UUID válido.",
+        "any.required": "El ID del territorio es obligatorio.",
+      }),
+  }),
+  body: Joi.object({
+    is_habilitado: Joi.boolean()
+      .required()
+      .messages({
+        "boolean.base": "El estado debe ser un valor booleano.",
+        "any.required": "El estado es obligatorio.",
+      }),
+  }),
+};
+
+export const createTerritorioSchema = Joi.object({
+  nombre_pais: Joi.string()
+    .min(2)
+    .max(100)
+    .required()
+    .messages({
+      "string.base": "El nombre del país debe ser un texto.",
+      "string.empty": "El nombre del país no puede estar vacío.",
+      "string.min": "El nombre del país debe tener al menos 2 caracteres.",
+      "string.max": "El nombre del país debe tener máximo 100 caracteres.",
+      "any.required": "El nombre del país es obligatorio.",
+    }),
+  codigo_iso: Joi.string()
+    .length(2)
+    .uppercase()
+    .required()
+    .messages({
+      "string.base": "El código ISO debe ser un texto.",
+      "string.empty": "El código ISO no puede estar vacío.",
+      "string.length": "El código ISO debe tener exactamente 2 letras mayúsculas.",
+      "any.required": "El código ISO es obligatorio.",
+    }),
+  is_habilitado: Joi.boolean()
+    .required()
+    .messages({
+      "boolean.base": "El estado de habilitación debe ser un valor booleano.",
+      "any.required": "El estado de habilitación es obligatorio.",
+    }),
+});
+
+export const deleteTerritorioSchema = Joi.object({
+  id_territorio: uuidSchema
+    .messages({
+      "string.base": "El ID del territorio debe ser un texto.",
+      "string.empty": "El ID del territorio no puede estar vacío.",
+      "string.uuid": "El ID del territorio debe ser un UUID válido.",
+      "any.required": "El ID del territorio es obligatorio.",
+    }),
+});
+
+//  end of miscRoutes
+
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// start of cashflowRoutes

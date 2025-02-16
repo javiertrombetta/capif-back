@@ -1,15 +1,42 @@
 import express from "express";
+import { celebrate, Segments } from "celebrate";
 
 import { authenticate, authorizeRoles } from '../middlewares/auth';
 
-import { getLogs, getTerritorios, getTiposDeDocumentos, getVistaPorRol, resetDatabase } from '../controllers/miscController';
+import { createTerritorio, deleteTerritorio, getLogs, getTerritorios, getTiposDeDocumentos, getVistaPorRol, resetDatabase, updateStatus } from '../controllers/miscController';
+import { createTerritorioSchema, deleteTerritorioSchema, updateIsHabilitadoSchema } from "../utils/validationSchemas";
+
 
 const router = express.Router();
 
-router.get('/base/documents', authenticate, getTiposDeDocumentos);
-router.get('/base/territories', authenticate, getTerritorios);
-router.get('/base/views', authenticate, getVistaPorRol);
-router.post('/base/reset', authenticate, authorizeRoles(['admin_principal']), resetDatabase);
+router.post('/reset', authenticate, authorizeRoles(['admin_principal']), resetDatabase);
+router.post(
+  "/territories",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.BODY]: createTerritorioSchema }),
+  createTerritorio
+);
+router.get('/documents', authenticate, getTiposDeDocumentos);
+router.get('/territories', authenticate, getTerritorios);
+router.get('/views', authenticate, getVistaPorRol);
 router.get('/logs', authenticate, authorizeRoles(['admin_principal']), getLogs);
+router.put(
+  "/territories/:territoryId/status",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({
+    [Segments.PARAMS]: updateIsHabilitadoSchema.params,
+    [Segments.BODY]: updateIsHabilitadoSchema.body,
+  }),
+  updateStatus
+);
+router.delete(
+  "/territories/:territoryId",
+  authenticate,
+  authorizeRoles(["admin_principal", "admin_secundario"]),
+  celebrate({ [Segments.PARAMS]: deleteTerritorioSchema }),
+  deleteTerritorio
+);
 
 export default router;

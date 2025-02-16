@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.81 - 16-02-2025
+## 🚀 Features
+
+- feat: add global territoires routes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.78
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.78 - 14-02-2025
 ## 🐛 Fixes
 

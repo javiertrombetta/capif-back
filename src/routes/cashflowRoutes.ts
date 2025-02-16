@@ -7,12 +7,12 @@ import { authenticate, authorizeRoles } from '../middlewares/auth';
 const router = Router();
 
 // Pasadas de repertorio (Reproductions)
-// router.post('/reproductions',
-//   authenticate,
-//   authorizeRoles(['admin_principal', 'admin_secundario']),
-//   uploadCSV.single('file'),
-//   cashflowController.processReproductions
-// );
+router.post('/reproductions',
+  authenticate,
+  authorizeRoles(['admin_principal', 'admin_secundario']),
+  uploadCSV.single('file'),
+  cashflowController.processReproductions
+);
 
 // Liquidaciones (Settlements)
 // router.post('/settlements/import', authenticate, authorizeRoles(['admin_principal', 'admin_secundario']), cashflowController.importSettlements);

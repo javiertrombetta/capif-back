@@ -9,7 +9,7 @@ import { ProductoraDocumentoTipo, FonogramaTerritorio, UsuarioRol, UsuarioVista 
 import { AuthenticatedRequest } from '../interfaces/AuthenticatedRequest';
 import { UsuarioResponse } from '../interfaces/UsuarioResponse';
 import { getAuthenticatedUser } from '../services/authService';
-import { createTerritorioService, deleteTerritorioService, updateStatusService } from '../services/miscService';
+import { createTerritorioService, deleteTerritorioService, generateTerritorialityReportService, updateStatusService } from '../services/miscService';
 
 export const getTiposDeDocumentos = async (req: Request, res: Response) => {
     try {
@@ -32,6 +32,23 @@ export const getTiposDeDocumentos = async (req: Request, res: Response) => {
             error: error instanceof Error ? error.message : 'Error desconocido',
         });
     }
+};
+
+export const generateTerritorialityReport = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const filters = req.query;
+    const csvBuffer = await generateTerritorialityReportService(filters);
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", 'attachment; filename="reporte_territorialidad.csv"');
+    res.status(200).send(csvBuffer);
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const getTerritorios = async (req: Request, res: Response) => {

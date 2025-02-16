@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.84 - 16-02-2025
+## 🚀 Features
+
+- feat: add territories reports
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.81
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.81 - 16-02-2025
 ## 🚀 Features
 

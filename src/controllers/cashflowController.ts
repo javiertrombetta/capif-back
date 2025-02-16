@@ -44,7 +44,7 @@ export const processReproductions = async (req: Request, res: Response) => {
           const conflictoActivo = await Conflicto.findOne({
             where: {
               fonograma_id: fonograma.id_fonograma,
-              fecha_fin_conflicto: { $ne: null }, // Solo conflictos aún abiertos
+              fecha_fin_conflicto: { $ne: null }, // Solo los conflictos todavía abiertos
             },
           });
 
@@ -112,7 +112,7 @@ export const processReproductions = async (req: Request, res: Response) => {
         fs.writeFileSync(outputFilePath, csvOutput);
 
         res.download(outputFilePath, 'pasadas.csv', () => {
-          // Eliminar archivos temporales después de la descarga
+          // Eliminar archivos temporales después de descargalo
           fs.unlinkSync(filePath);
           fs.unlinkSync(outputFilePath);
         });

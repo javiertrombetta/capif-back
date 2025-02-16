@@ -1269,11 +1269,11 @@ export const getAllEnvios = async (filters: any) => {
     const { nombre_tema, estado_envio, fecha_desde, fecha_hasta, page = 1, limit = 10 } = filters;
 
     const ESTADO_ENVIO_MAP: Record<string, string[]> = {
-    "PENDIENTE": ["PENDIENTE DE ENVIO"],
-    "ENVIADO": ["ENVIADO SIN AUDIO", "ENVIADO CON AUDIO"],
-    "RECHAZADO": ["RECHAZADO POR VERICAST"],
-    "ERROR": ["ERROR EN EL ENVIO"]
-};
+        "PENDIENTE": ["PENDIENTE DE ENVIO"],
+        "ENVIADO": ["ENVIADO SIN AUDIO", "ENVIADO CON AUDIO"],
+        "RECHAZADO": ["RECHAZADO POR VERICAST"],
+        "ERROR": ["ERROR EN EL ENVIO"]
+    };
 
     const whereCondition: any = {};
 

@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.99 - 17-02-2025
+## 🐛 Fixes
+
+- fix: change toggleUserViewStatus
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.96
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.96 - 17-02-2025
 ## 🐛 Fixes
 

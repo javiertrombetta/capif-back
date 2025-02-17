@@ -258,13 +258,13 @@ export const updateStatus = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id_territorio } = req.params;
+    const { territoryId } = req.params;
     const { is_habilitado } = req.body;
 
-    const updatedTerritorio = await updateStatusService(id_territorio, is_habilitado);
+    const updatedTerritorio = await updateStatusService(territoryId, is_habilitado);
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Estado actualizado exitosamente en FonogramaTerritorio: ${id_territorio}`
+      `${req.method} ${req.originalUrl} - Estado actualizado exitosamente en FonogramaTerritorio: ${territoryId}`
     );
 
     res.status(200).json({ message: "Estado actualizado exitosamente.", data: updatedTerritorio });
@@ -306,12 +306,12 @@ export const deleteTerritorio = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const { id_territorio } = req.params;
+    const { territoryId } = req.params;
 
-    await deleteTerritorioService(id_territorio);
+    await deleteTerritorioService(territoryId);
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Territorio eliminado exitosamente: ${id_territorio}`
+      `${req.method} ${req.originalUrl} - Territorio eliminado exitosamente: ${territoryId}`
     );
 
     res.status(200).json({

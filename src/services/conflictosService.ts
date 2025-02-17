@@ -248,6 +248,11 @@ export const obtenerConflicto = async (id: string) => {
       where: { id_conflicto: id },
       include: [
         {
+          model: Productora,
+          as: "productoraDelConflicto",
+          attributes: ["id_productora", "nombre_productora"],
+        },
+        {
           model: Fonograma,
           as: "fonogramaDelConflicto",
           attributes: [
@@ -258,11 +263,6 @@ export const obtenerConflicto = async (id: string) => {
             "sello_discografico",
             "anio_lanzamiento",
           ],
-        },
-        {
-          model: Productora,
-          as: "productoraDelConflicto",
-          attributes: ["id_productora", "nombre"],
         },
         {
           model: ConflictoParte,
@@ -277,7 +277,23 @@ export const obtenerConflicto = async (id: string) => {
                 "fecha_participacion_inicio",
                 "fecha_participacion_hasta",
               ],
+              include: [
+                {
+                  model: Productora,
+                  as: "productoraDeParticipante",
+                  attributes: ["id_productora", "nombre_productora"],
+                },
+              ],
             },
+          ],
+          attributes: [
+            "id_conflicto_participacion",
+            "estado",
+            "porcentaje_declarado",
+            "porcentaje_confirmado",
+            "is_documentos_enviados",
+            "fecha_respuesta_confirmacion",
+            "fecha_respuesta_documentacion"
           ],
         },
       ],

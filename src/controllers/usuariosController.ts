@@ -375,12 +375,16 @@ export const toggleUserViewStatus = async (
     if (!targetUser.rol || !targetUser.rol.nombre_rol) {
       throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ROLE_INVALID);
     }
+    
+    if (authUser.rol.nombre_rol === "admin_secundario" && targetUser.rol.nombre_rol === "admin_principal") {
+      throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+    }
 
     if (!authMaestros.length && authUser.rol.nombre_rol === "productor_principal") {
       throw new Err.InternalServerError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS);
     }
 
-    if (!targetMaestros.length) {
+    if (!targetMaestros.length && !["admin_principal", "admin_secundario"].includes(targetUser.rol.nombre_rol)) {
       throw new Err.BadRequestError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS);
     }
 

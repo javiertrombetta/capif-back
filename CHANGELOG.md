@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.96 - 17-02-2025
+## 🐛 Fixes
+
+- fix: change me route and send repertoire
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.93
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.93 - 17-02-2025
 ## 🐛 Fixes
 

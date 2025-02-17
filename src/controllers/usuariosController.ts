@@ -528,7 +528,7 @@ export const getUser = async (
 
     // Filtrar los datos de las vistas eliminando los elementos sin datos válidos
     const filteredVistas = authVistas
-      .filter(vistaMaestro => vistaMaestro.vista)
+      .filter(vistaMaestro => vistaMaestro.vista && vistaMaestro.is_habilitado === true)
       .map(vistaMaestro => ({
         vista: vistaMaestro.vista!.nombre_vista,
         vista_superior: vistaMaestro.vista!.nombre_vista_superior,

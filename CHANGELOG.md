@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.93 - 17-02-2025
+## 🐛 Fixes
+
+- fix: change get all repertoires for no mapping state
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.90
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.90 - 16-02-2025
 ## 🐛 Fixes
 

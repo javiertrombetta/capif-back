@@ -1297,7 +1297,7 @@ export const getAllEnvios = async (filters: any) => {
             {
                 model: Fonograma,
                 as: "fonogramaDelEnvio",
-                attributes: ["titulo"],
+                attributes: ["id_fonograma","isrc","titulo", "artista", "album", "duracion", "sello_discografico", "anio_lanzamiento"],
                 where: nombre_tema ? { titulo: { [Op.iLike]: `%${nombre_tema}%` } } : undefined,
             },
         ],

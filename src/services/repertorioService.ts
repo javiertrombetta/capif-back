@@ -1266,21 +1266,14 @@ export const getEnviosByFonograma = async (fonogramaId: string) => {
 
 
 export const getAllEnvios = async (filters: any) => {
-    const { nombre_tema, estado_envio, fecha_desde, fecha_hasta, page = 1, limit = 10 } = filters;
-
-    const ESTADO_ENVIO_MAP: Record<string, string[]> = {
-        "PENDIENTE": ["PENDIENTE DE ENVIO"],
-        "ENVIADO": ["ENVIADO SIN AUDIO", "ENVIADO CON AUDIO"],
-        "RECHAZADO": ["RECHAZADO POR VERICAST"],
-        "ERROR": ["ERROR EN EL ENVIO"]
-    };
+    const { nombre_tema, estado_envio, fecha_desde, fecha_hasta, page = 1, limit = 50 } = filters;
 
     const whereCondition: any = {};
-
-    // Validar y convertir el estado recibido a lo definido en la base de datos
-    if (estado_envio && ESTADO_ENVIO_MAP[estado_envio]) {
-        whereCondition.tipo_estado = { [Op.in]: ESTADO_ENVIO_MAP[estado_envio] };
+    
+    if (estado_envio) {
+        whereCondition.tipo_estado = estado_envio;
     }
+
     if (fecha_desde) {
         whereCondition.fecha_envio_inicial = { [Op.gte]: new Date(fecha_desde) };
     }

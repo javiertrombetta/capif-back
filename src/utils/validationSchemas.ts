@@ -1084,12 +1084,18 @@ export const getAllEnviosSchema = Joi.object({
       "string.base": "El nombre del tema debe ser un texto.",
       "string.empty": "El nombre del tema no puede estar vacío.",
     }),
-    
+
   estado_envio: Joi.string()
-    .valid('PENDIENTE', 'ENVIADO', 'RECHAZADO', 'ERROR')
+    .valid(
+      'PENDIENTE DE ENVIO',
+      'ENVIADO SIN AUDIO',
+      'ENVIADO CON AUDIO',
+      'RECHAZADO POR VERICAST',
+      'ERROR EN EL ENVIO'
+    )
     .optional()
     .messages({
-      "any.only": "El estado de envío debe ser uno de los siguientes valores: PENDIENTE, ENVIADO, RECHAZADO, ERROR.",
+      "any.only": "El estado de envío debe ser uno de los siguientes valores: 'PENDIENTE DE ENVIO', 'ENVIADO SIN AUDIO', 'ENVIADO CON AUDIO', 'RECHAZADO POR VERICAST', 'ERROR EN EL ENVIO'.",
     }),
 
   fecha_desde: Joi.date()

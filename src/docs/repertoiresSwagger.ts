@@ -231,7 +231,7 @@ export const repertoiresSwaggerDocs = {
                                                     tipo_estado: {
                                                         type: "string",
                                                         description: "Estado actual del envío.",
-                                                        example: "ENVIADO A VERICAST"
+                                                        example: "ENVIADO SIN AUDIO"
                                                     },
                                                     fecha_envio_inicial: {
                                                         type: "string",
@@ -1688,7 +1688,7 @@ export const repertoiresSwaggerDocs = {
                         name: "estado_envio",
                         schema: {
                             type: "string",
-                            enum: ["PENDIENTE", "ENVIADO", "RECHAZADO", "ERROR"]
+                            enum: ["PENDIENTE DE ENVIO", "ENVIADO SIN AUDIO", "ENVIADO CON AUDIO", "RECHAZADO POR VERICAST", "ERROR EN EL ENVIO"]
                         },
                         description: "Filtrar por estado del envío.",
                         example: "ENVIADO"
@@ -1719,7 +1719,7 @@ export const repertoiresSwaggerDocs = {
                         name: "limit",
                         schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
                         description: "Cantidad de registros por página.",
-                        example: 10
+                        example: 50
                     }
                 ],
                 responses: {
@@ -1734,7 +1734,7 @@ export const repertoiresSwaggerDocs = {
                                         total: { type: "integer", example: 25 },
                                         totalPages: { type: "integer", example: 3 },
                                         currentPage: { type: "integer", example: 1 },
-                                        limit: { type: "integer", example: 10 },
+                                        limit: { type: "integer", example: 50 },
                                         data: {
                                             type: "array",
                                             items: {
@@ -1742,7 +1742,7 @@ export const repertoiresSwaggerDocs = {
                                                 properties: {
                                                     id_envio_vericast: { type: "integer", example: 12345 },
                                                     nombre_tema: { type: "string", example: "Mi Canción" },
-                                                    tipo_estado: { type: "string", example: "ENVIADO" },
+                                                    tipo_estado: { type: "string", example: "ENVIADO SIN AUDIO" },
                                                     fecha_envio_inicial: { type: "string", format: "date-time", example: "2024-01-15T10:00:00.000Z" },
                                                     fecha_envio_ultimo: { type: "string", format: "date-time", example: "2024-02-01T12:00:00.000Z" },
                                                     createdAt: { type: "string", format: "date-time", example: "2024-01-01T08:30:00.000Z" },

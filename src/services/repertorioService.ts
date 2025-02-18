@@ -1039,7 +1039,7 @@ export const enviarFonograma = async (req: any) => {
           },
         ];
         const metadataCsv = parse(metadata, { delimiter: "\t" });
-        fs.writeFileSync(metadataPath, metadataCsv);
+        fs.writeFileSync(metadataPath, metadataCsv, { encoding: "utf8" });
 
         // Crear archivo ZIP
         const output = fs.createWriteStream(zipPath);

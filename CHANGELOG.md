@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.108 - 18-02-2025
+## 🐛 Fixes
+
+- fix: change obtenerConflicto and obtenerConflictos
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.105
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.105 - 18-02-2025
 ## 🐛 Fixes
 

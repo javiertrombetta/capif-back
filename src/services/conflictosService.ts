@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import { Op } from "sequelize";
 import { Parser } from 'json2csv';
-import { Productora, Conflicto, Fonograma, FonogramaParticipacion, ConflictoParte } from '../models';
+import { Productora, Conflicto, Fonograma, FonogramaParticipacion, ConflictoParte, UsuarioMaestro } from '../models';
 
 import { AuthenticatedRequest } from "../interfaces/AuthenticatedRequest";
 
@@ -140,56 +140,60 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
     };
 };
 
-export const obtenerConflictos = async (filtros: {
-  fecha_desde?: string;
-  fecha_hasta?: string;
-  estado?: string;
-  isrc?: string;
-  productora_id?: string;
-  page?: number;
-  limit?: number;
-}) => {
-  const { fecha_desde, fecha_hasta, estado, isrc, productora_id, page = 1, limit = 50 } = filtros;
+export const obtenerConflictos = async (req: AuthenticatedRequest) => {
+  const { fecha_desde, fecha_hasta, estado, isrc, productora_id, page = 1, limit = 50 } = req.query;
+
+  const parsedPage = Number(page);
+  const parsedLimit = Number(limit); 
+
+  // Obtener usuario autenticado
+  const { user: authUser, maestros: authMaestros } = await getAuthenticatedUser(req);
 
   // Filtros iniciales
   const where: any = {};
 
-  // Filtro por fechas de período
-  if (fecha_desde) where.fecha_periodo_desde = { [Op.gte]: new Date(fecha_desde) };
-  if (fecha_hasta) where.fecha_periodo_hasta = { [Op.lte]: new Date(fecha_hasta) };
+  if (["productor_principal", "productor_secundario"].includes(authUser.rol?.nombre_rol || "")) {
+    if (!req.productoraId) {
+      throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NO_ASSOCIATED_PRODUCTORAS);
+    }
+    const productoraValida = authMaestros.some(maestro => maestro.productora_id === req.productoraId);
+    if (!productoraValida) {
+      throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+    }
+    where.productora_id = req.productoraId;
+  } else if (productora_id) {
+    where.productora_id = productora_id;
+  }
 
-  // Filtro por estado del conflicto
-  if (estado) {
+  if (typeof fecha_desde === "string" && fecha_desde) {
+    where.fecha_periodo_desde = { [Op.gte]: new Date(fecha_desde) };
+  }
+  if (typeof fecha_hasta === "string" && fecha_hasta) {
+    where.fecha_periodo_hasta = { [Op.lte]: new Date(fecha_hasta) };
+  }
+
+  if (typeof estado === "string" && estado) {
     if (estado === "en curso") {
       where.estado_conflicto = {
-        [Op.in]: [
-          "PENDIENTE CAPIF",
-          "PRIMERA INSTANCIA",
-          "PRIMERA PRORROGA",
-          "SEGUNDA INSTANCIA",
-          "SEGUNDA PRORROGA",
-        ],
+        [Op.in]: ["PENDIENTE CAPIF", "PRIMERA INSTANCIA", "PRIMERA PRORROGA", "SEGUNDA INSTANCIA", "SEGUNDA PRORROGA"],
       };
-    } else if (estado === "cerrado") {
-      where.estado_conflicto = "CERRADO";
-    } else if (estado === "vencido") {
-      where.estado_conflicto = "VENCIDO";
+    } else if (["cerrado", "vencido"].includes(estado)) {
+      where.estado_conflicto = estado.toUpperCase();
     }
   }
 
-  // Construcción de condiciones para incluir relaciones
   const include: any[] = [
     {
       model: Fonograma,
       as: "fonogramaDelConflicto",
-      attributes: ["id_fonograma", "isrc", "titulo", "artista"],
+      attributes: ["id_fonograma", "isrc", "titulo", "artista", "sello_discografico", "anio_lanzamiento"],
       where: isrc ? { isrc } : undefined,
     },
     {
       model: Productora,
       as: "productoraDelConflicto",
       attributes: ["id_productora", "nombre_productora"],
-      where: productora_id ? { id_productora: productora_id } : undefined
+      where: where.productora_id ? { id_productora: where.productora_id } : undefined,
     },
     {
       model: ConflictoParte,
@@ -200,44 +204,66 @@ export const obtenerConflictos = async (filtros: {
         "porcentaje_declarado",
         "porcentaje_confirmado",
         "is_documentos_enviados",
-      ],
-      include: [
-        {
-          model: FonogramaParticipacion,
-          as: "participacionDeLaParte",
-          attributes: [
-            "id_participacion",
-            "porcentaje_participacion",
-            "fecha_participacion_inicio",
-            "fecha_participacion_hasta",
-          ],
-        },
+        "fecha_respuesta_confirmacion",
+        "fecha_respuesta_documentacion",
+        "participacion_id",
       ],
     },
-  ].filter((inc) => !inc.where || Object.keys(inc.where).length > 0);
+  ];
 
   // Paginación
-  const offset = (page - 1) * limit;
+  const offset = (parsedPage - 1) * parsedLimit;
 
   // Consulta a la base de datos
-  const { count, rows: conflictos } = await Conflicto.findAndCountAll({
+  const { count, rows } = await Conflicto.findAndCountAll({
     where,
     include,
     order: [["fecha_inicio_conflicto", "DESC"]],
-    limit,
+    limit: parsedLimit,
     offset,
   });
 
-  if (!conflictos.length) {
+  if (!rows.length) {
     throw new Err.NotFoundError(MESSAGES.ERROR.CONFLICTO.NOT_FOUND);
   }
+
+  // Casteo seguro de `conflictos` para que TypeScript no marque error en `partesDelConflicto`
+  const conflictos = rows as (Conflicto & { partesDelConflicto?: ConflictoParte[] })[];
+
+  // Extraer los IDs de participaciones
+  const participacionIds = conflictos
+    .flatMap(conflicto => conflicto.partesDelConflicto ?? [])
+    .map((parte: ConflictoParte) => parte.participacion_id)
+    .filter(Boolean);
+
+  // Buscar manualmente los datos de participacionDeLaParte
+  const participaciones = await FonogramaParticipacion.findAll({
+    where: { id_participacion: participacionIds },
+    attributes: ["id_participacion", "porcentaje_participacion", "fecha_participacion_inicio", "fecha_participacion_hasta"],
+    include: [
+      {
+        model: Productora,
+        as: "productoraDeParticipante",
+        attributes: ["id_productora", "nombre_productora"],
+      },
+    ],
+  });
+
+  // Mapear las participaciones en `partesDelConflicto`
+  const conflictosConParticipaciones = conflictos.map(conflicto => ({
+    ...conflicto.toJSON(),
+    partesDelConflicto: (conflicto.partesDelConflicto ?? []).map((parte: ConflictoParte) => ({
+      ...parte.toJSON(),
+      participacionDeLaParte: participaciones.find(p => p.id_participacion === parte.participacion_id) || null,
+    })),
+  }));
 
   return {
     message: MESSAGES.SUCCESS.CONFLICTO.CONFLICTO_FETCHED,
     total: count,
-    page,
-    limit,
-    data: conflictos,
+    page: parsedPage,
+    limit: parsedLimit,
+    data: conflictosConParticipaciones,
   };
 };
 

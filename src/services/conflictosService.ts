@@ -242,72 +242,88 @@ export const obtenerConflictos = async (filtros: {
 };
 
 export const obtenerConflicto = async (id: string) => {
+  // Buscar el conflicto por ID incluyendo sus relaciones excepto participacionDeLaParte
+  const conflicto = await Conflicto.findOne({
+    where: { id_conflicto: id },
+    include: [
+      {
+        model: Productora,
+        as: "productoraDelConflicto",
+        attributes: ["id_productora", "nombre_productora"],
+      },
+      {
+        model: Fonograma,
+        as: "fonogramaDelConflicto",
+        attributes: [
+          "id_fonograma",
+          "isrc",
+          "titulo",
+          "artista",
+          "sello_discografico",
+          "anio_lanzamiento",
+        ],
+      },
+      {
+        model: ConflictoParte,
+        as: "partesDelConflicto",
+        attributes: [
+          "id_conflicto_participacion",
+          "estado",
+          "porcentaje_declarado",
+          "porcentaje_confirmado",
+          "is_documentos_enviados",
+          "fecha_respuesta_confirmacion",
+          "fecha_respuesta_documentacion",
+          "participacion_id",
+        ],
+      },
+    ],
+  });
 
-    // Buscar el conflicto por ID incluyendo sus relaciones
-    const conflicto = await Conflicto.findOne({
-      where: { id_conflicto: id },
-      include: [
-        {
-          model: Productora,
-          as: "productoraDelConflicto",
-          attributes: ["id_productora", "nombre_productora"],
-        },
-        {
-          model: Fonograma,
-          as: "fonogramaDelConflicto",
-          attributes: [
-            "id_fonograma",
-            "isrc",
-            "titulo",
-            "artista",
-            "sello_discografico",
-            "anio_lanzamiento",
-          ],
-        },
-        {
-          model: ConflictoParte,
-          as: "partesDelConflicto",
-          include: [
-            {
-              model: FonogramaParticipacion,
-              as: "participacionDeLaParte",
-              attributes: [
-                "id_participacion",
-                "porcentaje_participacion",
-                "fecha_participacion_inicio",
-                "fecha_participacion_hasta",
-              ],
-              include: [
-                {
-                  model: Productora,
-                  as: "productoraDeParticipante",
-                  attributes: ["id_productora", "nombre_productora"],
-                },
-              ],
-            },
-          ],
-          attributes: [
-            "id_conflicto_participacion",
-            "estado",
-            "porcentaje_declarado",
-            "porcentaje_confirmado",
-            "is_documentos_enviados",
-            "fecha_respuesta_confirmacion",
-            "fecha_respuesta_documentacion"
-          ],
-        },
-      ],
-    });
+  // Verificar si el conflicto existe
+  if (!conflicto) {
+    throw new Err.NotFoundError(MESSAGES.ERROR.CONFLICTO.NOT_FOUND);
+  }
 
-    // Verificar si el conflicto existe
-    if (!conflicto) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.CONFLICTO.NOT_FOUND);
-    }
+  // Extraer los IDs de participaciones para hacer la segunda consulta
+  const participacionIds = (conflicto as unknown as { partesDelConflicto: ConflictoParte[] })
+  .partesDelConflicto.map((parte) => parte.participacion_id);
 
-    return {
-      message: MESSAGES.SUCCESS.CONFLICTO.CONFLICTO_FETCHED,
-      data: conflicto,
-    };
+  // Buscar manualmente los datos de participacionDeLaParte
+  const participaciones = await FonogramaParticipacion.findAll({
+    where: { id_participacion: participacionIds },
+    attributes: [
+      "id_participacion",
+      "porcentaje_participacion",
+      "fecha_participacion_inicio",
+      "fecha_participacion_hasta",
+    ],
+    include: [
+      {
+        model: Productora,
+        as: "productoraDeParticipante",
+        attributes: ["id_productora", "nombre_productora"],
+      },
+    ],
+  });
+
+  // Mapear los datos de participaciones en partesDelConflicto
+  const partesDelConflictoConParticipaciones = (conflicto as unknown as { partesDelConflicto: ConflictoParte[] })
+  .partesDelConflicto.map((parte) => ({
+    ...parte.toJSON(),
+    participacionDeLaParte: participaciones.find(
+      (p) => p.id_participacion === parte.participacion_id
+    ),
+  }));
+
+  // Retornar la estructura final con la información correcta
+  return {
+    message: MESSAGES.SUCCESS.CONFLICTO.CONFLICTO_FETCHED,
+    data: {
+      ...conflicto.toJSON(),
+      partesDelConflicto: partesDelConflictoConParticipaciones,
+    },
+  };
 };
 
 export const actualizarEstadoConflicto = async (req: AuthenticatedRequest, id: string, estado_conflicto: string) => {

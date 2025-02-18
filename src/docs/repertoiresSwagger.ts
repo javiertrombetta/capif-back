@@ -144,7 +144,7 @@ export const repertoiresSwaggerDocs = {
                                 properties: {
                                     nuevoEstado: {
                                         type: "string",
-                                        enum: ["RECHAZADO POR VERICAST", "ERROR EN EL ENVIO"],
+                                        enum: ["PENDIENTE DE ENVIO", "RECHAZADO POR VERICAST", "ERROR EN EL ENVIO"],
                                         description: "Nuevo estado del envío."
                                     },
                                     comentario: {

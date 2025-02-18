@@ -21,7 +21,7 @@ export const crearConflicto = async (req: AuthenticatedRequest, res: Response, n
   }
 };
 
-export const obtenerConflictos = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const obtenerConflictos = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { fecha_desde, fecha_hasta, estado, isrc, productora_id, page, limit } = req.query;
 

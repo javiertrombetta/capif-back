@@ -17,6 +17,12 @@ export const startFakeFtpServer = async () => {
       logger.info(`Carpeta creada: ${FTP_ROOT}`);
     }
 
+    const uploadsDir = path.join(FTP_ROOT, "uploads");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+      logger.info(`Directorio uploads creado: ${uploadsDir}`);
+    }
+
     ftpServer = new FtpSrv({
       url: FTP_URL,
       anonymous: false,

@@ -1054,11 +1054,11 @@ export const cambiarEstadoEnvioFonogramaParamsSchema = Joi.object({
 
 export const cambiarEstadoEnvioFonogramaBodySchema = Joi.object({
   nuevoEstado: Joi.string()
-    .valid('RECHAZADO POR VERICAST', 'ERROR EN EL ENVIO')
+    .valid('PENDIENTE DE ENVIO', 'RECHAZADO POR VERICAST', 'ERROR EN EL ENVIO')
     .required()
     .messages({
       "string.base": "El estado debe ser un string.",
-      "any.only": "El estado debe ser 'RECHAZADO POR VERICAST' o 'ERROR EN EL ENVIO'.",
+      "any.only": "El estado debe ser 'PENDIENTE DE ENVIO', 'RECHAZADO POR VERICAST' o 'ERROR EN EL ENVIO'.",
       "any.required": "El estado es obligatorio.",
     }),
   comentario: Joi.string()

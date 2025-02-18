@@ -951,10 +951,10 @@ export const enviarFonograma = async (req: any) => {
 
     // Cargar configuración FTP desde .env
     const FTP_CONFIG = {
-      host: process.env.FTP_HOST || "",
-      user: process.env.FTP_USER || "",
-      password: process.env.FTP_PASSWORD || "",
-      port: Number(process.env.FTP_PORT) || 21,
+    host: process.env.FTP_HOST || "127.0.0.1",
+    user: process.env.FTP_USER || "test",
+    password: process.env.FTP_PASSWORD || "password",
+    port: Number(process.env.FTP_PORT) || 2121,
     };
     
     const { fonograma_ids } = req.body;
@@ -1059,6 +1059,9 @@ export const enviarFonograma = async (req: any) => {
 
         await archive.finalize();
 
+        if (!fs.existsSync(zipPath)) {
+            throw new Error(`El archivo ZIP ${zipPath} no existe antes de subirlo.`);
+        }
         // Subir archivo ZIP al FTP con el formato correcto
         await subirArchivoFTP(zipPath, isrc, codigoEnvio, FTP_CONFIG);
 
@@ -1081,14 +1084,15 @@ export const enviarFonograma = async (req: any) => {
     return { message: "Fonogramas enviados correctamente.", observaciones };
 };
 
-export const cambiarEstadoEnvioFonograma = async (fonogramaId: string, sendId: string, nuevoEstado: typeof FonogramaEnvio.prototype.tipo_estado, comentario: string | undefined, req: any) => {
-
+export const cambiarEstadoEnvioFonograma = async (
+  fonogramaId: string,
+  sendId: string,
+  nuevoEstado: typeof FonogramaEnvio.prototype.tipo_estado,
+  comentario: string | undefined,
+  req: any
+) => {
   // Verificar el usuario autenticado
   const { user: authUser } = await getAuthenticatedUser(req);
-
-  const validStates = ['RECHAZADO POR VERICAST', 'ERROR EN EL ENVIO'];
-
-  if (!validStates.includes(nuevoEstado)) throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ENVIO_STATE_INVALID);
 
   // Buscar el envío relacionado al fonograma
   const envio = await FonogramaEnvio.findOne({
@@ -1101,17 +1105,27 @@ export const cambiarEstadoEnvioFonograma = async (fonogramaId: string, sendId: s
 
   const oldState = envio.tipo_estado;
 
+  // Estados permitidos para cambio a PENDIENTE DE ENVIO
+  const estadosPermitidosParaPendiente = ['RECHAZADO POR VERICAST', 'ERROR EN EL ENVIO'];
+
+  if (nuevoEstado === 'PENDIENTE DE ENVIO' && !estadosPermitidosParaPendiente.includes(oldState)) {
+    throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ENVIO_STATE_INVALID);
+  }
+
+  // Validar el estado
+  const estadosValidos = ['RECHAZADO POR VERICAST', 'ERROR EN EL ENVIO', 'PENDIENTE DE ENVIO'];
+  if (!estadosValidos.includes(nuevoEstado)) {
+    throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.ENVIO_STATE_INVALID);
+  }
+
+  // Si el nuevo estado es RECHAZADO POR VERICAST, notificar al productor
   if (nuevoEstado === 'RECHAZADO POR VERICAST') {
     const { productora_id: productoraId } = envio.fonogramaDelEnvio;
     if (!productoraId) throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
 
-    // Obtener el productor principal asociado a la productora del fonograma
     const { user: targetUser } = await getTargetUser({ productoraId, nombre_rol: 'productor_principal' }, req);
+    const rejectionComment = comentario || `El envío del archivo de audio del repertorio '${envio.fonogramaDelEnvio.titulo}' fue rechazado.`;
 
-    // Mensaje de respuesta para enviar por email al productor principal
-    const rejectionComment = comentario || `El envío del archivo de audio del repertorio '${envio.fonogramaDelEnvio.titulo}' fue rechazado por Vericast.`;
-
-    // Crear mensaje asociado al rechazo
     await createProductoraMessage({
       usuarioId: authUser.id_usuario,
       productoraId,
@@ -1120,20 +1134,15 @@ export const cambiarEstadoEnvioFonograma = async (fonogramaId: string, sendId: s
     });
 
     await sendEmailWithErrorHandling(
-    {
+      {
         to: targetUser.email,
         subject: 'Rechazo del envío del archivo de audio',
         html: MESSAGES.EMAIL_BODY.SENDFILE_REJECTION_NOTIFICATION(targetUser.nombre!, rejectionComment),
         successLog: `Correo enviado a ${targetUser.email} notificando rechazo del envío.`,
         errorLog: `Error al enviar correo a ${targetUser.email} durante la notificación de rechazo.`,
-    },
-    req,
-    undefined,
-    undefined
+      },
+      req
     );
-
-    // Cambiar el estado del envío a "PENDIENTE DE ENVIO"
-    nuevoEstado = 'PENDIENTE DE ENVIO';
   }
 
   envio.tipo_estado = nuevoEstado;

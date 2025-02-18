@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.105 - 18-02-2025
+## 🐛 Fixes
+
+- fix: change send repertoire by ftp
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.102
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.102 - 17-02-2025
 ## 🐛 Fixes
 

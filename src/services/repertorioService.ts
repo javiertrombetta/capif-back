@@ -88,6 +88,7 @@ export const validateISRC = async (isrc: string) => {
 
   return { available: true, message: MESSAGES.SUCCESS.ISRC.ISRC_AVAILABLE };
 };
+
 export const createFonograma = async (req: any) => {
   
     const {
@@ -104,11 +105,18 @@ export const createFonograma = async (req: any) => {
       territorios: territoriosActivos
     } = req.body;
 
-    // Obtener productora_id, dándole prioridad a req.productoraId
-    let productora_id = req.productoraId || bodyProductoraId;
+    // Verificar el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
-    // Si no hay productora_id pero se pasó un cuit, buscarlo en la base de datos
-    if (!productora_id && cuit) {
+    // Determinar si el usuario es un productor o un administrador
+    const isAdmin = authUser.rol?.nombre_rol === "admin_principal" || authUser.rol?.nombre_rol === "admin_secundario";
+    const isProductor = authUser.rol?.nombre_rol === "productor_principal" || authUser.rol?.nombre_rol === "productor_secundario";
+
+    // Obtener productora_id
+    let productora_id = isAdmin ? bodyProductoraId : req.productoraId;
+
+    // Si el usuario es admin, se puede buscar con el cuit
+    if (isAdmin && !productora_id && cuit) {
         const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
         if (!productora) {
             throw new Err.NotFoundError(`No se encontró ninguna productora con el CUIT: ${cuit}`);
@@ -116,10 +124,7 @@ export const createFonograma = async (req: any) => {
         productora_id = productora.id_productora;
     }
 
-    if (!productora_id) throw new Err.ForbiddenError("Acceso denegado: no se encontró el ID de la productora.");
-
-    // Verificar el usuario autenticado
-    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);    
+    if (!productora_id) throw new Err.ForbiddenError("Acceso denegado: no se encontró el ID de la productora.");       
 
     // Verificar si existe el fonograma
     const existingFonograma = await Fonograma.findOne({ where: { isrc } });
@@ -156,9 +161,25 @@ export const createFonograma = async (req: any) => {
       throw new Err.BadRequestError("No se incluyeron participaciones en la creación del fonograma.");
     }
 
-    // Registrar participaciones de productoras (obligatorio)
+    let participacionesFiltradas = participaciones;
+
+    if (isProductor) {
+        // Obtener el cuit correspondiente al req.productoraId para verificar las participaciones
+        const productora = await Productora.findOne({ where: { id_productora: req.productoraId } });
+        if (!productora) {
+            throw new Err.NotFoundError(`No se encontró ninguna productora con ID: ${req.productoraId}`);
+        }
+
+        // Filtrar solo la participación de la productora autenticada
+        participacionesFiltradas = participaciones.filter((p: Record<string, any>) => p.cuit === productora.cuit_cuil);
+        if (participacionesFiltradas.length === 0) {
+            throw new Err.ForbiddenError("No se encontró ninguna participación válida para la productora autenticada.");
+        }
+    }
+
+    // Registrar participaciones de productoras
     const overlappingPeriods: string[] = [];
-    for (const participacion of participaciones) {
+    for (const participacion of participacionesFiltradas) {
         const { cuit, porcentaje_participacion, fecha_inicio, fecha_hasta } = participacion;
 
         // Verificar si la productora del usuario que registra es parte de los participantes
@@ -224,7 +245,7 @@ export const createFonograma = async (req: any) => {
         }
     }
 
-    // Registrar los territorios habilitados en FonogramaTerritorioMaestro (obligatorio)
+    // Registrar los territorios habilitados en FonogramaTerritorioMaestro
     // Validar territorios activos
     const territoriosHabilitados = await FonogramaTerritorio.findAll({ where: { is_habilitado: true } });
 
@@ -1279,11 +1300,31 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
 
     // Obtener usuario autenticado
     const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    // Determinar si es productor
+    const isProductor = authUser.rol?.nombre_rol === "productor_principal" || authUser.rol?.nombre_rol === "productor_secundario";
+
+    let participacionesFiltradas = participaciones;
+
+    if (isProductor) {
+        // Obtener el CUIT correspondiente a la productora autenticada
+        const productora = await Productora.findOne({ where: { id_productora: req.productoraId } });
+        if (!productora) {
+            throw new Err.NotFoundError(`No se encontró ninguna productora con ID: ${req.productoraId}`);
+        }
+
+        // Filtrar solo la participación de la productora autenticada
+        participacionesFiltradas = participaciones.filter((p: Record<string, any>) => p.cuit === productora.cuit_cuil);
+
+        if (!participacionesFiltradas.length) {
+            throw new Err.ForbiddenError("No se encontró ninguna participación válida para la productora autenticada.");
+        }
+    }
     
     const overlappingPeriods: string[] = [];
 
     // Procesar cada participación
-    for (const participacion of participaciones) {
+    for (const participacion of participacionesFiltradas) {
         const { cuit, porcentaje_participacion, fecha_inicio, fecha_hasta } = participacion;
 
         const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
@@ -1360,7 +1401,7 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
         ? `Participaciones agregadas con éxito, pero hay períodos donde se supera el 100% de participación: ${overlappingPeriods.join("; ")}`
         : "Participaciones agregadas exitosamente";
 
-    return { message, data: { fonogramaId, participaciones } };
+    return { message, data: { fonogramaId, participaciones: participacionesFiltradas } };
 };
 
 export const cargarParticipacionesMasivo = async (req: any) => {

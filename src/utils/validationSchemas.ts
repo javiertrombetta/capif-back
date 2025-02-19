@@ -1436,11 +1436,7 @@ export const createFonogramaBodySchema = Joi.object({
       Joi.object({
         cuit: Joi.string()
           .pattern(/^\d{11}$/)
-          .required()
-          .messages({
-            "string.pattern.base": "El campo 'cuit' debe contener 11 dígitos numéricos.",
-            "any.required": "El campo 'cuit' es obligatorio.",
-          }),
+          .optional(),
         porcentaje_participacion: Joi.number()
           .min(0)
           .max(100)

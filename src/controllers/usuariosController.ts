@@ -528,6 +528,7 @@ export const getUser = async (
       .map(authMaestro => ({
         id: authMaestro.productora!.id_productora,
         productora: authMaestro.productora!.nombre_productora,
+        cuit: authMaestro.productora!.cuit_cuil,
       }));
 
     // Filtrar los datos de las vistas eliminando los elementos sin datos válidos

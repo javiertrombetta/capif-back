@@ -140,7 +140,7 @@ router.get(
 router.post(
   "/:id/shares",
   authenticate,
-  authorizeRoles(["admin_principal"]),
+  authorizeRoles(["admin_principal", "productor_principal", "productor_secundario"]),
   celebrate({
     [Segments.PARAMS]: addParticipacionToFonogramaParamsSchema,
     [Segments.BODY]: addParticipacionToFonogramaBodySchema,
@@ -253,7 +253,7 @@ router.post(
 router.post(
   "/",
   authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
+  authorizeRoles(["admin_principal", "productor_principal", "productor_secundario"]),
   celebrate({
     [Segments.BODY]: createFonogramaBodySchema,
   }),

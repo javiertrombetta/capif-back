@@ -1588,7 +1588,7 @@ export const repertoiresSwaggerDocs = {
         "/repertoires/bulk": {
             post: {
                 summary: "Carga masiva de repertorios",
-                description: "Permite cargar múltiples repertorios mediante un archivo CSV, registrando fonogramas, participaciones y territorios.",
+                description: "Permite cargar múltiples repertorios mediante un archivo CSV, registrando fonogramas, participaciones y territorios.\n\n### Ejemplo de archivo CSV esperado:\n\n```csv\ncuit\tisrc\tartista\ttema\talbum\tduracion\taño publicacion\tproductor originario\tsello discografico\ttitular desde\ttitular hasta\tporcentaje titularidad\n30686513528\tQM6P42495458\tRusherking ft Luck Ra\tME GUSTAN TODAS\t\t00:03:31\t2024\tSony Music Entertainment\t\t1/7/2024\t31/12/2099\t100\n```",
                 tags: ["Repertorios"],
                 security: [{ bearerAuth: [] }],
                 requestBody: {
@@ -1637,6 +1637,17 @@ export const repertoiresSwaggerDocs = {
                                                     }
                                                 }
                                             }
+                                        },
+                                        isrcExistentes: {
+                                            type: "array",
+                                            items: {
+                                                type: "string"
+                                            },
+                                            description: "Lista de ISRCs que ya existían y a los que solo se agregó una participación.",
+                                            example: [
+                                                "ARABC2412345",
+                                                "USXYZ2312345"
+                                            ]
                                         },
                                         conflictos: {
                                             type: "array",

@@ -309,7 +309,7 @@ export const cargarRepertoriosMasivo = async (req: any) => {
     const errores: string[] = [];
     const registrosCreados: any[] = [];
     const conflictos: string[] = [];
-
+    const isrcExistentes: any[] = [];
     
     // Leer y procesar el archivo CSV desde el stream del request
     await new Promise<void>((resolve, reject) => {
@@ -325,187 +325,156 @@ export const cargarRepertoriosMasivo = async (req: any) => {
     await Promise.all(
         resultados.map(async (row, index) => {
             try {
-                const {
-                    productora_id,
-                    titulo,
-                    artista,
-                    album,
-                    duracion,
-                    anio_lanzamiento,
-                    sello_discografico,
-                    isrc,
-                    participaciones, // JSON string: [{"cuit": "...", "porcentaje_participacion": ...}]
-                    territorios, // JSON string: ["AR", "US"]
-                    archivo_audio_path, // Ruta del archivo de audio (opcional)
-                } = row;
-                
-                // Convertir JSON strings a objetos/arrays
-                const parsedParticipaciones = participaciones ? JSON.parse(participaciones) : [];
-                const parsedTerritorios = territorios ? JSON.parse(territorios) : [];
-                    
-                // Fecha para dominio público
-                const currentYear = new Date().getFullYear();   
+                    const {
+                        cuit,
+                        isrc,
+                        artista,
+                        titulo,
+                        album,
+                        duracion,
+                        anio_publicacion,
+                        sello_discografico,
+                        titular_desde,
+                        titular_hasta,
+                        porcentaje_titularidad
+                    } = row;
 
-                // Verificar si el fonograma ya existe
-                const existingFonograma = await Fonograma.findOne({ where: { isrc } });
-                if (existingFonograma) {
-                    errores.push(`El fonograma con ISRC '${isrc}' ya existe en la base de datos.`);
-                    return;
-                }
-
-                // Crear el fonograma
-                const fonograma = await Fonograma.create({
-                    productora_id,
-                    isrc,
-                    titulo,
-                    artista,
-                    album,
-                    duracion,
-                    anio_lanzamiento,
-                    sello_discografico,
-                    is_dominio_publico: currentYear - anio_lanzamiento > 70,
-                    estado_fonograma: "ACTIVO",
-                });
-
-                await registrarAuditoria({
-                    usuario_originario_id: authUser.id_usuario,
-                    usuario_destino_id: null,
-                    modelo: "Fonograma",
-                    tipo_auditoria: "ALTA",
-                    detalle: `Se creó el fonograma con título '${titulo}' y ISRC '${isrc}'`,
-                });
-
-                // Registrar en FonogramaMaestro
-                await FonogramaMaestro.create({
-                    fonograma_id: fonograma.id_fonograma,
-                    operacion: "ALTA",
-                    fecha_operacion: new Date(),
-                });               
-
-                // Registrar archivo de audio si existe
-                if (archivo_audio_path && fs.existsSync(archivo_audio_path)) {
-                    const registrarArchivo = await FonogramaArchivo.create({
-                        fonograma_id: fonograma.id_fonograma,
-                        ruta_archivo_audio: archivo_audio_path,
-                    });
-
-                    // Asignar el ID del envío a la propiedad correcta en el fonograma
-                    fonograma.archivo_audio_id = registrarArchivo.id_archivo;
-                    await fonograma.save();
-
-                    await registrarAuditoria({
-                        usuario_originario_id: authUser.id_usuario,
-                        usuario_destino_id: null,
-                        modelo: "FonogramaArchivo",
-                        tipo_auditoria: "ALTA",
-                        detalle: `Se registró el archivo de audio en '${archivo_audio_path}' para el fonograma con ISRC '${isrc}'`,
-                    });
-                }
-
-                await FonogramaEnvio.create({
-                    fonograma_id: fonograma.id_fonograma,
-                    tipo_estado: 'PENDIENTE DE ENVIO',
-                    tipo_contenido: 'DATOS',
-                    fecha_envio_inicial: null,
-                    fecha_envio_ultimo: null,
-                });                
-
-                await registrarAuditoria({
-                    usuario_originario_id: authUser.id_usuario,
-                    usuario_destino_id: null,
-                    modelo: "FonogramaEnvio",
-                    tipo_auditoria: "ALTA",
-                    detalle: `Se registró el envío del fonograma con ID: '${fonograma.id_fonograma}' en estado 'PENDIENTE DE ENVIO' y contenido 'DATOS'.`,
-                });
-
-                // Registrar participaciones y calcular conflictos
-                for (const participacion of parsedParticipaciones) {
-                    const { cuit, porcentaje_participacion, fecha_inicio, fecha_hasta } = participacion;
-
+                    // Verificar la productora según el cuit
                     const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
-                    if (!productora) throw new Err.NotFoundError(`No se encontró ninguna productora con el CUIT '${cuit}'`);
+                    if (!productora) {
+                        errores.push(`No se encontró productora con CUIT '${cuit}'`);
+                        return;
+                    }
 
+                    // Definir el sello discográfico a insertar
+                    const selloFinal = sello_discografico || productora.nombre_productora;            
+                        
+                    // Fecha para dominio público
+                    const currentYear = new Date().getFullYear();   
+
+                    // Verificar si el fonograma ya existe
+                    let fonograma = await Fonograma.findOne({ where: { isrc } });
+
+                    // Crear el fonograma
+                    if (!fonograma) {
+                        fonograma = await Fonograma.create({
+                            productora_id: productora.id_productora,
+                            isrc,
+                            titulo,
+                            artista,
+                            album,
+                            duracion,
+                            anio_lanzamiento: anio_publicacion,
+                            sello_discografico: selloFinal,
+                            is_dominio_publico: currentYear - anio_publicacion > 70,
+                            estado_fonograma: "ACTIVO",
+                        });
+
+                        await registrarAuditoria({
+                            usuario_originario_id: authUser.id_usuario,
+                            modelo: "Fonograma",
+                            tipo_auditoria: "ALTA",
+                            detalle: `Se creó el fonograma '${titulo}' con ISRC '${isrc}'`,
+                        });
+
+                        // Registrar en FonogramaMaestro
+                        await FonogramaMaestro.create({
+                            fonograma_id: fonograma.id_fonograma,
+                            operacion: "ALTA",
+                            fecha_operacion: new Date(),
+                        });
+
+                        await FonogramaEnvio.create({
+                            fonograma_id: fonograma.id_fonograma,
+                            tipo_estado: 'PENDIENTE DE ENVIO',
+                            tipo_contenido: 'DATOS',
+                            fecha_envio_inicial: null,
+                            fecha_envio_ultimo: null,
+                        });                
+
+                        await registrarAuditoria({
+                            usuario_originario_id: authUser.id_usuario,
+                            usuario_destino_id: null,
+                            modelo: "FonogramaEnvio",
+                            tipo_auditoria: "ALTA",
+                            detalle: `Se registró el envío del fonograma con ID: '${fonograma.id_fonograma}' en estado 'PENDIENTE DE ENVIO' y contenido 'DATOS'.`,
+                        });
+
+                    } else {
+                        isrcExistentes.push(isrc);
+                    }
+                        
                     // Validar si la productora ya está registrada en el mismo período para este fonograma
                     const participacionExistente = await FonogramaParticipacion.findOne({
                         where: {
                             fonograma_id: fonograma.id_fonograma,
                             productora_id: productora.id_productora,
                             [Op.or]: [
-                                { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
-                                { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                                { fecha_participacion_inicio: { [Op.between]: [titular_desde, titular_hasta] } },
+                                { fecha_participacion_hasta: { [Op.between]: [titular_desde, titular_hasta] } },
                             ],
                         },
                     });
 
-                    if (participacionExistente) {
-                      conflictos.push(
-                          `Conflicto en el fonograma con ISRC '${isrc}': Ya existe una participación de ${productora.id_productora} entre ${fecha_inicio} y ${fecha_hasta}.`
-                      );
-                    }
-                    else {
-                        // Registrar participación
+                    if (!participacionExistente) {
                         await FonogramaParticipacion.create({
                             fonograma_id: fonograma.id_fonograma,
                             productora_id: productora.id_productora,
-                            porcentaje_participacion,
-                            fecha_participacion_inicio: fecha_inicio || new Date(),
-                            fecha_participacion_hasta: fecha_hasta || new Date("2099-12-31"),
+                            porcentaje_participacion: porcentaje_titularidad,
+                            fecha_participacion_inicio: titular_desde || new Date(),
+                            fecha_participacion_hasta: titular_hasta || new Date("2099-12-31"),
+                        });
+
+                        await registrarAuditoria({
+                            usuario_originario_id: authUser.id_usuario,
+                            modelo: "FonogramaParticipacion",
+                            tipo_auditoria: "ALTA",
+                            detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ISRC '${isrc}'`,
+                        });
+                    }
+
+                    // Verificar conflictos de periodos
+                    const conflictosExistentes = await FonogramaParticipacion.findAll({
+                        where: {
+                            fonograma_id: fonograma.id_fonograma,
+                            [Op.or]: [
+                                { fecha_participacion_inicio: { [Op.between]: [titular_desde, titular_hasta] } },
+                                { fecha_participacion_hasta: { [Op.between]: [titular_desde, titular_hasta] } },
+                            ],
+                        },
+                    });
+                    const porcentajeSuperpuesto = conflictosExistentes.reduce(
+                        (sum, p) => sum + p.porcentaje_participacion,
+                        Number(porcentaje_titularidad)
+                    );
+
+                    if (porcentajeSuperpuesto > 100) {
+                        conflictos.push(
+                            `Conflicto en el fonograma con ISRC '${isrc}': El porcentaje total supera el 100% entre ${titular_desde} y ${titular_hasta} (${porcentajeSuperpuesto}%)`
+                        );
+                        await crearConflicto(req, isrc, titular_desde, titular_hasta);
+                    }
+                
+                    // Registrar territorios
+                    const territoriosHabilitados = await FonogramaTerritorio.findAll({ where: { is_habilitado: true } });
+
+                    for (const territorio of territoriosHabilitados) {
+                        await FonogramaTerritorioMaestro.create({
+                            fonograma_id: fonograma.id_fonograma,
+                            territorio_id: territorio.id_territorio,
+                            is_activo: true,
                         });
 
                         await registrarAuditoria({
                             usuario_originario_id: authUser.id_usuario,
                             usuario_destino_id: null,
-                            modelo: "FonogramaParticipacion",
+                            modelo: "FonogramaTerritorioMaestro",
                             tipo_auditoria: "ALTA",
-                            detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ISRC '${isrc}'`,
-                        });                            
-
-                        // Verificar conflictos de periodos
-                        const conflictosExistentes = await FonogramaParticipacion.findAll({
-                            where: {
-                                fonograma_id: fonograma.id_fonograma,
-                                [Op.or]: [
-                                    { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
-                                    { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
-                                ],
-                            },
+                            detalle: `Se registró el territorio '${territorio.codigo_iso}' para el fonograma con ISRC '${isrc}'`,
                         });
-                        const porcentajeSuperpuesto = conflictosExistentes.reduce(
-                            (sum, p) => sum + p.porcentaje_participacion,
-                            Number(porcentaje_participacion)
-                        );
-
-                        if (porcentajeSuperpuesto > 100) {
-                            conflictos.push(
-                                `Conflicto en el fonograma con ISRC '${isrc}': El porcentaje total supera el 100% entre ${fecha_inicio} y ${fecha_hasta} (${porcentajeSuperpuesto}%)`
-                            );
-
-                            // Llamar automáticamente a crearConflicto cuando se detecte exceso de participación
-                            await crearConflicto(req, isrc, fecha_inicio, fecha_hasta);
-                        }
                     }
-                }                
+                    registrosCreados.push({ titulo, isrc });
 
-                // Registrar territorios
-                const territoriosHabilitados = await FonogramaTerritorio.findAll({ where: { is_habilitado: true } });
-
-                for (const territorio of territoriosHabilitados) {
-                    const isActivo = parsedTerritorios.includes(territorio.codigo_iso);
-                    await FonogramaTerritorioMaestro.create({
-                        fonograma_id: fonograma.id_fonograma,
-                        territorio_id: territorio.id_territorio,
-                        is_activo: isActivo,
-                    });
-
-                    await registrarAuditoria({
-                        usuario_originario_id: authUser.id_usuario,
-                        usuario_destino_id: null,
-                        modelo: "FonogramaTerritorioMaestro",
-                        tipo_auditoria: "ALTA",
-                        detalle: `Se registró el territorio '${territorio.codigo_iso}' (${isActivo ? "Activo" : "Inactivo"}) para el fonograma con ISRC '${isrc}'`,
-                    });
-                }
-                registrosCreados.push({ titulo, isrc });
             } catch (err: any) {
                 errores.push(`Error en fila ${index + 1}: ${err.message}`);
             }
@@ -516,6 +485,7 @@ export const cargarRepertoriosMasivo = async (req: any) => {
     return {
         message: "Carga masiva completada",
         registrosCreados,
+        isrcExistentes,
         conflictos,
         errores,
     };

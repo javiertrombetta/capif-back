@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.120 - 19-02-2025
+## 🐛 Fixes
+
+- fix: change participaciones with producers and admins
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.117
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.117 - 19-02-2025
 ## 🐛 Fixes
 

@@ -292,12 +292,6 @@ Productora.hasMany(Fonograma, {
 //   onDelete: 'SET NULL',
 // });
 
-// Fonograma.belongsTo(FonogramaEnvio, {
-//   foreignKey: 'envio_vericast_id',
-//   as: 'envioDelFonograma',
-//   onDelete: 'SET NULL',
-// });
-
 
 
 // FonogramaArchivo

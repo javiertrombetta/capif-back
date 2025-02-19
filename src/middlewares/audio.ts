@@ -4,7 +4,7 @@ import * as path from "path";
 import { Request } from "express";
 import { UPLOAD_DIR } from "../config/paths";
 
-const allowedAudioTypes = [".mp3", ".wav", ".flac", ".aac"];
+const allowedAudioTypes = [".mp3"];
 
 // Configuración del almacenamiento
 const audioStorage = multer.diskStorage({

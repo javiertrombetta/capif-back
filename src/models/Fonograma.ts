@@ -2,9 +2,8 @@ import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
 import Productora from './Productora';
 import FonogramaArchivo from './FonogramaArchivo';
-import FonogramaEnvio from './FonogramaEnvio';
 
-const ESTADO_FONOGRAMA = ['ACTIVO', 'BAJA'] as const;
+const ESTADO_FONOGRAMA = ['ACTIVO', 'INACTIVO'] as const;
 
 class Fonograma extends Model {
   public id_fonograma!: string;
@@ -15,24 +14,21 @@ class Fonograma extends Model {
   public artista!: string;
   public album!: string | null;
   public duracion!: string;
-  public sello_discografico!: string;
+  public sello_discografico!: string | null;
   public anio_lanzamiento!: number;
   public is_dominio_publico!: boolean;
   public cantidad_conflictos_activos!: number;
   public archivo_audio_id!: string | null;
-  public envio_vericast_id!: string | null;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
   public productoraDelFonograma?: Productora;
   public archivoDelFonograma?: FonogramaArchivo;
-  public envioDelFonograma?: FonogramaEnvio;
 
   public static associations: {
     productoraDelFonograma: Association<Fonograma, Productora>;
     archivoDelFonograma: Association<Fonograma, FonogramaArchivo>;
-    envioDelFonograma: Association<Fonograma, FonogramaEnvio>;
   };
 }
 
@@ -79,10 +75,17 @@ Fonograma.init(
       allowNull: false,
       unique: true,
       validate: {
+        len: {
+          args: [12, 12],
+          msg: "El código ISRC debe tener exactamente 12 caracteres.",
+        },
         is: {
           args: /^[A-Z]{2}[0-9A-Z]{3}[0-9]{2}[0-9]{5}$/,
-          msg: 'El código ISRC debe seguir el formato correcto (Ej: ARABC2100001).',
+          msg: "El código ISRC debe seguir el formato correcto (Ej: ARABC2500001).",
         },
+      },
+      set(value: string) {
+        this.setDataValue("isrc", value.toUpperCase());
       },
     },
     titulo: {
@@ -127,7 +130,7 @@ Fonograma.init(
     },
     sello_discografico: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      allowNull: true,
     },
     anio_lanzamiento: {
       type: DataTypes.INTEGER,
@@ -173,20 +176,6 @@ Fonograma.init(
         isUUID: {
           args: 4,
           msg: 'El ID del archivo de audio debe ser un UUID válido.',
-        },
-      },
-    },
-    envio_vericast_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: FonogramaEnvio,
-        key: 'id_envio_vericast',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID de envío a Vericast debe ser un UUID válido.',
         },
       },
     },

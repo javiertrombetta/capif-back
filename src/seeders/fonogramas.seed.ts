@@ -72,8 +72,7 @@ const seedFonogramas = async () => {
         anio_lanzamiento: data.anio_lanzamiento,
         is_dominio_publico: false,
         cantidad_conflictos_activos: 0,        
-        archivo_audio_id: null,
-        envio_vericast_id: null,
+        archivo_audio_id: null,  
       });
 
       // Registrar en FonogramaEnvio con la fecha de hoy

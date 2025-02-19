@@ -300,6 +300,7 @@ export const ERROR = {
   REPERTORIO: {
     NOT_FOUND: 'No se encontró el repertorio solicitado.',
     INVALID_STATE: 'El estado del repertorio no es válido para esta acción.',
+    ALREADY_EXIST: 'Ya existe un repertorio declarado con el ISRC proporcionado.'
   },
   REPORTE: {
     NOT_FOUND: 'No se encontró el reporte solicitado.',

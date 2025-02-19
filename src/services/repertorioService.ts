@@ -20,37 +20,61 @@ import { sendEmailWithErrorHandling } from "./emailService";
 import { createProductoraMessage } from "./productoraService";
 import { crearConflicto } from "./conflictosService";
 
+const fonogramaIncludeModels = [
+  {
+    model: FonogramaArchivo,
+    as: "archivoDelFonograma",
+    attributes: ["id_archivo", "ruta_archivo_audio"],
+  },
+  {
+    model: FonogramaParticipacion,
+    as: "participantesDelFonograma",
+    attributes: [
+      "id_participacion",
+      "productora_id",
+      "fecha_participacion_inicio",
+      "fecha_participacion_hasta",
+      "porcentaje_participacion",
+    ],
+  },
+  {
+    model: FonogramaTerritorioMaestro,
+    as: "vinculosDelFonograma",
+    attributes: ["id_territorio_maestro", "territorio_id", "is_activo"],
+    include: [
+      {
+        model: FonogramaTerritorio,
+        as: "territorioDelVinculo",
+        attributes: ["id_territorio", "nombre_pais", "codigo_iso", "is_habilitado"],
+        where: { is_habilitado: true },
+      },
+    ],
+  },
+  {
+    model: Productora,
+    as: "productoraDelFonograma",
+    attributes: ["id_productora", "nombre_productora", "cuit_cuil"],
+  },
+];
+
+const fonogramaAttributes = [
+  "id_fonograma",
+  "estado_fonograma",
+  "isrc",
+  "titulo",
+  "artista",
+  "album",
+  "duracion",
+  "anio_lanzamiento",
+  "sello_discografico",
+  "is_dominio_publico",
+  "cantidad_conflictos_activos",
+];
+
 
 export const validateISRC = async (isrc: string) => {
-
   if (!isrc || typeof isrc !== "string") {
-    throw new Err. BadRequestError(MESSAGES.ERROR.ISRC.ISRC_REQUIRED);
-  }
-
-  if (isrc.length !== 12) {
-    return { valid: false, message: MESSAGES.ERROR.ISRC.ISRC_LENGTH };
-  }
-
-  if (!isrc.startsWith("AR")) {
-    throw new Err.BadRequestError(MESSAGES.ERROR.ISRC.ISRC_PREFIX);
-  }
-
-  const codigoProductora = isrc.substring(2, 5);
-  const anioISRC = isrc.substring(5, 7);
-  const currentYear = new Date().getFullYear().toString().slice(-2);
-
-  const productoraISRC = await ProductoraISRC.findOne({
-    where: { codigo_productora: codigoProductora, tipo: "AUDIO" },
-  });
-
-  if (!productoraISRC) {
-    throw new Err.NotFoundError(MESSAGES.ERROR.ISRC.ISRC_PRODUCTORA_INVALID);
-  }
-
-  if (anioISRC !== currentYear) {
-    throw new Err.BadRequestError(
-      MESSAGES.ERROR.ISRC.ISRC_YEAR_MISMATCH.replace("{year}", currentYear)
-    );
+    throw new Err.BadRequestError(MESSAGES.ERROR.ISRC.ISRC_REQUIRED);
   }
 
   const fonogramaExistente = await Fonograma.findOne({ where: { isrc } });
@@ -66,36 +90,41 @@ export const createFonograma = async (req: any) => {
   
     const {
       productora_id: bodyProductoraId,
+      cuit,
+      isrc,
       titulo,
       artista,
       album,
       duracion,
       anio_lanzamiento,
       sello_discografico,
-      codigo_designacion,
       participaciones,
       territorios: territoriosActivos
     } = req.body;
 
-    // Priorizar `productora_id` de `req.productoraId`, si está presente.
-    const productora_id = req.productoraId || bodyProductoraId;
+    // Obtener productora_id, dándole prioridad a req.productoraId
+    let productora_id = req.productoraId || bodyProductoraId;
+
+    // Si no hay productora_id pero se pasó un cuit, buscarlo en la base de datos
+    if (!productora_id && cuit) {
+        const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
+        if (!productora) {
+            throw new Err.NotFoundError(`No se encontró ninguna productora con el CUIT: ${cuit}`);
+        }
+        productora_id = productora.id_productora;
+    }
+
     if (!productora_id) throw new Err.ForbiddenError("Acceso denegado: no se encontró el ID de la productora.");
 
-    // Verifica el usuario autenticado
-    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+    // Verificar el usuario autenticado
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);    
 
-    // Validar existencia de la productora y obtener su código ISRC
-    const productoraISRC = await ProductoraISRC.findOne({ where: { productora_id, tipo: "AUDIO" } });
-    if (!productoraISRC) throw new Err.NotFoundError("La productora no tiene un código ISRC asignado para AUDIO.");
-
-    // Generar el ISRC
-    const currentYear = new Date().getFullYear();
-    const isrc = `AR${productoraISRC.codigo_productora}${currentYear.toString().slice(-2)}${codigo_designacion}`;
-
+    // Verificar si existe el fonograma
     const existingFonograma = await Fonograma.findOne({ where: { isrc } });
     if (existingFonograma) throw new Err.ConflictError("Ya existe un repertorio declarado con el ISRC a generar.");
 
     // Calcular si es dominio público
+    const currentYear = new Date().getFullYear();
     const is_dominio_publico = currentYear - anio_lanzamiento > 70;
 
     // Crear el fonograma con datos obligatorios
@@ -222,17 +251,13 @@ export const createFonograma = async (req: any) => {
     // Cargar en FonogramaMaestro
     await FonogramaMaestro.create({ fonograma_id: fonograma.id_fonograma, operacion: "ALTA", fecha_operacion: new Date() });  
 
-    const registrarEnvio = await FonogramaEnvio.create({
+    await FonogramaEnvio.create({
         fonograma_id: fonograma.id_fonograma,
         tipo_estado: 'PENDIENTE DE ENVIO',
         tipo_contenido: 'DATOS',
         fecha_envio_inicial: null,
         fecha_envio_ultimo: null,
-    });
-
-    // Asignar el ID del envío a la propiedad correcta en el fonograma
-    fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
-    await fonograma.save();
+    });    
 
     await registrarAuditoria({
         usuario_originario_id: authUser.id_usuario,
@@ -285,7 +310,7 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                     duracion,
                     anio_lanzamiento,
                     sello_discografico,
-                    codigo_designacion,
+                    isrc,
                     participaciones, // JSON string: [{"cuit": "...", "porcentaje_participacion": ...}]
                     territorios, // JSON string: ["AR", "US"]
                     archivo_audio_path, // Ruta del archivo de audio (opcional)
@@ -295,9 +320,8 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                 const parsedParticipaciones = participaciones ? JSON.parse(participaciones) : [];
                 const parsedTerritorios = territorios ? JSON.parse(territorios) : [];
                     
-                // Generar el ISRC
-                const currentYear = new Date().getFullYear();
-                const isrc = `AR${codigo_designacion}${currentYear.toString().slice(-2)}`;
+                // Fecha para dominio público
+                const currentYear = new Date().getFullYear();   
 
                 // Verificar si el fonograma ya existe
                 const existingFonograma = await Fonograma.findOne({ where: { isrc } });
@@ -355,17 +379,13 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                     });
                 }
 
-                const registrarEnvio = await FonogramaEnvio.create({
+                await FonogramaEnvio.create({
                     fonograma_id: fonograma.id_fonograma,
                     tipo_estado: 'PENDIENTE DE ENVIO',
                     tipo_contenido: 'DATOS',
                     fecha_envio_inicial: null,
                     fecha_envio_ultimo: null,
-                });
-
-                // Asignar el ID del envío a la propiedad correcta en el fonograma
-                fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
-                await fonograma.save();
+                });                
 
                 await registrarAuditoria({
                     usuario_originario_id: authUser.id_usuario,
@@ -482,49 +502,8 @@ export const getFonogramaById = async (id: string) => {
   // Buscar el fonograma por ID
   const fonograma = await Fonograma.findOne({
     where: { id_fonograma: id },
-    include: [
-      {
-        model: FonogramaArchivo,
-        as: "archivoDelFonograma",
-        attributes: ["id_archivo", "ruta_archivo_audio"],
-      },
-      {
-        model: FonogramaParticipacion,
-        as: "participantesDelFonograma",
-        attributes: [
-          "id_participacion",
-          "productora_id",
-          "porcentaje_participacion",
-          "fecha_participacion_inicio",
-          "fecha_participacion_hasta",
-        ],
-      },
-      {
-        model: FonogramaTerritorioMaestro,
-        as: "vinculosDelFonograma",
-        attributes: ["id_territorio_maestro", "territorio_id", "is_activo"],
-        include: [
-          {
-            model: FonogramaTerritorio,
-            as: "territorioDelVinculo",
-            attributes: ["id_territorio", "nombre_pais", "codigo_iso", "is_habilitado"],
-            where: { is_habilitado: true }, // Solo territorios habilitados
-          },
-        ],
-      },
-    ],
-    attributes: [
-      "id_fonograma",
-      "titulo",
-      "isrc",
-      "artista",
-      "album",
-      "duracion",
-      "anio_lanzamiento",
-      "sello_discografico",
-      "is_dominio_publico",
-      "estado_fonograma",
-    ],
+    include: fonogramaIncludeModels,
+    attributes: fonogramaAttributes,
   });
 
   // Verificar si el fonograma existe
@@ -532,25 +511,54 @@ export const getFonogramaById = async (id: string) => {
     throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
   }
 
-  // Devolver el fonograma encontrado
-  return fonograma;
+  return {
+    message: "Fonograma obtenido exitosamente.",
+    data: fonograma,
+  };
 };
 
-export const generateISRCPrefix = async (productoraId: string): Promise<string> => {
-  if (!productoraId || typeof productoraId !== "string") {
-    throw new Err.BadRequestError(MESSAGES.ERROR.PRODUCTORA.ID_REQUIRED);
+export const listFonogramas = async (queryParams: any) => {
+  // Construcción del filtro de búsqueda dinámico
+  const whereClause: any = {};
+
+  if (queryParams.isrc) whereClause.isrc = { [Op.iLike]: `%${queryParams.isrc}%` };
+  if (queryParams.titulo) whereClause.titulo = { [Op.iLike]: `%${queryParams.titulo}%` };
+  if (queryParams.artista) whereClause.artista = { [Op.iLike]: `%${queryParams.artista}%` };
+  if (queryParams.album) whereClause.album = { [Op.iLike]: `%${queryParams.album}%` };
+  if (queryParams.anio_lanzamiento) whereClause.anio_lanzamiento = queryParams.anio_lanzamiento;
+
+  // Filtro parcial para sello_discografico (puede contener varios nombres separados por comas)
+  if (queryParams.sello_discografico) {
+    whereClause.sello_discografico = { [Op.iLike]: `%${queryParams.sello_discografico}%` };
   }
 
-  const productoraISRC = await ProductoraISRC.findOne({
-    where: { productora_id: productoraId, tipo: "AUDIO" },
+  // Filtrar por estado_fonograma si se pasa en los query params
+  if (queryParams.estado_fonograma && ["ACTIVO", "INACTIVO"].includes(queryParams.estado_fonograma.toUpperCase())) {
+    whereClause.estado_fonograma = queryParams.estado_fonograma.toUpperCase();
+  }
+
+  // Paginación
+  const page = queryParams.page ? parseInt(queryParams.page, 10) : 1;
+  const limit = queryParams.limit ? parseInt(queryParams.limit, 10) : 50;
+  const offset = (page - 1) * limit;
+
+  // Obtener datos paginados con sus relaciones
+  const { count, rows: fonogramas } = await Fonograma.findAndCountAll({
+    where: whereClause,
+    attributes: fonogramaAttributes,
+    include: fonogramaIncludeModels,
+    order: [["titulo", "ASC"]],
+    limit,
+    offset,
   });
 
-  if (!productoraISRC) {
-    throw new Err.NotFoundError(MESSAGES.ERROR.ISRC.ISRC_PRODUCTORA_INVALID);
-  }
-
-  const currentYear = new Date().getFullYear().toString().slice(-2);
-  return `AR${productoraISRC.codigo_productora}${currentYear}`;
+  return {
+    message: "Fonogramas obtenidos exitosamente.",
+    total: count,
+    page,
+    limit,
+    data: fonogramas,
+  };
 };
 
 export const updateFonograma = async (id: string, req: any) => {
@@ -610,17 +618,13 @@ export const updateFonograma = async (id: string, req: any) => {
 
     if (!existingEnvio) {
         // Crear un nuevo registro en FonogramaEnvio si no existe
-        const registrarEnvio = await FonogramaEnvio.create({
+        await FonogramaEnvio.create({
             fonograma_id: fonograma.id_fonograma,
             tipo_estado: "PENDIENTE DE ENVIO",
             tipo_contenido: "DATOS",
             fecha_envio_inicial: null,
             fecha_envio_ultimo: null,
-        });
-
-        // Asignar el ID del envío al fonograma y guardarlo
-        fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
-        await fonograma.save();
+        });       
 
         await registrarAuditoria({
             usuario_originario_id: authUser.id_usuario,
@@ -687,76 +691,6 @@ export const deleteFonograma = async (id: string, req: any) => {
     } catch (err: any) {
         throw new Error(`Error al eliminar el fonograma con ID '${id}': ${err.message}`);
     }
-};
-
-export const listFonogramas = async (queryParams: any) => {
-  // Construcción del filtro de búsqueda dinámico
-  const whereClause: any = {};
-
-  if (queryParams.isrc) whereClause.isrc = { [Op.iLike]: `%${queryParams.isrc}%` };
-  if (queryParams.titulo) whereClause.titulo = { [Op.iLike]: `%${queryParams.titulo}%` };
-  if (queryParams.artista) whereClause.artista = { [Op.iLike]: `%${queryParams.artista}%` };
-  if (queryParams.album) whereClause.album = { [Op.iLike]: `%${queryParams.album}%` };
-  if (queryParams.anio_lanzamiento) whereClause.anio_lanzamiento = queryParams.anio_lanzamiento;
-  
-  // Filtro parcial para `sello_discografico` (puede contener varios nombres separados por comas)
-  if (queryParams.sello_discografico) {
-    whereClause.sello_discografico = { [Op.iLike]: `%${queryParams.sello_discografico}%` };
-  }
-
-  // Paginación
-  const page = queryParams.page ? parseInt(queryParams.page, 10) : 1;
-  const limit = queryParams.limit ? parseInt(queryParams.limit, 10) : 50;
-  const offset = (page - 1) * limit;
-
-  // Obtener datos paginados
-  const { count, rows: fonogramas } = await Fonograma.findAndCountAll({
-    where: whereClause,
-    attributes: [
-      "id_fonograma",
-      "titulo",
-      "isrc",
-      "artista",
-      "album",
-      "anio_lanzamiento",
-      "estado_fonograma",
-      "sello_discografico",
-    ],
-    include: [
-      {
-        model: Productora,
-        as: "productoraDelFonograma",
-        attributes: ["nombre_productora"],
-        where: queryParams.nombre_productora
-          ? { nombre_productora: { [Op.iLike]: `%${queryParams.nombre_productora}%` } }
-          : undefined,
-      },
-    ],
-    order: [["titulo", "ASC"]],
-    limit,
-    offset,
-  });
-
-  // Formatear la respuesta incluyendo nombre_productora
-  const formattedFonogramas = fonogramas.map((fonograma) => ({
-    id_fonograma: fonograma.id_fonograma,
-    titulo: fonograma.titulo,
-    isrc: fonograma.isrc,
-    artista: fonograma.artista,
-    album: fonograma.album,
-    anio_lanzamiento: fonograma.anio_lanzamiento,
-    estado_fonograma: fonograma.estado_fonograma,
-    sello_discografico: fonograma.sello_discografico,
-    nombre_productora: fonograma.productoraDelFonograma?.nombre_productora || "Desconocido",
-  }));
-
-  return {
-    message: "Fonogramas obtenidos exitosamente.",
-    total: count,
-    page,
-    limit,
-    data: formattedFonogramas,
-  };
 };
 
 export const addArchivoToFonograma = async (id: string, req: any) => {
@@ -850,17 +784,13 @@ export const addArchivoToFonograma = async (id: string, req: any) => {
 
     if (!existingEnvio) {
         // Crear un nuevo registro en FonogramaEnvio si no existe
-        const registrarEnvio = await FonogramaEnvio.create({
+        await FonogramaEnvio.create({
             fonograma_id: fonograma.id_fonograma,
             tipo_estado: "PENDIENTE DE ENVIO",
             tipo_contenido: "COMPLETO",
             fecha_envio_inicial: null,
             fecha_envio_ultimo: null,
-        });
-
-        // Asignar el ID del envío al fonograma y guardarlo
-        fonograma.envio_vericast_id = registrarEnvio.id_envio_vericast;
-        await fonograma.save();
+        });        
 
         await registrarAuditoria({
             usuario_originario_id: authUser.id_usuario,

@@ -324,7 +324,7 @@ export const findUsuarios = async (filters: Filters): Promise<{ users: UsuarioRe
       {
         model: Productora,
         as: "productora",
-        attributes: ["id_productora", "nombre_productora"],
+        attributes: ["id_productora", "nombre_productora", "cuit_cuil"],
       },
     ],
   });

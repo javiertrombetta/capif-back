@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.123 - 19-02-2025
+## 🐛 Fixes
+
+- fix: change createFonograma and cargarRepertoriosMasivo
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.120
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.120 - 19-02-2025
 ## 🐛 Fixes
 

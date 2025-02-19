@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.111 - 19-02-2025
+## 🚀 Features
+
+- feat: add repertoire state to endpoints
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.108
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.108 - 18-02-2025
 ## 🐛 Fixes
 

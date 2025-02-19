@@ -34,7 +34,7 @@ export const obtenerConflictos = async (req: AuthenticatedRequest, res: Response
 };
 
 export const obtenerConflicto = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
@@ -43,7 +43,7 @@ export const obtenerConflicto = async (
 
     logger.info(`${req.method} ${req.originalUrl} - Obteniendo conflicto con ID: ${id}`);
 
-    const resultado = await conflictosService.obtenerConflicto(id);
+    const resultado = await conflictosService.obtenerConflicto(req, id);
 
     res.status(200).json(resultado);
   } catch (error) {

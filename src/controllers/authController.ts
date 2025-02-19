@@ -59,6 +59,19 @@ export const login = async (
       return next(new Err.ConflictError(MESSAGES.ERROR.VALIDATION.ALREADY_LOGGED_IN));
     }
 
+    // Eliminar cookies de sesiones previas
+    res.clearCookie("auth_token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+
+    res.clearCookie("active_sesion", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });    
+
     // Verificación de confirmación de cuenta
     if (targetUser.tipo_registro === "NUEVO") {
       logger.warn(

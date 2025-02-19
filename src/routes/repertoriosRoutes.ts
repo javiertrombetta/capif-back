@@ -253,7 +253,7 @@ router.post(
 router.post(
   "/",
   authenticate,
-  authorizeRoles(["productor_principal", "productor_secundario"]),
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
   celebrate({
     [Segments.BODY]: createFonogramaBodySchema,
   }),

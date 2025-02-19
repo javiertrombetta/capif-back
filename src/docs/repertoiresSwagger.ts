@@ -1104,143 +1104,192 @@ export const repertoiresSwaggerDocs = {
                     }
                 ],
                 responses: {
-                    200: {
-                        description: "Fonograma encontrado exitosamente.",
-                        content: {
+                    "200": {
+                        "description": "Fonograma encontrado exitosamente.",
+                        "content": {
                             "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        message: {
-                                            type: "string",
-                                            example: "Fonograma encontrado"
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Mensaje de éxito.",
+                                            "example": "Fonograma obtenido exitosamente."
                                         },
-                                        data: {
-                                            type: "object",
-                                            properties: {
-                                                id_fonograma: {
-                                                    type: "string",
-                                                    format: "uuid",
-                                                    description: "UUID del fonograma.",
-                                                    example: "987e6543-e21b-11d3-b456-426614174000"
+                                        "data": {
+                                            "type": "object",
+                                            "description": "Fonograma obtenido exitosamente.",
+                                            "properties": {
+                                                "id_fonograma": {
+                                                    "type": "string",
+                                                    "format": "uuid",
+                                                    "description": "UUID del fonograma.",
+                                                    "example": "987e6543-e21b-11d3-b456-426614174000"
                                                 },
-                                                titulo: {
-                                                    type: "string",
-                                                    description: "Título del fonograma.",
-                                                    example: "Canción Ejemplo"
+                                                "titulo": {
+                                                    "type": "string",
+                                                    "description": "Título del fonograma.",
+                                                    "example": "Canción Ejemplo"
                                                 },
-                                                isrc: {
-                                                    type: "string",
-                                                    description: "Código ISRC del fonograma.",
-                                                    example: "ARABC2412345"
+                                                "isrc": {
+                                                    "type": "string",
+                                                    "description": "Código ISRC del fonograma.",
+                                                    "example": "ARABC2412345"
                                                 },
-                                                artista: {
-                                                    type: "string",
-                                                    description: "Nombre del artista.",
-                                                    example: "Artista Ejemplo"
+                                                "artista": {
+                                                    "type": "string",
+                                                    "description": "Nombre del artista.",
+                                                    "example": "Artista Ejemplo"
                                                 },
-                                                album: {
-                                                    type: "string",
-                                                    description: "Nombre del álbum.",
-                                                    example: "Álbum Ejemplo"
+                                                "album": {
+                                                    "type": "string",
+                                                    "description": "Nombre del álbum.",
+                                                    "example": "Álbum Ejemplo"
                                                 },
-                                                duracion: {
-                                                    type: "string",
-                                                    description: "Duración del fonograma en formato HH:MM:SS.",
-                                                    example: "00:03:36"
+                                                "anio_lanzamiento": {
+                                                    "type": "integer",
+                                                    "description": "Año de lanzamiento del fonograma.",
+                                                    "example": 2024
                                                 },
-                                                anio_lanzamiento: {
-                                                    type: "integer",
-                                                    description: "Año de lanzamiento del fonograma.",
-                                                    example: 2024
+                                                "estado_fonograma": {
+                                                    "type": "string",
+                                                    "description": "Estado actual del fonograma.",
+                                                    "example": "ACTIVO"
                                                 },
-                                                sello_discografico: {
-                                                    type: "string",
-                                                    description: "Sello discográfico del fonograma.",
-                                                    example: "Sello Ejemplo"
+                                                "sello_discografico": {
+                                                    "type": "string",
+                                                    "description": "Sello discográfico del fonograma.",
+                                                    "example": "Sello Ejemplo"
                                                 },
-                                                is_dominio_publico: {
-                                                    type: "boolean",
-                                                    description: "Indica si el fonograma es de dominio público.",
-                                                    example: false
+                                                "is_dominio_publico": {
+                                                    "type": "boolean",
+                                                    "description": "Indica si el fonograma es de dominio público.",
+                                                    "example": false
                                                 },
-                                                estado_fonograma: {
-                                                    type: "string",
-                                                    description: "Estado actual del fonograma.",
-                                                    example: "ACTIVO"
+                                                "cantidad_conflictos_activos": {
+                                                    "type": "integer",
+                                                    "description": "Cantidad de conflictos activos del fonograma.",
+                                                    "example": 2
                                                 },
-                                                archivos: {
-                                                    type: "array",
-                                                    description: "Lista de archivos asociados al fonograma.",
-                                                    items: {
-                                                        type: "object",
-                                                        properties: {
-                                                            id_fonograma_archivo: {
-                                                                type: "string",
-                                                                format: "uuid",
-                                                                example: "321e6543-e21b-11d3-b456-426614174000"
+                                                "archivoDelFonograma": {
+                                                    "type": "object",
+                                                    "description": "Información del archivo de audio asociado.",
+                                                    "properties": {
+                                                        "id_archivo": {
+                                                            "type": "string",
+                                                            "description": "ID del archivo de audio.",
+                                                            "example": "abc-123"
+                                                        },
+                                                        "ruta_archivo_audio": {
+                                                            "type": "string",
+                                                            "description": "Ruta del archivo de audio.",
+                                                            "example": "/uploads/fonograma.mp3"
+                                                        }
+                                                    }
+                                                },
+                                                "productoraDelFonograma": {
+                                                    "type": "object",
+                                                    "description": "Información de la productora asociada.",
+                                                    "properties": {
+                                                        "id_productora": {
+                                                            "type": "string",
+                                                            "description": "UUID de la productora.",
+                                                            "example": "prod-456"
+                                                        },
+                                                        "nombre_productora": {
+                                                            "type": "string",
+                                                            "description": "Nombre de la productora.",
+                                                            "example": "Productora Ejemplo"
+                                                        },
+                                                        "cuit_cuil": {
+                                                            "type": "string",
+                                                            "description": "CUIT/CUIL de la productora.",
+                                                            "example": "30712345678"
+                                                        }
+                                                    }
+                                                },
+                                                "participantesDelFonograma": {
+                                                    "type": "array",
+                                                    "description": "Lista de participaciones en el fonograma.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id_participacion": {
+                                                                "type": "string",
+                                                                "description": "ID de la participación.",
+                                                                "example": "part-001"
                                                             },
-                                                            ruta_archivo_audio: {
-                                                                type: "string",
-                                                                description: "Ruta del archivo de audio.",
-                                                                example: "/uploads/audio/ARABC2412345.mp3"
+                                                            "productora_id": {
+                                                                "type": "string",
+                                                                "description": "ID de la productora asociada a la participación.",
+                                                                "example": "prod-456"
+                                                            },
+                                                            "fecha_participacion_inicio": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "description": "Fecha de inicio de la participación.",
+                                                                "example": "2023-01-01"
+                                                            },
+                                                            "fecha_participacion_hasta": {
+                                                                "type": "string",
+                                                                "format": "date",
+                                                                "description": "Fecha de finalización de la participación.",
+                                                                "example": "2023-12-31"
+                                                            },
+                                                            "porcentaje_participacion": {
+                                                                "type": "number",
+                                                                "description": "Porcentaje de participación.",
+                                                                "example": 50
                                                             }
                                                         }
                                                     }
                                                 },
-                                                participaciones: {
-                                                    type: "array",
-                                                    description: "Lista de participaciones en el fonograma.",
-                                                    items: {
-                                                        type: "object",
-                                                        properties: {
-                                                            id_fonograma_participacion: {
-                                                                type: "string",
-                                                                format: "uuid",
-                                                                example: "789e6543-e21b-11d3-b456-426614174000"
+                                                "vinculosDelFonograma": {
+                                                    "type": "array",
+                                                    "description": "Lista de territorios asociados al fonograma.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id_territorio_maestro": {
+                                                                "type": "string",
+                                                                "description": "ID del territorio maestro.",
+                                                                "example": "ter-001"
                                                             },
-                                                            productora_id: {
-                                                                type: "string",
-                                                                format: "uuid",
-                                                                example: "123e4567-e89b-12d3-a456-426614174000"
+                                                            "territorio_id": {
+                                                                "type": "string",
+                                                                "description": "ID del territorio.",
+                                                                "example": "ter-123"
                                                             },
-                                                            porcentaje_participacion: {
-                                                                type: "number",
-                                                                example: 50.0
+                                                            "is_activo": {
+                                                                "type": "boolean",
+                                                                "description": "Indica si el territorio está activo.",
+                                                                "example": true
                                                             },
-                                                            fecha_participacion_inicio: {
-                                                                type: "string",
-                                                                format: "date",
-                                                                example: "2024-01-01"
-                                                            },
-                                                            fecha_participacion_hasta: {
-                                                                type: "string",
-                                                                format: "date",
-                                                                example: "2024-12-31"
-                                                            }
-                                                        }
-                                                    }
-                                                },
-                                                territorios: {
-                                                    type: "array",
-                                                    description: "Lista de territorios asociados al fonograma.",
-                                                    items: {
-                                                        type: "object",
-                                                        properties: {
-                                                            id_territorio_maestro: {
-                                                                type: "string",
-                                                                format: "uuid",
-                                                                example: "456e6543-e21b-11d3-b456-426614174000"
-                                                            },
-                                                            territorio_id: {
-                                                                type: "string",
-                                                                format: "uuid",
-                                                                example: "321e6543-e21b-11d3-b456-426614174000"
-                                                            },
-                                                            is_activo: {
-                                                                type: "boolean",
-                                                                description: "Indica si el territorio está activo para el fonograma.",
-                                                                example: true
+                                                            "territorioDelVinculo": {
+                                                                "type": "object",
+                                                                "description": "Detalles del territorio vinculado.",
+                                                                "properties": {
+                                                                    "id_territorio": {
+                                                                        "type": "string",
+                                                                        "description": "ID del territorio.",
+                                                                        "example": "ter-123"
+                                                                    },
+                                                                    "nombre_pais": {
+                                                                        "type": "string",
+                                                                        "description": "Nombre del país del territorio.",
+                                                                        "example": "Argentina"
+                                                                    },
+                                                                    "codigo_iso": {
+                                                                        "type": "string",
+                                                                        "description": "Código ISO del territorio.",
+                                                                        "example": "AR"
+                                                                    },
+                                                                    "is_habilitado": {
+                                                                        "type": "boolean",
+                                                                        "description": "Indica si el territorio está habilitado.",
+                                                                        "example": true
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -1252,12 +1301,12 @@ export const repertoiresSwaggerDocs = {
                             }
                         }
                     },
-                    400: { description: "Datos inválidos." },
-                    401: { description: "Usuario no autenticado." },
-                    403: { description: "Usuario no autorizado." },
-                    404: { description: "Fonograma no encontrado." },
-                    500: { description: "Error interno del servidor." }
-                }
+                    "400": { "description": "Datos inválidos." },
+                    "401": { "description": "Usuario no autenticado." },
+                    "403": { "description": "Usuario no autorizado." },
+                    "404": { "description": "Fonograma no encontrado." },
+                    "500": { "description": "Error interno del servidor." }
+                },
             },
             put: {
                 summary: "Actualizar fonograma",
@@ -1435,43 +1484,7 @@ export const repertoiresSwaggerDocs = {
                     500: { description: "Error interno del servidor." }
                 }
             }
-        },
-        "/repertoires/isrc/prefix": {
-            get: {
-                summary: "Obtener prefijo ISRC",
-                description:
-                "Devuelve los primeros 7 caracteres de un ISRC basado en la productora del usuario autenticado. El usuario debe tener el rol adecuado para acceder a esta información.",
-                tags: ["Repertorios"],
-                security: [{ bearerAuth: [] }],
-                responses: {
-                200: {
-                    description: "Prefijo ISRC obtenido exitosamente.",
-                    content: {
-                    "application/json": {
-                        schema: {
-                        type: "object",
-                        properties: {
-                            message: {
-                            type: "string",
-                            example: "Prefijo ISRC obtenido parar la productora ID: 987e6543-e21b-11d3-b456-426614174000",
-                            },
-                            data: {
-                            type: "string",
-                            description: "Los primeros 7 caracteres de un ISRC.",
-                            example: "AR98725",
-                            },
-                        },
-                        },
-                    },
-                    },
-                },
-                400: { description: "Datos inválidos o falta el ID de la productora en el token." },
-                401: { description: "Usuario no autenticado." },
-                403: { description: "Usuario no autorizado para obtener el prefijo ISRC." },
-                500: { description: "Error interno del servidor." },
-                },
-            },
-         },
+        },     
         "/repertoires/isrc/validate": {
             post: {
                 summary: "Validar ISRC",
@@ -1946,6 +1959,11 @@ export const repertoiresSwaggerDocs = {
                                         description: "UUID de la productora propietaria del fonograma.",
                                         example: "123e4567-e89b-12d3-a456-426614174000"
                                     },
+                                    cuit: {
+                                        type: "string",
+                                        description: "CUIT de la productora propietaria del fonograma (opcional si se proporciona productora_id).",
+                                        example: "30123456789"
+                                    },
                                     titulo: {
                                         type: "string",
                                         description: "Título del fonograma.",
@@ -2022,8 +2040,7 @@ export const repertoiresSwaggerDocs = {
                                         example: ["AR", "US", "BR"]
                                     }
                                 },
-                                required: [
-                                    "productora_id",
+                                required: [                                    
                                     "titulo",
                                     "artista",
                                     "anio_lanzamiento",
@@ -2168,6 +2185,17 @@ export const repertoiresSwaggerDocs = {
                     },
                     {
                         in: "query",
+                        name: "estado_fonograma",
+                        required: false,
+                        schema: {
+                            type: "string",
+                            enum: ["ACTIVO", "INACTIVO"]
+                        },
+                        description: "Filtrar fonogramas por estado (ACTIVO o INACTIVO).",
+                        example: "ACTIVO"
+                    },
+                    {
+                        in: "query",
                         name: "page",
                         required: false,
                         schema: { type: "integer", minimum: 1 },
@@ -2184,79 +2212,207 @@ export const repertoiresSwaggerDocs = {
                     }
                 ],
                 responses: {
-                    200: {
-                        description: "Lista de fonogramas obtenida exitosamente.",
-                        content: {
+                    "200": {
+                        "description": "Lista de fonogramas obtenida exitosamente.",
+                        "content": {
                             "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        total: {
-                                            type: "integer",
-                                            description: "Cantidad total de fonogramas encontrados.",
-                                            example: 5
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "total": {
+                                            "type": "integer",
+                                            "description": "Cantidad total de fonogramas encontrados.",
+                                            "example": 5
                                         },
-                                        page: {
-                                            type: "integer",
-                                            description: "Número de página actual.",
-                                            example: 1
+                                        "page": {
+                                            "type": "integer",
+                                            "description": "Número de página actual.",
+                                            "example": 1
                                         },
-                                        limit: {
-                                            type: "integer",
-                                            description: "Número de resultados por página.",
-                                            example: 50
+                                        "limit": {
+                                            "type": "integer",
+                                            "description": "Número de resultados por página.",
+                                            "example": 50
                                         },
-                                        data: {
-                                            type: "array",
-                                            description: "Lista de fonogramas encontrados.",
-                                            items: {
-                                                type: "object",
-                                                properties: {
-                                                    id_fonograma: {
-                                                        type: "string",
-                                                        format: "uuid",
-                                                        description: "UUID del fonograma.",
-                                                        example: "987e6543-e21b-11d3-b456-426614174000"
+                                        "data": {
+                                            "type": "array",
+                                            "description": "Lista de fonogramas encontrados.",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "id_fonograma": {
+                                                        "type": "string",
+                                                        "format": "uuid",
+                                                        "description": "UUID del fonograma.",
+                                                        "example": "987e6543-e21b-11d3-b456-426614174000"
                                                     },
-                                                    titulo: {
-                                                        type: "string",
-                                                        description: "Título del fonograma.",
-                                                        example: "Canción Ejemplo"
+                                                    "titulo": {
+                                                        "type": "string",
+                                                        "description": "Título del fonograma.",
+                                                        "example": "Canción Ejemplo"
                                                     },
-                                                    isrc: {
-                                                        type: "string",
-                                                        description: "Código ISRC del fonograma.",
-                                                        example: "ARABC2412345"
+                                                    "isrc": {
+                                                        "type": "string",
+                                                        "description": "Código ISRC del fonograma.",
+                                                        "example": "ARABC2412345"
                                                     },
-                                                    artista: {
-                                                        type: "string",
-                                                        description: "Nombre del artista.",
-                                                        example: "Artista Ejemplo"
+                                                    "artista": {
+                                                        "type": "string",
+                                                        "description": "Nombre del artista.",
+                                                        "example": "Artista Ejemplo"
                                                     },
-                                                    album: {
-                                                        type: "string",
-                                                        description: "Nombre del álbum.",
-                                                        example: "Álbum Ejemplo"
+                                                    "album": {
+                                                        "type": "string",
+                                                        "description": "Nombre del álbum.",
+                                                        "example": "Álbum Ejemplo"
                                                     },
-                                                    anio_lanzamiento: {
-                                                        type: "integer",
-                                                        description: "Año de lanzamiento del fonograma.",
-                                                        example: 2024
+                                                    "anio_lanzamiento": {
+                                                        "type": "integer",
+                                                        "description": "Año de lanzamiento del fonograma.",
+                                                        "example": 2024
                                                     },
-                                                    estado_fonograma: {
-                                                        type: "string",
-                                                        description: "Estado actual del fonograma.",
-                                                        example: "ACTIVO"
+                                                    "estado_fonograma": {
+                                                        "type": "string",
+                                                        "description": "Estado actual del fonograma.",
+                                                        "example": "ACTIVO"
                                                     },
-                                                    sello_discografico: {
-                                                        type: "string",
-                                                        description: "Sello discográfico del fonograma.",
-                                                        example: "Sello Ejemplo"
+                                                    "sello_discografico": {
+                                                        "type": "string",
+                                                        "description": "Sello discográfico del fonograma.",
+                                                        "example": "Sello Ejemplo"
                                                     },
-                                                    nombre_productora: {
-                                                        type: "string",
-                                                        description: "Nombre de la productora propietaria del fonograma.",
-                                                        example: "Productora Ejemplo"
+                                                    "is_dominio_publico": {
+                                                        "type": "boolean",
+                                                        "description": "Indica si el fonograma es de dominio público.",
+                                                        "example": false
+                                                    },
+                                                    "cantidad_conflictos_activos": {
+                                                        "type": "integer",
+                                                        "description": "Cantidad de conflictos activos del fonograma.",
+                                                        "example": 2
+                                                    },
+                                                    "archivoDelFonograma": {
+                                                        "type": "object",
+                                                        "description": "Información del archivo de audio asociado.",
+                                                        "properties": {
+                                                            "id_archivo": {
+                                                                "type": "string",
+                                                                "description": "ID del archivo de audio.",
+                                                                "example": "abc-123"
+                                                            },
+                                                            "ruta_archivo_audio": {
+                                                                "type": "string",
+                                                                "description": "Ruta del archivo de audio.",
+                                                                "example": "/uploads/fonograma.mp3"
+                                                            }
+                                                        }
+                                                    },
+                                                    "productoraDelFonograma": {
+                                                        "type": "object",
+                                                        "description": "Información de la productora asociada.",
+                                                        "properties": {
+                                                            "id_productora": {
+                                                                "type": "string",
+                                                                "description": "UUID de la productora.",
+                                                                "example": "prod-456"
+                                                            },
+                                                            "nombre_productora": {
+                                                                "type": "string",
+                                                                "description": "Nombre de la productora.",
+                                                                "example": "Productora Ejemplo"
+                                                            },
+                                                            "cuit_cuil": {
+                                                                "type": "string",
+                                                                "description": "CUIT/CUIL de la productora.",
+                                                                "example": "30712345678"
+                                                            }
+                                                        }
+                                                    },
+                                                    "participantesDelFonograma": {
+                                                        "type": "array",
+                                                        "description": "Lista de participaciones en el fonograma.",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id_participacion": {
+                                                                    "type": "string",
+                                                                    "description": "ID de la participación.",
+                                                                    "example": "part-001"
+                                                                },
+                                                                "productora_id": {
+                                                                    "type": "string",
+                                                                    "description": "ID de la productora asociada a la participación.",
+                                                                    "example": "prod-456"
+                                                                },
+                                                                "fecha_participacion_inicio": {
+                                                                    "type": "string",
+                                                                    "format": "date",
+                                                                    "description": "Fecha de inicio de la participación.",
+                                                                    "example": "2023-01-01"
+                                                                },
+                                                                "fecha_participacion_hasta": {
+                                                                    "type": "string",
+                                                                    "format": "date",
+                                                                    "description": "Fecha de finalización de la participación.",
+                                                                    "example": "2023-12-31"
+                                                                },
+                                                                "porcentaje_participacion": {
+                                                                    "type": "number",
+                                                                    "description": "Porcentaje de participación.",
+                                                                    "example": 50
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "vinculosDelFonograma": {
+                                                        "type": "array",
+                                                        "description": "Lista de territorios asociados al fonograma.",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id_territorio_maestro": {
+                                                                    "type": "string",
+                                                                    "description": "ID del territorio maestro.",
+                                                                    "example": "ter-001"
+                                                                },
+                                                                "territorio_id": {
+                                                                    "type": "string",
+                                                                    "description": "ID del territorio.",
+                                                                    "example": "ter-123"
+                                                                },
+                                                                "is_activo": {
+                                                                    "type": "boolean",
+                                                                    "description": "Indica si el territorio está activo.",
+                                                                    "example": true
+                                                                },
+                                                                "territorioDelVinculo": {
+                                                                    "type": "object",
+                                                                    "description": "Detalles del territorio vinculado.",
+                                                                    "properties": {
+                                                                        "id_territorio": {
+                                                                            "type": "string",
+                                                                            "description": "ID del territorio.",
+                                                                            "example": "ter-123"
+                                                                        },
+                                                                        "nombre_pais": {
+                                                                            "type": "string",
+                                                                            "description": "Nombre del país del territorio.",
+                                                                            "example": "Argentina"
+                                                                        },
+                                                                        "codigo_iso": {
+                                                                            "type": "string",
+                                                                            "description": "Código ISO del territorio.",
+                                                                            "example": "AR"
+                                                                        },
+                                                                        "is_habilitado": {
+                                                                            "type": "boolean",
+                                                                            "description": "Indica si el territorio está habilitado.",
+                                                                            "example": true
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -2266,10 +2422,10 @@ export const repertoiresSwaggerDocs = {
                             }
                         }
                     },
-                    400: { description: "Datos inválidos." },
-                    401: { description: "Usuario no autenticado." },
-                    403: { description: "Usuario no autorizado." },
-                    500: { description: "Error interno del servidor." }
+                    "400": { "description": "Datos inválidos." },
+                    "401": { "description": "Usuario no autenticado." },
+                    "403": { "description": "Usuario no autorizado." },
+                    "500": { "description": "Error interno del servidor." }
                 }
             }
         }

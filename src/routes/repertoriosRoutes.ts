@@ -28,7 +28,6 @@ import {
   getNovedadesFonograma,
   cambiarEstadoEnvioFonograma,
   cargarParticipacionesMasivo,
-  getISRCPrefix,
   getAllEnvios,
 } from '../controllers/repertoriosController';
 
@@ -269,13 +268,6 @@ router.get(
     [Segments.PARAMS]: getFonogramaByIdParamsSchema,
   }),
   getFonogramaById
-);
-
-router.get(
-  "/isrc/prefix",
-  authenticate,
-  authorizeRoles(["productor_principal", "productor_secundario"]),
-  getISRCPrefix
 );
 
 router.get(

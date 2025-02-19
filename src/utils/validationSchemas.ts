@@ -1394,10 +1394,15 @@ export const validateISRCBodySchema = Joi.object({
 });
 
 export const createFonogramaBodySchema = Joi.object({
-  productora_id: uuidSchema.messages({
-      "string.base": "El campo 'productora_id' debe ser una cadena de texto.",
-      "string.uuid": "El campo 'productora_id' debe ser un UUID válido.",
-      "any.required": "El campo 'productora_id' es obligatorio.",
+  productora_id: uuidSchema.optional().messages({
+    "string.base": "El campo 'productora_id' debe ser una cadena de texto.",
+    "string.uuid": "El campo 'productora_id' debe ser un UUID válido.",
+  }),
+  cuit: Joi.string()
+    .pattern(/^\d{11}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "El campo 'cuit' debe contener exactamente 11 dígitos numéricos.",
     }),
   titulo: Joi.string().min(1).required().messages({
     "string.base": "El campo 'titulo' debe ser una cadena de texto.",
@@ -1430,14 +1435,6 @@ export const createFonogramaBodySchema = Joi.object({
   sello_discografico: Joi.string().allow(null, "").messages({
     "string.base": "El campo 'sello_discografico' debe ser una cadena de texto.",
   }),
-  codigo_designacion: Joi.string()
-    .length(5)
-    .required()
-    .messages({
-      "string.base": "El campo 'codigo_designacion' debe ser una cadena de texto.",
-      "string.length": "El campo 'codigo_designacion' debe tener exactamente 5 caracteres.",
-      "any.required": "El campo 'codigo_designacion' es obligatorio.",
-    }),
   participaciones: Joi.array()
     .items(
       Joi.object({
@@ -1523,6 +1520,13 @@ export const listFonogramasQuerySchema = Joi.object({
   nombre_productora: Joi.string().trim().optional().messages({
     "string.base": "El nombre de la productora debe ser un texto.",
   }),
+  estado_fonograma: Joi.string()
+    .valid("ACTIVO", "INACTIVO")
+    .optional()
+    .messages({
+      "string.base": "El estado del fonograma debe ser un texto.",
+      "any.only": "El estado del fonograma debe ser 'ACTIVO' o 'INACTIVO'.",
+    }),
   page: Joi.number().integer().min(1).optional().messages({
     "number.base": "El campo 'page' debe ser un número entero.",
     "number.min": "El campo 'page' debe ser un número mayor o igual a 1.",

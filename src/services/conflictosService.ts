@@ -100,6 +100,18 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
             detalle: `Se creó un nuevo conflicto para el ISRC '${isrc}' con ID '${nuevoConflicto.id_conflicto}'`,
           });
 
+          // Cambiar el estado del fonograma a INACTIVO
+          await fonograma.update({ estado_fonograma: 'INACTIVO' });
+
+          // Registrar auditoría del cambio de estado
+          await registrarAuditoria({
+              usuario_originario_id: authUser.id_usuario,
+              usuario_destino_id: null,
+              modelo: "Fonograma",
+              tipo_auditoria: "CAMBIO",
+              detalle: `Se cambió el estado del fonograma con ISRC '${isrc}' a INACTIVO debido a la creación de un conflicto.`,
+          });
+
           await Promise.all(
             periodo.participaciones.map(async (participacion) => {
               await ConflictoParte.create({
@@ -379,6 +391,23 @@ export const actualizarEstadoConflicto = async (req: AuthenticatedRequest, id: s
   // Actualizar el estado del conflicto
   await conflicto.update({ estado_conflicto });
 
+  // Si el conflicto se marca como VENCIDO o CERRADO, actualizar el estado del fonograma a ACTIVO
+  if (estado_conflicto === "VENCIDO" || estado_conflicto === "CERRADO") {
+    const fonograma = await Fonograma.findOne({ where: { id_fonograma: conflicto.fonograma_id } });
+
+    if (fonograma && fonograma.estado_fonograma !== "ACTIVO") {
+      await fonograma.update({ estado_fonograma: "ACTIVO" });
+
+      await registrarAuditoria({
+        usuario_originario_id: authUser.id_usuario,
+        usuario_destino_id: null,
+        modelo: "Fonograma",
+        tipo_auditoria: "CAMBIO",
+        detalle: `Se cambió el estado del fonograma con ID '${fonograma.id_fonograma}' a ACTIVO debido a la resolución del conflicto '${id}'.`,
+      });
+    }
+  }
+
   // Registrar Auditoría
   await registrarAuditoria({
     usuario_originario_id: authUser.id_usuario,
@@ -406,19 +435,34 @@ export const desistirConflicto = async (req: AuthenticatedRequest, id: string) =
       throw new Err.NotFoundError(MESSAGES.ERROR.CONFLICTO.NOT_FOUND)    
     }
 
-    // Cambiar el estado del conflicto a "CERRADO"
+    // Cambiar el estado del conflicto a CERRADO
     await conflicto.update({
       estado_conflicto: "CERRADO",
       fecha_fin_conflicto: new Date(),
     });
 
-    // Cambiar el estado de todas las partes del conflicto a "DESISTIDO"
+    // Cambiar el estado de todas las partes del conflicto a DESISTIDO
     await ConflictoParte.update(
       { estado: "DESISTIDO" },
       { where: { conflicto_id: id } }
     );
 
-    // Registrar Auditoría
+    // Buscar el fonograma asociado al conflicto y cambiar su estado a ACTIVO
+    const fonograma = await Fonograma.findOne({ where: { id_fonograma: conflicto.fonograma_id } });
+
+    if (fonograma && fonograma.estado_fonograma !== "ACTIVO") {
+      await fonograma.update({ estado_fonograma: "ACTIVO" });
+
+      await registrarAuditoria({
+        usuario_originario_id: authUser.id_usuario,
+        usuario_destino_id: null,
+        modelo: "Fonograma",
+        tipo_auditoria: "CAMBIO",
+        detalle: `El fonograma con ID '${fonograma.id_fonograma}' fue reactivado a ACTIVO debido al desistimiento del conflicto con ID '${id}'.`,
+      });
+    }
+
+    // Registrar Auditoría del desistimiento del conflicto
     await registrarAuditoria({
       usuario_originario_id: authUser.id_usuario,
       usuario_destino_id: null,
@@ -451,7 +495,22 @@ export const eliminarConflicto = async (req: AuthenticatedRequest, id: string) =
     // Eliminar el conflicto
     await conflicto.destroy();
 
-    // Registrar Auditoría
+    // Buscar el fonograma asociado al conflicto y cambiar su estado a ACTIVO
+    const fonograma = await Fonograma.findOne({ where: { id_fonograma: conflicto.fonograma_id } });
+
+    if (fonograma && fonograma.estado_fonograma !== "ACTIVO") {
+      await fonograma.update({ estado_fonograma: "ACTIVO" });
+
+      await registrarAuditoria({
+        usuario_originario_id: authUser.id_usuario,
+        usuario_destino_id: null,
+        modelo: "Fonograma",
+        tipo_auditoria: "CAMBIO",
+        detalle: `El fonograma con ID '${fonograma.id_fonograma}' fue reactivado a ACTIVO debido a la eliminación del conflicto con ID '${id}'.`,
+      });
+    }
+
+    // Registrar Auditoría de la eliminación del conflicto
     await registrarAuditoria({
       usuario_originario_id: authUser.id_usuario,
       usuario_destino_id: null,
@@ -527,7 +586,7 @@ export const actualizarPorResolucion = async (req: AuthenticatedRequest, id: str
         await conflictoParte.update({ estado: "RETIRADO" });
         await participacion.destroy();
 
-        // **Registrar Auditoría**
+        // Registrar Auditoría
         await registrarAuditoria({
           usuario_originario_id: authUser.id_usuario,
           usuario_destino_id: null,
@@ -567,6 +626,33 @@ export const actualizarPorResolucion = async (req: AuthenticatedRequest, id: str
         });
       }
     }
+
+    // Cambiar el estado del conflicto a CERRADO
+    await conflicto.update({ estado_conflicto: "CERRADO" });
+
+    // Buscar el fonograma asociado al conflicto y cambiar su estado a ACTIVO
+    const fonograma = await Fonograma.findOne({ where: { id_fonograma: conflicto.fonograma_id } });
+
+    if (fonograma && fonograma.estado_fonograma !== "ACTIVO") {
+      await fonograma.update({ estado_fonograma: "ACTIVO" });
+
+      await registrarAuditoria({
+        usuario_originario_id: authUser.id_usuario,
+        usuario_destino_id: null,
+        modelo: "Fonograma",
+        tipo_auditoria: "CAMBIO",
+        detalle: `El fonograma con ID '${fonograma.id_fonograma}' fue reactivado a ACTIVO debido a la resolución del conflicto con ID '${id}'.`,
+      });
+    }
+
+    // Registrar Auditoría del cambio de estado del conflicto
+    await registrarAuditoria({
+      usuario_originario_id: authUser.id_usuario,
+      usuario_destino_id: null,
+      modelo: "Conflicto",
+      tipo_auditoria: "CAMBIO",
+      detalle: `El usuario '${authUser.id_usuario}' resolvió el conflicto con ID '${id}', cambiando su estado a CERRADO.`,
+    });
 
     return {
       message: MESSAGES.SUCCESS.CONFLICTO.RESOLUTION_APPLIED,
@@ -695,7 +781,24 @@ export const confirmarPorcentaje = async (req: AuthenticatedRequest, id: string,
 
     await conflicto.update(updateData);
 
-    // Registrar Auditoría
+    // Si el conflicto se cierra, cambiar el estado del fonograma a ACTIVO
+    if (nuevoEstado === "CERRADO") {
+      const fonograma = await Fonograma.findOne({ where: { id_fonograma: conflicto.fonograma_id } });
+
+      if (fonograma && fonograma.estado_fonograma !== "ACTIVO") {
+        await fonograma.update({ estado_fonograma: "ACTIVO" });
+
+        await registrarAuditoria({
+          usuario_originario_id: authUser.id_usuario,
+          usuario_destino_id: null,
+          modelo: "Fonograma",
+          tipo_auditoria: "CAMBIO",
+          detalle: `El fonograma con ID '${fonograma.id_fonograma}' fue reactivado a ACTIVO debido a la confirmación del último porcentaje en el conflicto con ID '${id}'.`,
+        });
+      }
+    }
+
+    // Registrar Auditoría del cambio de estado del conflicto
     await registrarAuditoria({
       usuario_originario_id: authUser.id_usuario,
       usuario_destino_id: null,
@@ -708,7 +811,6 @@ export const confirmarPorcentaje = async (req: AuthenticatedRequest, id: string,
       message: MESSAGES.SUCCESS.CONFLICTO.STATUS_UPDATED,
       data: conflicto,
     };
- 
 };
 
 export const enviarDocumentos = async (req: AuthenticatedRequest, id: string, archivos: Express.Multer.File[]) => {

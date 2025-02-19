@@ -1,4 +1,23 @@
 # Changelog
+## v0.3.134 - 19-02-2025
+## 🐛 Fixes
+
+- fix: cuit optional create repertoire
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.129
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+## 🔄 Uncategorized Commits
+
+- revert changes
+
+
 ## v0.3.129 - 19-02-2025
 ## 🐛 Fixes
 

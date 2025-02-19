@@ -172,9 +172,9 @@ export const obtenerConflictos = async (req: AuthenticatedRequest) => {
     if (!productoraValida) {
       throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
     }
-    where.productora_id = req.productoraId;
+    where.productora_conflicto_id = req.productoraId;
   } else if (productora_id) {
-    where.productora_id = productora_id;
+    where.productora_conflicto_id = productora_id;
   }
 
   if (typeof fecha_desde === "string" && fecha_desde) {
@@ -205,7 +205,7 @@ export const obtenerConflictos = async (req: AuthenticatedRequest) => {
       model: Productora,
       as: "productoraDelConflicto",
       attributes: ["id_productora", "nombre_productora"],
-      where: where.productora_id ? { id_productora: where.productora_id } : undefined,
+      where: where.productora_conflicto_id ? { id_productora: where.productora_conflicto_id } : undefined,
     },
     {
       model: ConflictoParte,
@@ -227,18 +227,27 @@ export const obtenerConflictos = async (req: AuthenticatedRequest) => {
   const offset = (parsedPage - 1) * parsedLimit;
 
   // Consulta a la base de datos
-  const { count, rows } = await Conflicto.findAndCountAll({
+  const conflictosQuery = await Conflicto.findAndCountAll({
     where,
     include,
+    distinct: true,
+    col: "id_conflicto",
     order: [["fecha_inicio_conflicto", "DESC"]],
     limit: parsedLimit,
     offset,
   });
 
-  if (!rows.length) {
-    throw new Err.NotFoundError(MESSAGES.ERROR.CONFLICTO.NOT_FOUND);
-  }
+  const { count, rows } = conflictosQuery;
 
+  if (!rows.length) {
+    return {
+      message: MESSAGES.SUCCESS.CONFLICTO.CONFLICTO_FETCHED,
+      total: 0,
+      page: parsedPage,
+      limit: parsedLimit,
+      data: [],
+    };
+  }
   // Casteo seguro de `conflictos` para que TypeScript no marque error en `partesDelConflicto`
   const conflictos = rows as (Conflicto & { partesDelConflicto?: ConflictoParte[] })[];
 
@@ -279,7 +288,10 @@ export const obtenerConflictos = async (req: AuthenticatedRequest) => {
   };
 };
 
-export const obtenerConflicto = async (id: string) => {
+export const obtenerConflicto = async (req: AuthenticatedRequest, id: string) => {
+  // Obtener usuario autenticado
+  const { user: authUser, maestros: authMaestros } = await getAuthenticatedUser(req);
+
   // Buscar el conflicto por ID incluyendo sus relaciones excepto participacionDeLaParte
   const conflicto = await Conflicto.findOne({
     where: { id_conflicto: id },
@@ -323,6 +335,18 @@ export const obtenerConflicto = async (id: string) => {
     throw new Err.NotFoundError(MESSAGES.ERROR.CONFLICTO.NOT_FOUND);
   }
 
+  // Verificar si el usuario tiene acceso a este conflicto
+  if (["productor_principal", "productor_secundario"].includes(authUser.rol?.nombre_rol || "")) {
+    const conflictoProductoraId = conflicto.productoraDelConflicto?.id_productora;
+
+    // Validar si la productora del usuario autenticado tiene acceso al conflicto
+    const productoraValida = authMaestros.some(maestro => maestro.productora_id === conflictoProductoraId);
+
+    if (!productoraValida) {
+      throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
+    }
+  }
+
   // Extraer los IDs de participaciones para hacer la segunda consulta
   const participacionIds = (conflicto as unknown as { partesDelConflicto: ConflictoParte[] })
   .partesDelConflicto.map((parte) => parte.participacion_id);
@@ -349,9 +373,7 @@ export const obtenerConflicto = async (id: string) => {
   const partesDelConflictoConParticipaciones = (conflicto as unknown as { partesDelConflicto: ConflictoParte[] })
   .partesDelConflicto.map((parte) => ({
     ...parte.toJSON(),
-    participacionDeLaParte: participaciones.find(
-      (p) => p.id_participacion === parte.participacion_id
-    ),
+    participacionDeLaParte: participaciones.find((p) => p.id_participacion === parte.participacion_id),
   }));
 
   // Retornar la estructura final con la información correcta

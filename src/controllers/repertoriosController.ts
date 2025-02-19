@@ -14,11 +14,7 @@ export const validateISRC = async (req: Request, res: Response, next: NextFuncti
 
     const validationResult = await repertorioService.validateISRC(isrc);
 
-    return res.status(200).json({
-      isrc,
-      available: validationResult.available,
-      message: validationResult.message,
-    });
+    return res.status(200).json(validationResult);
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al validar el ISRC");
   }
@@ -54,9 +50,9 @@ export const getFonogramaById = async (req: Request, res: Response, next: NextFu
   try {
     logger.info(`${req.method} ${req.originalUrl} - Buscando fonograma por ID.`);
 
-    const fonograma = await repertorioService.getFonogramaById(req.params.id);
+    const resultado = await repertorioService.getFonogramaById(req.params.id);
 
-    return res.status(200).json({ message: "Fonograma encontrado", data: fonograma });
+    return res.status(200).json(resultado);
 
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al obtener el fonograma");

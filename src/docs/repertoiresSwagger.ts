@@ -1486,63 +1486,102 @@ export const repertoiresSwaggerDocs = {
             }
         },     
         "/repertoires/isrc/validate": {
-            post: {
-                summary: "Validar ISRC",
-                description: "Verifica si un ISRC es válido, asegurando que sigue el formato correcto y no está en uso.",
-                tags: ["Repertorios"],
-                security: [{ bearerAuth: [] }],
-                requestBody: {
-                    required: true,
-                    content: {
+            "post": {
+                "summary": "Validar ISRC",
+                "description": "Verifica si un ISRC es válido, asegurando que sigue el formato correcto y no está en uso. Si el ISRC ya está en uso, devuelve el ID del repertorio asociado.",
+                "tags": ["Repertorios"],
+                "security": [{ "bearerAuth": [] }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
                         "application/json": {
-                            schema: {
-                                type: "object",
-                                properties: {
-                                    isrc: {
-                                        type: "string",
-                                        description: "Código ISRC a validar.",
-                                        example: "ARABC2412345"
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "isrc": {
+                                        "type": "string",
+                                        "description": "Código ISRC a validar.",
+                                        "example": "ARABC2412345"
                                     }
                                 },
-                                required: ["isrc"]
+                                "required": ["isrc"]
                             }
                         }
                     }
                 },
-                responses: {
-                    200: {
-                        description: "ISRC validado correctamente.",
-                        content: {
+                "responses": {
+                    "200": {
+                        "description": "ISRC validado correctamente.",
+                        "content": {
                             "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        isrc: {
-                                            type: "string",
-                                            description: "Código ISRC validado.",
-                                            example: "ARABC2412345"
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "isrc": {
+                                            "type": "string",
+                                            "description": "Código ISRC validado.",
+                                            "example": "ARABC2412345"
                                         },
-                                        available: {
-                                            type: "boolean",
-                                            description: "Indica si el ISRC está disponible para uso.",
-                                            example: true
+                                        "available": {
+                                            "type": "boolean",
+                                            "description": "Indica si el ISRC está disponible para uso.",
+                                            "example": true
                                         },
-                                        message: {
-                                            type: "string",
-                                            description: "Mensaje descriptivo del resultado de la validación.",
-                                            example: "ISRC disponible para uso."
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Mensaje descriptivo del resultado de la validación.",
+                                            "example": "ISRC disponible para uso."
+                                        },
+                                        "id_repertorio": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "description": "ID del repertorio asociado si el ISRC ya está en uso.",
+                                            "example": "b18c8773-6488-49bf-b283-7a975aa6a205",
+                                            "nullable": true
                                         }
                                     }
                                 }
                             }
                         }
                     },
-                    400: { description: "Datos inválidos, formato incorrecto o ISRC con prefijo incorrecto." },
-                    401: { description: "Usuario no autenticado." },
-                    403: { description: "Usuario no autorizado." },
-                    404: { description: "Productora del ISRC no encontrada." },
-                    409: { description: "El ISRC ya está en uso." },
-                    500: { description: "Error interno del servidor." }
+                    "400": { "description": "Datos inválidos, formato incorrecto o ISRC con prefijo incorrecto." },
+                    "401": { "description": "Usuario no autenticado." },
+                    "403": { "description": "Usuario no autorizado." },
+                    "404": { "description": "Productora del ISRC no encontrada." },
+                    "409": { 
+                        "description": "El ISRC ya está en uso.", 
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "isrc": {
+                                            "type": "string",
+                                            "description": "Código ISRC validado.",
+                                            "example": "ARABC2412345"
+                                        },
+                                        "available": {
+                                            "type": "boolean",
+                                            "description": "Indica si el ISRC está en uso.",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Mensaje indicando que el ISRC ya está en uso.",
+                                            "example": "ISRC ya registrado en otro repertorio."
+                                        },
+                                        "id_repertorio": {
+                                            "type": "string",
+                                            "format": "uuid",
+                                            "description": "ID del repertorio asociado al ISRC en uso.",
+                                            "example": "b18c8773-6488-49bf-b283-7a975aa6a205"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": { "description": "Error interno del servidor." }
                 }
             }
         },

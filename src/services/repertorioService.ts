@@ -79,12 +79,15 @@ export const validateISRC = async (isrc: string) => {
   const fonogramaExistente = await Fonograma.findOne({ where: { isrc } });
 
   if (fonogramaExistente) {
-    throw new Err.ConflictError(MESSAGES.ERROR.ISRC.ISRC_IN_USE);
+    return {
+      available: false,
+      message: MESSAGES.ERROR.ISRC.ISRC_IN_USE,
+      id_repertorio: fonogramaExistente.id_fonograma,
+    };
   }
 
   return { available: true, message: MESSAGES.SUCCESS.ISRC.ISRC_AVAILABLE };
 };
-
 export const createFonograma = async (req: any) => {
   
     const {

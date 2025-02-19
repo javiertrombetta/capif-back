@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.117 - 19-02-2025
+## 🐛 Fixes
+
+- fix: change validate isrc and get all repertoires
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.114
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.114 - 19-02-2025
 ## 🐛 Fixes
 

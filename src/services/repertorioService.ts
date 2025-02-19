@@ -1269,7 +1269,7 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
     }
 
     // Obtener usuario autenticado
-    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
     // Determinar si es productor
     const isProductor = authUser.rol?.nombre_rol === "productor_principal" || authUser.rol?.nombre_rol === "productor_secundario";
@@ -1277,6 +1277,11 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
     let participacionesFiltradas = participaciones;
 
     if (isProductor) {
+
+        // Verifica que el productor tenga una productora activa
+        if (!req.productoraId) {
+            throw new Err.BadRequestError("No se encontró el ID de la productora activa en la sesión del usuario.");
+        }
         // Obtener el CUIT correspondiente a la productora autenticada
         const productora = await Productora.findOne({ where: { id_productora: req.productoraId } });
         if (!productora) {

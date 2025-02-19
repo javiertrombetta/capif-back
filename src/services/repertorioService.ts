@@ -71,7 +71,6 @@ const fonogramaAttributes = [
   "cantidad_conflictos_activos",
 ];
 
-
 export const validateISRC = async (isrc: string) => {
   if (!isrc || typeof isrc !== "string") {
     throw new Err.BadRequestError(MESSAGES.ERROR.ISRC.ISRC_REQUIRED);
@@ -527,12 +526,12 @@ export const listFonogramas = async (queryParams: any) => {
   if (queryParams.album) whereClause.album = { [Op.iLike]: `%${queryParams.album}%` };
   if (queryParams.anio_lanzamiento) whereClause.anio_lanzamiento = queryParams.anio_lanzamiento;
 
-  // Filtro parcial para sello_discografico (puede contener varios nombres separados por comas)
+  // Filtro parcial para sello_discografico
   if (queryParams.sello_discografico) {
     whereClause.sello_discografico = { [Op.iLike]: `%${queryParams.sello_discografico}%` };
   }
 
-  // Filtrar por estado_fonograma si se pasa en los query params
+  // Filtrar por estado_fonograma
   if (queryParams.estado_fonograma && ["ACTIVO", "INACTIVO"].includes(queryParams.estado_fonograma.toUpperCase())) {
     whereClause.estado_fonograma = queryParams.estado_fonograma.toUpperCase();
   }
@@ -542,8 +541,11 @@ export const listFonogramas = async (queryParams: any) => {
   const limit = queryParams.limit ? parseInt(queryParams.limit, 10) : 50;
   const offset = (page - 1) * limit;
 
+  // Obtener el total de registros sin paginación para evitar errores en el conteo
+  const total = await Fonograma.count({ where: whereClause });
+
   // Obtener datos paginados con sus relaciones
-  const { count, rows: fonogramas } = await Fonograma.findAndCountAll({
+  const fonogramas = await Fonograma.findAll({
     where: whereClause,
     attributes: fonogramaAttributes,
     include: fonogramaIncludeModels,
@@ -554,7 +556,7 @@ export const listFonogramas = async (queryParams: any) => {
 
   return {
     message: "Fonogramas obtenidos exitosamente.",
-    total: count,
+    total,
     page,
     limit,
     data: fonogramas,

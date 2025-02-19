@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.126 - 19-02-2025
+## 🐛 Fixes
+
+- fix: cuit optional add participaciones
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.123
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.123 - 19-02-2025
 ## 🐛 Fixes
 

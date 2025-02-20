@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.144 - 20-02-2025
+## 🐛 Fixes
+
+- fix: change participacion to repertoires services
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.141
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.141 - 20-02-2025
 ## 🐛 Fixes
 

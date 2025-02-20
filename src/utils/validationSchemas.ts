@@ -1435,6 +1435,15 @@ export const createFonogramaBodySchema = Joi.object({
   sello_discografico: Joi.string().allow(null, "").messages({
     "string.base": "El campo 'sello_discografico' debe ser una cadena de texto.",
   }),
+  isrc: Joi.string()
+  .length(12)
+  .regex(/^[A-Z]{2}[A-Z0-9]{10}$/)
+  .required()
+  .messages({
+    "string.length": "El ISRC debe tener exactamente 12 caracteres.",
+    "string.pattern.base": "El ISRC debe comenzar con dos letras seguidas de 10 caracteres alfanuméricos.",
+    "any.required": "El ISRC es obligatorio.",
+  }),
   participaciones: Joi.array()
     .items(
       Joi.object({

@@ -42,6 +42,8 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
         throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
     }
 
+    console.log(`DEBUG: Buscando participaciones para conflicto entre ${fechaDesde.toISOString()} y ${fechaHasta.toISOString()}`);
+    
     // Obtener participaciones dentro del período
     const participaciones = await FonogramaParticipacion.findAll({
       where: {
@@ -59,6 +61,8 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
       },
     });
 
+    console.log("DEBUG: Participaciones encontradas para conflicto:", participaciones);
+
     if (participaciones.length === 0) {
         throw new Err.BadRequestError(MESSAGES.ERROR.PARTICIPACION.NOT_FOUND_PERIOD);
     }
@@ -67,20 +71,54 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
     const periodosMap = new Map<string, { fecha_inicio: Date; fecha_fin: Date; participaciones: typeof participaciones }>();
 
     participaciones.forEach((participacion) => {
-      const inicio = participacion.fecha_participacion_inicio > fechaDesde ? participacion.fecha_participacion_inicio : fechaDesde;
-      const fin = participacion.fecha_participacion_hasta < fechaHasta ? participacion.fecha_participacion_hasta : fechaHasta;
+        const inicio = participacion.fecha_participacion_inicio > fechaDesde ? participacion.fecha_participacion_inicio : fechaDesde;
+        const fin = participacion.fecha_participacion_hasta < fechaHasta ? participacion.fecha_participacion_hasta : fechaHasta;
 
-      const key = `${inicio.toISOString()}_${fin.toISOString()}`;
-      if (!periodosMap.has(key)) {
-        periodosMap.set(key, { fecha_inicio: inicio, fecha_fin: fin, participaciones: [] });
-      }
-      periodosMap.get(key)!.participaciones.push(participacion);
+        // Verificar si ya existe un período en el que esta participación encaje
+        let periodoExistente = Array.from(periodosMap.values()).find(
+            (p) => 
+                (inicio >= p.fecha_inicio && inicio <= p.fecha_fin) || 
+                (fin >= p.fecha_inicio && fin <= p.fecha_fin) ||
+                (inicio <= p.fecha_inicio && fin >= p.fecha_fin) // La nueva abarca la existente
+        );
+
+        if (!periodoExistente) {
+            periodoExistente = { fecha_inicio: inicio, fecha_fin: fin, participaciones: [] };
+            periodosMap.set(`${inicio.toISOString()}_${fin.toISOString()}`, periodoExistente);
+        }
+
+        periodoExistente.participaciones.push(participacion);
+
+        // Asegurarse de actualizar los límites del período fusionado
+        periodoExistente.fecha_inicio = new Date(Math.min(periodoExistente.fecha_inicio.getTime(), inicio.getTime()));
+        periodoExistente.fecha_fin = new Date(Math.max(periodoExistente.fecha_fin.getTime(), fin.getTime()));
     });
 
     // Crear conflictos cuando la suma de los porcentajes supera 100%
     const conflictosCreados = await Promise.all(
       Array.from(periodosMap.values()).map(async (periodo) => {
-        const porcentajeTotal = periodo.participaciones.reduce((acc, curr) => acc + curr.porcentaje_participacion, 0);
+      // const porcentajeTotal = periodo.participaciones.reduce((acc, curr) => acc + curr.porcentaje_participacion, 0);
+
+      // console.log(`Período analizado: ${periodo.fecha_inicio} - ${periodo.fecha_fin}`);
+
+      // console.log(`Participaciones en este período: `, periodo.participaciones.map(p => ({
+      //     id: p.id_participacion,
+      //     porcentaje: p.porcentaje_participacion
+      // })));
+
+      const uniqueParticipaciones = [...new Map(periodo.participaciones.map(p => [p.id_participacion, p])).values()];
+
+      const porcentajeTotal = uniqueParticipaciones.reduce((acc, curr) => acc + curr.porcentaje_participacion, 0);
+
+      console.log(`DEBUG: Período analizado corregido: ${periodo.fecha_inicio} - ${periodo.fecha_fin}`);
+      console.log(`DEBUG: Participaciones únicas en este período: `, uniqueParticipaciones.map(p => ({
+          id: p.id_participacion,
+          porcentaje: p.porcentaje_participacion
+      })));
+
+      if (porcentajeTotal > 100) {
+        console.log(`DEBUG: Se debe crear un conflicto total de: ${porcentajeTotal}%`);
+      }
 
         if (porcentajeTotal > 100) {
           const nuevoConflicto = await Conflicto.create({
@@ -131,8 +169,7 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
                 detalle: `Se creó una nueva participación en conflicto para el ISRC '${isrc}' para la participación ID '${participacion.id_participacion}'`,
               });
             })
-          );          
-
+          );
           return nuevoConflicto;
         }
         return null;

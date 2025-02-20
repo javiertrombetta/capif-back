@@ -101,7 +101,6 @@ export const createFonograma = async (req: any) => {
       duracion,
       anio_lanzamiento,
       sello_discografico,
-      participaciones,
       territorios: territoriosActivos
     } = req.body;
 
@@ -110,7 +109,6 @@ export const createFonograma = async (req: any) => {
 
     // Determinar si el usuario es un productor o un administrador
     const isAdmin = authUser.rol?.nombre_rol === "admin_principal" || authUser.rol?.nombre_rol === "admin_secundario";
-    const isProductor = authUser.rol?.nombre_rol === "productor_principal" || authUser.rol?.nombre_rol === "productor_secundario";
 
     // Obtener productora_id
     let productora_id = isAdmin ? bodyProductoraId : req.productoraId;
@@ -155,98 +153,11 @@ export const createFonograma = async (req: any) => {
         tipo_auditoria: "ALTA",
         detalle: `Se creó el fonograma con título '${titulo}' y ID '${fonograma.id_fonograma}'`,
     });
+    
+    // Registrar las participaciones del fonograma
+    const participacionResponse = await addParticipacionToFonograma(fonograma.id_fonograma, req);
 
-    // Validar y registrar participaciones
-    if (!participaciones || participaciones.length === 0) {
-      throw new Err.BadRequestError("No se incluyeron participaciones en la creación del fonograma.");
-    }
-
-    let participacionesFiltradas = participaciones;
-
-    if (isProductor) {
-        // Obtener el cuit correspondiente al req.productoraId para verificar las participaciones
-        const productora = await Productora.findOne({ where: { id_productora: req.productoraId } });
-        if (!productora) {
-            throw new Err.NotFoundError(`No se encontró ninguna productora con ID: ${req.productoraId}`);
-        }
-
-        // Filtrar solo la participación de la productora autenticada
-        participacionesFiltradas = participaciones.filter((p: Record<string, any>) => p.cuit === productora.cuit_cuil);
-        if (participacionesFiltradas.length === 0) {
-            throw new Err.ForbiddenError("No se encontró ninguna participación válida para la productora autenticada.");
-        }
-    }
-
-    // Registrar participaciones de productoras
-    const overlappingPeriods: string[] = [];
-    for (const participacion of participacionesFiltradas) {
-        const { cuit, porcentaje_participacion, fecha_inicio, fecha_hasta } = participacion;
-
-        // Verificar si la productora del usuario que registra es parte de los participantes
-        const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
-        if (!productora) throw new Err.NotFoundError(`No se encontró ninguna productora con el CUIT: ${cuit}`);
-
-        // Validar si la productora ya está registrada como participante en el mismo período para este fonograma
-        const participacionExistente = await FonogramaParticipacion.findOne({
-            where: {
-                fonograma_id: fonograma.id_fonograma,
-                productora_id: productora.id_productora,
-                [Op.or]: [
-                    { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
-                    { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
-                ],
-            },
-        });
-
-        if (participacionExistente) {
-          throw new Err.ConflictError(
-            `La productora con CUIT '${cuit}' ya tiene una participación registrada en este fonograma para el período entre ${fecha_inicio} y ${fecha_hasta}.`
-          );
-        }
-
-        await FonogramaParticipacion.create({
-            fonograma_id: fonograma.id_fonograma,
-            productora_id: productora.id_productora,
-            porcentaje_participacion,
-            fecha_participacion_inicio: fecha_inicio || new Date(),
-            fecha_participacion_hasta: fecha_hasta || new Date("2099-12-31"),
-        });
-
-        await registrarAuditoria({
-            usuario_originario_id: authUser.id_usuario,
-            usuario_destino_id: null,
-            modelo: "FonogramaParticipacion",
-            tipo_auditoria: "ALTA",
-            detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ISRC '${isrc}'`,
-        });
-
-        // Verificar períodos superpuestos con la participación creada
-        const participacionesExistentes = await FonogramaParticipacion.findAll({
-            where: {
-                fonograma_id: fonograma.id_fonograma,
-                [Op.or]: [
-                    { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
-                    { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
-                ],
-            },
-        });
-        const porcentajeSuperpuesto = participacionesExistentes.reduce(
-            (sum, p) => sum + p.porcentaje_participacion,
-            porcentaje_participacion
-        );
-
-        if (porcentajeSuperpuesto > 100) {
-            overlappingPeriods.push(
-                `Entre ${fecha_inicio} y ${fecha_hasta} se supera el 100% con un total de ${porcentajeSuperpuesto}%`
-            );
-
-            // Llamar automáticamente a crearConflicto cuando se detecte exceso de participación
-            await crearConflicto(req, isrc, fecha_inicio, fecha_hasta);
-        }
-    }
-
-    // Registrar los territorios habilitados en FonogramaTerritorioMaestro
-    // Validar territorios activos
+    // Registrar los territorios
     const territoriosHabilitados = await FonogramaTerritorio.findAll({ where: { is_habilitado: true } });
 
     if (!territoriosHabilitados.length) throw new Err.NotFoundError("No hay territorios habilitados disponibles.");
@@ -269,7 +180,7 @@ export const createFonograma = async (req: any) => {
             tipo_auditoria: "ALTA",
             detalle: `Se registró el territorio '${territorio.codigo_iso}' (${isActivo ? "Activo" : "Inactivo"}) para el fonograma con ISRC '${isrc}'`,
         });
-    }        
+    }
 
     // Cargar en FonogramaMaestro
     await FonogramaMaestro.create({ fonograma_id: fonograma.id_fonograma, operacion: "ALTA", fecha_operacion: new Date() });  
@@ -292,9 +203,8 @@ export const createFonograma = async (req: any) => {
 
     return {
         fonograma,
-        message: overlappingPeriods.length > 0
-            ? `Fonograma creado con éxito, pero hay períodos donde se supera el 100% de participación: ${overlappingPeriods.join("; ")}`
-            : "Fonograma creado exitosamente",
+        message: participacionResponse.message,
+        participacionesAgregadas: participacionResponse.data.participacionesAgregadas
     };
 };
 
@@ -390,7 +300,7 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                             tipo_contenido: 'DATOS',
                             fecha_envio_inicial: null,
                             fecha_envio_ultimo: null,
-                        });                
+                        });
 
                         await registrarAuditoria({
                             usuario_originario_id: authUser.id_usuario,
@@ -404,57 +314,23 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                         isrcExistentes.push(isrc);
                     }
                         
-                    // Validar si la productora ya está registrada en el mismo período para este fonograma
-                    const participacionExistente = await FonogramaParticipacion.findOne({
-                        where: {
-                            fonograma_id: fonograma.id_fonograma,
-                            productora_id: productora.id_productora,
-                            [Op.or]: [
-                                { fecha_participacion_inicio: { [Op.between]: [titular_desde, titular_hasta] } },
-                                { fecha_participacion_hasta: { [Op.between]: [titular_desde, titular_hasta] } },
-                            ],
-                        },
-                    });
-
-                    if (!participacionExistente) {
-                        await FonogramaParticipacion.create({
-                            fonograma_id: fonograma.id_fonograma,
-                            productora_id: productora.id_productora,
+                    // Registrar participación
+                    const resultadoParticipacion = await addParticipacionToFonograma(fonograma.id_fonograma, {
+                    body: {
+                        participaciones: [{
+                            cuit,
                             porcentaje_participacion: porcentaje_titularidad,
-                            fecha_participacion_inicio: titular_desde || new Date(),
-                            fecha_participacion_hasta: titular_hasta || new Date("2099-12-31"),
-                        });
+                            fecha_inicio: titular_desde,
+                            fecha_hasta: titular_hasta,
+                        }]
+                    },
+                    userId: authUser.id_usuario,
+                });
 
-                        await registrarAuditoria({
-                            usuario_originario_id: authUser.id_usuario,
-                            modelo: "FonogramaParticipacion",
-                            tipo_auditoria: "ALTA",
-                            detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ISRC '${isrc}'`,
-                        });
+                    if (resultadoParticipacion.message.includes("se supera el 100%")) {
+                        conflictos.push(resultadoParticipacion.message);
                     }
-
-                    // Verificar conflictos de periodos
-                    const conflictosExistentes = await FonogramaParticipacion.findAll({
-                        where: {
-                            fonograma_id: fonograma.id_fonograma,
-                            [Op.or]: [
-                                { fecha_participacion_inicio: { [Op.between]: [titular_desde, titular_hasta] } },
-                                { fecha_participacion_hasta: { [Op.between]: [titular_desde, titular_hasta] } },
-                            ],
-                        },
-                    });
-                    const porcentajeSuperpuesto = conflictosExistentes.reduce(
-                        (sum, p) => sum + p.porcentaje_participacion,
-                        Number(porcentaje_titularidad)
-                    );
-
-                    if (porcentajeSuperpuesto > 100) {
-                        conflictos.push(
-                            `Conflicto en el fonograma con ISRC '${isrc}': El porcentaje total supera el 100% entre ${titular_desde} y ${titular_hasta} (${porcentajeSuperpuesto}%)`
-                        );
-                        await crearConflicto(req, isrc, titular_desde, titular_hasta);
-                    }
-                
+                    
                     // Registrar territorios
                     const territoriosHabilitados = await FonogramaTerritorio.findAll({ where: { is_habilitado: true } });
 
@@ -1199,7 +1075,6 @@ export const getEnviosByFonograma = async (fonogramaId: string) => {
     };
 };
 
-
 export const getAllEnvios = async (filters: any) => {
     const { nombre_tema, estado_envio, fecha_desde, fecha_hasta, page = 1, limit = 50 } = filters;
 
@@ -1297,6 +1172,7 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
     }
     
     const overlappingPeriods: string[] = [];
+    const participacionesGuardadas = [];
 
     // Procesar cada participación
     for (const participacion of participacionesFiltradas) {
@@ -1319,14 +1195,17 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
             },
         });
 
+        const fechaInicioFormateada = new Date(fecha_inicio).toLocaleDateString('es-AR', { timeZone: 'UTC' });
+        const fechaHastaFormateada = new Date(fecha_hasta).toLocaleDateString('es-AR', { timeZone: 'UTC' });        
+
         if (participacionExistente) {
             throw new Err.BadRequestError(
-              `La productora con CUIT '${cuit}' ya tiene una participación registrada en este fonograma para el período entre ${fecha_inicio} y ${fecha_hasta}.`
+              `La productora con CUIT '${cuit}' ya tiene una participación registrada en este fonograma para el período entre ${fechaInicioFormateada} y ${fechaHastaFormateada}.`
             );
         }
-
+    
         // Crear la nueva participación
-        await FonogramaParticipacion.create({
+        const nuevaParticipacion = await FonogramaParticipacion.create({
             fonograma_id: fonogramaId,
             productora_id: productora.id_productora,
             porcentaje_participacion,
@@ -1342,28 +1221,54 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
             detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ID '${fonogramaId}'`,
         });
 
+        participacionesGuardadas.push({
+            id: nuevaParticipacion.id_participacion,
+            cuit,
+            porcentaje_participacion,
+            fecha_inicio,
+            fecha_hasta,
+        });
+
         // Cargar en FonogramaMaestro
         await FonogramaMaestro.create({ fonograma_id: fonograma.id_fonograma, operacion: "PARTICIPACION", fecha_operacion: new Date() });
 
-        // Verificar superposición de períodos
+        // Verificar si hay superposición y si la suma de los porcentajes supera el 100%
         const participacionesExistentes = await FonogramaParticipacion.findAll({
             where: {
                 fonograma_id: fonogramaId,
                 [Op.or]: [
                     { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
                     { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
+                    { 
+                        [Op.and]: [
+                            { fecha_participacion_inicio: { [Op.lte]: fecha_inicio } },
+                            { fecha_participacion_hasta: { [Op.gte]: fecha_hasta } },
+                        ],
+                    },
                 ],
             },
         });
 
-        const porcentajeSuperpuesto = participacionesExistentes.reduce(
-            (sum, p) => sum + p.porcentaje_participacion,
-            porcentaje_participacion
-        );
+        console.log("DEBUG: participacionesExistentes antes del cálculo:");
+        console.log(participacionesExistentes.map(p => ({
+            id: p.id_participacion,
+            porcentaje: p.porcentaje_participacion
+        })));
+
+        const idsUnicos = new Set();
+        const porcentajeSuperpuesto = participacionesExistentes.reduce((sum, p) => {
+            if (!idsUnicos.has(p.id_participacion)) {
+                idsUnicos.add(p.id_participacion);
+                return sum + p.porcentaje_participacion;
+            }
+            return sum;
+        }, 0);
+
+        console.log(`DEBUG: PORCENTAJE FINAL CORREGIDO: ${porcentajeSuperpuesto}%`);
 
         if (porcentajeSuperpuesto > 100) {
             overlappingPeriods.push(
-                `Entre ${fecha_inicio} y ${fecha_hasta} se supera el 100% con un total de ${porcentajeSuperpuesto}%`
+                `Entre ${fechaInicioFormateada} y ${fechaHastaFormateada} se supera el 100% con un total de ${porcentajeSuperpuesto}%`
             );
 
             // Llamar automáticamente a crearConflicto cuando se detecte exceso de participación
@@ -1376,147 +1281,57 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
         ? `Participaciones agregadas con éxito, pero hay períodos donde se supera el 100% de participación: ${overlappingPeriods.join("; ")}`
         : "Participaciones agregadas exitosamente";
 
-    return { message, data: { fonogramaId, participaciones: participacionesFiltradas } };
+    return { message, data: { fonogramaId, participacionesAgregadas: participacionesGuardadas } };
 };
 
 export const cargarParticipacionesMasivo = async (req: any) => {
-    
-  if (!req.file || !req.file.buffer) {
-    throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.NO_CSV_FOUND);
-  }
-
-  const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
-
-  const participaciones: any[] = [];
-  const errores: string[] = [];
-  const overlappingPeriods: string[] = [];
-
-  // Leer y procesar el archivo CSV desde el buffer
-  await new Promise<void>((resolve, reject) => {
-    const stream = Readable.from(req.file!.buffer);
-    stream
-      .pipe(csv())
-      .on("data", (data) => participaciones.push(data))
-      .on("end", resolve)
-      .on("error", reject);
-  });
-
-  // 1. Obtener todos los fonogramas y productoras en paralelo
-  const isrcList = participaciones.map((p) => p.isrc);
-  const cuitList = participaciones.map((p) => p.cuit);
-
-  const [fonogramas, productoras] = await Promise.all([
-    Fonograma.findAll({ where: { isrc: isrcList } }),
-    Productora.findAll({ where: { cuit_cuil: cuitList } }),
-  ]);
-
-  // Convertir a mapas para acceso rápido
-  const fonogramaMap = new Map(fonogramas.map((f) => [f.isrc, f]));
-  const productoraMap = new Map(productoras.map((p) => [p.cuit_cuil, p]));
-
-  // 2. Validar existencia de fonogramas y productoras
-  participaciones.forEach(({ isrc, cuit }) => {
-    if (!fonogramaMap.has(isrc)) {
-      errores.push(`No se encontró ningún fonograma con el ISRC: ${isrc}`);
-    }
-    if (!productoraMap.has(cuit)) {
-      errores.push(`No se encontró ninguna productora con el CUIT: ${cuit}`);
-    }
-  });
-
-  // Filtrar participaciones válidas
-  const participacionesValidas = participaciones.filter(
-    ({ isrc, cuit }) => fonogramaMap.has(isrc) && productoraMap.has(cuit)
-  );
-
-  // 3. Obtener participaciones existentes en paralelo
-  const participacionesExistentes = await Promise.all(
-    participacionesValidas.map(({ isrc, cuit, fecha_inicio, fecha_hasta }) =>
-      FonogramaParticipacion.findAll({
-        where: {
-          fonograma_id: fonogramaMap.get(isrc)!.id_fonograma,
-          productora_id: productoraMap.get(cuit)!.id_productora,
-          [Op.or]: [
-            { fecha_participacion_inicio: { [Op.between]: [fecha_inicio, fecha_hasta] } },
-            { fecha_participacion_hasta: { [Op.between]: [fecha_inicio, fecha_hasta] } },
-          ],
-        },
-      })
-    )
-  );
-
-  // 4. Validar superposición de períodos
-  for (const [index, participacion] of participacionesValidas.entries()) {
-    const { isrc, cuit, fecha_inicio, fecha_hasta, porcentaje_titularidad } = participacion;
-    const existing = participacionesExistentes[index];
-
-    if (existing.length > 0) {
-      errores.push(
-        `La productora con CUIT '${cuit}' ya tiene una participación en el fonograma '${isrc}' para el período.`
-      );
-      return;
+    if (!req.file || !req.file.buffer) {
+        throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.NO_CSV_FOUND);
     }
 
-    const porcentajeTotal = existing.reduce(
-      (sum, p) => sum + p.porcentaje_participacion,
-      Number(porcentaje_titularidad)
-    );
+    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+    const participaciones: any[] = [];
+    const errores: string[] = [];
+    const overlappingPeriods: string[] = [];
 
-    if (porcentajeTotal > 100) {
-      overlappingPeriods.push(
-        `Entre ${fecha_inicio} y ${fecha_hasta}, el porcentaje total (${porcentajeTotal}%) supera el 100%.`
-      );
-      // Llamar automáticamente a crearConflicto cuando se detecte exceso de participación
-      await crearConflicto(req, isrc, fecha_inicio, fecha_hasta);
-    }
-  }
-
-  // 5. Crear nuevas participaciones en paralelo y registrar en FonogramaMaestro
-  await Promise.all(
-  participacionesValidas.map(async ({ isrc, cuit, fecha_inicio, fecha_hasta, porcentaje_titularidad }) => {
-    const fonograma = fonogramaMap.get(isrc);
-    const productora = productoraMap.get(cuit);
-
-    if (!fonograma || !productora) return;
-
-    // Crear la participación
-    await FonogramaParticipacion.create({
-      fonograma_id: fonograma.id_fonograma,
-      productora_id: productora.id_productora,
-      porcentaje_participacion: porcentaje_titularidad,
-      fecha_participacion_inicio: fecha_inicio || new Date(),
-      fecha_participacion_hasta: fecha_hasta || new Date("2099-12-31"),
+    await new Promise<void>((resolve, reject) => {
+        const stream = Readable.from(req.file!.buffer);
+        stream
+            .pipe(csv())
+            .on("data", (data) => participaciones.push(data))
+            .on("end", resolve)
+            .on("error", reject);
     });
 
-    // Registrar la operación en FonogramaMaestro
-    await FonogramaMaestro.create({
-      fonograma_id: fonograma.id_fonograma,
-      operacion: "PARTICIPACION",
-      fecha_operacion: new Date(),
-    });    
-  })
-  );
+    await Promise.all(
+        participaciones.map(async (row, index) => {
+            try {
+                const resultadoParticipacion = await addParticipacionToFonograma(row.isrc, {
+                    body: {
+                        participaciones: [{
+                            cuit: row.cuit,
+                            porcentaje_participacion: row.porcentaje_titularidad,
+                            fecha_inicio: row.titular_desde,
+                            fecha_hasta: row.titular_hasta,
+                        }]
+                    },
+                    userId: authUser.id_usuario,
+                });
 
-  // 6. Registrar auditoría en paralelo
-  await Promise.all(
-    participacionesValidas.map(({ isrc, cuit }) =>
-      registrarAuditoria({
-        usuario_originario_id: authUser.id_usuario,
-        usuario_destino_id: null,
-        modelo: "FonogramaParticipacion",
-        tipo_auditoria: "ALTA",
-        detalle: `Se registró la participación de la productora con CUIT '${cuit}' en el fonograma '${isrc}'`,
-      })
-    )
-  ); 
+                if (resultadoParticipacion.message.includes("se supera el 100%")) {
+                    overlappingPeriods.push(resultadoParticipacion.message);
+                }
+            } catch (err: any) {
+                errores.push(`Error en fila ${index + 1}: ${err.message}`);
+            }
+        })
+    );
 
-  // 7. Devolver respuesta final
-  const message =
-    overlappingPeriods.length > 0
-      ? `Carga completada con advertencias: ${overlappingPeriods.join("; ")}`
-      : "Carga completada exitosamente.";
+    const message = overlappingPeriods.length > 0
+        ? `Carga completada con advertencias: ${overlappingPeriods.join("; ")}`
+        : "Carga completada exitosamente.";
 
-  return { message, errores };
+    return { message, errores };
 };
 
 export const listParticipaciones = async (fonogramaId: string, query: any) => {
@@ -1614,19 +1429,27 @@ export const updateParticipacion = async (fonogramaId: string, participacionId: 
     const participacionesEnPeriodo = await FonogramaParticipacion.findAll({
         where: {
             fonograma_id: fonogramaId,
-            id_participacion: { [Op.ne]: participacionId }, // Excluir la participación a actualizar
+            id_participacion: { [Op.ne]: participacionId },
             [Op.or]: [
                 { fecha_participacion_inicio: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } },
-                { fecha_participacion_hasta: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } }
+                { fecha_participacion_hasta: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } },
+                { [Op.and]: [
+                    { fecha_participacion_inicio: { [Op.lte]: fecha_participacion_inicio } },
+                    { fecha_participacion_hasta: { [Op.gte]: fecha_participacion_hasta } },
+                ]},
             ]
         }
     });
 
     // Calcular el total de participación dentro del período actualizado
-    const totalParticipacion = participacionesEnPeriodo.reduce(
-        (sum, p) => sum + p.porcentaje_participacion,
-        porcentaje_participacion // Incluir el nuevo porcentaje de la participación actualizada
-    );
+    const idsUnicos = new Set();
+    const totalParticipacion = participacionesEnPeriodo.reduce((sum, p) => {
+        if (!idsUnicos.has(p.id_participacion)) {
+            idsUnicos.add(p.id_participacion);
+            return sum + p.porcentaje_participacion;
+        }
+        return sum;
+    }, porcentaje_participacion);
 
     // Mensaje de advertencia si supera el 100%
     let warningMessage = null;
@@ -1660,7 +1483,7 @@ export const updateParticipacion = async (fonogramaId: string, participacionId: 
     return {
         message: "Participación actualizada exitosamente.",
         data: participacion,
-        warning: warningMessage || undefined // Solo se incluye si hay una advertencia
+        warning: warningMessage || undefined
     }; 
 };
 
@@ -1686,7 +1509,7 @@ export const deleteParticipacion = async (fonogramaId: string, participacionId: 
     const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
 
     // Guardar los datos del período antes de eliminar la participación
-    const { fecha_participacion_inicio, fecha_participacion_hasta } = participacion;
+    const { fecha_participacion_inicio, fecha_participacion_hasta, porcentaje_participacion } = participacion;
 
     // Eliminar la participación
     await participacion.destroy();
@@ -1708,15 +1531,30 @@ export const deleteParticipacion = async (fonogramaId: string, participacionId: 
     });
 
     // Recalcular la participación total en el período de la participación eliminada
-    const totalParticipacionEnPeriodo = await FonogramaParticipacion.sum('porcentaje_participacion', {
+    const participacionesRestantes = await FonogramaParticipacion.findAll({
         where: {
             fonograma_id: fonogramaId,
             [Op.or]: [
                 { fecha_participacion_inicio: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } },
-                { fecha_participacion_hasta: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } }
+                { fecha_participacion_hasta: { [Op.between]: [fecha_participacion_inicio, fecha_participacion_hasta] } },
+                {
+                    [Op.and]: [
+                        { fecha_participacion_inicio: { [Op.lte]: fecha_participacion_inicio } },
+                        { fecha_participacion_hasta: { [Op.gte]: fecha_participacion_hasta } },
+                    ]
+                },
             ]
         }
-    });   
+    });
+
+    const idsUnicos = new Set();
+    const totalParticipacionEnPeriodo = participacionesRestantes.reduce((sum, p) => {
+        if (!idsUnicos.has(p.id_participacion)) {
+            idsUnicos.add(p.id_participacion);
+            return sum + p.porcentaje_participacion;
+        }
+        return sum;
+    }, porcentaje_participacion);
 
     // Mensaje de advertencia si el total en el período sigue siendo mayor al 100%
     let warningMessage = null;

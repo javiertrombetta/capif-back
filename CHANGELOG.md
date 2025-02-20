@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.141 - 20-02-2025
+## 🐛 Fixes
+
+- fix: change swagger for get repertoires
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.138
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.138 - 19-02-2025
 ## 🐛 Fixes
 

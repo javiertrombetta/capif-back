@@ -1,7 +1,31 @@
 # Changelog
+## v0.3.151 - 20-02-2025
+## 🐛 Fixes
+
+- fix: change cashflow models
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.147
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch feature_cashflow of https://github.com/javiertrombetta/capif-back into develop
+
+
+## v0.3.147 - 20-02-2025
+## 🐛 Fixes
+
+- fix: add isrc to create repertoire body validation
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.144
+- chore(docs): update CHANGELOG.MD
+
 
 ## v0.3.144 - 20-02-2025
-
 ## 🐛 Fixes
 
 - fix: change participacion to repertoires services
@@ -11,8 +35,8 @@
 - chore(release): bump version to v0.3.141
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.141 - 20-02-2025
 
+## v0.3.141 - 20-02-2025
 ## 🐛 Fixes
 
 - fix: change swagger for get repertoires
@@ -22,8 +46,8 @@
 - chore(release): bump version to v0.3.138
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.138 - 19-02-2025
 
+## v0.3.138 - 19-02-2025
 ## 🐛 Fixes
 
 - fix: change findUsuarios
@@ -37,8 +61,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.3.134 - 19-02-2025
 
+## v0.3.134 - 19-02-2025
 ## 🐛 Fixes
 
 - fix: cuit optional create repertoire
@@ -56,8 +80,8 @@
 
 - revert changes
 
-## v0.3.129 - 19-02-2025
 
+## v0.3.129 - 19-02-2025
 ## 🐛 Fixes
 
 - fix: change obtenerConflictos, obtenerConflicto and login
@@ -67,8 +91,8 @@
 - chore(release): bump version to v0.3.126
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.126 - 19-02-2025
 
+## v0.3.126 - 19-02-2025
 ## 🐛 Fixes
 
 - fix: cuit optional add participaciones
@@ -78,8 +102,8 @@
 - chore(release): bump version to v0.3.123
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.123 - 19-02-2025
 
+## v0.3.123 - 19-02-2025
 ## 🐛 Fixes
 
 - fix: change createFonograma and cargarRepertoriosMasivo
@@ -89,8 +113,8 @@
 - chore(release): bump version to v0.3.120
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.120 - 19-02-2025
 
+## v0.3.120 - 19-02-2025
 ## 🐛 Fixes
 
 - fix: change participaciones with producers and admins
@@ -100,8 +124,8 @@
 - chore(release): bump version to v0.3.117
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.117 - 19-02-2025
 
+## v0.3.117 - 19-02-2025
 ## 🐛 Fixes
 
 - fix: change validate isrc and get all repertoires
@@ -111,8 +135,8 @@
 - chore(release): bump version to v0.3.114
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.114 - 19-02-2025
 
+## v0.3.114 - 19-02-2025
 ## 🐛 Fixes
 
 - fix: change total in listFonogramas
@@ -122,8 +146,8 @@
 - chore(release): bump version to v0.3.111
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.111 - 19-02-2025
 
+## v0.3.111 - 19-02-2025
 ## 🚀 Features
 
 - feat: add repertoire state to endpoints
@@ -133,8 +157,8 @@
 - chore(release): bump version to v0.3.108
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.108 - 18-02-2025
 
+## v0.3.108 - 18-02-2025
 ## 🐛 Fixes
 
 - fix: change obtenerConflicto and obtenerConflictos
@@ -144,8 +168,8 @@
 - chore(release): bump version to v0.3.105
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.105 - 18-02-2025
 
+## v0.3.105 - 18-02-2025
 ## 🐛 Fixes
 
 - fix: change send repertoire by ftp
@@ -155,8 +179,8 @@
 - chore(release): bump version to v0.3.102
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.102 - 17-02-2025
 
+## v0.3.102 - 17-02-2025
 ## 🐛 Fixes
 
 - fix: change params in misc routes
@@ -166,8 +190,8 @@
 - chore(release): bump version to v0.3.99
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.99 - 17-02-2025
 
+## v0.3.99 - 17-02-2025
 ## 🐛 Fixes
 
 - fix: change toggleUserViewStatus
@@ -177,8 +201,8 @@
 - chore(release): bump version to v0.3.96
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.96 - 17-02-2025
 
+## v0.3.96 - 17-02-2025
 ## 🐛 Fixes
 
 - fix: change me route and send repertoire
@@ -188,8 +212,8 @@
 - chore(release): bump version to v0.3.93
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.93 - 17-02-2025
 
+## v0.3.93 - 17-02-2025
 ## 🐛 Fixes
 
 - fix: change get all repertoires for no mapping state
@@ -199,8 +223,8 @@
 - chore(release): bump version to v0.3.90
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.90 - 16-02-2025
 
+## v0.3.90 - 16-02-2025
 ## 🐛 Fixes
 
 - fix: change tabulations
@@ -210,8 +234,8 @@
 - chore(release): bump version to v0.3.87
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.87 - 16-02-2025
 
+## v0.3.87 - 16-02-2025
 ## 🐛 Fixes
 
 - fix: map query inputs in getAlEnvios
@@ -221,8 +245,8 @@
 - chore(release): bump version to v0.3.84
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.84 - 16-02-2025
 
+## v0.3.84 - 16-02-2025
 ## 🚀 Features
 
 - feat: add territories reports
@@ -232,8 +256,8 @@
 - chore(release): bump version to v0.3.81
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.81 - 16-02-2025
 
+## v0.3.81 - 16-02-2025
 ## 🚀 Features
 
 - feat: add global territoires routes
@@ -243,8 +267,8 @@
 - chore(release): bump version to v0.3.78
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.78 - 14-02-2025
 
+## v0.3.78 - 14-02-2025
 ## 🐛 Fixes
 
 - fix: change init seed for bulk repertoires
@@ -254,8 +278,8 @@
 - chore(release): bump version to v0.3.75
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.75 - 14-02-2025
 
+## v0.3.75 - 14-02-2025
 ## 🚀 Features
 
 - feat: add enable and disable users
@@ -265,8 +289,8 @@
 - chore(release): bump version to v0.3.72
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.72 - 14-02-2025
 
+## v0.3.72 - 14-02-2025
 ## 🐛 Fixes
 
 - fix: change get users for include self user
@@ -276,8 +300,8 @@
 - chore(release): bump version to v0.3.69
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.69 - 14-02-2025
 
+## v0.3.69 - 14-02-2025
 ## 🚀 Features
 
 - feat: add cuit validation in auth
@@ -287,8 +311,8 @@
 - chore(release): bump version to v0.3.66
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.66 - 14-02-2025
 
+## v0.3.66 - 14-02-2025
 ## 🐛 Fixes
 
 - fix: change messages for emails in step-one
@@ -298,8 +322,8 @@
 - chore(release): bump version to v0.3.63
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.63 - 14-02-2025
 
+## v0.3.63 - 14-02-2025
 ## 🐛 Fixes
 
 - fix: add relations to Conflicto model
@@ -309,8 +333,8 @@
 - chore(release): bump version to v0.3.60
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.60 - 14-02-2025
 
+## v0.3.60 - 14-02-2025
 ## 🐛 Fixes
 
 - fix: change repertoires for shares and get all shares
@@ -320,8 +344,8 @@
 - chore(release): bump version to v0.3.57
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.57 - 14-02-2025
 
+## v0.3.57 - 14-02-2025
 ## 🐛 Fixes
 
 - fix: change login for no recaptcha
@@ -331,8 +355,8 @@
 - chore(release): bump version to v0.3.54
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.54 - 14-02-2025
 
+## v0.3.54 - 14-02-2025
 ## 🚀 Features
 
 - feat: add logs for postman
@@ -342,8 +366,8 @@
 - chore(release): bump version to v0.3.51
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.51 - 14-02-2025
 
+## v0.3.51 - 14-02-2025
 ## 🚀 Features
 
 - feat: add logs for postman
@@ -353,8 +377,8 @@
 - chore(release): bump version to v0.3.48
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.48 - 13-02-2025
 
+## v0.3.48 - 13-02-2025
 ## 🚀 Features
 
 - feat: add recaptcha
@@ -364,8 +388,8 @@
 - chore(release): bump version to v0.3.45
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.45 - 13-02-2025
 
+## v0.3.45 - 13-02-2025
 ## 🐛 Fixes
 
 - fix: change reset database endpoint
@@ -375,8 +399,8 @@
 - chore(release): bump version to v0.3.42
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.42 - 13-02-2025
 
+## v0.3.42 - 13-02-2025
 ## 🐛 Fixes
 
 - fix: change Dockerfile
@@ -386,8 +410,8 @@
 - chore(release): bump version to v0.3.39
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.39 - 13-02-2025
 
+## v0.3.39 - 13-02-2025
 ## 🚀 Features
 
 - feat: add pagination to endpoints till confclits
@@ -397,8 +421,8 @@
 - chore(release): bump version to v0.3.36
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.36 - 13-02-2025
 
+## v0.3.36 - 13-02-2025
 ## 🐛 Fixes
 
 - fix: change repertoires and pagination in users and producers
@@ -408,8 +432,8 @@
 - chore(release): bump version to v0.3.33
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.33 - 11-02-2025
 
+## v0.3.33 - 11-02-2025
 ## 🐛 Fixes
 
 - fix: change transactions
@@ -419,8 +443,8 @@
 - chore(release): bump version to v0.3.30
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.30 - 11-02-2025
 
+## v0.3.30 - 11-02-2025
 ## 🐛 Fixes
 
 - fix: change get repertoires, logger, get users and get producers
@@ -430,8 +454,8 @@
 - chore(release): bump version to v0.3.27
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.27 - 10-02-2025
 
+## v0.3.27 - 10-02-2025
 ## 🐛 Fixes
 
 - fix: getFonogramaById keys
@@ -445,8 +469,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.3.23 - 10-02-2025
 
+## v0.3.23 - 10-02-2025
 ## 🐛 Fixes
 
 - fix: change GET repertoires
@@ -456,8 +480,8 @@
 - chore(release): bump version to v0.3.20
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.20 - 10-02-2025
 
+## v0.3.20 - 10-02-2025
 ## 🐛 Fixes
 
 - fix: change validate ISRC
@@ -467,8 +491,8 @@
 - chore(release): bump version to v0.3.17
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.17 - 10-02-2025
 
+## v0.3.17 - 10-02-2025
 ## 🐛 Fixes
 
 - fix: change cookies for secure
@@ -482,8 +506,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.3.13 - 10-02-2025
 
+## v0.3.13 - 10-02-2025
 ## 🚀 Features
 
 - feat: add cashflow schema routes
@@ -493,8 +517,8 @@
 - chore(release): bump version to v0.3.10
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.10 - 10-02-2025
 
+## v0.3.10 - 10-02-2025
 ## 🐛 Fixes
 
 - fix: change transactions
@@ -504,8 +528,8 @@
 - chore(release): bump version to v0.3.7
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.7 - 10-02-2025
 
+## v0.3.7 - 10-02-2025
 ## 🐛 Fixes
 
 - fix: change ci for automatic deploy in host
@@ -515,8 +539,8 @@
 - chore(release): bump version to v0.3.4
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.4 - 10-02-2025
 
+## v0.3.4 - 10-02-2025
 ## 🐛 Fixes
 
 - fix: change ci for automatic deploy in host
@@ -526,8 +550,8 @@
 - chore(release): bump version to v0.3.1
 - chore(docs): update CHANGELOG.MD
 
-## v0.3.1 - 10-02-2025
 
+## v0.3.1 - 10-02-2025
 ## 🚀 Features
 
 - feat(MINOR): add conflict endpoints
@@ -541,16 +565,16 @@
 
 - Merge branch feature_conflicts of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.2.101 - 10-02-2025
 
+## v0.2.101 - 10-02-2025
 ## 🛠️ Maintenance
 
 - chore(release): bump version to v0.2.98
 - chore(docs): update CHANGELOG.MD
 - chore: disabled conflicts
 
-## v0.2.98 - 10-02-2025
 
+## v0.2.98 - 10-02-2025
 ## 🐛 Fixes
 
 - fix: change res.cookie for none sameSite
@@ -560,8 +584,8 @@
 - chore(release): bump version to v0.2.95
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.95 - 09-02-2025
 
+## v0.2.95 - 09-02-2025
 ## 🐛 Fixes
 
 - fix: change npm version
@@ -571,8 +595,8 @@
 - chore(release): bump version to v0.2.92
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.92 - 09-02-2025
 
+## v0.2.92 - 09-02-2025
 ## 🚀 Features
 
 - feat: add swagger for misc
@@ -586,8 +610,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.2.88 - 09-02-2025
 
+## v0.2.88 - 09-02-2025
 ## 🐛 Fixes
 
 - fix: change controllers in producers and auth
@@ -597,8 +621,8 @@
 - chore(release): bump version to v0.2.85
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.85 - 08-02-2025
 
+## v0.2.85 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: swap /zip
@@ -612,8 +636,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.2.81 - 08-02-2025
 
+## v0.2.81 - 08-02-2025
 ## 🚀 Features
 
 - feat: add reset db by endpoint
@@ -623,8 +647,8 @@
 - chore(release): bump version to v0.2.78
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.78 - 08-02-2025
 
+## v0.2.78 - 08-02-2025
 ## 🚀 Features
 
 - feat: add reset db by endpoint
@@ -634,8 +658,8 @@
 - chore(release): bump version to v0.2.75
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.75 - 08-02-2025
 
+## v0.2.75 - 08-02-2025
 ## 🚀 Features
 
 - feat: add reset db by endpoint
@@ -649,8 +673,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.2.71 - 08-02-2025
 
+## v0.2.71 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: change sequelize
@@ -661,8 +685,8 @@
 - chore(release): bump version to v0.2.67
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.67 - 08-02-2025
 
+## v0.2.67 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: change initPosrgres for production.remote
@@ -672,8 +696,8 @@
 - chore(release): bump version to v0.2.64
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.64 - 08-02-2025
 
+## v0.2.64 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: chage env for Digital Ocean
@@ -683,8 +707,8 @@
 - chore(release): bump version to v0.2.61
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.61 - 08-02-2025
 
+## v0.2.61 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: change production behaviour
@@ -694,8 +718,8 @@
 - chore(release): bump version to v0.2.58
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.58 - 08-02-2025
 
+## v0.2.58 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: change CORS in app.ts
@@ -705,8 +729,8 @@
 - chore(release): bump version to v0.2.55
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.55 - 08-02-2025
 
+## v0.2.55 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: change app.ts for CORS with Digital Ocean
@@ -716,8 +740,8 @@
 - chore(release): bump version to v0.2.52
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.52 - 08-02-2025
 
+## v0.2.52 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: change relations in models and initPostgres
@@ -727,8 +751,8 @@
 - chore(release): bump version to v0.2.49
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.49 - 08-02-2025
 
+## v0.2.49 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: change Dockerfile for init postgres
@@ -738,8 +762,8 @@
 - chore(release): bump version to v0.2.46
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.46 - 08-02-2025
 
+## v0.2.46 - 08-02-2025
 ## 🐛 Fixes
 
 - fix: change CORS in app.ts and Dockerfile
@@ -749,8 +773,8 @@
 - chore(release): bump version to v0.2.43
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.43 - 07-02-2025
 
+## v0.2.43 - 07-02-2025
 ## 🚀 Features
 
 - feat: add api health check
@@ -760,8 +784,8 @@
 - chore(release): bump version to v0.2.40
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.40 - 07-02-2025
 
+## v0.2.40 - 07-02-2025
 ## 🐛 Fixes
 
 - fix: change tust proxy
@@ -775,8 +799,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.2.36 - 06-02-2025
 
+## v0.2.36 - 06-02-2025
 ## 🐛 Fixes
 
 - fix: change Dockerfile for Digital Ocean
@@ -790,8 +814,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.2.32 - 05-02-2025
 
+## v0.2.32 - 05-02-2025
 ## 🚀 Features
 
 - feat: add rimraf to uploads in package.json
@@ -805,8 +829,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.2.28 - 05-02-2025
 
+## v0.2.28 - 05-02-2025
 ## 🐛 Fixes
 
 - fix: change relations in models
@@ -816,8 +840,8 @@
 - chore(release): bump version to v0.2.25
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.25 - 05-02-2025
 
+## v0.2.25 - 05-02-2025
 ## 🐛 Fixes
 
 - fix: change duracion in joi repertoires
@@ -827,24 +851,24 @@
 - chore(release): bump version to v0.2.22
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.22 - 05-02-2025
 
+## v0.2.22 - 05-02-2025
 ## 🛠️ Maintenance
 
 - chore(release): bump version to v0.2.19
 - chore(docs): update CHANGELOG.MD
 - chore: init deploy in Digital Ocean
 
-## v0.2.19 - 05-02-2025
 
+## v0.2.19 - 05-02-2025
 ## 🛠️ Maintenance
 
 - chore(release): bump version to v0.2.16
 - chore(docs): update CHANGELOG.MD
 - chore: init deploy in Digital Ocean
 
-## v0.2.16 - 05-02-2025
 
+## v0.2.16 - 05-02-2025
 ## 🐛 Fixes
 
 - fix: change producers controller, joi and swagger
@@ -854,8 +878,8 @@
 - chore(release): bump version to v0.2.13
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.13 - 04-02-2025
 
+## v0.2.13 - 04-02-2025
 ## 🐛 Fixes
 
 - fix: changes in authController
@@ -869,8 +893,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.2.9 - 03-02-2025
 
+## v0.2.9 - 03-02-2025
 ## 🐛 Fixes
 
 - fix: auth routes
@@ -880,8 +904,8 @@
 - chore(release): bump version to v0.2.6
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.6 - 02-02-2025
 
+## v0.2.6 - 02-02-2025
 ## 🚀 Features
 
 - feat: add conflict routes
@@ -891,8 +915,8 @@
 - chore(release): bump version to v0.2.3
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.3 - 02-02-2025
 
+## v0.2.3 - 02-02-2025
 ## 🚀 Features
 
 - feat: add massive load for participaciones and change send status
@@ -902,8 +926,8 @@
 - chore(release): bump version to v0.2.0
 - chore(docs): update CHANGELOG.MD
 
-## v0.2.0 - 01-02-2025
 
+## v0.2.0 - 01-02-2025
 ## 🚀 Features
 
 - feat(MINOR): add repertoires
@@ -913,8 +937,8 @@
 - chore(release): bump version to v0.1.214
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.214 - 01-02-2025
 
+## v0.1.214 - 01-02-2025
 ## 🚀 Features
 
 - feat: add joi to repertoires
@@ -924,8 +948,8 @@
 - chore(release): bump version to v0.1.211
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.211 - 01-02-2025
 
+## v0.1.211 - 01-02-2025
 ## 🚀 Features
 
 - feat: add all endpoints to repertoires controller
@@ -935,8 +959,8 @@
 - chore(release): bump version to v0.1.208
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.208 - 31-01-2025
 
+## v0.1.208 - 31-01-2025
 ## 🐛 Fixes
 
 - fix: changes in findUsuarios, getProductoras, getUsers and approveApplication
@@ -950,8 +974,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.204 - 30-01-2025
 
+## v0.1.204 - 30-01-2025
 ## 🐛 Fixes
 
 - fix: change getUsers in users and clean init seed
@@ -961,8 +985,8 @@
 - chore(release): bump version to v0.1.201
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.201 - 30-01-2025
 
+## v0.1.201 - 30-01-2025
 ## 🐛 Fixes
 
 - fix: change file use in createFonograma
@@ -972,8 +996,8 @@
 - chore(release): bump version to v0.1.198
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.198 - 30-01-2025
 
+## v0.1.198 - 30-01-2025
 ## 🐛 Fixes
 
 - fix: change return object in sendApplication
@@ -983,8 +1007,8 @@
 - chore(release): bump version to v0.1.195
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.195 - 30-01-2025
 
+## v0.1.195 - 30-01-2025
 ## 🐛 Fixes
 
 - fix: change loading documents in producers
@@ -995,8 +1019,8 @@
 - chore(docs): update CHANGELOG.MD
 - chore: merge with feature_repertoires
 
-## v0.1.191 - 30-01-2025
 
+## v0.1.191 - 30-01-2025
 ## 🐛 Fixes
 
 - fix: change bodyParser
@@ -1010,8 +1034,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.187 - 29-01-2025
 
+## v0.1.187 - 29-01-2025
 ## 🚀 Features
 
 - feat: add Fonograma and FonogramaEnvio to repertoires
@@ -1021,8 +1045,8 @@
 - chore(release): bump version to v0.1.184
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.184 - 28-01-2025
 
+## v0.1.184 - 28-01-2025
 ## 🚀 Features
 
 - feat: add create repertoires
@@ -1032,8 +1056,8 @@
 - chore(release): bump version to v0.1.181
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.181 - 27-01-2025
 
+## v0.1.181 - 27-01-2025
 ## 🐛 Fixes
 
 - fix: change querys and pagination
@@ -1043,8 +1067,8 @@
 - chore(release): bump version to v0.1.178
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.178 - 27-01-2025
 
+## v0.1.178 - 27-01-2025
 ## 🐛 Fixes
 
 - fix: change create producer in controller
@@ -1054,8 +1078,8 @@
 - chore(release): bump version to v0.1.175
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.175 - 27-01-2025
 
+## v0.1.175 - 27-01-2025
 ## 🐛 Fixes
 
 - fix: change transactions for debug
@@ -1065,8 +1089,8 @@
 - chore(release): bump version to v0.1.172
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.172 - 27-01-2025
 
+## v0.1.172 - 27-01-2025
 ## 🐛 Fixes
 
 - fix: change generarCodigosISRC in usuarios.seed
@@ -1076,8 +1100,8 @@
 - chore(release): bump version to v0.1.169
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.169 - 27-01-2025
 
+## v0.1.169 - 27-01-2025
 ## 🚀 Features
 
 - feat: add docs to producers routes
@@ -1087,8 +1111,8 @@
 - chore(release): bump version to v0.1.166
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.166 - 26-01-2025
 
+## v0.1.166 - 26-01-2025
 ## 🐛 Fixes
 
 - fix: add google for emails and transactions
@@ -1098,8 +1122,8 @@
 - chore(release): bump version to v0.1.163
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.163 - 26-01-2025
 
+## v0.1.163 - 26-01-2025
 ## 🚀 Features
 
 - feat: add count of repertoires in Productora
@@ -1109,8 +1133,8 @@
 - chore(release): bump version to v0.1.160
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.160 - 26-01-2025
 
+## v0.1.160 - 26-01-2025
 ## 🚀 Features
 
 - feat: add documents for producers routes
@@ -1120,8 +1144,8 @@
 - chore(release): bump version to v0.1.157
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.157 - 25-01-2025
 
+## v0.1.157 - 25-01-2025
 ## 🚀 Features
 
 - feat: add docs for swagger
@@ -1131,8 +1155,8 @@
 - chore(release): bump version to v0.1.154
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.154 - 25-01-2025
 
+## v0.1.154 - 25-01-2025
 ## 🐛 Fixes
 
 - fix: getAllPostulaciones serice
@@ -1142,8 +1166,8 @@
 - chore(release): bump version to v0.1.151
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.151 - 25-01-2025
 
+## v0.1.151 - 25-01-2025
 ## 🚀 Features
 
 - feat: seed for producers
@@ -1153,8 +1177,8 @@
 - chore(release): bump version to v0.1.148
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.148 - 25-01-2025
 
+## v0.1.148 - 25-01-2025
 ## 🐛 Fixes
 
 - fix: getAllProductoras
@@ -1168,8 +1192,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.144 - 25-01-2025
 
+## v0.1.144 - 25-01-2025
 ## 🐛 Fixes
 
 - fix: productorasRoutes
@@ -1183,8 +1207,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.140 - 25-01-2025
 
+## v0.1.140 - 25-01-2025
 ## 🐛 Fixes
 
 - fix: productorasRoutes with middleware
@@ -1194,8 +1218,8 @@
 - chore(release): bump version to v0.1.137
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.137 - 25-01-2025
 
+## v0.1.137 - 25-01-2025
 ## 🐛 Fixes
 
 - fix: getAllPostulaciones
@@ -1205,8 +1229,8 @@
 - chore(release): bump version to v0.1.134
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.134 - 25-01-2025
 
+## v0.1.134 - 25-01-2025
 ## 🐛 Fixes
 
 - fix: postulaciones in productoraController
@@ -1220,8 +1244,8 @@
 
 - Merge branch fix_auth of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.130 - 23-01-2025
 
+## v0.1.130 - 23-01-2025
 ## 🐛 Fixes
 
 - fix: getUser
@@ -1231,8 +1255,8 @@
 - chore(release): bump version to v0.1.127
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.127 - 23-01-2025
 
+## v0.1.127 - 23-01-2025
 ## 🐛 Fixes
 
 - fix: already login
@@ -1242,8 +1266,8 @@
 - chore(release): bump version to v0.1.124
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.124 - 23-01-2025
 
+## v0.1.124 - 23-01-2025
 ## 🐛 Fixes
 
 - fix: index of routes
@@ -1253,8 +1277,8 @@
 - chore(release): bump version to v0.1.121
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.121 - 23-01-2025
 
+## v0.1.121 - 23-01-2025
 ## 🐛 Fixes
 
 - fix: major changes in auth and usuarios
@@ -1264,8 +1288,8 @@
 - chore(release): bump version to v0.1.118
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.118 - 20-01-2025
 
+## v0.1.118 - 20-01-2025
 ## 🐛 Fixes
 
 - fix: remove public in Dockerfile
@@ -1275,8 +1299,8 @@
 - chore(release): bump version to v0.1.115
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.115 - 20-01-2025
 
+## v0.1.115 - 20-01-2025
 ## 🐛 Fixes
 
 - fix: vistas in usuariosController and userService
@@ -1288,8 +1312,8 @@
 - chore: staged fix errors
 - chore: refactor authController and usuariosController
 
-## v0.1.110 - 14-01-2025
 
+## v0.1.110 - 14-01-2025
 ## 🐛 Fixes
 
 - fix: change rejectApplication controller
@@ -1299,8 +1323,8 @@
 - chore(release): bump version to v0.1.107
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.107 - 14-01-2025
 
+## v0.1.107 - 14-01-2025
 ## 🐛 Fixes
 
 - fix: change authorizeRoles in sendApplication route
@@ -1314,8 +1338,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.103 - 14-01-2025
 
+## v0.1.103 - 14-01-2025
 ## 🐛 Fixes
 
 - fix: change approveApplication controller
@@ -1325,8 +1349,8 @@
 - chore(release): bump version to v0.1.100
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.100 - 14-01-2025
 
+## v0.1.100 - 14-01-2025
 ## 🐛 Fixes
 
 - fix: change auth and usuarios controllers
@@ -1336,8 +1360,8 @@
 - chore(release): bump version to v0.1.97
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.97 - 14-01-2025
 
+## v0.1.97 - 14-01-2025
 ## 🐛 Fixes
 
 - fix: change cookies in auth middleware
@@ -1348,8 +1372,8 @@
 - chore(docs): update CHANGELOG.MD
 - chore: changes in comments
 
-## v0.1.93 - 13-01-2025
 
+## v0.1.93 - 13-01-2025
 ## 🚀 Features
 
 - feat: add repertoriosController mock
@@ -1359,8 +1383,8 @@
 - chore(release): bump version to v0.1.90
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.90 - 13-01-2025
 
+## v0.1.90 - 13-01-2025
 ## 🚀 Features
 
 - feat: add productorasController
@@ -1370,8 +1394,8 @@
 - chore(release): bump version to v0.1.87
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.87 - 11-01-2025
 
+## v0.1.87 - 11-01-2025
 ## 🐛 Fixes
 
 - fix: change sendApplication and getUsers controllers
@@ -1381,8 +1405,8 @@
 - chore(release): bump version to v0.1.84
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.84 - 10-01-2025
 
+## v0.1.84 - 10-01-2025
 ## 🐛 Fixes
 
 - fix: change sendApplication in usuariosController
@@ -1392,8 +1416,8 @@
 - chore(release): bump version to v0.1.81
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.81 - 10-01-2025
 
+## v0.1.81 - 10-01-2025
 ## 🐛 Fixes
 
 - fix: applications in usuariosController
@@ -1403,8 +1427,8 @@
 - chore(release): bump version to v0.1.78
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.78 - 09-01-2025
 
+## v0.1.78 - 09-01-2025
 ## 🐛 Fixes
 
 - fix: init and dev separate in package.json
@@ -1414,8 +1438,8 @@
 - chore(release): bump version to v0.1.75
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.75 - 08-01-2025
 
+## v0.1.75 - 08-01-2025
 ## 🐛 Fixes
 
 - fix: schemas of auth and users
@@ -1425,8 +1449,8 @@
 - chore(release): bump version to v0.1.72
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.72 - 08-01-2025
 
+## v0.1.72 - 08-01-2025
 ## 🐛 Fixes
 
 - fix: login
@@ -1440,8 +1464,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.68 - 07-01-2025
 
+## v0.1.68 - 07-01-2025
 ## 🐛 Fixes
 
 - fix: controllers
@@ -1456,8 +1480,8 @@
 
 - Merge pull request #3 from javiertrombetta/fix_usuarios_and_auth_controllers
 
-## v0.1.63 - 07-01-2025
 
+## v0.1.63 - 07-01-2025
 ## 🐛 Fixes
 
 - fix: roles in Usuario
@@ -1471,8 +1495,8 @@
 
 - Merge branch feature_vistas of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.59 - 06-01-2025
 
+## v0.1.59 - 06-01-2025
 ## 🐛 Fixes
 
 - fix: authenticate middleware
@@ -1486,8 +1510,8 @@
 
 - Merge branch feature_vistas of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.55 - 06-01-2025
 
+## v0.1.55 - 06-01-2025
 ## 🐛 Fixes
 
 - fix: add vistas in getUser and change routes
@@ -1501,8 +1525,8 @@
 
 - Merge branch feature_vistas of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.51 - 06-01-2025
 
+## v0.1.51 - 06-01-2025
 ## 🚀 Features
 
 - feat: new routes files
@@ -1512,8 +1536,8 @@
 - chore(release): bump version to v0.1.48
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.48 - 05-01-2025
 
+## v0.1.48 - 05-01-2025
 ## 🚀 Features
 
 - feat: views for users and roles
@@ -1523,8 +1547,8 @@
 - chore(release): bump version to v0.1.45
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.45 - 05-01-2025
 
+## v0.1.45 - 05-01-2025
 ## 🐛 Fixes
 
 - fix: sendApplication in usuariosController
@@ -1538,8 +1562,8 @@
 
 - Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
 
-## v0.1.41 - 05-01-2025
 
+## v0.1.41 - 05-01-2025
 ## 🐛 Fixes
 
 - fix: sendApplication in usuariosController
@@ -1549,8 +1573,8 @@
 - chore(release): bump version to v0.1.38
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.38 - 05-01-2025
 
+## v0.1.38 - 05-01-2025
 ## 🚀 Features
 
 - feat: auth
@@ -1564,8 +1588,8 @@
 
 - Merge pull request #2 from javiertrombetta/feature-auth
 
-## v0.1.34 - 27-12-2024
 
+## v0.1.34 - 27-12-2024
 ## 🚀 Features
 
 - feat: register
@@ -1580,8 +1604,8 @@
 
 - Merge pull request #1 from javiertrombetta/feature-register
 
-## v0.1.29 - 23-12-2024
 
+## v0.1.29 - 23-12-2024
 ## 🐛 Fixes
 
 - fix: models to latest version
@@ -1591,8 +1615,8 @@
 - chore(release): bump version to v0.1.26
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.26 - 14-11-2024
 
+## v0.1.26 - 14-11-2024
 ## 🚀 Features
 
 - feat: change models, authController and userController
@@ -1603,8 +1627,8 @@
 - chore(release): bump version to v0.1.22
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.22 - 18-10-2024
 
+## v0.1.22 - 18-10-2024
 ## 🐛 Fixes
 
 - fix: change messages for forntend
@@ -1614,8 +1638,8 @@
 - chore(release): bump version to v0.1.19
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.19 - 17-10-2024
 
+## v0.1.19 - 17-10-2024
 ## 🐛 Fixes
 
 - fix: number to string for uuid
@@ -1625,8 +1649,8 @@
 - chore(release): bump version to v0.1.16
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.16 - 17-10-2024
 
+## v0.1.16 - 17-10-2024
 ## 🐛 Fixes
 
 - fix: mailing service
@@ -1636,8 +1660,8 @@
 - chore(release): bump version to v0.1.13
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.13 - 14-10-2024
 
+## v0.1.13 - 14-10-2024
 ## 🐛 Fixes
 
 - fix: register zip
@@ -1647,8 +1671,8 @@
 - chore(release): bump version to v0.1.10
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.10 - 14-10-2024
 
+## v0.1.10 - 14-10-2024
 ## 🐛 Fixes
 
 - fix: compose
@@ -1658,8 +1682,8 @@
 - chore(release): bump version to v0.1.7
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.7 - 09-10-2024
 
+## v0.1.7 - 09-10-2024
 ## 🚀 Features
 
 - feat: add uuidv4, swagger in archivos
@@ -1675,12 +1699,14 @@
 - chore(release): bump version to v0.1.1
 - chore(docs): update CHANGELOG.MD
 
-## v0.1.1 - 29-09-2024
 
+## v0.1.1 - 29-09-2024
 ## 🛠️ Maintenance
 
 - chore(docs): reset CHANGELOG.md and start from v0.1.0
 
-## v0.1.0 - 29-09-2024
 
+
+## v0.1.0 - 29-09-2024
 - v0.1.0 restAPI with initial endpoints completed.
+

@@ -1992,183 +1992,176 @@ export const repertoiresSwaggerDocs = {
         },
         "/repertoires/": {
             post: {
-                summary: "Crear un nuevo fonograma",
-                description: "Permite registrar un nuevo fonograma con sus participaciones y territorios.",
-                tags: ["Repertorios"],
-                security: [{ bearerAuth: [] }],
-                requestBody: {
-                    required: true,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "object",
-                                properties: {
-                                    productora_id: {
-                                        type: "string",
-                                        format: "uuid",
-                                        description: "UUID de la productora propietaria del fonograma.",
-                                        example: "123e4567-e89b-12d3-a456-426614174000"
-                                    },
-                                    cuit: {
-                                        type: "string",
-                                        description: "CUIT de la productora propietaria del fonograma (opcional si se proporciona productora_id).",
-                                        example: "30123456789"
-                                    },
-                                    titulo: {
-                                        type: "string",
-                                        description: "Título del fonograma.",
-                                        example: "Canción Ejemplo"
-                                    },
-                                    artista: {
-                                        type: "string",
-                                        description: "Nombre del artista.",
-                                        example: "Artista Ejemplo"
-                                    },
-                                    album: {
-                                        type: "string",
-                                        description: "Nombre del álbum.",
-                                        example: "Álbum Ejemplo"
-                                    },
-                                    duracion: {
-                                        type: "string",
-                                        description: "Duración del fonograma en formato HH:MM:SS.",
-                                        example: "00:03:36"
-                                    },
-                                    anio_lanzamiento: {
-                                        type: "integer",
-                                        description: "Año de lanzamiento del fonograma.",
-                                        example: 2024
-                                    },
-                                    sello_discografico: {
-                                        type: "string",
-                                        description: "Sello discográfico del fonograma.",
-                                        example: "Sello Ejemplo"
-                                    },
-                                    codigo_designacion: {
-                                        type: "string",
-                                        description: "Código de designación único del fonograma.",
-                                        example: "12345"
-                                    },
-                                    participaciones: {
-                                        type: "array",
-                                        description: "Lista de participaciones en el fonograma.",
-                                        items: {
-                                            type: "object",
-                                            properties: {
-                                                cuit: {
-                                                    type: "string",
-                                                    description: "CUIT de la productora participante.",
-                                                    example: "30123456789"
-                                                },
-                                                porcentaje_participacion: {
-                                                    type: "number",
-                                                    description: "Porcentaje de participación en el fonograma.",
-                                                    example: 50.0
-                                                },
-                                                fecha_inicio: {
-                                                    type: "string",
-                                                    format: "date",
-                                                    description: "Fecha de inicio de la participación.",
-                                                    example: "2024-01-01"
-                                                },
-                                                fecha_hasta: {
-                                                    type: "string",
-                                                    format: "date",
-                                                    description: "Fecha de finalización de la participación.",
-                                                    example: "2024-12-31"
-                                                }
-                                            },
-                                            required: ["cuit", "porcentaje_participacion", "fecha_inicio", "fecha_hasta"]
-                                        }
-                                    },
-                                    territorios: {
-                                        type: "array",
-                                        description: "Lista de códigos ISO de los territorios en los que el fonograma tiene derechos.",
-                                        items: {
-                                            type: "string"
-                                        },
-                                        example: ["AR", "US", "BR"]
-                                    }
+                "summary": "Crear un nuevo fonograma",
+                "description": "Permite registrar un nuevo fonograma con sus participaciones y territorios.",
+                "tags": ["Repertorios"],
+                "security": [{ "bearerAuth": [] }],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                    "application/json": {
+                        "schema": {
+                        "type": "object",
+                        "properties": {
+                            "productora_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "UUID de la productora propietaria del fonograma.",
+                            "example": "123e4567-e89b-12d3-a456-426614174000"
+                            },
+                            "cuit": {
+                            "type": "string",
+                            "description": "CUIT de la productora propietaria del fonograma (opcional si se proporciona productora_id).",
+                            "example": "30123456789"
+                            },
+                            "isrc": {
+                            "type": "string",
+                            "description": "Código ISRC único del fonograma.",
+                            "example": "ARABC2412345"
+                            },
+                            "titulo": {
+                            "type": "string",
+                            "description": "Título del fonograma.",
+                            "example": "Canción Ejemplo"
+                            },
+                            "artista": {
+                            "type": "string",
+                            "description": "Nombre del artista.",
+                            "example": "Artista Ejemplo"
+                            },
+                            "album": {
+                            "type": "string",
+                            "description": "Nombre del álbum.",
+                            "example": "Álbum Ejemplo"
+                            },
+                            "duracion": {
+                            "type": "string",
+                            "description": "Duración del fonograma en formato HH:MM:SS.",
+                            "example": "00:03:36"
+                            },
+                            "anio_lanzamiento": {
+                            "type": "integer",
+                            "description": "Año de lanzamiento del fonograma.",
+                            "example": 2024
+                            },
+                            "sello_discografico": {
+                            "type": "string",
+                            "description": "Sello discográfico del fonograma.",
+                            "example": "Sello Ejemplo"
+                            },
+                            "participaciones": {
+                            "type": "array",
+                            "description": "Lista de participaciones en el fonograma.",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                "cuit": {
+                                    "type": "string",
+                                    "description": "CUIT de la productora participante.",
+                                    "example": "30123456789"
                                 },
-                                required: [                                    
-                                    "titulo",
-                                    "artista",
-                                    "anio_lanzamiento",
-                                    "codigo_designacion",
-                                    "participaciones",
-                                    "territorios"
-                                ]
+                                "porcentaje_participacion": {
+                                    "type": "number",
+                                    "description": "Porcentaje de participación en el fonograma.",
+                                    "example": 50.0
+                                },
+                                "fecha_inicio": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "description": "Fecha de inicio de la participación.",
+                                    "example": "2024-01-01"
+                                },
+                                "fecha_hasta": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "description": "Fecha de finalización de la participación.",
+                                    "example": "2024-12-31"
+                                }
+                                },
+                                "required": ["cuit", "porcentaje_participacion", "fecha_inicio", "fecha_hasta"]
                             }
+                            },
+                            "territorios": {
+                            "type": "array",
+                            "description": "Lista de códigos ISO de los territorios en los que el fonograma tiene derechos.",
+                            "items": {
+                                "type": "string"
+                            },
+                            "example": ["AR", "US", "BR"]
+                            }
+                        },
+                        "required": ["titulo", "artista", "anio_lanzamiento", "isrc", "participaciones", "territorios"]
                         }
                     }
+                    }
                 },
-                responses: {
-                    201: {
-                        description: "Fonograma creado exitosamente.",
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        message: {
-                                            type: "string",
-                                            example: "Fonograma creado exitosamente."
-                                        },
-                                        data: {
-                                            type: "object",
-                                            properties: {
-                                                id_fonograma: {
-                                                    type: "string",
-                                                    format: "uuid",
-                                                    description: "UUID del fonograma creado.",
-                                                    example: "987e6543-e21b-11d3-b456-426614174000"
-                                                },
-                                                isrc: {
-                                                    type: "string",
-                                                    description: "Código ISRC del fonograma generado.",
-                                                    example: "ARABC2412345"
-                                                },
-                                                titulo: {
-                                                    type: "string",
-                                                    example: "Canción Ejemplo"
-                                                },
-                                                artista: {
-                                                    type: "string",
-                                                    example: "Artista Ejemplo"
-                                                },
-                                                album: {
-                                                    type: "string",
-                                                    example: "Álbum Ejemplo"
-                                                },
-                                                duracion: {
-                                                    type: "string",
-                                                    example: "00:03:36"
-                                                },
-                                                anio_lanzamiento: {
-                                                    type: "integer",
-                                                    example: 2024
-                                                },
-                                                sello_discografico: {
-                                                    type: "string",
-                                                    example: "Sello Ejemplo"
-                                                },
-                                                estado_fonograma: {
-                                                    type: "string",
-                                                    example: "ACTIVO"
-                                                },                                                
-                                            }
-                                        }
-                                    }
+                "responses": {
+                    "201": {
+                    "description": "Fonograma creado exitosamente.",
+                    "content": {
+                        "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                            "message": {
+                                "type": "string",
+                                "example": "Fonograma creado exitosamente."
+                            },
+                            "data": {
+                                "type": "object",
+                                "properties": {
+                                "id_fonograma": {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "description": "UUID del fonograma creado.",
+                                    "example": "987e6543-e21b-11d3-b456-426614174000"
+                                },
+                                "isrc": {
+                                    "type": "string",
+                                    "description": "Código ISRC del fonograma generado.",
+                                    "example": "ARABC2412345"
+                                },
+                                "titulo": {
+                                    "type": "string",
+                                    "example": "Canción Ejemplo"
+                                },
+                                "artista": {
+                                    "type": "string",
+                                    "example": "Artista Ejemplo"
+                                },
+                                "album": {
+                                    "type": "string",
+                                    "example": "Álbum Ejemplo"
+                                },
+                                "duracion": {
+                                    "type": "string",
+                                    "example": "00:03:36"
+                                },
+                                "anio_lanzamiento": {
+                                    "type": "integer",
+                                    "example": 2024
+                                },
+                                "sello_discografico": {
+                                    "type": "string",
+                                    "example": "Sello Ejemplo"
+                                },
+                                "estado_fonograma": {
+                                    "type": "string",
+                                    "example": "ACTIVO"
+                                }
                                 }
                             }
+                            }
                         }
+                        }
+                    }
                     },
-                    400: { description: "Datos inválidos o información faltante." },
-                    401: { description: "Usuario no autenticado." },
-                    403: { description: "Usuario no autorizado." },
-                    404: { description: "Productora no encontrada o sin código ISRC asignado." },
-                    409: { description: "El fonograma ya existe con el mismo ISRC." },
-                    500: { description: "Error interno del servidor." }
+                    "400": { "description": "Datos inválidos o información faltante." },
+                    "401": { "description": "Usuario no autenticado." },
+                    "403": { "description": "Usuario no autorizado." },
+                    "404": { "description": "Productora no encontrada o sin código ISRC asignado." },
+                    "409": { "description": "El fonograma ya existe con el mismo ISRC." },
+                    "500": { "description": "Error interno del servidor." }
                 }
             },
             get: {

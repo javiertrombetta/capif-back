@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.147 - 20-02-2025
+## 🐛 Fixes
+
+- fix: add isrc to create repertoire body validation
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.144
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.144 - 20-02-2025
 ## 🐛 Fixes
 

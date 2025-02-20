@@ -1,4 +1,19 @@
 # Changelog
+## v0.3.151 - 20-02-2025
+## 🐛 Fixes
+
+- fix: change cashflow models
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.147
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch feature_cashflow of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.3.147 - 20-02-2025
 ## 🐛 Fixes
 

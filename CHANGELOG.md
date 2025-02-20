@@ -1,15 +1,4 @@
 # Changelog
-## v0.3.154 - 20-02-2025
-## 🛠️ Maintenance
-
-- chore(release): bump version to v0.3.151
-- chore(docs): update CHANGELOG.MD
-
-## 🔄 Uncategorized Commits
-
-- revert to working commit
-
-
 
 ## v0.3.144 - 20-02-2025
 

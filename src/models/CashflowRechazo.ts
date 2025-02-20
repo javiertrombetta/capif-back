@@ -9,6 +9,7 @@ class CashflowRechazo extends Model {
   public cashflow_destino_id!: string;
   public numero_rechazo!: number;
   public monto_positivo_destino!: number;
+  public fecha_registro_rechazo!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -86,7 +87,18 @@ CashflowRechazo.init(
           msg: 'El monto positivo no puede ser negativo.',
         },
       },
-    },    
+    },
+    fecha_registro_rechazo: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de registro debe ser una fecha válida.',
+        },
+      },
+    },
   },
   {
     sequelize,
@@ -95,7 +107,7 @@ CashflowRechazo.init(
     hooks: {
       beforeCreate: async (liquidacion) => {
         const maxNumero = await CashflowRechazo.max<number, CashflowRechazo>('numero_liquidacion');
-        liquidacion.numero_rechazo = (maxNumero ?? 0) + 1;
+        liquidacion.numero_rechazo = (maxNumero ?? 0) + 1; // Usar coalescencia nula para asignar 1 si maxNumero es null
       },
     },
     timestamps: true,

@@ -1,4 +1,18 @@
 # Changelog
+## v0.3.174 - 21-02-2025
+## 🐛 Fixes
+
+- fix: change cashflow models
+- fix: change pago model
+- fix: change cashflow models
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.168
+- chore(docs): update CHANGELOG.MD
+- chore: merge with feature_cashflow
+
+
 ## v0.3.168 - 21-02-2025
 ## 🐛 Fixes
 

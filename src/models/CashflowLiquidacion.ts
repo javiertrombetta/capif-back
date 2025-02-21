@@ -7,16 +7,16 @@ const TIPO_NACIONALIDAD = ['NO APLICA', 'NACIONAL', 'INTERNACIONAL'] as const;
 
 class CashflowLiquidacion extends Model {
   public id_liquidacion!: string;
-  public cashflow_destino_id!: string;
-  public numero_liquidacion!: number;
-  public tipo_liquidacion!: (typeof TIPO_LIQUIDACION)[number];
-  public tipo_nacionalidad!: (typeof TIPO_NACIONALIDAD)[number];
-  public monto_positivo_destino!: number;
-  public monto_retencion_liquidacion!: number;
-  public is_isrc_no_asignado!: boolean;
-  public is_isrc_conflicto!: boolean;
-  public fecha_registro_liquidacion!: Date;
-  public fecha_pago!: Date | null;  
+  public cashflow_maestro_id!: string;
+  public concepto!: (typeof CONCEPTO)[number];
+  public nacionalidad_fonograma?: (typeof NACIONALIDAD_FONOGRAMA)[number];
+  public monto!: number;
+  public isRetencion!: boolean;
+  public cuit!: string;
+  public isrc?: string;
+  public nombre_fonograma?: string;
+  public nombre_artista?: string;
+  public sello_discografico?: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -37,26 +37,12 @@ CashflowLiquidacion.init(
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID de cashflow liquidación debe ser un UUID válido.',
+          msg: 'El ID de liquidación debe ser un UUID válido.',
         },
       },
     },
-    cashflow_destino_id: {
+    cashflow_maestro_id: {
       type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Cashflow,
-        key: 'id_cashflow',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID de destino debe ser un UUID válido.',
-        },
-      },
-    },
-    numero_liquidacion: {
-      type: DataTypes.INTEGER,
       allowNull: false,
       unique: true,
       validate: {
@@ -64,9 +50,15 @@ CashflowLiquidacion.init(
           msg: 'El número de liquidación debe ser un entero.',
         },
       },
+      validate: {
+        isUUID: {
+          args: 4,
+          msg: 'El ID de la transacción debe ser un UUID válido.',
+        },
+      },
     },
-    tipo_liquidacion: {
-      type: DataTypes.ENUM(...TIPO_LIQUIDACION),
+    concepto: {
+      type: DataTypes.ENUM(...CONCEPTO),
       allowNull: false,
       validate: {
         isIn: {
@@ -155,19 +147,9 @@ CashflowLiquidacion.init(
     },
     timestamps: true,
     indexes: [
-      {
-        fields: ['cashflow_destino_id'],
-        name: 'idx_cashflow_liquidacion_destino_id',
-      },
-      {
-        fields: ['cashflow_destino_id', 'fecha_pago'],
-        name: 'idx_cashflow_destino_fecha_pago',
-      },
-      {
-        fields: ['numero_liquidacion'],
-        name: 'idx_cashflow_numero_liquidacion',
-        unique: true
-      },
+      { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_liquidacion_maestro_id' },      
+      { fields: ['cuit'], name: 'idx_cashflow_liquidacion_cuit' }, 
+      { fields: ['isrc'], name: 'idx_cashflow_liquidacion_isrc' },
     ],
   }
 );

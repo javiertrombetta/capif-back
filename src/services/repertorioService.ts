@@ -393,32 +393,52 @@ export const getFonogramaById = async (id: string) => {
   };
 };
 
-export const listFonogramas = async (queryParams: any) => {
-  // Construcción del filtro de búsqueda dinámico
-  const whereClause: any = {};
+export const listFonogramas = async (req: any) => {
+  // Verifica el usuario autenticado y obtiene sus relaciones con productoras
+  const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
 
-  if (queryParams.isrc) whereClause.isrc = { [Op.iLike]: `%${queryParams.isrc}%` };
-  if (queryParams.titulo) whereClause.titulo = { [Op.iLike]: `%${queryParams.titulo}%` };
-  if (queryParams.artista) whereClause.artista = { [Op.iLike]: `%${queryParams.artista}%` };
-  if (queryParams.album) whereClause.album = { [Op.iLike]: `%${queryParams.album}%` };
-  if (queryParams.anio_lanzamiento) whereClause.anio_lanzamiento = queryParams.anio_lanzamiento;
-
-  // Filtro parcial para sello_discografico
-  if (queryParams.sello_discografico) {
-    whereClause.sello_discografico = { [Op.iLike]: `%${queryParams.sello_discografico}%` };
+  // Comprobar que el rol esté presente
+  if (!authUser.rol) {
+    throw new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED);
   }
 
-  // Filtrar por estado_fonograma
-  if (queryParams.estado_fonograma && ["ACTIVO", "INACTIVO"].includes(queryParams.estado_fonograma.toUpperCase())) {
-    whereClause.estado_fonograma = queryParams.estado_fonograma.toUpperCase();
+  const { query } = req;
+  const whereClause: any = {};
+
+  const rolesProductores = ["productor_principal", "productor_secundario"];
+
+  // Si el usuario es un productor, validar que la productora esté en authMaestros
+  if (rolesProductores.includes(authUser.rol.nombre_rol)) {
+    if (!req.productoraId) {
+      throw new Error("El usuario productor no tiene una productora asignada.");
+    }
+
+    // Verificar que la productora exista en los maestros del usuario
+    const productoraExiste = authMaestros.some(maestro => maestro.productora_id === req.productoraId);
+    
+    if (!productoraExiste) {
+      throw new Error("La productora seleccionada no está asociada al usuario.");
+    }
+
+    whereClause.productora_id = req.productoraId;
+  }
+
+  if (query.isrc) whereClause.isrc = { [Op.iLike]: `%${query.isrc}%` };
+  if (query.titulo) whereClause.titulo = { [Op.iLike]: `%${query.titulo}%` };
+  if (query.artista) whereClause.artista = { [Op.iLike]: `%${query.artista}%` };
+  if (query.album) whereClause.album = { [Op.iLike]: `%${query.album}%` };
+  if (query.anio_lanzamiento) whereClause.anio_lanzamiento = query.anio_lanzamiento;
+  if (query.sello_discografico) whereClause.sello_discografico = { [Op.iLike]: `%${query.sello_discografico}%` };
+  if (query.estado_fonograma && ["ACTIVO", "INACTIVO"].includes(query.estado_fonograma.toUpperCase())) {
+    whereClause.estado_fonograma = query.estado_fonograma.toUpperCase();
   }
 
   // Paginación
-  const page = queryParams.page ? parseInt(queryParams.page, 10) : 1;
-  const limit = queryParams.limit ? parseInt(queryParams.limit, 10) : 50;
+  const page = query.page ? parseInt(query.page as string, 10) : 1;
+  const limit = query.limit ? parseInt(query.limit as string, 10) : 50;
   const offset = (page - 1) * limit;
 
-  // Obtener el total de registros sin paginación para evitar errores en el conteo
+  // Obtener el total de registros sin paginación
   const total = await Fonograma.count({ where: whereClause });
 
   // Obtener datos paginados con sus relaciones

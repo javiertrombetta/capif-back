@@ -88,11 +88,11 @@ export const deleteFonograma = async (req: AuthenticatedRequest, res: Response, 
   }
 };
 
-export const listFonogramas = async (req: Request, res: Response, next: NextFunction) => {
+export const listFonogramas = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     logger.info(`${req.method} ${req.originalUrl} - Listando fonogramas.`);
 
-    const response = await repertorioService.listFonogramas(req.query);
+    const response = await repertorioService.listFonogramas(req);
 
     return res.status(200).json(response);
 

@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.168 - 21-02-2025
+## 🐛 Fixes
+
+- fix: change in create repertoires
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.165
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.165 - 20-02-2025
 ## 🐛 Fixes
 

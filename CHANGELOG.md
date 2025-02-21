@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.177 - 21-02-2025
+## 🐛 Fixes
+
+- fix: change listFonogramas for role restrictions
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.174
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.174 - 21-02-2025
 ## 🐛 Fixes
 

@@ -1396,13 +1396,21 @@ export const validateISRCBodySchema = Joi.object({
 export const createFonogramaBodySchema = Joi.object({
   productora_id: uuidSchema.optional().messages({
     "string.base": "El campo 'productora_id' debe ser una cadena de texto.",
-    "string.uuid": "El campo 'productora_id' debe ser un UUID válido.",
+    "string.guid": "El campo 'productora_id' debe ser un UUID válido.",
   }),
   cuit: Joi.string()
     .pattern(/^\d{11}$/)
     .optional()
     .messages({
       "string.pattern.base": "El campo 'cuit' debe contener exactamente 11 dígitos numéricos.",
+    }),
+  isrc: Joi.string()
+    .pattern(/^[A-Z]{2}[A-Z0-9]{3}\d{2}\d{5}$/)
+    .required()
+    .messages({
+      "string.base": "El campo 'isrc' debe ser una cadena de texto.",
+      "string.pattern.base": "El campo 'isrc' debe cumplir con el formato estándar de código ISRC.",
+      "any.required": "El campo 'isrc' es obligatorio.",
     }),
   titulo: Joi.string().min(1).required().messages({
     "string.base": "El campo 'titulo' debe ser una cadena de texto.",
@@ -1417,10 +1425,13 @@ export const createFonogramaBodySchema = Joi.object({
   album: Joi.string().allow(null, "").messages({
     "string.base": "El campo 'album' debe ser una cadena de texto.",
   }),
-  duracion: duracionSchema.required().messages({
-    "string.pattern.base": "El campo 'duracion' debe estar en formato HH:MM:SS.",
-    "any.required": "El campo 'duracion' es obligatorio.",
-  }),
+  duracion: Joi.string()
+    .pattern(/^(\d{2}):(\d{2}):(\d{2})$/)
+    .required()
+    .messages({
+      "string.pattern.base": "El campo 'duracion' debe estar en formato HH:MM:SS.",
+      "any.required": "El campo 'duracion' es obligatorio.",
+    }),
   anio_lanzamiento: Joi.number()
     .integer()
     .min(1900)

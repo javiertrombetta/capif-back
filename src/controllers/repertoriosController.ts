@@ -26,7 +26,10 @@ export const createFonograma = async (req: AuthenticatedRequest, res: Response, 
     
     const newFonograma = await repertorioService.createFonograma(req);
 
-    return res.status(201).json({ message: newFonograma.message, data: newFonograma.fonograma });
+    return res.status(201).json({
+            message: newFonograma.message,
+            data: newFonograma.data,
+        });
 
   } catch (err) {
     handleGeneralError(err, req, res, next, "Error al crear el fonograma");

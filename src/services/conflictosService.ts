@@ -42,7 +42,7 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
         throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
     }
 
-    console.log(`DEBUG: Buscando participaciones para conflicto entre ${fechaDesde.toISOString()} y ${fechaHasta.toISOString()}`);
+    // console.log(`DEBUG: Buscando participaciones para conflicto entre ${fechaDesde.toISOString()} y ${fechaHasta.toISOString()}`);
     
     // Obtener participaciones dentro del período
     const participaciones = await FonogramaParticipacion.findAll({
@@ -61,7 +61,7 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
       },
     });
 
-    console.log("DEBUG: Participaciones encontradas para conflicto:", participaciones);
+    // console.log("DEBUG: Participaciones encontradas para conflicto:", participaciones);
 
     if (participaciones.length === 0) {
         throw new Err.BadRequestError(MESSAGES.ERROR.PARTICIPACION.NOT_FOUND_PERIOD);
@@ -110,15 +110,15 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
 
       const porcentajeTotal = uniqueParticipaciones.reduce((acc, curr) => acc + curr.porcentaje_participacion, 0);
 
-      console.log(`DEBUG: Período analizado corregido: ${periodo.fecha_inicio} - ${periodo.fecha_fin}`);
-      console.log(`DEBUG: Participaciones únicas en este período: `, uniqueParticipaciones.map(p => ({
-          id: p.id_participacion,
-          porcentaje: p.porcentaje_participacion
-      })));
+      // console.log(`DEBUG: Período analizado corregido: ${periodo.fecha_inicio} - ${periodo.fecha_fin}`);
+      // console.log(`DEBUG: Participaciones únicas en este período: `, uniqueParticipaciones.map(p => ({
+      //     id: p.id_participacion,
+      //     porcentaje: p.porcentaje_participacion
+      // })));
 
-      if (porcentajeTotal > 100) {
-        console.log(`DEBUG: Se debe crear un conflicto total de: ${porcentajeTotal}%`);
-      }
+      // if (porcentajeTotal > 100) {
+      //   console.log(`DEBUG: Se debe crear un conflicto total de: ${porcentajeTotal}%`);
+      // }
 
         if (porcentajeTotal > 100) {
           const nuevoConflicto = await Conflicto.create({

@@ -50,7 +50,7 @@ Productora.init(
       validate: {
         isUUID: {
           args: 4,
-          msg: 'El ID de Productora Datos debe ser un UUID válido.',
+          msg: 'El ID de la productora debe ser un UUID válido.',
         },
       },
     },

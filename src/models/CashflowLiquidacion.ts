@@ -1,9 +1,9 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import Cashflow from './Cashflow';
+import CashflowMaestro from './CashflowMaestro';
 
-const TIPO_LIQUIDACION = ['FONOGRAMA', 'GENERAL'] as const;
-const TIPO_NACIONALIDAD = ['NO APLICA', 'NACIONAL', 'INTERNACIONAL'] as const;
+const CONCEPTO = ['FONOGRAMA', 'GENERAL'] as const;
+const NACIONALIDAD_FONOGRAMA = ['NACIONAL', 'INTERNACIONAL'] as const;
 
 class CashflowLiquidacion extends Model {
   public id_liquidacion!: string;
@@ -20,10 +20,10 @@ class CashflowLiquidacion extends Model {
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public cuentaDeLaLiquidacion?: Cashflow;
+  public maestroDeLaLiquidacion?: CashflowMaestro;
 
   public static associations: {
-    cuentaDeLaLiquidacion: Association<CashflowLiquidacion, Cashflow>;
+    maestroDeLaLiquidacion: Association<CashflowLiquidacion, CashflowMaestro>;
   };
 }
 
@@ -44,11 +44,9 @@ CashflowLiquidacion.init(
     cashflow_maestro_id: {
       type: DataTypes.UUID,
       allowNull: false,
-      unique: true,
-      validate: {
-        isInt: {
-          msg: 'El número de liquidación debe ser un entero.',
-        },
+      references: {
+        model: CashflowMaestro,
+        key: 'id_transaccion',
       },
       validate: {
         isUUID: {
@@ -62,89 +60,75 @@ CashflowLiquidacion.init(
       allowNull: false,
       validate: {
         isIn: {
-          args: [TIPO_LIQUIDACION],
+          args: [CONCEPTO],
           msg: 'El tipo de liquidación debe ser FONOGRAMA o GENERAL.',
         },
       },
     },
-    tipo_nacionalidad: {
-      type: DataTypes.ENUM(...TIPO_NACIONALIDAD),
-      allowNull: false,
-      validate: {
-        isIn: {
-          args: [TIPO_NACIONALIDAD],
-          msg: 'La nacionalidad debe ser SIN REGISTRO, NACIONAL o INTERNACIONAL.',
-        },
-      },
-    },
-    monto_positivo_destino: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: {
-        isDecimal: {
-          msg: 'El monto positivo debe ser un número decimal válido.',
-        },
-        min: {
-          args: [0],
-          msg: 'El monto positivo no puede ser negativo.',
-        },
-      },
-    },
-    monto_retencion_liquidacion: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
-      validate: {
-        isDecimal: {
-          msg: 'El monto de retención debe ser un número decimal válido.',
-        },
-        min: {
-          args: [0],
-          msg: 'El monto de retención no puede ser negativo.',
-        },
-      },
-    },
-    is_isrc_no_asignado: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
-    is_isrc_conflicto: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
-    fecha_registro_liquidacion: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-      validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de registro debe ser una fecha válida.',
-        },
-      },
-    },
-    fecha_pago: {
-      type: DataTypes.DATE,
+    nacionalidad_fonograma: {
+      type: DataTypes.ENUM(...NACIONALIDAD_FONOGRAMA),
       allowNull: true,
       validate: {
-        isDate: {
-          args: true,
-          msg: 'La fecha de pago debe ser una fecha válida.',
+        isIn: {
+          args: [NACIONALIDAD_FONOGRAMA],
+          msg: 'La nacionalidad del fonograma debe ser NACIONAL o INTERNACIONAL.',
         },
       },
     },
+    monto: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+      validate: {
+        isDecimal: {
+          msg: 'El monto debe ser un número decimal válido.',
+        },
+      },
+    },
+    isRetencion: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    cuit: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        isNumeric: {
+          msg: 'El CUIT debe contener solo números.',
+        },
+        len: {
+          args: [11, 11],
+          msg: 'El CUIT debe tener exactamente 11 dígitos.',
+        },
+      },
+    },
+    isrc: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+        len: {
+          args: [12, 12],
+          msg: 'El ISRC debe tener exactamente 12 caracteres.',
+        },
+      },
+    },
+    nombre_fonograma: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    nombre_artista: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    sello_discografico: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },    
   },
   {
     sequelize,
     modelName: 'CashflowLiquidacion',
     tableName: 'CashflowLiquidacion',
-    hooks: {
-      beforeCreate: async (liquidacion) => {
-        const maxNumero = await CashflowLiquidacion.max<number, CashflowLiquidacion>('numero_liquidacion');
-        liquidacion.numero_liquidacion = (maxNumero ?? 0) + 1; // Usar coalescencia nula para asignar 1 si maxNumero es null
-      },
-    },
     timestamps: true,
     indexes: [
       { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_liquidacion_maestro_id' },      

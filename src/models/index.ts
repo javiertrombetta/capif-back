@@ -5,7 +5,9 @@ import AuditoriaRepertorio from './AuditoriaRepertorio';
 import AuditoriaSesion from './AuditoriaSesion';
 import Cashflow from './Cashflow';
 import CashflowLiquidacion from './CashflowLiquidacion';
+import CashflowMaestro from './CashflowMaestro';
 import CashflowPago from './CashflowPago';
+import CashflowPendiente from './CashflowPendiente';
 import CashflowRechazo from './CashflowRechazo';
 import CashflowTraspaso from './CashflowTraspaso';
 import Conflicto from './Conflicto';
@@ -107,7 +109,7 @@ Usuario.hasMany(AuditoriaSesion, {
 Cashflow.belongsTo(Productora, {
   foreignKey: 'productora_id',
   as: 'productoraDeCC',
-  onDelete: 'RESTRICT',
+  onDelete: 'CASCADE',
 });
 
 Productora.hasOne(Cashflow, {
@@ -118,17 +120,51 @@ Productora.hasOne(Cashflow, {
 
 
 
-// CashflowLiquidaciones
+// CashflowMaestro
 
-CashflowLiquidacion.belongsTo(Cashflow, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'cuentaDeLaLiquidacion',
+CashflowMaestro.belongsTo(Cashflow, {
+  foreignKey: 'cashflow_id',
+  as: 'cashflow',
+  onDelete: 'CASCADE',
+});
+
+Cashflow.hasMany(CashflowMaestro, {
+  foreignKey: 'cashflow_id',
+  as: 'transacciones',
   onDelete: 'RESTRICT',
 });
 
-Cashflow.hasMany(CashflowLiquidacion, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'liquidacionesDeLaCC',
+CashflowMaestro.belongsTo(CashflowLiquidacion, {
+  foreignKey: 'liquidacion_id',
+  as: 'liquidacion',
+  onDelete: 'SET NULL',
+});
+
+CashflowMaestro.belongsTo(CashflowPago, {
+  foreignKey: 'pago_id',
+  as: 'pago',
+  onDelete: 'SET NULL',
+});
+
+CashflowMaestro.belongsTo(CashflowRechazo, {
+  foreignKey: 'rechazo_id',
+  as: 'rechazo',
+  onDelete: 'SET NULL',
+});
+
+CashflowMaestro.belongsTo(CashflowTraspaso, {
+  foreignKey: 'traspaso_id',
+  as: 'traspaso',
+  onDelete: 'SET NULL',
+});
+
+
+
+// CashflowLiquidaciones
+
+CashflowLiquidacion.belongsTo(CashflowMaestro, {
+  foreignKey: 'cashflow_maestro_id',
+  as: 'maestroDeLaLiquidacion',
   onDelete: 'RESTRICT',
 });
 
@@ -136,15 +172,9 @@ Cashflow.hasMany(CashflowLiquidacion, {
 
 // CashflowPago
 
-CashflowPago.belongsTo(Cashflow, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'ccDelPago',
-  onDelete: 'RESTRICT',
-});
-
-Cashflow.hasMany(CashflowPago, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'pagosALaCC',
+CashflowPago.belongsTo(CashflowMaestro, {
+  foreignKey: 'cashflow_maestro_id',
+  as: 'maestroDelPago',
   onDelete: 'RESTRICT',
 });
 
@@ -152,59 +182,21 @@ Cashflow.hasMany(CashflowPago, {
 
 // CashflowRechazo
 
-CashflowRechazo.belongsTo(CashflowPago, {
-  foreignKey: 'pago_id',
-  as: 'pagoDelRechazo',
+CashflowRechazo.belongsTo(CashflowMaestro, {
+  foreignKey: 'cashflow_maestro_id',
+  as: 'maestroDelRechazo',
   onDelete: 'RESTRICT',
 });
-
-CashflowPago.hasMany(CashflowRechazo, {
-  foreignKey: 'pago_id',
-  as: 'rechazosDelPago',
-  onDelete: 'RESTRICT',
-});
-
-CashflowRechazo.belongsTo(Cashflow, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'ccDelRechazo',
-  onDelete: 'RESTRICT',
-});
-
-Cashflow.hasMany(CashflowRechazo, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'rechazosDeLaCC',
-  onDelete: 'RESTRICT',
-});
-
 
 
 
 // CashflowTraspaso
 
-CashflowTraspaso.belongsTo(Cashflow, {
-  foreignKey: 'cashflow_origen_id',
-  as: 'originarioDelTraspaso',
+CashflowTraspaso.belongsTo(CashflowMaestro, {
+  foreignKey: 'cashflow_maestro_id',
+  as: 'maestroDelTraspaso',
   onDelete: 'RESTRICT',
 });
-
-Cashflow.hasMany(CashflowTraspaso, {
-  foreignKey: 'cashflow_origen_id',
-  as: 'traspasosDelOriginario',
-  onDelete: 'RESTRICT',
-});
-
-CashflowTraspaso.belongsTo(Cashflow, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'destinoDelTraspaso',
-  onDelete: 'RESTRICT',
-});
-
-Cashflow.hasMany(CashflowTraspaso, {
-  foreignKey: 'cashflow_destino_id',
-  as: 'traspasosDelDestino',
-  onDelete: 'RESTRICT',
-});
-
 
 
 
@@ -771,7 +763,9 @@ export {
   AuditoriaSesion,
   Cashflow,
   CashflowLiquidacion,
+  CashflowMaestro,
   CashflowPago,
+  CashflowPendiente,
   CashflowRechazo,
   CashflowTraspaso,
   Conflicto,

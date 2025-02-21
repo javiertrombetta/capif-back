@@ -1,6 +1,5 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import Cashflow from './Cashflow';
 import CashflowMaestro from './CashflowMaestro';
 
 const CONCEPTO = ['FONOGRAMA', 'GENERAL'] as const;
@@ -16,10 +15,10 @@ class CashflowPago extends Model {
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public ccDelPago?: Cashflow;  
+  public maestroDelPago?: CashflowMaestro;  
 
   public static associations: {
-    ccDelPago: Association<CashflowPago, Cashflow>;
+    maestroDelPago: Association<CashflowPago, CashflowMaestro>;
   };
 }
 
@@ -38,13 +37,19 @@ CashflowPago.init(
       },
     },
     cashflow_maestro_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: CashflowMaestro,
         key: 'id_transaccion',
       },
-    },   
+      validate: {
+        isUUID: {
+          args: 4,
+          msg: 'El ID de la transacción debe ser un UUID válido.',
+        },
+      },
+    },
     concepto: {
       type: DataTypes.ENUM(...CONCEPTO),
       allowNull: false,
@@ -99,10 +104,9 @@ CashflowPago.init(
     tableName: 'CashflowPago',   
     timestamps: true,
     indexes: [
-      {
-        fields: ['cashflow_maestro_id'],
-        name: 'idx_cashflow_pago_maestro_id',
-      },
+      { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_pago_maestro_id' },
+      { fields: ['cuit'], name: 'idx_cashflow_pago_cuit' },
+      { fields: ['isrc'], name: 'idx_cashflow_pago_isrc' },
     ],
   }
 );

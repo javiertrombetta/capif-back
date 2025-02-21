@@ -1,7 +1,6 @@
 import { Model, DataTypes, Association } from 'sequelize';
 import sequelize from '../config/database/sequelize';
-import { calculateLoteAndOrdenPago } from '../utils/checkModels';
-import Cashflow from './Cashflow';
+import CashflowMaestro from './CashflowMaestro';
 
 const TIPO_PAGO = ['PAGO POR ISRC', 'PAGO GENERAL'] as const;
 
@@ -18,10 +17,10 @@ class CashflowPago extends Model {
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
-  public ccDelPago?: Cashflow;  
+  public maestroDelPago?: CashflowMaestro;  
 
   public static associations: {
-    ccDelPago: Association<CashflowPago, Cashflow>;
+    maestroDelPago: Association<CashflowPago, CashflowMaestro>;
   };
 }
 
@@ -39,22 +38,8 @@ CashflowPago.init(
         },
       },
     },
-    cashflow_destino_id: {
+    cashflow_maestro_id: {
       type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: Cashflow,
-        key: 'id_cashflow',
-      },
-      validate: {
-        isUUID: {
-          args: 4,
-          msg: 'El ID de destino debe ser un UUID válido.',
-        },
-      },
-    },
-    numero_pago: {
-      type: DataTypes.INTEGER,
       allowNull: false,
       unique: true,
       validate: {
@@ -62,9 +47,15 @@ CashflowPago.init(
           msg: 'El número de pago debe ser un entero.',
         },
       },
+      validate: {
+        isUUID: {
+          args: 4,
+          msg: 'El ID de la transacción debe ser un UUID válido.',
+        },
+      },
     },
-    tipo_pago: {
-      type: DataTypes.ENUM(...TIPO_PAGO),
+    concepto: {
+      type: DataTypes.ENUM(...CONCEPTO),
       allowNull: false,
       validate: {
         isIn: {
@@ -132,21 +123,9 @@ CashflowPago.init(
     },
     timestamps: true,
     indexes: [
-      {
-        fields: ['cashflow_destino_id'],
-        name: 'idx_cashflow_pago_destino_id',
-      },
-      
-      {
-        fields: ['lote_envio', 'orden_en_lote'],
-        name: 'idx_cashflow_pago_lote_orden',
-        unique: true,
-      },
-      {
-        fields: ['numero_pago'],
-        name: 'idx_cashflow_numero_pago',
-        unique: true
-      },
+      { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_pago_maestro_id' },
+      { fields: ['cuit'], name: 'idx_cashflow_pago_cuit' },
+      { fields: ['isrc'], name: 'idx_cashflow_pago_isrc' },
     ],
   }
 );

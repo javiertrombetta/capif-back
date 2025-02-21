@@ -110,6 +110,11 @@ export const createFonograma = async (req: any) => {
     // Determinar si el usuario es un productor o un administrador
     const isAdmin = authUser.rol?.nombre_rol === "admin_principal" || authUser.rol?.nombre_rol === "admin_secundario";
 
+    // Chequear si tiene un req.productoraId
+    if(!isAdmin && !req.productoraId){
+        throw new Err.NotFoundError(`No se encontró una productora activa en la solicitud.`);
+    }
+
     // Obtener productora_id
     let productora_id = isAdmin ? bodyProductoraId : req.productoraId;
 
@@ -202,9 +207,11 @@ export const createFonograma = async (req: any) => {
     });
 
     return {
-        fonograma,
-        message: participacionResponse.message,
-        participacionesAgregadas: participacionResponse.data.participacionesAgregadas
+        message: 'Fonograma creado existosamente.',
+        data: {
+            ...fonograma.toJSON(),
+            participaciones: participacionResponse.data.participacionesAgregadas
+        }
     };
 };
 
@@ -732,12 +739,12 @@ const subirArchivoFTP = (zipPath: string, isrc: string, codigoEnvio: string, FTP
         if (err) {
           reject(new Error(`Error al subir el archivo ${zipPath}: ${err.message}`));
         } else {
-          console.log(`Archivo ${zipPath} subido correctamente como ${ftpFileName}.`);
+        //   console.log(`Archivo ${zipPath} subido correctamente como ${ftpFileName}.`);
 
           // Eliminar el archivo ZIP después de subirlo
           if (fs.existsSync(zipPath)) {
             fs.unlinkSync(zipPath);
-            console.log(`Archivo ZIP eliminado: ${zipPath}`);
+            // console.log(`Archivo ZIP eliminado: ${zipPath}`);
           }
 
           resolve();
@@ -1249,11 +1256,11 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
             },
         });
 
-        console.log("DEBUG: participacionesExistentes antes del cálculo:");
-        console.log(participacionesExistentes.map(p => ({
-            id: p.id_participacion,
-            porcentaje: p.porcentaje_participacion
-        })));
+        // console.log("DEBUG: participacionesExistentes antes del cálculo:");
+        // console.log(participacionesExistentes.map(p => ({
+        //     id: p.id_participacion,
+        //     porcentaje: p.porcentaje_participacion
+        // })));
 
         const idsUnicos = new Set();
         const porcentajeSuperpuesto = participacionesExistentes.reduce((sum, p) => {
@@ -1264,7 +1271,7 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
             return sum;
         }, 0);
 
-        console.log(`DEBUG: PORCENTAJE FINAL CORREGIDO: ${porcentajeSuperpuesto}%`);
+        // console.log(`DEBUG: PORCENTAJE FINAL CORREGIDO: ${porcentajeSuperpuesto}%`);
 
         if (porcentajeSuperpuesto > 100) {
             overlappingPeriods.push(

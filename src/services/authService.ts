@@ -100,7 +100,7 @@ export const getTargetUser = async (
 
   const limitedFilters = { ...filters, limit: 2 };
   const userData = await findUsuarios(limitedFilters);
-  console.log('USERDATA: ' + userData);
+  // console.log('USERDATA: ' + userData);
 
   if (!userData || !userData.users.length) {
     logger.warn(
@@ -235,7 +235,7 @@ export const deleteProductoraById = async (productoraId: string) => {
     where: { id_productora: productoraId },
   });
 
-  console.log(`Productora con ID ${productoraId} eliminada.`);
+  // console.log(`Productora con ID ${productoraId} eliminada.`);
 };
 
 // Eliminar documentos asociados a la productora
@@ -248,9 +248,9 @@ export const deleteProductoraDocumentos = async (productoraId: string) => {
     where: { productora_id: productoraId },
   });
 
-  console.log(
-    `Documentos asociados a la productora con ID ${productoraId} eliminados.`
-  );
+  // console.log(
+  //   `Documentos asociados a la productora con ID ${productoraId} eliminados.`
+  // );
 };
 
 // Eliminar mensajes asociados a la productora
@@ -263,9 +263,9 @@ export const deleteProductoraMensajes = async (productoraId: string) => {
     where: { productora_id: productoraId },
   });
 
-  console.log(
-    `Mensajes asociados a la productora con ID ${productoraId} eliminados.`
-  );
+  // console.log(
+  //   `Mensajes asociados a la productora con ID ${productoraId} eliminados.`
+  // );
 };
 
 // Eliminar vistas asociadas al usuario
@@ -278,7 +278,7 @@ export const deleteUsuarioVistaMaestro = async (usuarioId: string) => {
     where: { usuario_id: usuarioId },
   });
 
-  console.log(`Vistas asociadas al usuario con ID ${usuarioId} eliminadas.`);
+  // console.log(`Vistas asociadas al usuario con ID ${usuarioId} eliminadas.`);
 };
 
 // Eliminar registros de auditoría asociados al usuario
@@ -300,7 +300,7 @@ export const deleteAuditoriasByUsuario = async (usuarioId: string) => {
     where: { usuario_registrante_id: usuarioId },
   });
 
-  console.log(`Auditorías asociadas al usuario con ID ${usuarioId} eliminadas.`);
+  // console.log(`Auditorías asociadas al usuario con ID ${usuarioId} eliminadas.`);
 };
   
   

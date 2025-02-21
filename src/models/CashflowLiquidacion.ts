@@ -6,8 +6,8 @@ const CONCEPTO = ['FONOGRAMA', 'GENERAL'] as const;
 const NACIONALIDAD_FONOGRAMA = ['NACIONAL', 'INTERNACIONAL'] as const;
 
 class CashflowLiquidacion extends Model {
-  public id_liquidacion!: number;
-  public cashflow_maestro_id!: number;
+  public id_liquidacion!: string;
+  public cashflow_maestro_id!: string;
   public concepto!: (typeof CONCEPTO)[number];
   public nacionalidad_fonograma?: (typeof NACIONALIDAD_FONOGRAMA)[number];
   public monto!: number;
@@ -30,19 +30,31 @@ class CashflowLiquidacion extends Model {
 CashflowLiquidacion.init(
   {
     id_liquidacion: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
       allowNull: false,
+      validate: {
+        isUUID: {
+          args: 4,
+          msg: 'El ID de liquidación debe ser un UUID válido.',
+        },
+      },
     },
     cashflow_maestro_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
         model: CashflowMaestro,
         key: 'id_transaccion',
       },
-    }, 
+      validate: {
+        isUUID: {
+          args: 4,
+          msg: 'El ID de la transacción debe ser un UUID válido.',
+        },
+      },
+    },
     concepto: {
       type: DataTypes.ENUM(...CONCEPTO),
       allowNull: false,
@@ -119,8 +131,9 @@ CashflowLiquidacion.init(
     tableName: 'CashflowLiquidacion',
     timestamps: true,
     indexes: [
-      { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_liquidacion_maestro_id' },
-      { fields: ['cashflow_maestro_id', 'fecha_pago_liquidacion'], name: 'idx_cashflow_maestro_fecha_pago_liquidacion' },
+      { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_liquidacion_maestro_id' },      
+      { fields: ['cuit'], name: 'idx_cashflow_liquidacion_cuit' }, 
+      { fields: ['isrc'], name: 'idx_cashflow_liquidacion_isrc' },
     ],
   }
 );

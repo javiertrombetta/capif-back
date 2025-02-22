@@ -1,4 +1,15 @@
 # Changelog
+## v0.4.0 - 22-02-2025
+## 🚀 Features
+
+- feat(MINOR): add cashflow routes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.188
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.188 - 22-02-2025
 ## 🐛 Fixes
 

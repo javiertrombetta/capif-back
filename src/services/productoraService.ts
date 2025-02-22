@@ -1,11 +1,14 @@
 import { Op } from 'sequelize';
+import path from 'path';
+import { promises as fsPromises } from 'fs';
+import { UPLOAD_DIR } from '../config/paths';
+
 import { Productora, ProductoraDocumento, ProductoraDocumentoTipo, ProductoraISRC, ProductoraMensaje, ProductoraPremio, Usuario, UsuarioMaestro, UsuarioRol} from '../models'
 
 import * as MESSAGES from '../utils/messages';
 import * as Err from '../utils/customErrors';
-import path from 'path';
-import { promises as fsPromises } from 'fs';
-import { UPLOAD_DIR } from '../config/paths';
+import { generateUniqueCodigoPostulacion } from "../utils/postulationCode";
+
 
 type ProductoraISRCData = {
   productora_id: string;
@@ -590,9 +593,8 @@ export const getAllPostulaciones = async (filters: {
   };
 };
 
-// Servicio para crear una postulación a una productora
+// Servicio para crear postulaciones masivamente
 export const createPostulacionesMassively = async (startDate: Date, endDate: Date) => {
-
   const productoras = await Productora.findAll({
     where: {
       fecha_ultimo_fonograma: {
@@ -604,12 +606,13 @@ export const createPostulacionesMassively = async (startDate: Date, endDate: Dat
   if (productoras.length === 0) {
     return [];
   }
-
+    
   const postulaciones = await Promise.all(
     productoras.map(async (productora) => {
+      const codigo = await generateUniqueCodigoPostulacion();
       const newPostulacion = await ProductoraPremio.create({
         productora_id: productora.id_productora,
-        codigo_postulacion: `POST-${productora.id_productora}-${Date.now()}`,
+        codigo_postulacion: codigo,
         fecha_asignacion: new Date(),
       });
       return newPostulacion;

@@ -1,4 +1,5 @@
 import { Productora, ProductoraDocumento, ProductoraDocumentoTipo, ProductoraPremio } from '../models';
+import { generateUniqueCodigoPostulacion } from '../utils/postulationCode';
 
 const seedProductoraData = async () => {
   try {
@@ -57,15 +58,19 @@ const seedProductoraData = async () => {
     // Crear postulaciones solo para WARNER
     const fechaAsignacion = new Date();
 
+    // Generar códigos únicos de 10 caracteres para cada postulación
+    const codigo1 = await generateUniqueCodigoPostulacion();
+    const codigo2 = await generateUniqueCodigoPostulacion();
+
     await ProductoraPremio.bulkCreate([
       {
         productora_id: productoraWarner.id_productora,
-        codigo_postulacion: 'POST001',
+        codigo_postulacion: codigo1,
         fecha_asignacion: fechaAsignacion,
       },
       {
         productora_id: productoraWarner.id_productora,
-        codigo_postulacion: 'POST002',
+        codigo_postulacion: codigo2,
         fecha_asignacion: fechaAsignacion,
       },
     ]);

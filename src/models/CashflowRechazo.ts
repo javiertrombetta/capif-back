@@ -7,6 +7,7 @@ class CashflowRechazo extends Model {
   public cashflow_maestro_id!: string;
   public monto!: number;
   public referencia?: string;
+  public fecha_rechazo!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -51,19 +52,29 @@ CashflowRechazo.init(
       validate: {
         isDecimal: {
           msg: 'El monto debe ser un número decimal válido.',
-        },        
+        },
       },
     },
     referencia: {
       type: DataTypes.STRING,
       allowNull: true,
       unique: true,
-    },  
+    },
+    fecha_rechazo: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de rechazo debe ser una fecha válida.',
+        },
+      },
+    },
   },
   {
     sequelize,
     modelName: 'CashflowRechazo',
-    tableName: 'CashflowRechazo',    
+    tableName: 'CashflowRechazo',
     timestamps: true,
     indexes: [
       { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_rechazo_maestro_id' },

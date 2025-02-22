@@ -13,6 +13,7 @@ class CashflowTraspaso extends Model {
   public cuit_destino!: string;
   public porcentaje_traspaso?: number;
   public monto!: number;
+  public fecha_traspaso!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -98,7 +99,17 @@ CashflowTraspaso.init(
     monto: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
-    },    
+    },
+    fecha_traspaso: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de traspaso debe ser una fecha válida.',
+        },
+      },
+    },
   },
   {
     sequelize,

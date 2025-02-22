@@ -6,7 +6,7 @@ import CashflowPago from './CashflowPago';
 import CashflowRechazo from './CashflowRechazo';
 import CashflowTraspaso from './CashflowTraspaso';
 
-const TIPO_TRANSACCION = ['LIQUIDACION', 'PAGO', 'RECHAZO', 'TRASPASO'] as const;
+const TIPO_TRANSACCION = ['LIQUIDACION', 'PAGO', 'RECHAZO', 'TRASPASO', 'ACTUALIZACION'] as const;
 
 class CashflowMaestro extends Model {
   public id_transaccion!: string;
@@ -20,6 +20,7 @@ class CashflowMaestro extends Model {
   public saldo_resultante!: number;
   public numero_lote!: number;
   public referencia?: string;
+  public fecha_transaccion!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -142,6 +143,16 @@ CashflowMaestro.init(
       type: DataTypes.STRING,
       allowNull: true,
       unique: true,
+    },
+    fecha_transaccion: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de traspaso debe ser una fecha válida.',
+        },
+      },
     },
   },
   {

@@ -14,9 +14,11 @@ class CashflowLiquidacion extends Model {
   public isRetencion!: boolean;
   public cuit!: string;
   public isrc?: string;
+  public pasadas!: number;
   public nombre_fonograma?: string;
   public nombre_artista?: string;
   public sello_discografico?: string;
+  public fecha_liquidacion!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -112,6 +114,19 @@ CashflowLiquidacion.init(
         },
       },
     },
+    pasadas: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      validate: {
+        isInt: {
+          msg: 'El monto debe ser un número entero válido.',
+        },
+        min: {
+          args: [0],
+          msg: 'El campo pasadas debe ser un número entero positivo.',
+        },
+      },
+    },
     nombre_fonograma: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -123,7 +138,17 @@ CashflowLiquidacion.init(
     sello_discografico: {
       type: DataTypes.STRING,
       allowNull: true,
-    },    
+    },
+    fecha_liquidacion: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de liquidación debe ser una fecha válida.',
+        },
+      },
+    },
   },
   {
     sequelize,

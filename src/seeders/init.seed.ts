@@ -85,6 +85,9 @@ type VistaData = {
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
     { nombreVista: "Envío Archivo Audio", vistaSuperior: "Repertorio" },
     { nombreVista: "Territorialidad", vistaSuperior: "Repertorio" },
+    { nombreVista: "Ver Titularidad", vistaSuperior: "Repertorio" },
+    { nombreVista: "Crear Titularidad", vistaSuperior: "Repertorio" },
+    { nombreVista: "Editar Titularidad", vistaSuperior: "Repertorio" },
 
     // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
@@ -118,6 +121,8 @@ type VistaData = {
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
     { nombreVista: "Envío Archivo Audio", vistaSuperior: "Repertorio" },
     { nombreVista: "Territorialidad", vistaSuperior: "Repertorio" },
+    { nombreVista: "Ver Titularidad", vistaSuperior: "Repertorio" },
+
 
     // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
@@ -148,6 +153,8 @@ type VistaData = {
     { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
+    { nombreVista: "Ver Titularidad", vistaSuperior: "Repertorio" },
+
 
     // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
@@ -167,6 +174,8 @@ type VistaData = {
     { nombreVista: "Declaración Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Buscar Repertorio", vistaSuperior: "Repertorio" },
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
+    { nombreVista: "Ver Titularidad", vistaSuperior: "Repertorio" },
+
 
     // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },

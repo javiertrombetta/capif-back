@@ -1361,8 +1361,16 @@ export const cargarParticipacionesMasivo = async (req: any) => {
     return { message, errores };
 };
 
-export const listParticipaciones = async (fonogramaId: string, query: any) => {
+export const listParticipaciones = async (fonogramaId: string, query: any, req: any) => {
     const { fecha_inicio, fecha_hasta } = query;
+
+    // Obtener usuario autenticado
+    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    // Comprobar que el rol esté presente
+    if (!authUser.rol) {
+        throw new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED);
+    }
 
     // Verificar si el fonograma existe
     const fonograma = await Fonograma.findByPk(fonogramaId);
@@ -1378,6 +1386,23 @@ export const listParticipaciones = async (fonogramaId: string, query: any) => {
             { fecha_participacion_inicio: { [Op.lte]: fecha_hasta } },
             { fecha_participacion_hasta: { [Op.gte]: fecha_inicio } }
         ];
+    }
+
+    // Determinar si el usuario es productor y aplicar restricción
+    const rolesProductores = ["productor_principal", "productor_secundario"];
+    if (rolesProductores.includes(authUser.rol.nombre_rol)) {
+        if (!req.productoraId) {
+            throw new Err.ForbiddenError("No tiene permiso para acceder a estas participaciones.");
+        }
+
+        // Validar que el usuario pertenece a la productora asociada
+        const productoraAsociada = authMaestros.some(maestro => maestro.productora_id === req.productoraId);
+        if (!productoraAsociada) {
+            throw new Err.ForbiddenError("No tiene permiso para acceder a estas participaciones.");
+        }
+
+        // Filtrar por productora asociada
+        whereCondition["$productoraDeParticipante.id_productora$"] = req.productoraId;
     }
 
     // Obtener participaciones filtradas

@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.180 - 22-02-2025
+## 🐛 Fixes
+
+- fix: change listParticipantes in repertoires
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.177
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.177 - 21-02-2025
 ## 🐛 Fixes
 

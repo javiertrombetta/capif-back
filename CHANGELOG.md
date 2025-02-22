@@ -1,4 +1,15 @@
 # Changelog
+## v0.3.188 - 22-02-2025
+## 🐛 Fixes
+
+- fix: change create awards
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.3.185
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.3.185 - 22-02-2025
 ## 🐛 Fixes
 

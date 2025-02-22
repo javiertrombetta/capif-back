@@ -89,6 +89,8 @@ type VistaData = {
     // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
+    { nombreVista: "Crear Postulaciones", vistaSuperior: "Productoras" },
+    { nombreVista: "Purgar Postulaciones", vistaSuperior: "Productoras" },
 
     // { nombreVista: "Usuarios" },
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
@@ -120,6 +122,8 @@ type VistaData = {
     // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
+    { nombreVista: "Crear Postulaciones", vistaSuperior: "Productoras" },
+    { nombreVista: "Purgar Postulaciones", vistaSuperior: "Productoras" },
 
     // { nombreVista: "Usuarios" },
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },

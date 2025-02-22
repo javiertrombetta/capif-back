@@ -51,7 +51,7 @@ router.get(
 router.get(
   "/",
   authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal"]),
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
   celebrate({
     [Segments.QUERY]: getUsuariosQuerySchema,
   }),

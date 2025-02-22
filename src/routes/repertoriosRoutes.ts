@@ -159,7 +159,7 @@ router.post(
 router.get(
   "/:id/shares",
   authenticate,
-  authorizeRoles(["admin_principal"]),
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
   celebrate({
     [Segments.PARAMS]: listParticipacionesParamsSchema,
     [Segments.QUERY]: listParticipacionesQuerySchema,

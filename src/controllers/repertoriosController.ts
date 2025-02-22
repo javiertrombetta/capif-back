@@ -221,11 +221,11 @@ export const cargarParticipacionesMasivo = async (req: AuthenticatedRequest, res
   }
 };
 
-export const listParticipaciones = async (req: Request, res: Response, next: NextFunction) => {
+export const listParticipaciones = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     logger.info(`${req.method} ${req.originalUrl} - Listando participaciones para el fonograma con ID: ${req.params.id}`);
 
-    const response = await repertorioService.listParticipaciones(req.params.id, req.query);
+    const response = await repertorioService.listParticipaciones(req.params.id, req.query, req);
 
     return res.status(200).json(response);
 

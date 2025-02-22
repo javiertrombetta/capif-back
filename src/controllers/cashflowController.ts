@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
+import { Parser as Json2CsvParser } from 'json2csv';
+import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import csvParser from 'csv-parser';
-import { Parser as Json2CsvParser } from 'json2csv';
 import path from 'path';
 
-import { Conflicto, Fonograma, FonogramaParticipacion, Productora } from '../models';
+import { Conflicto, Fonograma, FonogramaParticipacion, Productora, Cashflow, CashflowMaestro, CashflowLiquidacion, CashflowPendiente } from '../models';
 
 
 export const processReproductions = async (req: Request, res: Response) => {
@@ -124,28 +125,83 @@ export const processReproductions = async (req: Request, res: Response) => {
   }
 };
 
-// export const importSettlements = (req: Request, res: Response) => res.sendStatus(200);
-// export const validateSettlements = (req: Request, res: Response) => res.sendStatus(200);
-export const processSettlements = (req: Request, res: Response) => res.sendStatus(200);
-export const getAllSettlements = (req: Request, res: Response) => res.sendStatus(200);
-export const getSettlementById = (req: Request, res: Response) => res.sendStatus(200);
-export const deleteSettlement = (req: Request, res: Response) => res.sendStatus(200);
+export const processSettlements = async (req: Request, res: Response) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: 'No se ha subido ningún archivo' });
+        }
+        
+        const filePath = req.file.path;
+        const results: any[] = [];
+        const registrosNoProcesados: any[] = [];
 
-// export const validateTransfers = (req: Request, res: Response) => res.sendStatus(200);
-export const createTransfers = (req: Request, res: Response) => res.sendStatus(200);
-export const getAllTransfers = (req: Request, res: Response) => res.sendStatus(200);
-export const getTransferById = (req: Request, res: Response) => res.sendStatus(200);
-export const deleteTransfer = (req: Request, res: Response) => res.sendStatus(200);
+        fs.createReadStream(filePath)
+            .pipe(csvParser({ separator: '\t' }))
+            .on('data', (row) => results.push(row))
+            .on('end', async () => {
+                for (const row of results) {
+                    const cuit = row.CUIT?.trim() || '00000000000';
+                    const monto = parseFloat(row.Liquidación.replace(',', '.'));
+                    const retencion = row.Retención.trim().toLowerCase() === 'si';
+                    
+                    const isFonograma = 'ISRC' in row;
+                    const concepto = isFonograma ? 'FONOGRAMA' : 'GENERAL';
+                    const nacionalidadFonograma = isFonograma && row.ISRC.startsWith('AR') ? 'NACIONAL' : 'INTERNACIONAL';
+                    const isrc = isFonograma ? row.ISRC.trim() : null;
+                    
+                    const productora = await Productora.findOne({ where: { cuit } });
+                    if (!productora) {
+                        registrosNoProcesados.push(row);
+                        continue;
+                    }
+                    
+                    const cashflow = await Cashflow.findOne({ where: { productora_id: productora.id_productora } });
+                    if (!cashflow) {
+                        registrosNoProcesados.push(row);
+                        continue;
+                    }
+                    
+                    const cashflowMaestro = await CashflowMaestro.create({
+                        id_transaccion: uuidv4(),
+                        cashflow_id: cashflow.id_cashflow,
+                        tipo_transaccion: 'LIQUIDACION',
+                        monto,
+                        saldo_resultante: parseFloat(cashflow.saldo_actual_productora.toString()) + monto,
+                        numero_lote: Date.now(),
+                    });
+                    
+                    await CashflowLiquidacion.create({
+                        id_liquidacion: uuidv4(),
+                        cashflow_maestro_id: cashflowMaestro.id_transaccion,
+                        concepto,
+                        nacionalidad_fonograma: nacionalidadFonograma,
+                        monto,
+                        isRetencion: retencion,
+                        cuit,
+                        isrc,
+                        nombre_fonograma: row['Nombre del fonograma']?.trim() || null,
+                        nombre_artista: row['Nombre del artista']?.trim() || null,
+                        sello_discografico: row['Sello']?.trim() || null,
+                    });
+                    
+                    cashflow.saldo_actual_productora = cashflowMaestro.saldo_resultante;
+                    await cashflow.save();
+                }
+                
+                if (registrosNoProcesados.length) {
+                    return res.status(207).json({ message: 'Algunos registros no pudieron procesarse', registrosNoProcesados });
+                }
+                return res.status(200).json({ message: 'Liquidaciones procesadas correctamente' });
+            });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Error procesando liquidaciones' });
+    }
+};
 
-// export const validatePayments = (req: Request, res: Response) => res.sendStatus(200);
+export const pendingSettlements = (req: Request, res: Response) => res.sendStatus(200);
+export const processTransfers = (req: Request, res: Response) => res.sendStatus(200);
 export const processPayments = (req: Request, res: Response) => res.sendStatus(200);
-export const getAllPayments = (req: Request, res: Response) => res.sendStatus(200);
-export const getPaymentById = (req: Request, res: Response) => res.sendStatus(200);
-export const deletePayment = (req: Request, res: Response) => res.sendStatus(200);
-
-// export const approveRejection = (req: Request, res: Response) => res.sendStatus(200);
-// export const reverseRejection = (req: Request, res: Response) => res.sendStatus(200);
 export const processRejections = (req: Request, res: Response) => res.sendStatus(200);
-export const getAllRejections = (req: Request, res: Response) => res.sendStatus(200);
-export const getRejectionById = (req: Request, res: Response) => res.sendStatus(200);
-export const deleteRejection = (req: Request, res: Response) => res.sendStatus(200);
+export const listTransactions = (req: Request, res: Response) => res.sendStatus(200);
+export const updateCashflow = (req: Request, res: Response) => res.sendStatus(200);

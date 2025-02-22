@@ -18,14 +18,14 @@ router.post('/reproductions',
 router.post('/settlements', authenticate, authorizeRoles(['admin_principal', 'admin_secundario']), cashflowController.processSettlements);
 router.get('/settlements/pending', authenticate, authorizeRoles(['admin_principal', 'admin_secundario']), cashflowController.pendingSettlements);
 
-// Traspasos (Transfers)
-router.post('/transfers', authenticate, authorizeRoles(['admin_principal', 'admin_secundario']), cashflowController.processTransfers);
-
 // Pagos (Payments)
 router.post('/payments', authenticate, authorizeRoles(['admin_principal', 'admin_secundario']), cashflowController.processPayments);
 
 // Rechazos (Rejections)
 router.post('/rejections', authenticate, authorizeRoles(['admin_principal', 'admin_secundario']), cashflowController.processRejections);
+
+// Traspasos (Transfers)
+router.post('/transfers', authenticate, authorizeRoles(['admin_principal', 'admin_secundario']), cashflowController.processTransfers);
 
 // General (Transacciones)
 router.get('/', authenticate, authorizeRoles(['admin_principal', 'admin_secundario', 'productor_principal', 'productor_secundario']), cashflowController.listTransactions);

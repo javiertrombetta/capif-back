@@ -12,6 +12,7 @@ class CashflowPago extends Model {
   public isRetencion!: boolean;
   public cuit!: string;
   public isrc?: string;
+  public fecha_pago!: Date;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 
@@ -96,7 +97,17 @@ CashflowPago.init(
           msg: 'El ISRC debe tener exactamente 12 caracteres.',
         },
       },
-    },    
+    },
+    fecha_pago: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      validate: {
+        isDate: {
+          args: true,
+          msg: 'La fecha de pago debe ser una fecha válida.',
+        },
+      },
+    },
   },
   {
     sequelize,

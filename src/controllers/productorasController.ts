@@ -500,13 +500,18 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
 export const createPostulaciones = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { startDate, endDate } = req.query;
+    
+    // Mostrar en consola el valor y tipo de startDate y endDate
+    console.log("Valor de startDate:", startDate, "Tipo:", typeof startDate);
+    console.log("Valor de endDate:", endDate, "Tipo:", typeof endDate);
 
     if (!startDate || !endDate) {
       return res.status(400).json({ error: 'Las fechas startDate y endDate son obligatorias.' });
     }
 
-    const start = parseISO(startDate as string);
-    const end = parseISO(endDate as string);
+    // Si startDate/endDate ya son Date, usarlos directamente; de lo contrario, intentar parsearlos
+    const start = startDate instanceof Date ? startDate : parseISO(String(startDate));
+    const end = endDate instanceof Date ? endDate : parseISO(String(endDate));
 
     if (!isValid(start) || !isValid(end)) {
       return res.status(400).json({ error: 'Las fechas proporcionadas no son válidas.' });
@@ -520,7 +525,7 @@ export const createPostulaciones = async (req: Request, res: Response, next: Nex
 
     logger.info(`${req.method} ${req.originalUrl} - Total de postulaciones creadas: ${createdPostulaciones.length}.`);
     res.status(201).json({ message: 'Postulaciones creadas exitosamente.', total: createdPostulaciones.length });
-
+    
   } catch (err) {
     handleGeneralError(err, req, res, next, 'Error al crear postulaciones masivamente');
   }

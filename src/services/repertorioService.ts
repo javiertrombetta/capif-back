@@ -158,6 +158,12 @@ export const createFonograma = async (req: any) => {
         tipo_auditoria: "ALTA",
         detalle: `Se creó el fonograma con título '${titulo}' y ID '${fonograma.id_fonograma}'`,
     });
+
+    // Actualizar la fecha_ultimo_fonograma en la Productora
+    await Productora.update(
+        { fecha_ultimo_fonograma: new Date() },
+        { where: { id_productora: productora_id } }
+    );
     
     // Registrar las participaciones del fonograma
     const participacionResponse = await addParticipacionToFonograma(fonograma.id_fonograma, req);
@@ -285,6 +291,7 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                             sello_discografico: selloFinal,
                             is_dominio_publico: currentYear - anio_publicacion > 70,
                             estado_fonograma: "ACTIVO",
+                            fecha_ultimo_fonograma: new Date(),
                         });
 
                         await registrarAuditoria({
@@ -293,6 +300,12 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                             tipo_auditoria: "ALTA",
                             detalle: `Se creó el fonograma '${titulo}' con ISRC '${isrc}'`,
                         });
+
+                        // Actualizar la fecha_ultimo_fonograma en la Productora
+                        await Productora.update(
+                            { fecha_ultimo_fonograma: new Date() },
+                            { where: { id_productora: productora.id_productora } }
+                        );
 
                         // Registrar en FonogramaMaestro
                         await FonogramaMaestro.create({

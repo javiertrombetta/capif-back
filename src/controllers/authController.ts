@@ -127,7 +127,9 @@ export const login = async (
       throw new Err.UnauthorizedError(MESSAGES.ERROR.VALIDATION.PASSWORD_INCORRECT);
     }
 
+    // Reiniciar los intentos fallidos y actualizar la fecha del último inicio de sesión
     targetUser.intentos_fallidos = 0;
+    targetUser.fecha_ultimo_inicio_sesion = new Date();
     await targetUser.save();
 
     // Preparar los datos de las productoras
@@ -178,7 +180,7 @@ export const login = async (
     }
 
     // Si la IP es ::1 (IPv6 localhost), convertirla a 127.0.0.1
-    const ip = req.ip || "IP desconocida";    
+    const ip = req.ip || "IP desconocida";
     return ip === "::1" ? "127.0.0.1" : ip; // Usa req.ip si no hay X-Forwarded-For. Si todo es undefined, devuelve IP desconocida
     };
 

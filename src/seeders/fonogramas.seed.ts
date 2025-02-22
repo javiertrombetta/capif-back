@@ -22,7 +22,7 @@ const generateISRC = async (productoraId: string): Promise<string> => {
   return `AR${productoraISRC.codigo_productora}${currentYear}${numeroCorrelativo}`;
 };
 
-const generateRandomPercentage = () => Math.floor(Math.random() * 101) + 1;
+const generateRandomPercentage = () => Math.floor(Math.random() * 100) + 1;
 
 const seedFonogramas = async () => {
   try {
@@ -74,6 +74,12 @@ const seedFonogramas = async () => {
         cantidad_conflictos_activos: 0,        
         archivo_audio_id: null,  
       });
+
+      // Actualizar la fecha_ultimo_fonograma en la productora a la fecha actual
+      await Productora.update(
+        { fecha_ultimo_fonograma: new Date() },
+        { where: { id_productora: productora.id_productora } }
+      );
 
       // Registrar en FonogramaEnvio con la fecha de hoy
       await FonogramaEnvio.create({

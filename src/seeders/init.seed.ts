@@ -1,9 +1,58 @@
+import bcrypt from "bcrypt";
+
 import {
+  Usuario,
   UsuarioRol,
   ProductoraDocumentoTipo,
   FonogramaTerritorio,
   UsuarioVista,
+  Productora,
+  Cashflow,
 } from "../models";
+
+const createAdminPrincipal = async () => {
+  try {
+    const adminRole = await UsuarioRol.findOne({ where: { nombre_rol: "admin_principal" } });
+
+    if (!adminRole) {
+      throw new Error("El rol admin_principal no está definido en la base de datos.");
+    }
+
+    if (!process.env.ADMIN_PRINCIPAL_EMAIL || !process.env.ADMIN_PRINCIPAL_PASSWORD) {
+      throw new Error("Las variables ADMIN_PRINCIPAL_EMAIL y ADMIN_PRINCIPAL_PASSWORD deben estar definidas en el .env.");
+    }
+
+    // Validación de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(process.env.ADMIN_PRINCIPAL_EMAIL)) {
+      throw new Error("El email definido en ADMIN_PRINCIPAL_EMAIL no es válido.");
+    }
+
+    const adminExists = await Usuario.findOne({ where: { email: process.env.ADMIN_PRINCIPAL_EMAIL } });
+
+    if (!adminExists) {
+      const hashedPassword = await bcrypt.hash(process.env.ADMIN_PRINCIPAL_PASSWORD, 10);
+
+      await Usuario.create({
+        nombre: "Administrador",
+        apellido: "Principal",
+        email: process.env.ADMIN_PRINCIPAL_EMAIL,
+        clave: hashedPassword,
+        tipo_registro: "HABILITADO",
+        is_bloqueado: false,
+        intentos_fallidos: 0,
+        fecha_ultimo_cambio_registro: new Date(),
+        rol_id: adminRole.id_rol,
+      });
+
+      console.log("Administrador Principal para CAPIF creado correctamente.");
+    } else {
+      console.log("El usuario Administrador Principal para CAPIF ya existe.");
+    }
+  } catch (error) {
+    console.error("Error al crear el usuario Administrador Principal para CAPIF:", error);
+  }
+};
 
 const rolesData = [
   { nombre_rol: "admin_principal" },
@@ -40,6 +89,51 @@ const paisesData = [
   { nombre_pais: "Venezuela", codigo_iso: "VE", is_activo: false },
   { nombre_pais: "Estados Unidos", codigo_iso: "US", is_activo: false },
   { nombre_pais: "Gran Bretaña", codigo_iso: "GB", is_activo: false },
+];
+
+const productorasIniciales = [
+  {
+    nombre_productora: "No Asignados",
+    tipo_persona: "FISICA",
+    cuit_cuil: "00000000000",
+    email: "noasignados@capif.org",
+    calle: "No Asignado",
+    numero: "0",
+    ciudad: "No Asignado",
+    localidad: "No Asignado",
+    provincia: "No Asignado",
+    codigo_postal: "0000",
+    telefono: "0000000000",
+    nacionalidad: "No Asignado",
+    alias_cbu: "noasignados",
+    cbu: "0000000000000000000000",
+    cantidad_fonogramas: 0,
+    razon_social: null,
+    apellidos_representante: null,
+    nombres_representante: null,
+    cuit_representante: null,
+  },
+  {
+    nombre_productora: "Conflictos",
+    tipo_persona: "FISICA",
+    cuit_cuil: "99999999999",
+    email: "conflictos@capif.org",
+    calle: "Conflicto",
+    numero: "0",
+    ciudad: "Conflicto",
+    localidad: "Conflicto",
+    provincia: "Conflicto",
+    codigo_postal: "9999",
+    telefono: "9999999999",
+    nacionalidad: "Conflicto",
+    alias_cbu: "conflictos",
+    cbu: "9999999999999999999999",
+    cantidad_fonogramas: 0,
+    razon_social: null,
+    apellidos_representante: null,
+    nombres_representante: null,
+    cuit_representante: null,
+  }
 ];
 
 type VistaData = {
@@ -200,6 +294,31 @@ const initSeed = async () => {
 
     const vistas = await vistasData();
     await UsuarioVista.bulkCreate(vistas);
+
+    await createAdminPrincipal();
+
+    // Insertar productoras iniciales
+    for (const data of productorasIniciales) {
+      const [productora, created] = await Productora.findOrCreate({
+        where: { cuit_cuil: data.cuit_cuil },
+        defaults: data,
+      });
+
+      if (created) {
+        console.log(`Productora creada: ${productora.nombre_productora}`);
+      } else {
+        console.log(`Productora ya existente: ${productora.nombre_productora}`);
+      }
+
+      // Crear cashflow asociado si no existe
+      await Cashflow.findOrCreate({
+        where: { productora_id: productora.id_productora },
+        defaults: {
+          productora_id: productora.id_productora,
+          saldo_actual_productora: 0,
+        },
+      });
+    }
 
     console.log("[SEED] init.seed completado con éxito.");
   } catch (error) {

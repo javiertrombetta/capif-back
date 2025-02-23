@@ -241,7 +241,7 @@ export const ERROR = {
     NOT_FOUND_PERIOD: 'No hay participaciones para este fonograma en el período seleccionado.',
     ALREADY_EXISTS: 'La participación ya existe en el fonograma.',
   },
-  CUENTA_CORRIENTE: {
+  CASHFLOW: {
     NOT_FOUND: 'La cuenta corriente no fue encontrada.',
     INVALID_SALDO: 'El saldo proporcionado es inválido.',
   },
@@ -415,6 +415,22 @@ export const EMAIL_BODY = {
     <p>Se han adjuntado documentos enviados por el participante <strong>${nombre_participante}</strong> en relación con el conflicto <strong>${conflicto_id}</strong>.</p>
     <p>Por favor, revise los archivos adjuntos.</p>
     <p>Atte.,</p>
+    <p><b>CAPIF</b></p>
+  `,
+  PAGO_PROCESADO: (nombreProductora: string, monto: number, referencia: string | null, fecha: string) => `
+    <p>Estimado/a ${nombreProductora},</p>
+    <p>Se ha registrado un pago de <strong>${monto}</strong> para su productora.</p>
+    <p><strong>Referencia:</strong> ${referencia || 'N/A'}</p>
+    <p><strong>Fecha:</strong> ${fecha}</p>
+    <p>Saludos cordiales,</p>
+    <p><b>CAPIF</b></p>
+  `,
+  RECHAZO_PAGO: (nombreProductora: string, monto: number, referencia: string | null, fecha: string) => `
+    <p>Estimado/a ${nombreProductora},</p>
+    <p>Se ha registrado un <strong>rechazo de pago</strong> de <strong>${monto}</strong> para su productora.</p>
+    <p><strong>Referencia:</strong> ${referencia || 'N/A'}</p>
+    <p><strong>Fecha:</strong> ${fecha}</p>
+    <p>Saludos cordiales,</p>
     <p><b>CAPIF</b></p>
   `,
 };

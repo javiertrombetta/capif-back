@@ -1,4 +1,15 @@
 # Changelog
+## v0.4.3 - 23-02-2025
+## 🚀 Features
+
+- feat: add cashflow services and swagger
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.4.0
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.4.0 - 22-02-2025
 ## 🚀 Features
 

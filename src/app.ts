@@ -65,7 +65,11 @@ app.use(express.json());
 app.use(cookieParser());
 app.set('trust proxy', 1);
 app.use(helmet());
-const allowedOrigins = env === 'development' ? true : [process.env.FRONTEND_URL];
+const allowedOrigins =
+  env === 'development' || env === 'production.local'
+    ? true
+    : [process.env.FRONTEND_URL];
+
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -108,14 +112,20 @@ app.use('/downloads', express.static(path.join(UPLOAD_DIR, 'csv')));
 app.use(`/${globalPrefix}`, router);
 
 
-const connectToDatabase = async () => {
-  try {
-    await sequelize.authenticate();
-    logger.info('Conexión exitosa a la base de datos');
-  } catch (err) {
-    logger.error('Error de conexión o sincronización con la base de datos:', err);
-    throw new Error('Error de conexión con la base de datos');
+const connectToDatabase = async (retries = 10, delay = 5000) => {
+  let attempts = 0;
+  while (attempts < retries) {
+    try {
+      await sequelize.authenticate();
+      logger.info('Conexión exitosa a la base de datos');
+      return;
+    } catch (err) {
+      attempts++;
+      logger.warn(`Intento ${attempts} de conexión a la base de datos fallido. Reintentando en ${delay / 1000} segundos...`);
+      await new Promise((res) => setTimeout(res, delay));
+    }
   }
+  throw new Error('No se pudo conectar a la base de datos después de múltiples intentos');
 };
 
 const startServer = () => {

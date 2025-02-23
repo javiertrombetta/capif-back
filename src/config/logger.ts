@@ -14,28 +14,26 @@ const logger = createLogger({
     new DailyRotateFile({
       filename: 'logs/error-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
-      zippedArchive: true, // Comprime logs viejos automáticamente
-      maxSize: '10m', // Máximo 10MB por archivo
-      maxFiles: '2d', // Guarda solo logs de los últimos 2 días
+      zippedArchive: true,
+      maxSize: '10m',
+      maxFiles: '2d',
       level: 'error',
     }),
     new DailyRotateFile({
       filename: 'logs/combined-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
-      zippedArchive: true, // Comprime logs viejos automáticamente
-      maxSize: '20m', // Máximo 20MB por archivo
-      maxFiles: '2d', // Guarda solo logs de los últimos 2 días
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '2d',
     }),
   ],
 });
 
-// Solo mostrar logs en consola en entornos que no sean producción
-if (!process.env.NODE_ENV?.startsWith('production')) {
-  logger.add(
-    new transports.Console({
-      format: format.combine(format.colorize(), format.simple()),
-    })
-  );
-}
+logger.add(
+  new transports.Console({
+    format: format.combine(format.colorize(), format.simple()),
+  })
+);
+
 
 export default logger;

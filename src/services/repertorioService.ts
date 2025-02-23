@@ -12,7 +12,7 @@ import { UsuarioResponse } from "../interfaces/UsuarioResponse";
 import { Conflicto, ConflictoParte, Fonograma, FonogramaArchivo, FonogramaEnvio, FonogramaMaestro, FonogramaParticipacion, FonogramaTerritorio, FonogramaTerritorioMaestro, Productora, ProductoraISRC } from "../models";
 
 import { getAuthenticatedUser, getTargetUser } from "./authService";
-import { registrarAuditoria } from "./auditService";
+import { registrarAuditoria, registrarRepertorio } from "./auditService";
 
 import * as MESSAGES from "../utils/messages";
 import * as Err from "../utils/customErrors";
@@ -159,6 +159,13 @@ export const createFonograma = async (req: any) => {
         detalle: `Se creó el fonograma con título '${titulo}' y ID '${fonograma.id_fonograma}'`,
     });
 
+    await registrarRepertorio({
+        usuario_registrante_id: authUser.id_usuario,
+        fonograma_id: fonograma.id_fonograma,
+        tipo_auditoria: "ALTA",
+        detalle: `Se registró el fonograma con ISRC '${isrc}', título '${titulo}', y productora '${productora_id}'.`,
+    });
+
     // Actualizar la fecha_ultimo_fonograma en la Productora
     await Productora.update(
         { fecha_ultimo_fonograma: new Date() },
@@ -297,6 +304,13 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                         await registrarAuditoria({
                             usuario_originario_id: authUser.id_usuario,
                             modelo: "Fonograma",
+                            tipo_auditoria: "ALTA",
+                            detalle: `Se creó el fonograma '${titulo}' con ISRC '${isrc}'`,
+                        });
+
+                        await registrarRepertorio({
+                            usuario_registrante_id: authUser.id_usuario,
+                            fonograma_id: fonograma.id_fonograma,
                             tipo_auditoria: "ALTA",
                             detalle: `Se creó el fonograma '${titulo}' con ISRC '${isrc}'`,
                         });
@@ -494,6 +508,16 @@ export const updateFonograma = async (id: string, req: any) => {
         throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
     }
 
+    // Guardar valores antes de la actualización para auditoría
+    const cambiosRealizados: string[] = [];
+    if (titulo && titulo !== fonograma.titulo) cambiosRealizados.push(`Título: '${fonograma.titulo}' → '${titulo}'`);
+    if (artista && artista !== fonograma.artista) cambiosRealizados.push(`Artista: '${fonograma.artista}' → '${artista}'`);
+    if (album && album !== fonograma.album) cambiosRealizados.push(`Álbum: '${fonograma.album}' → '${album}'`);
+    if (duracion && duracion !== fonograma.duracion) cambiosRealizados.push(`Duración: '${fonograma.duracion}' → '${duracion}'`);
+    if (anio_lanzamiento && anio_lanzamiento !== fonograma.anio_lanzamiento) cambiosRealizados.push(`Año de lanzamiento: '${fonograma.anio_lanzamiento}' → '${anio_lanzamiento}'`);
+    if (sello_discografico && sello_discografico !== fonograma.sello_discografico) cambiosRealizados.push(`Sello discográfico: '${fonograma.sello_discografico}' → '${sello_discografico}'`);
+    if (estado_fonograma && estado_fonograma !== fonograma.estado_fonograma) cambiosRealizados.push(`Estado: '${fonograma.estado_fonograma}' → '${estado_fonograma}'`);
+
     // Actualizar los datos del fonograma
     await fonograma.update({
       titulo,
@@ -505,13 +529,23 @@ export const updateFonograma = async (id: string, req: any) => {
       estado_fonograma,
     });
 
-    await registrarAuditoria({
-        usuario_originario_id: authUser.id_usuario,
-        usuario_destino_id: null,
-        modelo: "Fonograma",
-        tipo_auditoria: "CAMBIO",
-        detalle: `Se modificaron los datos del fonograma ID: '${fonograma.id_fonograma}'`,
-    });
+    // Registrar cambios en Auditoría de Fonogramas
+    if (cambiosRealizados.length > 0) {
+        await registrarAuditoria({
+            usuario_originario_id: authUser.id_usuario,
+            usuario_destino_id: null,
+            modelo: "Fonograma",
+            tipo_auditoria: "CAMBIO",
+            detalle: `Se modificaron los datos del fonograma ID: '${fonograma.id_fonograma}'. Cambios: ${cambiosRealizados.join(", ")}.`,
+        });
+
+        await registrarRepertorio({
+            usuario_registrante_id: authUser.id_usuario,
+            fonograma_id: fonograma.id_fonograma,
+            tipo_auditoria: "CAMBIO",
+            detalle: `Se modificaron los datos del fonograma con ISRC '${fonograma.isrc}'. Cambios: ${cambiosRealizados.join(", ")}.`,
+        });
+    }
 
     // Registrar la actualización en FonogramaMaestro
     await FonogramaMaestro.create({
@@ -597,6 +631,13 @@ export const deleteFonograma = async (id: string, req: any) => {
             detalle: `El fonograma con ID '${id}', sus conflictos y todas sus asociaciones han sido eliminados.`,
         });
 
+        await registrarRepertorio({
+            usuario_registrante_id: authUser.id_usuario,
+            fonograma_id: id,
+            tipo_auditoria: "BAJA",
+            detalle: `Se eliminó el fonograma con ISRC '${fonograma.isrc}' y todas sus asociaciones.`,
+        });
+
         return {
             message: `El fonograma con ID '${id}', sus conflictos y asociaciones han sido eliminados exitosamente.`,
         };
@@ -651,6 +692,13 @@ export const addArchivoToFonograma = async (id: string, req: any) => {
           detalle: `Se actualizó el archivo de audio para el fonograma con ISRC: '${fonograma.isrc}'`,
       });
 
+      await registrarRepertorio({
+          usuario_registrante_id: authUser.id_usuario,
+          fonograma_id: fonograma.id_fonograma,
+          tipo_auditoria: "CAMBIO",
+          detalle: `Se actualizó el archivo de audio para el fonograma con ISRC: '${fonograma.isrc}'`,
+      });
+
       // Registrar el cambio en FonogramaMaestro
       await FonogramaMaestro.create({
           fonograma_id: id,
@@ -674,6 +722,13 @@ export const addArchivoToFonograma = async (id: string, req: any) => {
           usuario_originario_id: authUser.id_usuario,
           usuario_destino_id: null,
           modelo: "FonogramaArchivo",
+          tipo_auditoria: "ALTA",
+          detalle: `Se registró el archivo de audio para el fonograma con ISRC: '${fonograma.isrc}'`,
+      });
+
+      await registrarRepertorio({
+          usuario_registrante_id: authUser.id_usuario,
+          fonograma_id: fonograma.id_fonograma,
           tipo_auditoria: "ALTA",
           detalle: `Se registró el archivo de audio para el fonograma con ISRC: '${fonograma.isrc}'`,
       });
@@ -1261,6 +1316,13 @@ export const addParticipacionToFonograma = async (fonogramaId: string, req: any)
             detalle: `Se registró la participación de la productora con CUIT '${cuit}' para el fonograma con ID '${fonogramaId}'`,
         });
 
+        await registrarRepertorio({
+            usuario_registrante_id: authUser.id_usuario,
+            fonograma_id: fonogramaId,
+            tipo_auditoria: "ALTA",
+            detalle: `Se agregó la participación de la productora con CUIT '${cuit}' con ${porcentaje_participacion}% de titularidad para el fonograma con ISRC '${fonograma.isrc}'`,
+        });
+
         participacionesGuardadas.push({
             id: nuevaParticipacion.id_participacion,
             cuit,
@@ -1361,6 +1423,27 @@ export const cargarParticipacionesMasivo = async (req: any) => {
                 if (resultadoParticipacion.message.includes("se supera el 100%")) {
                     overlappingPeriods.push(resultadoParticipacion.message);
                 }
+
+                // Obtener el fonograma para registrar en la auditoría de repertorios
+                const fonograma = await Fonograma.findOne({ where: { isrc: row.isrc } });
+
+                if (fonograma) {
+                    await registrarAuditoria({
+                        usuario_originario_id: authUser.id_usuario,
+                        usuario_destino_id: null,
+                        modelo: "FonogramaParticipacion",
+                        tipo_auditoria: "ALTA",
+                        detalle: `Se registró la participación de la productora con CUIT '${row.cuit}' con ${row.porcentaje_titularidad}% en el fonograma con ISRC '${row.isrc}'.`,
+                    });
+
+                    await registrarRepertorio({
+                        usuario_registrante_id: authUser.id_usuario,
+                        fonograma_id: fonograma.id_fonograma,
+                        tipo_auditoria: "ALTA",
+                        detalle: `Se agregó la participación de la productora con CUIT '${row.cuit}' con ${row.porcentaje_titularidad}% de titularidad para el fonograma con ISRC '${row.isrc}'`,
+                    });
+                }
+
             } catch (err: any) {
                 errores.push(`Error en fila ${index + 1}: ${err.message}`);
             }
@@ -1522,6 +1605,18 @@ export const updateParticipacion = async (fonogramaId: string, participacionId: 
         warningMessage = `Advertencia: El total de participación en el período ${fecha_participacion_inicio} - ${fecha_participacion_hasta} ahora es ${totalParticipacion}%, lo que supera el 100%.`;
     }
 
+    // Guardar datos previos para la auditoría
+    const cambiosRealizados: string[] = [];
+    if (porcentaje_participacion !== participacion.porcentaje_participacion) {
+        cambiosRealizados.push(`Porcentaje: '${participacion.porcentaje_participacion}%' → '${porcentaje_participacion}%'`);
+    }
+    if (fecha_participacion_inicio !== participacion.fecha_participacion_inicio.toISOString().split('T')[0]) {
+        cambiosRealizados.push(`Fecha inicio: '${participacion.fecha_participacion_inicio.toISOString().split('T')[0]}' → '${fecha_participacion_inicio}'`);
+    }
+    if (fecha_participacion_hasta !== participacion.fecha_participacion_hasta.toISOString().split('T')[0]) {
+        cambiosRealizados.push(`Fecha fin: '${participacion.fecha_participacion_hasta.toISOString().split('T')[0]}' → '${fecha_participacion_hasta}'`);
+    }
+
     // Actualizar la participación
     await participacion.update({
         porcentaje_participacion,
@@ -1543,7 +1638,14 @@ export const updateParticipacion = async (fonogramaId: string, participacionId: 
         modelo: "FonogramaParticipacion",
         tipo_auditoria: "CAMBIO",
         detalle: `Se actualizó la participación de la productora con CUIT '${participacion.productoraDeParticipante?.cuit_cuil}' para el fonograma con ID '${fonogramaId}'`,
-    });  
+    });
+
+    await registrarRepertorio({
+        usuario_registrante_id: authUser.id_usuario,
+        fonograma_id: fonograma.id_fonograma,
+        tipo_auditoria: "CAMBIO",
+        detalle: `Se actualizó la participación de la productora con CUIT '${participacion.productoraDeParticipante?.cuit_cuil}' en el fonograma con ISRC '${fonograma.isrc}'. Cambios: ${cambiosRealizados.join(", ")}`,
+    });
 
     return {
         message: "Participación actualizada exitosamente.",
@@ -1595,6 +1697,13 @@ export const deleteParticipacion = async (fonogramaId: string, participacionId: 
         detalle: `Se eliminó la participación de '${participacion.productoraDeParticipante?.nombre_productora}' del fonograma '${fonogramaId}'`,
     });
 
+    await registrarRepertorio({
+        usuario_registrante_id: authUser.id_usuario,
+        fonograma_id: fonograma.id_fonograma,
+        tipo_auditoria: "BAJA",
+        detalle: `Se eliminó la participación de '${participacion.productoraDeParticipante?.nombre_productora}' con ${porcentaje_participacion}% de titularidad del fonograma con ISRC '${fonograma.isrc}'`,
+    });
+
     // Recalcular la participación total en el período de la participación eliminada
     const participacionesRestantes = await FonogramaParticipacion.findAll({
         where: {
@@ -1635,7 +1744,7 @@ export const deleteParticipacion = async (fonogramaId: string, participacionId: 
 
 export const addTerritorioToFonograma = async (fonogramaId: string, req: any) => {
 
-    const { codigo_iso, is_activo = true } = req.body; // is_activo por defecto en true
+    const { codigo_iso, is_activo = true } = req.body;
 
     if (!codigo_iso) {
        throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.TERRITORIO_ISO_NOT_FOUND);
@@ -1688,6 +1797,13 @@ export const addTerritorioToFonograma = async (fonogramaId: string, req: any) =>
         modelo: "FonogramaTerritorioMaestro",
         tipo_auditoria: "ALTA",
         detalle: `Se agregó el territorio '${territorio.codigo_iso}' al fonograma con ID '${fonogramaId}', estado: ${is_activo ? "Activo" : "Inactivo"}`,
+    });
+
+    await registrarRepertorio({
+        usuario_registrante_id: authUser.id_usuario,
+        fonograma_id: fonograma.id_fonograma,
+        tipo_auditoria: "ALTA",
+        detalle: `Se agregó el territorio '${territorio.codigo_iso}' al fonograma con ISRC '${fonograma.isrc}', estado: ${is_activo ? "Activo" : "Inactivo"}`,
     });
 
     return {
@@ -1775,6 +1891,9 @@ export const updateTerritorio = async (fonogramaId: string, territorioId: string
         throw new Err.NotFoundError(MESSAGES.ERROR.TERRITORIO.NOT_ASSIGNED);
     }
 
+    // Guardar estado anterior para la auditoría
+    const estadoAnterior = territorioVinculado.is_activo;
+
     // Actualizar el estado is_activo
     await territorioVinculado.update({ is_activo });
 
@@ -1792,6 +1911,13 @@ export const updateTerritorio = async (fonogramaId: string, territorioId: string
         modelo: "FonogramaTerritorioMaestro",
         tipo_auditoria: "CAMBIO",
         detalle: `Se actualizó el estado de territorio ID '${territorioId}' en el fonograma '${fonogramaId}' a ${is_activo ? "Activo" : "Inactivo"}.`,
+    });
+
+    await registrarRepertorio({
+        usuario_registrante_id: authUser.id_usuario,
+        fonograma_id: fonograma.id_fonograma,
+        tipo_auditoria: "CAMBIO",
+        detalle: `Se actualizó el estado del territorio '${territorio.codigo_iso}' en el fonograma con ISRC '${fonograma.isrc}' de ${estadoAnterior ? "Activo" : "Inactivo"} a ${is_activo ? "Activo" : "Inactivo"}.`,
     });
 
     return {
@@ -1815,6 +1941,7 @@ export const deleteTerritorio = async (fonogramaId: string, territorioId: string
     // Verificar si el territorio está vinculado al fonograma en FonogramaTerritorioMaestro
     const territorioVinculado = await FonogramaTerritorioMaestro.findOne({
         where: { fonograma_id: fonogramaId, territorio_id: territorioId },
+        include: [{ model: FonogramaTerritorio, as: "territorioDelVinculo" }]
     });
 
     if (!territorioVinculado) {
@@ -1823,6 +1950,9 @@ export const deleteTerritorio = async (fonogramaId: string, territorioId: string
 
     // Verifica el usuario autenticado
     const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    // Guardar datos antes de la eliminación para la auditoría
+    const codigoIsoTerritorio = territorioVinculado.territorioDelVinculo?.codigo_iso || "Desconocido";
 
     // Eliminar la relación del territorio con el fonograma
     await territorioVinculado.destroy();
@@ -1841,6 +1971,13 @@ export const deleteTerritorio = async (fonogramaId: string, territorioId: string
         modelo: "FonogramaTerritorioMaestro",
         tipo_auditoria: "BAJA",
         detalle: `Se eliminó el territorio ID '${territorioId}' del fonograma '${fonogramaId}'.`,
+    });
+
+    await registrarRepertorio({
+        usuario_registrante_id: authUser.id_usuario,
+        fonograma_id: fonograma.id_fonograma,
+        tipo_auditoria: "BAJA",
+        detalle: `Se eliminó el territorio '${codigoIsoTerritorio}' del fonograma con ISRC '${fonograma.isrc}'.`,
     });
 
     return {

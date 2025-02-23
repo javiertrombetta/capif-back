@@ -1,6 +1,12 @@
-import { AuditoriaCambio, AuditoriaRepertorio, AuditoriaSesion }  from "../models";
-import { ENTIDADES_PERMITIDAS } from "../models/AuditoriaCambio";
+import { Request } from "express";
+import { Op } from "sequelize";
 import logger from "../config/logger";
+
+import { AuditoriaCambio, AuditoriaRepertorio, AuditoriaSesion, Fonograma, Productora, Usuario }  from "../models";
+import { ENTIDADES_PERMITIDAS } from "../models/AuditoriaCambio";
+
+import * as MESSAGES from "../utils/messages";
+import * as Err from "../utils/customErrors";
 
 /**
  * Crea un registro de auditoría genérico.
@@ -196,4 +202,310 @@ export const actualizarFechaFinSesion = async (
     logger.error(`Error al actualizar la fecha de fin de sesión: ${errorMessage}`);
     throw error;
   }
+};
+
+const parseDate = (fecha: string): Date => {
+  const [day, month, year] = fecha.split("/").map(Number);
+
+  if (!day || !month || !year) {
+    throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_INVALID_FORMAT);
+  }
+
+  return new Date(year, month - 1, day, 0, 0, 0);
+};
+
+export const getAuditChanges = async (req: Request) => {
+  const { fechaDesde, fechaHasta, emailUsuario, tablaDb, tipoAuditoria, page, limit } = req.query;
+
+  const filters: any = {};
+
+  // Manejo de fechas en formato DD/MM/AAAA
+  if (fechaDesde || fechaHasta) {
+    try {
+      const startDate = fechaDesde ? parseDate(fechaDesde as string) : undefined;
+      const endDate = fechaHasta ? parseDate(fechaHasta as string) : new Date();
+
+      if (startDate && endDate && startDate > endDate) {
+        throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_RANGE_INVALID);
+      }
+
+      filters.createdAt = {
+        ...(startDate && { [Op.gte]: startDate }),
+        ...(endDate && { [Op.lte]: new Date(endDate.setHours(23, 59, 59, 999)) }),
+      };
+    } catch (error) {
+      throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_INVALID_FORMAT);
+    }
+  }
+
+  // Filtrado por usuario
+  if (emailUsuario) {
+    const usuario = await Usuario.findOne({
+      where: { email: emailUsuario as string },
+    });
+
+    if (!usuario) {
+      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+    }
+
+    filters.usuario_originario_id = usuario.id_usuario;
+  }
+
+  // Filtrado por tabla de base de datos
+  if (tablaDb && ENTIDADES_PERMITIDAS.includes(tablaDb as string)) {
+    filters.modelo = tablaDb;
+  } else if (tablaDb) {
+    throw new Err.BadRequestError(MESSAGES.ERROR.DATABASE.INVALID_TABLE);
+  }
+
+  // Filtrado por tipo de auditoría
+  if (tipoAuditoria) {
+    filters.tipo_auditoria = tipoAuditoria;
+  }
+
+  // Manejo de paginación con valores por defecto
+  const pageNumber = page ? parseInt(page as string, 10) : 1;
+  const limitNumber = limit ? parseInt(limit as string, 10) : 10;
+  const offset = (pageNumber - 1) * limitNumber;
+
+  // Contar el total de registros sin paginación
+  const total = await AuditoriaCambio.count({ where: filters });
+
+  // Consulta con paginación
+  const cambios = await AuditoriaCambio.findAll({
+    where: filters,
+    include: [
+      {
+        model: Usuario,
+        as: "registranteDeCambio",
+        attributes: ["id_usuario", "email", "nombre", "apellido"],
+      },
+      {
+        model: Usuario,
+        as: "usuarioAuditado",
+        attributes: ["id_usuario", "email", "nombre", "apellido"],
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit: limitNumber,
+    offset: offset,
+  });
+
+  return {
+    message: "Cambios de auditoría obtenidos exitosamente.",
+    total,
+    page: pageNumber,
+    limit: limitNumber,
+    totalPages: Math.ceil(total / limitNumber),
+    data: cambios,
+  };
+};
+
+export const getRepertoireAuditChanges = async (req: Request) => {
+  const { fechaDesde, fechaHasta, isrc, emailUsuario, productora, tipoCambio, detalle, page, limit } = req.query;
+
+  const filters: any = {};
+
+  // Manejo de fechas en formato DD/MM/AAAA
+  if (fechaDesde || fechaHasta) {
+    try {
+      const startDate = fechaDesde ? parseDate(fechaDesde as string) : undefined;
+      const endDate = fechaHasta ? parseDate(fechaHasta as string) : new Date();
+
+      if (startDate && endDate && startDate > endDate) {
+        throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_RANGE_INVALID);
+      }
+
+      filters.createdAt = {
+        ...(startDate && { [Op.gte]: startDate }),
+        ...(endDate && { [Op.lte]: new Date(endDate.setHours(23, 59, 59, 999)) }),
+      };
+    } catch (error) {
+      throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_INVALID_FORMAT);
+    }
+  }
+
+  // Filtrado por usuario
+  if (emailUsuario) {
+    const usuario = await Usuario.findOne({
+      where: { email: emailUsuario as string },
+    });
+
+    if (!usuario) {
+      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+    }
+
+    filters.usuario_registrante_id = usuario.id_usuario;
+  }
+
+  // Filtrado por ISRC
+  if (isrc) {
+    const fonograma = await Fonograma.findOne({
+      where: { isrc: isrc as string },
+    });
+
+    if (!fonograma) {
+      throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
+    }
+
+    filters.fonograma_id = fonograma.id_fonograma;
+  }
+
+  // Filtrado por Productora
+  if (productora) {
+    const productoraData = await Productora.findOne({
+      where: { nombre_productora: productora as string },
+    });
+
+    if (!productoraData) {
+      throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
+    }
+
+    filters["$fonogramaAuditado.productora_id$"] = productoraData.id_productora;
+  }
+
+  // Filtrado por tipo de cambio
+  if (tipoCambio) {
+    filters.tipo_auditoria = tipoCambio;
+  }
+
+  // Búsqueda insensible a mayúsculas en detalle
+  if (detalle) {
+    filters.detalle = {
+      [Op.iLike]: `%${detalle}%`,
+    };
+  }
+
+  // Manejo de paginación con valores por defecto
+  const pageNumber = page ? parseInt(page as string, 10) : 1;
+  const limitNumber = limit ? parseInt(limit as string, 10) : 10;
+  const offset = (pageNumber - 1) * limitNumber;
+
+  // Contar el total de registros sin paginación
+  const total = await AuditoriaRepertorio.count({ where: filters });
+
+  // Consulta con paginación
+  const repertorioCambios = await AuditoriaRepertorio.findAll({
+    where: filters,
+    include: [
+      {
+        model: Usuario,
+        as: "registranteDeRepertorio",
+        attributes: ["id_usuario", "email", "nombre", "apellido"],
+      },
+      {
+        model: Fonograma,
+        as: "fonogramaAuditado",
+        attributes: ["id_fonograma", "isrc", "titulo", "artista"],
+        include: [
+          {
+            model: Productora,
+            as: "productoraDelFonograma",
+            attributes: ["id_productora", "nombre_productora"],
+          },
+        ],
+      },
+    ],
+    order: [["createdAt", "DESC"]],
+    limit: limitNumber,
+    offset: offset,
+  });
+
+  return {
+    message: "Cambios en repertorios obtenidos exitosamente.",
+    total,
+    page: pageNumber,
+    limit: limitNumber,
+    totalPages: Math.ceil(total / limitNumber),
+    data: repertorioCambios,
+  };
+};
+
+export const getSessionAuditChanges = async (req: Request) => {
+  const { nombre, apellido, email, fechaDesde, fechaHasta, page, limit } = req.query;
+
+  const filters: any = {};
+
+  // Manejo de rango de fechas en formato DD/MM/AAAA
+  if (fechaDesde || fechaHasta) {
+    try {
+      const startDate = fechaDesde ? parseDate(fechaDesde as string) : undefined;
+      const endDate = fechaHasta ? parseDate(fechaHasta as string) : new Date();
+
+      if (startDate && endDate && startDate > endDate) {
+        throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_RANGE_INVALID);
+      }
+
+      filters.fecha_inicio_sesion = {
+        ...(startDate && { [Op.gte]: startDate }),
+        ...(endDate && { [Op.lte]: new Date(endDate.setHours(23, 59, 59, 999)) }),
+      };
+    } catch (error) {
+      throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_INVALID_FORMAT);
+    }
+  }
+
+  // Filtrado por email
+  if (email) {
+    const usuario = await Usuario.findOne({
+      where: { email: email as string },
+    });
+
+    if (!usuario) {
+      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
+    }
+
+    filters.usuario_registrante_id = usuario.id_usuario;
+  }
+
+  // Búsqueda insensible a mayúsculas y minúsculas en nombre y apellido
+  const usuarioFilters: any = {};
+  if (nombre) {
+    usuarioFilters.nombre = { [Op.iLike]: `%${nombre}%` };
+  }
+  if (apellido) {
+    usuarioFilters.apellido = { [Op.iLike]: `%${apellido}%` };
+  }
+
+  // Manejo de paginación con valores por defecto
+  const pageNumber = page ? parseInt(page as string, 10) : 1;
+  const limitNumber = limit ? parseInt(limit as string, 10) : 10;
+  const offset = (pageNumber - 1) * limitNumber;
+
+  // Contar el total de registros sin paginación
+  const total = await AuditoriaSesion.count({
+    where: filters,
+    include: [
+      {
+        model: Usuario,
+        as: "registranteDeSesion",
+        where: usuarioFilters,
+      },
+    ],
+  });
+
+  // Consulta con paginación
+  const sesiones = await AuditoriaSesion.findAll({
+    where: filters,
+    include: [
+      {
+        model: Usuario,
+        as: "registranteDeSesion",
+        attributes: ["id_usuario", "email", "nombre", "apellido"],
+        where: usuarioFilters,
+      },
+    ],
+    order: [["fecha_inicio_sesion", "DESC"]],
+    limit: limitNumber,
+    offset: offset,
+  });
+
+  return {
+    message: "Sesiones iniciadas obtenidas exitosamente.",
+    total,
+    page: pageNumber,
+    limit: limitNumber,
+    totalPages: Math.ceil(total / limitNumber),
+    data: sesiones,
+  };
 };

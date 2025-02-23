@@ -1,4 +1,4 @@
-import { Fonograma } from "../models";
+import { AuditoriaCambio, Fonograma } from "../models";
 
 export function validateCUIT(cuit: string): string | true {
   if (cuit.length !== 11) {
@@ -72,8 +72,10 @@ export async function updateConflictosActivos(fonogramaId: string, ConflictoMode
   }
 }
 
-
-export async function actualizarDominioPublicoGlobal(FonogramaModel: typeof Fonograma) {
+export async function actualizarDominioPublicoGlobal(
+  FonogramaModel: typeof Fonograma,
+  AuditoriaCambioModel: typeof AuditoriaCambio
+) {
   const currentYear = new Date().getFullYear();
 
   // Obtener todos los fonogramas que potencialmente necesiten actualización
@@ -94,17 +96,24 @@ export async function actualizarDominioPublicoGlobal(FonogramaModel: typeof Fono
     }));
 
   if (actualizaciones.length === 0) {
-    console.log('No hay fonogramas que necesiten actualización de dominio público.');
     return;
   }
 
-  // Actualizar en bloque las filas necesarias
   for (const actualizacion of actualizaciones) {
     await FonogramaModel.update(
       { is_dominio_publico: actualizacion.is_dominio_publico },
       { where: { id_fonograma: actualizacion.id_fonograma } }
     );
-  }
 
-  console.log(`${actualizaciones.length} fonogramas actualizados a su estado de dominio público.`);
+    // Registrar cambio en auditoría con el modelo pasado como argumento
+    await AuditoriaCambioModel.create({
+      usuario_originario_id: null,
+      usuario_destino_id: null,
+      modelo: "Fonograma",
+      tipo_auditoria: "SISTEMA",
+      detalle: `El fonograma con ID ${actualizacion.id_fonograma} cambió su estado de dominio público a ${
+        actualizacion.is_dominio_publico ? "Sí" : "No"
+      }`,      
+    });
+  }
 }

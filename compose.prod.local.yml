@@ -11,8 +11,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      # redis:
-      #   condition: service_healthy
     environment:
     # Base de Datos
       DB_USER: ${DB_USER}
@@ -35,11 +33,6 @@ services:
       CAPIF_EMAIL_RECEIVER: ${CAPIF_EMAIL_RECEIVER}
       ADMIN_PRINCIPAL_EMAIL: ${ADMIN_PRINCIPAL_EMAIL}
       ADMIN_PRINCIPAL_PASSWORD: ${ADMIN_PRINCIPAL_PASSWORD}
-
-      # Redis
-      # REDIS_HOST: ${REDIS_HOST}
-      # REDIS_PORT: ${REDIS_PORT}
-      # REDIS_NAME: ${REDIS_NAME}
 
       # Timezone
       TZ: ${TZ}
@@ -74,8 +67,6 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      # POSTGRES_HOST_AUTH_METHOD: scram-sha-256
-      # POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
     volumes:
       - postgresdata:/var/lib/postgresql/data
     healthcheck:
@@ -86,22 +77,6 @@ services:
       timeout: 10s
     networks:
       - capif-net
-
-  # redis:
-  #   image: redis:7.4.2-alpine3.21
-  #   container_name: redis
-  #   restart: always
-  #   ports:
-  #     - '6379:6379'
-  #   environment:
-  #     TZ: ${TZ}
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   networks:
-  #     - capif-net
 
 volumes:
   postgresdata:

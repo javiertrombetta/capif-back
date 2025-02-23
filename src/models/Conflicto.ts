@@ -16,7 +16,7 @@ const TIPO_ESTADOS = [
 
 class Conflicto extends Model {
   public id_conflicto!: string;
-  public productora_conflicto_id!: string;
+  public productora_id!: string;
   public fonograma_id!: string;
   public estado_conflicto!: (typeof TIPO_ESTADOS)[number];
   public fecha_periodo_desde!: Date;
@@ -80,7 +80,7 @@ Conflicto.init(
         },
       },
     },  
-    productora_conflicto_id: {
+    productora_id: {
       type: DataTypes.UUID,
       allowNull: false,
       references: {
@@ -190,8 +190,8 @@ Conflicto.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['productora_conflicto_id'],
-        name: 'idx_conflicto_productora_registrante',
+        fields: ['productora_id'],
+        name: 'idx_conflicto_productora_id',
       },
       {
         fields: ['fonograma_id'],

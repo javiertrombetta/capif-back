@@ -123,7 +123,7 @@ export const crearConflicto = async (req: AuthenticatedRequest, isrc: string, fe
         if (porcentajeTotal > 100) {
           const nuevoConflicto = await Conflicto.create({
             fonograma_id: fonograma.id_fonograma,
-            productora_conflicto_id: fonograma.productora_id,
+            productora_id: fonograma.productora_id,
             estado_conflicto: 'PRIMERA INSTANCIA',
             fecha_periodo_desde: periodo.fecha_inicio,
             fecha_periodo_hasta: periodo.fecha_fin,
@@ -209,9 +209,9 @@ export const obtenerConflictos = async (req: AuthenticatedRequest) => {
     if (!productoraValida) {
       throw new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED);
     }
-    where.productora_conflicto_id = req.productoraId;
+    where.productora_id = req.productoraId;
   } else if (productora_id) {
-    where.productora_conflicto_id = productora_id;
+    where.productora_id = productora_id;
   }
 
   if (typeof fecha_desde === "string" && fecha_desde) {
@@ -242,7 +242,7 @@ export const obtenerConflictos = async (req: AuthenticatedRequest) => {
       model: Productora,
       as: "productoraDelConflicto",
       attributes: ["id_productora", "nombre_productora"],
-      where: where.productora_conflicto_id ? { id_productora: where.productora_conflicto_id } : undefined,
+      where: where.productora_id ? { id_productora: where.productora_id } : undefined,
     },
     {
       model: ConflictoParte,

@@ -40,6 +40,7 @@ class Usuario extends Model {
   public static associations: {
     rol: Association<Usuario, UsuarioRol>;
   };
+  UsuarioMaestro: any;
 }
 
 Usuario.init(

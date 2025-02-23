@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.9 - 23-02-2025
+## 🐛 Fixes
+
+- fix: change package.json for production seed
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.6
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.6 - 23-02-2025
 ## 🚀 Features
 

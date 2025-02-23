@@ -103,6 +103,8 @@ if (env === 'development') {
   setupSwagger(app);
 }
 
+app.use('/downloads', express.static(path.join(UPLOAD_DIR, 'csv')));
+
 // Rutas y middlewares de aplicación
 app.use(`/${globalPrefix}`, router);
 

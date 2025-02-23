@@ -30,6 +30,8 @@ const requiredEnvVars = [
   'DB_USER',
   'DB_PASSWORD',
   'DB_NAME',
+  'ADMIN_PRINCIPAL_EMAIL',
+  'ADMIN_PRINCIPAL_PASSWORD',
 ];
 
 const missingVars = requiredEnvVars.filter((key) => !process.env[key]);

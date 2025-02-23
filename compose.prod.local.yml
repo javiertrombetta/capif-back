@@ -70,10 +70,10 @@ services:
     volumes:
       - postgresdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME} && psql -U ${DB_USER} -d ${DB_NAME} -c 'SELECT 1' || exit 1"]
       interval: 10s
-      retries: 5
-      start_period: 30s
+      retries: 15
+      start_period: 60s
       timeout: 10s
     networks:
       - capif-net

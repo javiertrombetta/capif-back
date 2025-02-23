@@ -1,13 +1,14 @@
 import bcrypt from "bcrypt";
 
 import {
+  Cashflow,
+  FonogramaTerritorio,
+  Productora,
+  ProductoraDocumentoTipo,
   Usuario,
   UsuarioRol,
-  ProductoraDocumentoTipo,
-  FonogramaTerritorio,
-  UsuarioVista,
-  Productora,
-  Cashflow,
+  UsuarioVista, 
+  UsuarioVistaMaestro,
 } from "../models";
 
 const createAdminPrincipal = async () => {
@@ -28,12 +29,12 @@ const createAdminPrincipal = async () => {
       throw new Error("El email definido en ADMIN_PRINCIPAL_EMAIL no es válido.");
     }
 
-    const adminExists = await Usuario.findOne({ where: { email: process.env.ADMIN_PRINCIPAL_EMAIL } });
+    let adminUser = await Usuario.findOne({ where: { email: process.env.ADMIN_PRINCIPAL_EMAIL } });
 
-    if (!adminExists) {
+    if (!adminUser) {
       const hashedPassword = await bcrypt.hash(process.env.ADMIN_PRINCIPAL_PASSWORD, 10);
 
-      await Usuario.create({
+      adminUser = await Usuario.create({
         nombre: "Administrador",
         apellido: "Principal",
         email: process.env.ADMIN_PRINCIPAL_EMAIL,
@@ -49,6 +50,32 @@ const createAdminPrincipal = async () => {
     } else {
       console.log("El usuario Administrador Principal para CAPIF ya existe.");
     }
+
+    // Asociar vistas de admin_principal al usuario
+    const vistasAdmin = await UsuarioVista.findAll({
+      where: { rol_id: adminRole.id_rol },
+    });
+
+    if (vistasAdmin.length > 0) {
+      for (const vista of vistasAdmin) {
+        await UsuarioVistaMaestro.findOrCreate({
+          where: {
+            usuario_id: adminUser.id_usuario,
+            vista_id: vista.id_vista,
+          },
+          defaults: {
+            usuario_id: adminUser.id_usuario,
+            vista_id: vista.id_vista,
+            is_habilitado: true,
+          },
+        });
+      }
+
+      console.log(`Vistas de admin_principal asociadas a ${adminUser.email} correctamente.`);
+    } else {
+      console.warn("No se encontraron vistas para admin_principal.");
+    }
+
   } catch (error) {
     console.error("Error al crear el usuario Administrador Principal para CAPIF:", error);
   }

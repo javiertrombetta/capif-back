@@ -146,8 +146,8 @@ export const resetDatabase = async (req: Request, res: Response) => {
             logger.info('[RESET DATABASE] Ejecutando `npm run init` en entorno de desarrollo...');
             command = 'npm run init';
         } else if (env === 'production.remote') {
-            logger.info('[RESET DATABASE] Ejecutando `npm run postgres:init` en entorno remoto...');
-            command = 'npm run postgres:init';
+            logger.info('[RESET DATABASE] Ejecutando `npm run postgres:all` en entorno remoto...');
+            command = 'npm run postgres:all';
         } else {
             logger.warn(`[RESET DATABASE] Intento de ejecución no autorizado en entorno: ${env}`);
             return res.status(403).json({ message: 'Acceso denegado. Solo puede ejecutarse en development o production.remote.' });

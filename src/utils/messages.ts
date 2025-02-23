@@ -151,6 +151,8 @@ export const ERROR = {
     NO_CSV_FOUND: 'No se proporcionó un archivo CSV.',
     DATES_INVALID: 'Las fechas proporcionadas son inválidas.',
     CUIT_ALREADY_EXISTS: "El CUIT ya está registrado en el sistema.",
+    DATE_INVALID_FORMAT: "La fecha proporcionada tiene un formato inválido.",
+    DATE_RANGE_INVALID: 'El rango de fechas proporcionado es invláido.'
   },
   REGISTER: {
     ALREADY_REGISTERED: 'El correo electrónico ya está registrado.',
@@ -188,6 +190,7 @@ export const ERROR = {
   DATABASE: {
     CONNECTION: 'Error de conexión con la base de datos.',
     GENERAL: 'Error de base de datos.',
+    INVALID_TABLE: 'El nombre de la tabla de base de datos es inválida.'
   },
   JWT: {
     ERROR: 'Error al generar el token.',

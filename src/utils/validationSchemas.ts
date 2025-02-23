@@ -2089,3 +2089,213 @@ export const listTransactionsSchema = Joi.object({
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 // start of auditRoutes
+
+export const getAuditChangesQuerySchema = Joi.object({
+  fechaDesde: Joi.string()
+    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "El campo 'fechaDesde' debe estar en formato DD/MM/AAAA.",
+    }),
+
+  fechaHasta: Joi.string()
+    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "El campo 'fechaHasta' debe estar en formato DD/MM/AAAA.",
+    }),
+
+  emailUsuario: Joi.string()
+    .email()
+    .optional()
+    .messages({
+      "string.email": "El campo 'emailUsuario' debe ser un correo electrónico válido.",
+    }),
+
+  tablaDb: Joi.string()
+    .valid(
+      "AuditoriaCambio",
+      "AuditoriaRepertorio",
+      "AuditoriaSesion",
+      "Cashflow",
+      "CashflowLiquidacion",
+      "CashflowMaestro",
+      "CashflowPago",
+      "CashflowPendiente",
+      "CashflowRechazo",
+      "CashflowTraspaso",
+      "Conflicto",
+      "ConflictoParte",
+      "Fonograma",
+      "FonogramaArchivo",
+      "FonogramaEnvio",
+      "FonogramaMaestro",
+      "FonogramaParticipacion",
+      "FonogramaTerritorio",
+      "FonogramaTerritorioMaestro",
+      "Productora",
+      "ProductoraDocumento",
+      "ProductoraDocumentoTipo",
+      "ProductoraISRC",
+      "ProductoraMensaje",
+      "ProductoraPremio",
+      "Usuario",
+      "UsuarioMaestro",
+      "UsuarioRol",
+      "UsuarioVista",
+      "UsuarioVistaMaestro"
+    )
+    .optional()
+    .messages({
+      "any.only": "El campo 'tablaDb' debe contener un valor válido.",
+    }),
+
+  tipoAuditoria: Joi.string()
+    .valid("ALTA", "BAJA", "CAMBIO", "ERROR", "SISTEMA", "AUTH")
+    .optional()
+    .messages({
+      "any.only": "El campo 'tipoAuditoria' debe contener un valor válido (ALTA, BAJA, CAMBIO, ERROR, SISTEMA, AUTH).",
+    }),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .optional()
+    .messages({
+      "number.base": "El campo 'page' debe ser un número entero.",
+      "number.min": "El campo 'page' debe ser un número mayor o igual a 1.",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .optional()
+    .messages({
+      "number.base": "El campo 'limit' debe ser un número entero.",
+      "number.min": "El campo 'limit' debe ser un número mayor o igual a 1.",
+    }),
+});
+
+export const getRepertoireChangesQuerySchema = Joi.object({
+  fechaDesde: Joi.string()
+    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "El campo 'fechaDesde' debe estar en formato DD/MM/AAAA.",
+    }),
+
+  fechaHasta: Joi.string()
+    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "El campo 'fechaHasta' debe estar en formato DD/MM/AAAA.",
+    }),
+
+  emailUsuario: Joi.string()
+    .email()
+    .optional()
+    .messages({
+      "string.email": "El campo 'emailUsuario' debe ser un correo electrónico válido.",
+    }),
+
+  isrc: Joi.string()
+    .length(12)
+    .optional()
+    .messages({
+      "string.length": "El campo 'isrc' debe tener exactamente 12 caracteres.",
+    }),
+
+  productora: Joi.string()
+    .max(255)
+    .optional()
+    .messages({
+      "string.max": "El campo 'productora' no puede superar los 255 caracteres.",
+    }),
+
+  tipoCambio: Joi.string()
+    .valid("ALTA", "BAJA", "CAMBIO", "ERROR", "SISTEMA")
+    .optional()
+    .messages({
+      "any.only": "El campo 'tipoCambio' debe contener un valor válido (ALTA, BAJA, CAMBIO, ERROR, SISTEMA).",
+    }),
+
+  detalle: Joi.string()
+    .max(255)
+    .optional()
+    .messages({
+      "string.max": "El campo 'detalle' no puede superar los 255 caracteres.",
+    }),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .optional()
+    .messages({
+      "number.base": "El campo 'page' debe ser un número entero.",
+      "number.min": "El campo 'page' debe ser un número mayor o igual a 1.",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .optional()
+    .messages({
+      "number.base": "El campo 'limit' debe ser un número entero.",
+      "number.min": "El campo 'limit' debe ser un número mayor o igual a 1.",
+    }),
+});
+
+export const getSessionAuditChangesQuerySchema = Joi.object({
+  fechaDesde: Joi.string()
+    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "El campo 'fechaDesde' debe estar en formato DD/MM/AAAA.",
+    }),
+
+  fechaHasta: Joi.string()
+    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "El campo 'fechaHasta' debe estar en formato DD/MM/AAAA.",
+    }),
+
+  email: Joi.string()
+    .email()
+    .optional()
+    .messages({
+      "string.email": "El campo 'email' debe ser un correo electrónico válido.",
+    }),
+
+  nombre: Joi.string()
+    .max(100)
+    .optional()
+    .messages({
+      "string.max": "El campo 'nombre' no puede superar los 100 caracteres.",
+    }),
+
+  apellido: Joi.string()
+    .max(100)
+    .optional()
+    .messages({
+      "string.max": "El campo 'apellido' no puede superar los 100 caracteres.",
+    }),
+
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .optional()
+    .messages({
+      "number.base": "El campo 'page' debe ser un número entero.",
+      "number.min": "El campo 'page' debe ser un número mayor o igual a 1.",
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .optional()
+    .messages({
+      "number.base": "El campo 'limit' debe ser un número entero.",
+      "number.min": "El campo 'limit' debe ser un número mayor o igual a 1.",
+    }),
+});

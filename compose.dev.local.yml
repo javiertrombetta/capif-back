@@ -21,22 +21,22 @@ services:
     networks:
       - capif-net
 
-  redis:
-    image: redis:7.4.2-alpine3.21
-    container_name: ${REDIS_NAME:-redis}
-    restart: always
-    ports:
-      - '6379:6379'
-    environment:
-      TZ: ${TZ}
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
-    networks:
-      - capif-net
+  # redis:
+  #   image: redis:7.4.2-alpine3.21
+  #   container_name: ${REDIS_NAME:-redis}
+  #   restart: always
+  #   ports:
+  #     - '6379:6379'
+  #   environment:
+  #     TZ: ${TZ}
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 10s
+  #   networks:
+  #     - capif-net
 
 volumes:
   postgres_data:  

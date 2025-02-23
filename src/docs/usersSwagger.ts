@@ -408,7 +408,7 @@ export const usersSwaggerDocs = {
                 }
             },
             delete: {
-                summary: "Eliminar un usuario.",
+                summary: "Eliminar un usuario no autorizado.",
                 description: "Permite a los administradores eliminar un usuario específico del sistema.",
                 tags: ["Usuarios"],
                 security: [{ bearerAuth: [] }],

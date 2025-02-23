@@ -109,7 +109,7 @@ const seedConflictos = async () => {
     const conflicto = await Conflicto.create({
       id_conflicto: uuidv4(),
       fonograma_id: fonogramaEnConflicto.id_fonograma,
-      productora_conflicto_id: productoraConflicto.id_productora,
+      productora_id: productoraConflicto.id_productora,
       estado_conflicto: "PRIMERA INSTANCIA",
       fecha_periodo_desde: new Date("2024-04-01"),
       fecha_periodo_hasta: new Date("2024-06-30"),

@@ -215,13 +215,13 @@ Fonograma.hasMany(Conflicto, {
 });
 
 Productora.hasMany(Conflicto, {
-  foreignKey: "productora_conflicto_id",
+  foreignKey: "productora_id",
   as: "conflictosDeProductora",
   onDelete: "RESTRICT",
 });
 
 Conflicto.belongsTo(Productora, {
-  foreignKey: "productora_conflicto_id",
+  foreignKey: "productora_id",
   as: "productoraDelConflicto",
   onDelete: "RESTRICT",
 });

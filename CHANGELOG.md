@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.0 - 23-02-2025
+## 🚀 Features
+
+- feat(MINOR): add audit routes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.4.3
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.4.3 - 23-02-2025
 ## 🚀 Features
 

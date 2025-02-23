@@ -41,6 +41,9 @@ if (missingVars.length > 0) {
   process.exit(1); 
 }
 
+// Verificar el argumento pasado
+const isInitOnly = process.argv.includes('--init-only');
+
 // import { exec } from 'child_process';
 // import util from 'util';
 import sequelize from './sequelize';
@@ -78,12 +81,20 @@ import conflictsSeed from '../../seeders/conflictos.seed';
 const runSeeders = async (): Promise<void> => {
   try {
     logger.info('[INIT POSTGRES] Ejecutando seeders...');
-    await initSeed();
-    await usersSeed();
-    await producersSeed();
-    await repertoiresSeed();
-    await conflictsSeed();
-    logger.info('[INIT POSTGRES] Seeders ejecutados exitosamente.');
+
+    // Ejecutar solo init.seed si es postgres:init
+    if (isInitOnly) {
+      await initSeed();
+      logger.info('[INIT POSTGRES] Seeder init.seed ejecutado exitosamente.');
+    } else {
+      // Ejecutar todos los seeders si es postgres:all
+      await initSeed();
+      await usersSeed();
+      await producersSeed();
+      await repertoiresSeed();
+      await conflictsSeed();
+      logger.info('[INIT POSTGRES] Todos los seeders ejecutados exitosamente.');
+    }
 
   } catch (error) {
     logger.error('[INIT POSTGRES] Error al ejecutar los seeders:', error);

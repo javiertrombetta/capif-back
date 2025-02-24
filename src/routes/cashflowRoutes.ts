@@ -6,7 +6,7 @@ import uploadCSV from '../middlewares/csvFromDisk';
 
 import * as cashflowController from '../controllers/cashflowController';
 
-import { listTransactionsSchema } from '../utils/validationSchemas';
+import { getCashflowsSchema, listTransactionsSchema } from '../utils/validationSchemas';
 
 const router = Router();
 
@@ -56,12 +56,20 @@ router.post('/transfers',
   cashflowController.processTransfers
 );
 
-// General (Transacciones)
-router.get('/',
+// General (Transactions)
+router.get('/transactions',
   authenticate,
   authorizeRoles(['admin_principal', 'admin_secundario', 'productor_principal', 'productor_secundario']),
   celebrate({ [Segments.QUERY]: listTransactionsSchema }),
   cashflowController.listTransactions
+);
+
+// General (Cashflow)
+router.get('/',
+  authenticate,
+  authorizeRoles(['admin_principal', 'admin_secundario', 'productor_principal', 'productor_secundario']),
+  celebrate({ [Segments.QUERY]: getCashflowsSchema }),
+  cashflowController.getCashflows
 );
 
 router.put('/',

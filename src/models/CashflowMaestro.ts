@@ -166,13 +166,13 @@ CashflowMaestro.init(
       { fields: ['numero_lote'], name: 'idx_cashflow_maestro_numero_lote' },
       { fields: ['referencia'], name: 'idx_cashflow_maestro_referencia', unique: true },
     ],
-    validate: {
-      atLeastOneReference() {
-        if (!this.liquidacion_id && !this.pago_id && !this.rechazo_id && !this.traspaso_id) {
-          throw new Error('Debe existir al menos un ID de referencia válido (liquidacion, pago, rechazo o traspaso).');
-        }
-      },
-    },
+    // validate: {
+    //   atLeastOneReference() {
+    //     if (!this.liquidacion_id && !this.pago_id && !this.rechazo_id && !this.traspaso_id) {
+    //       throw new Error('Debe existir al menos un ID de referencia válido (liquidacion, pago, rechazo o traspaso).');
+    //     }
+    //   },
+    // },
   }
 );
 

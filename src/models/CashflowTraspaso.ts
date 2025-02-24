@@ -93,8 +93,21 @@ CashflowTraspaso.init(
       },
     },
     porcentaje_traspaso: {
-      type: DataTypes.DECIMAL(5, 2),
+      type: DataTypes.INTEGER,
       allowNull: true,
+      validate: {
+        isInt: {
+          msg: 'El porcentaje de traspaso debe ser un número entero.',
+        },
+        min: {
+          args: [0],
+          msg: 'El porcentaje de traspaso no puede ser negativo.',
+        },
+        max: {
+          args: [100],
+          msg: 'El porcentaje de traspaso no puede ser mayor a 100.',
+        },
+      },
     },
     monto: {
       type: DataTypes.DECIMAL(10, 2),

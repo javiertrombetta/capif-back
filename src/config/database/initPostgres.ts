@@ -52,6 +52,8 @@ import usersSeed from '../../seeders/usuarios.seed';
 import producersSeed from '../../seeders/productoras.seed';
 import repertoiresSeed from '../../seeders/fonogramas.seed';
 import conflictsSeed from '../../seeders/conflictos.seed';
+import cashflowSeed from '../../seeders/cashflow.seed';
+import auditSeed from '../../seeders/audit.seed';
 
 // const execPromise = util.promisify(exec);
 
@@ -93,6 +95,8 @@ const runSeeders = async (): Promise<void> => {
       await producersSeed();
       await repertoiresSeed();
       await conflictsSeed();
+      await cashflowSeed();
+      await auditSeed();
       logger.info('[INIT POSTGRES] Todos los seeders ejecutados exitosamente.');
     }
 

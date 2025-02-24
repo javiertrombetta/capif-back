@@ -277,7 +277,7 @@ export const getAuditChanges = async (req: Request) => {
     include: [
       {
         model: Usuario,
-        as: "registranteDeCambio",
+        as: "registranteDeAuditoria",
         attributes: ["id_usuario", "email", "nombre", "apellido"],
       },
       {

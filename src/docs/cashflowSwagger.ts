@@ -6,7 +6,7 @@ export const cashflowSwaggerDocs = {
         },
     ],
     paths: {
-        "/payments": {
+        "/cashflow/payments": {
             post: {
                 summary: "Procesar pagos",
                 description: "Carga un archivo CSV con pagos a procesar, actualiza los registros de Cashflow y envía notificaciones por correo electrónico a las productoras.",
@@ -80,7 +80,7 @@ export const cashflowSwaggerDocs = {
                 }
             }
         },
-        "/rejections": {
+        "/cashflow/rejections": {
             post: {
                 summary: "Procesar rechazos de pagos",
                 description: "Carga un archivo CSV con rechazos de pagos, actualiza los registros de Cashflow y envía notificaciones por correo electrónico a las productoras afectadas.",
@@ -154,7 +154,7 @@ export const cashflowSwaggerDocs = {
                 }
             }
         },
-        "/reproductions": {
+        "/cashflow/reproductions": {
             post: {
                 summary: "Procesar pasadas de repertorio (reproducciones)",
                 description: "Carga un archivo CSV con pasadas de repertorio y procesa la información para determinar titularidad y conflictos en la base de datos.",
@@ -222,7 +222,7 @@ export const cashflowSwaggerDocs = {
                 },
             },
         },
-        "/settlements/pending": {
+        "/cashflow/settlements/pending": {
             get: {
                 summary: "Obtener liquidaciones pendientes",
                 description: "Devuelve una lista de liquidaciones pendientes de procesar.",
@@ -269,7 +269,7 @@ export const cashflowSwaggerDocs = {
                 },
             },
         },
-        "/settlements": {
+        "/cashflow/settlements": {
             post: {
                 summary: "Procesar liquidaciones",
                 description: "Carga un archivo CSV con liquidaciones y actualiza el cashflow de las productoras correspondientes.",
@@ -339,82 +339,7 @@ export const cashflowSwaggerDocs = {
                 },
             },
         },
-        "/transfers": {
-            post: {
-                summary: "Procesar traspasos de fondos",
-                description: "Carga un archivo CSV con los traspasos de fondos entre productoras, actualiza los registros de Cashflow y realiza auditorías.",
-                tags: ["Cashflow"],
-                security: [{ bearerAuth: [] }],
-                requestBody: {
-                    required: true,
-                    content: {
-                        "multipart/form-data": {
-                            schema: {
-                                type: "object",
-                                properties: {
-                                    file: {
-                                        type: "string",
-                                        format: "binary",
-                                        description: "Archivo CSV con los traspasos de fondos a procesar."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                responses: {
-                    200: {
-                        description: "Traspasos procesados correctamente.",
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        message: {
-                                            type: "string",
-                                            example: "Traspasos procesados correctamente."
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    207: {
-                        description: "Algunos traspasos no pudieron procesarse.",
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    type: "object",
-                                    properties: {
-                                        message: {
-                                            type: "string",
-                                            example: "Algunos traspasos no pudieron procesarse"
-                                        },
-                                        registrosNoProcesados: {
-                                            type: "array",
-                                            items: {
-                                                type: "object",
-                                                properties: {
-                                                    CUIT_ORIGEN: { type: "string", example: "20123456789" },
-                                                    CUIT_DESTINO: { type: "string", example: "20876543210" },
-                                                    MONTO: { type: "number", example: 5000.00 },
-                                                    REFERENCIA: { type: "string", example: "Traspaso de fondos" }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    400: { description: "Archivo no proporcionado o con formato incorrecto." },
-                    401: { description: "Usuario no autenticado." },
-                    403: { description: "Usuario no autorizado." },
-                    500: { description: "Error interno del servidor al procesar los traspasos." }
-                }
-            }
-        },
-        "/": {
+        "/cashflow/transactions": {
             get: {
                 summary: "Listar transacciones de cashflow",
                 description: "Obtiene una lista paginada de las transacciones de cashflow filtradas por diferentes criterios.",
@@ -617,5 +542,153 @@ export const cashflowSwaggerDocs = {
                 }
             }
         },
+        "/cashflow/transfers": {
+            post: {
+                summary: "Procesar traspasos de fondos",
+                description: "Carga un archivo CSV con los traspasos de fondos entre productoras, actualiza los registros de Cashflow y realiza auditorías.",
+                tags: ["Cashflow"],
+                security: [{ bearerAuth: [] }],
+                requestBody: {
+                    required: true,
+                    content: {
+                        "multipart/form-data": {
+                            schema: {
+                                type: "object",
+                                properties: {
+                                    file: {
+                                        type: "string",
+                                        format: "binary",
+                                        description: "Archivo CSV con los traspasos de fondos a procesar."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                responses: {
+                    200: {
+                        description: "Traspasos procesados correctamente.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: {
+                                            type: "string",
+                                            example: "Traspasos procesados correctamente."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    207: {
+                        description: "Algunos traspasos no pudieron procesarse.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        message: {
+                                            type: "string",
+                                            example: "Algunos traspasos no pudieron procesarse"
+                                        },
+                                        registrosNoProcesados: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    CUIT_ORIGEN: { type: "string", example: "20123456789" },
+                                                    CUIT_DESTINO: { type: "string", example: "20876543210" },
+                                                    MONTO: { type: "number", example: 5000.00 },
+                                                    REFERENCIA: { type: "string", example: "Traspaso de fondos" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    400: { description: "Archivo no proporcionado o con formato incorrecto." },
+                    401: { description: "Usuario no autenticado." },
+                    403: { description: "Usuario no autorizado." },
+                    500: { description: "Error interno del servidor al procesar los traspasos." }
+                }
+            }
+        },
+        "/cashflow": {
+            get: {
+                summary: "Obtener cashflows",
+                description: "Recupera los registros de Cashflow según el rol del usuario.",
+                tags: ["Cashflow"],
+                security: [{ bearerAuth: [] }],
+                parameters: [
+                    {
+                        in: "query",
+                        name: "cuit",
+                        schema: { type: "string", pattern: "^[0-9]{11}$" },
+                        description: "CUIT de la productora (solo para administradores).",
+                        example: "20123456789",
+                    },
+                    {
+                        in: "query",
+                        name: "productora_id",
+                        schema: { type: "string", format: "uuid" },
+                        description: "ID de la productora en formato UUID (solo para administradores).",
+                        example: "550e8400-e29b-41d4-a716-446655440000",
+                    },
+                    {
+                        in: "query",
+                        name: "page",
+                        schema: { type: "integer", minimum: 1, default: 1 },
+                        description: "Número de página para la paginación.",
+                        example: 1,
+                    },
+                    {
+                        in: "query",
+                        name: "limit",
+                        schema: { type: "integer", minimum: 1, maximum: 100, default: 50 },
+                        description: "Cantidad de registros por página (máximo 100).",
+                        example: 50,
+                    },
+                ],
+                responses: {
+                    200: {
+                        description: "Lista de cashflows obtenida exitosamente.",
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    properties: {
+                                        total: { type: "integer", example: 100 },
+                                        page: { type: "integer", example: 1 },
+                                        limit: { type: "integer", example: 50 },
+                                        cashflows: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    id_cashflow: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+                                                    productora_id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+                                                    saldo_actual_productora: { type: "number", format: "decimal", example: 25000.50 },
+                                                    createdAt: { type: "string", format: "date-time", example: "2024-01-15T14:30:00.000Z" },
+                                                    updatedAt: { type: "string", format: "date-time", example: "2024-02-10T09:20:00.000Z" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    400: { description: "Parámetros inválidos en la consulta." },
+                    401: { description: "Usuario no autenticado." },
+                    403: { description: "Acceso no permitido para el usuario." },
+                    404: { description: "No se encontró la productora o el cashflow." },
+                    500: { description: "Error interno del servidor al obtener cashflows." }
+                }
+            }
+        }
     },
 };

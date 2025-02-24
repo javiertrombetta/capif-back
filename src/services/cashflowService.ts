@@ -315,7 +315,7 @@ export const processPaymentsService = async (req: any): Promise<{ status: number
                         const cashflowMaestro = await CashflowMaestro.create({
                             cashflow_id: cashflow.id_cashflow,
                             tipo_transaccion: 'PAGO',
-                            monto,
+                            monto:-monto,
                             saldo_resultante: parseFloat(cashflow.saldo_actual_productora.toString()) - monto,
                             numero_lote: newLote,
                             referencia,

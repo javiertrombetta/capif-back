@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.15 - 24-02-2025
+## 🚀 Features
+
+- feat: add cashflow and audit seeds
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.12
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.12 - 23-02-2025
 ## 🐛 Fixes
 

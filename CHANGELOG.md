@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.18 - 24-02-2025
+## 🐛 Fixes
+
+- fix: change payment amount for negative in maestro
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.15
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.15 - 24-02-2025
 ## 🚀 Features
 

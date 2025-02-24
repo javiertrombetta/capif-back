@@ -174,7 +174,7 @@ const seedCashflowData = async () => {
         const pagoGeneral = await CashflowPago.create({
             cashflow_maestro_id: pagoGeneralMaestro.id_transaccion,
             concepto: "GENERAL",
-            monto: -montoPagoGeneral,
+            monto: montoPagoGeneral,
             isRetencion: Math.random() > 0.5,
             cuit: "20365478912",
             isrc: null,

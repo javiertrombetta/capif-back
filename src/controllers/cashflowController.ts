@@ -74,6 +74,15 @@ export const listTransactions = async (req: AuthenticatedRequest, res: Response,
     }
 };
 
+export const getCashflows = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const result = await cashflowService.getCashflowsService(req);
+        return res.status(result.status).json(result.data);
+    } catch (err) {
+        handleGeneralError(err, req, res, next, "Error obteniendo los cashflows");
+    }
+};
+
 export const updateCashflow = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const result = await cashflowService.updateCashflowService(req);

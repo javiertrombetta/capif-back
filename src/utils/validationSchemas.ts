@@ -2021,33 +2021,36 @@ export const deleteTerritorioSchema = Joi.object({
 
 export const listTransactionsSchema = Joi.object({
   cuit: Joi.string()
-    .length(11)
-    .pattern(/^[0-9]+$/)
+    .optional()
+    .pattern(/^[0-9]{11}$/)    
     .messages({
       'string.length': 'El CUIT debe tener exactamente 11 caracteres.',
       'string.pattern.base': 'El CUIT debe contener solo números.',
     }),
 
-  productora_id: Joi.string()
-    .uuid()
+  productora_id: uuidSchema
+    .optional()
     .messages({
       'string.uuid': 'El ID de la productora debe ser un UUID válido.',
     }),
 
   tipo_transaccion: Joi.string()
-    .valid('LIQUIDACION', 'PAGO', 'RECHAZO', 'TRASPASO', 'ACTUALIZACION')
+    .optional()
+    .valid('LIQUIDACION', 'PAGO', 'RECHAZO', 'TRASPASO', 'ACTUALIZACION')    
     .messages({
       'any.only': 'El tipo de transacción debe ser LIQUIDACION, PAGO, RECHAZO, TRASPASO o ACTUALIZACION.',
     }),
 
   fecha_desde: Joi.string()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .optional()
+    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)    
     .messages({
       'string.pattern.base': 'La fecha_desde debe tener el formato dd/MM/yyyy.',
     }),
 
   fecha_hasta: Joi.string()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .optional()
+    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)    
     .messages({
       'string.pattern.base': 'La fecha_hasta debe tener el formato dd/MM/yyyy.',
     }),
@@ -2060,6 +2063,47 @@ export const listTransactionsSchema = Joi.object({
     }),
 
   page: Joi.number()
+    .optional()
+    .integer()
+    .min(1)
+    .default(1)    
+    .messages({
+      'number.base': 'El número de página debe ser un número válido.',
+      'number.integer': 'El número de página debe ser un número entero.',
+      'number.min': 'El número de página debe ser al menos 1.',
+    }),
+
+  limit: Joi.number()
+    .optional()
+    .integer()
+    .min(1)
+    .max(100)
+    .default(50)    
+    .messages({
+      'number.base': 'El límite debe ser un número válido.',
+      'number.integer': 'El límite debe ser un número entero.',
+      'number.min': 'El límite debe ser al menos 1.',
+      'number.max': 'El límite no debe exceder los 100 registros.',
+    }),
+});
+
+export const getCashflowsSchema = Joi.object({
+  cuit: Joi.string()
+    .optional()
+    .pattern(/^[0-9]{11}$/)
+    .messages({
+      'string.pattern.base': 'El CUIT debe tener exactamente 11 caracteres numéricos.',
+    }),
+
+  productora_id: uuidSchema
+    .optional()
+    .uuid()
+    .messages({
+      'string.uuid': 'El ID de la productora debe ser un UUID válido.',
+    }),
+
+  page: Joi.number()
+    .optional()
     .integer()
     .min(1)
     .default(1)
@@ -2070,6 +2114,7 @@ export const listTransactionsSchema = Joi.object({
     }),
 
   limit: Joi.number()
+    .optional()
     .integer()
     .min(1)
     .max(100)

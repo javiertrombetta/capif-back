@@ -1990,7 +1990,7 @@ export const repertoiresSwaggerDocs = {
                 }
             }
         },
-        "/repertoires/": {
+        "/repertoires": {
             post: {
                 "summary": "Crear un nuevo fonograma",
                 "description": "Permite registrar un nuevo fonograma con sus participaciones y territorios.",

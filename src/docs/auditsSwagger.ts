@@ -391,7 +391,7 @@ export const auditsSwaggerDocs = {
                 }
             }
         },
-        "/audits/": {
+        "/audits": {
             get: {
                 summary: "Listar cambios de auditoría",
                 description: "Obtiene una lista de cambios registrados en la auditoría, con filtros opcionales por fecha, usuario, tabla afectada y tipo de cambio.",

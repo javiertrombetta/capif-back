@@ -738,6 +738,73 @@ export const listTransactionsService = async (req: any) => {
     };
 };
 
+export const getCashflowsService = async (req: any): Promise<{ status: number; data: any }> => {
+    const { cuit, productora_id, page = 1, limit = 50 } = req.query;
+    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+
+    // Obtener usuario autenticado
+    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+
+    if (!authUser.rol) {
+        throw new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED);
+    }
+
+    let whereCondition: any = {};
+    const rolesProductores = ["productor_principal", "productor_secundario"];
+
+    // Si el usuario es productor, solo puede ver su propio cashflow
+    if (rolesProductores.includes(authUser.rol.nombre_rol)) {
+        if (!req.productoraId) {
+            throw new Err.ForbiddenError(MESSAGES.ERROR.VALIDATION.NO_TOKEN_PROVIDED);
+        }
+
+        const productoraAsociada = authMaestros.some(maestro => maestro.productora_id === req.productoraId);
+        if (!productoraAsociada) {
+            throw new Err.ForbiddenError(MESSAGES.ERROR.VALIDATION.PRODUCTORA_NOT_ALLOWED);
+        }
+
+        const cashflow = await Cashflow.findOne({ where: { productora_id: req.productoraId } });
+        if (!cashflow) {
+            throw new Err.NotFoundError(MESSAGES.ERROR.CASHFLOW.NOT_FOUND);
+        }
+
+        return {
+            status: 200,
+            data: cashflow
+        };
+    }
+
+    // Si el usuario es admin, puede filtrar por CUIT o productora_id
+    if (cuit) {
+        const productora = await Productora.findOne({ where: { cuit } });
+        if (!productora) {
+            throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
+        }
+        whereCondition.productora_id = productora.id_productora;
+    }
+
+    if (productora_id) {
+        whereCondition.productora_id = productora_id;
+    }
+
+    const { count, rows: cashflows } = await Cashflow.findAndCountAll({
+        where: whereCondition,
+        order: [['saldo_actual_productora', 'DESC']], // Ordenar por saldo descendente
+        limit: parseInt(limit as string),
+        offset: offset
+    });
+
+    return {
+        status: 200,
+        data: {
+            total: count,
+            page: parseInt(page as string),
+            limit: parseInt(limit as string),
+            cashflows
+        }
+    };
+};
+
 export const updateCashflowService = async (req: any): Promise<{ status: number; data: any }> => {
     if (!req.file) {
         throw new Err.NotFoundError(MESSAGES.ERROR.ARCHIVO.NOT_FOUND);

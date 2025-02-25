@@ -92,8 +92,8 @@ router.post(
 
 router.post("/logout", authenticate, logout);
 
-// router.post("/login", celebrate({ [Segments.BODY]: loginSchema }), verifyRecaptcha, login);
-router.post("/login", celebrate({ [Segments.BODY]: loginSchema }), login);
+router.post("/login", celebrate({ [Segments.BODY]: loginSchema }), verifyRecaptcha, login);
+// router.post("/login", celebrate({ [Segments.BODY]: loginSchema }), login);
 
 router.post(
   "/admins/secondary",

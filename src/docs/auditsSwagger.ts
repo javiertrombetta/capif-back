@@ -231,20 +231,20 @@ export const auditsSwaggerDocs = {
                         name: "fechaDesde",
                         schema: {
                             type: "string",
-                            pattern: "^\\d{2}/\\d{2}/\\d{4}$"
+                            pattern: "^\\d{4}-\\d{2}-\\d{2}$"
                         },
-                        description: "Fecha de inicio del rango en formato DD/MM/AAAA.",
-                        example: "01/01/2024"
+                        description: "Fecha de inicio del rango en formato ISO (YYYY-MM-DD).",
+                        example: "2024-01-01"
                     },
                     {
                         in: "query",
                         name: "fechaHasta",
                         schema: {
                             type: "string",
-                            pattern: "^\\d{2}/\\d{2}/\\d{4}$"
+                            pattern: "^\\d{4}-\\d{2}-\\d{2}$"
                         },
-                        description: "Fecha de fin del rango en formato DD/MM/AAAA.",
-                        example: "31/12/2024"
+                        description: "Fecha de fin del rango en formato ISO (YYYY-MM-DD).",
+                        example: "2024-12-31"
                     },
                     {
                         in: "query",
@@ -403,20 +403,20 @@ export const auditsSwaggerDocs = {
                         name: "fechaDesde",
                         schema: {
                             type: "string",
-                            pattern: "^\\d{2}/\\d{2}/\\d{4}$"
+                            pattern: "^\\d{4}-\\d{2}-\\d{2}$"
                         },
-                        description: "Fecha de inicio del rango en formato DD/MM/AAAA.",
-                        example: "01/01/2024"
+                        description: "Fecha de inicio del rango en formato ISO (YYYY-MM-DD).",
+                        example: "2024-01-01"
                     },
                     {
                         in: "query",
                         name: "fechaHasta",
                         schema: {
                             type: "string",
-                            pattern: "^\\d{2}/\\d{2}/\\d{4}$"
+                            pattern: "^\\d{4}-\\d{2}-\\d{2}$"
                         },
-                        description: "Fecha de fin del rango en formato DD/MM/AAAA.",
-                        example: "31/12/2024"
+                        description: "Fecha de fin del rango en formato ISO (YYYY-MM-DD).",
+                        example: "2024-12-31"
                     },
                     {
                         in: "query",

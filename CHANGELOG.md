@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.21 - 25-02-2025
+## 🐛 Fixes
+
+- fix: change audit changes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.18
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.18 - 24-02-2025
 ## 🐛 Fixes
 

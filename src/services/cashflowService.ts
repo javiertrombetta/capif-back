@@ -789,9 +789,10 @@ export const getCashflowsService = async (req: any): Promise<{ status: number; d
 
     const { count, rows: cashflows } = await Cashflow.findAndCountAll({
         where: whereCondition,
-        order: [['saldo_actual_productora', 'DESC']], // Ordenar por saldo descendente
+        order: [['saldo_actual_productora', 'DESC']],
         limit: parseInt(limit as string),
-        offset: offset
+        offset: offset,
+        include: [{ model: Productora, as: 'productoraDeCC' }]
     });
 
     return {

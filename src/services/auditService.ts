@@ -205,13 +205,19 @@ export const actualizarFechaFinSesion = async (
 };
 
 const parseDate = (fecha: string): Date => {
-  const [day, month, year] = fecha.split("/").map(Number);
+  const regex = /^\d{2}\/\d{2}\/\d{4}$/;
 
-  if (!day || !month || !year) {
+  if (!regex.test(fecha)) {
     throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_INVALID_FORMAT);
   }
 
-  return new Date(year, month - 1, day, 0, 0, 0);
+  const [day, month, year] = fecha.split("/").map(Number);
+
+  if (!day || !month || !year || day > 31 || month > 12) {
+    throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_INVALID_FORMAT);
+  }
+  
+  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
 };
 
 export const getAuditChanges = async (req: Request) => {

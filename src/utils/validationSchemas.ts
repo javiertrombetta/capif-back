@@ -703,16 +703,44 @@ export const getPostulacionesByIdSchema = Joi.object({
   }),
 });
 
-export const getAllPostulacionesQuerySchema = Joi.object({
-  startDate: Joi.date().iso().optional().messages({
-    "date.base": "La fecha de inicio debe ser válida.",
-    "date.format": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD o ISO 8601).",
-  }),
+// Función personalizada para validar fechas en formato DD/MM/YYYY o ISO 8601
+const customDateValidation = (value: string, helpers: Joi.CustomHelpers) => {
+  // Si es un string en formato ISO válido, lo aceptamos
+  if (!isNaN(Date.parse(value))) {
+    return value;
+  }
 
-  endDate: Joi.date().iso().optional().messages({
-    "date.base": "La fecha de fin debe ser válida.",
-    "date.format": "La fecha de fin debe estar en formato ISO (YYYY-MM-DD o ISO 8601).",
-  }),
+  // Validar formato DD/MM/YYYY
+  const regex = /^\d{2}\/\d{2}\/\d{4}$/;
+  if (!regex.test(value)) {
+    return helpers.error("any.invalid", { message: "La fecha debe estar en formato ISO (YYYY-MM-DD) o en formato DD/MM/YYYY." });
+  }
+
+  const [day, month, year] = value.split("/").map(Number);
+  if (!day || !month || !year || day > 31 || month > 12) {
+    return helpers.error("any.invalid", { message: "La fecha en formato DD/MM/YYYY no es válida." });
+  }
+
+  return value;
+};
+
+// Esquema de validación con fecha personalizada
+export const getAllPostulacionesQuerySchema = Joi.object({
+  startDate: Joi.string()
+    .custom(customDateValidation)
+    .optional()
+    .messages({
+      "string.base": "La fecha de inicio debe ser válida.",
+      "any.invalid": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD) o DD/MM/YYYY.",
+    }),
+
+  endDate: Joi.string()
+    .custom(customDateValidation)
+    .optional()
+    .messages({
+      "string.base": "La fecha de fin debe ser válida.",
+      "any.invalid": "La fecha de fin debe estar en formato ISO (YYYY-MM-DD) o DD/MM/YYYY.",
+    }),
 
   productoraName: Joi.string().trim().optional().messages({
     "string.base": "El nombre de la productora debe ser un texto.",

@@ -47,7 +47,7 @@ UsuarioVista.init(
       },
     },
     nombre_vista_superior: {
-      type: DataTypes.STRING,      
+      type: DataTypes.STRING,
       allowNull: true,
       validate: {
         len: {
@@ -74,12 +74,16 @@ UsuarioVista.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['rol_id', 'nombre_vista_superior'],
-        name: 'idx_rol_nombre_vista',
+        fields: ['rol_id'],
+        name: 'idx_usuario_vista_rol_id',
       },
       {
-        fields: ['nombre_vista', 'nombre_vista_superior'],
-        name: 'idx_nombre_vista_superior',
+        fields: ['nombre_vista'],
+        name: 'idx_usuario_vista_nombre_vista',
+      },
+      {
+        fields: ['nombre_vista_superior', 'nombre_vista'],
+        name: 'idx_usuario_vista_nombre_vista_superior',
       },
     ],
   }

@@ -222,24 +222,20 @@ Usuario.init(
         unique: true,
       },
       {
-        fields: ["nombre"],
-        name: "idx_usuario_nombre",
-      },
-      {
-        fields: ["apellido"],
-        name: "idx_usuario_apellido",
+        fields: ["nombre", "apellido"],
+        name: "idx_usuario_nombre_apellido",
       },
       {
         fields: ["tipo_registro"],
         name: "idx_usuario_tipo_registro",
       },
       {
-        fields: ["is_bloqueado"],
-        name: "idx_usuario_bloqueado",
+        fields: ["is_bloqueado", "fecha_ultimo_inicio_sesion"],
+        name: "idx_usuario_bloqueo_fecha",
       },
       {
-        fields: ['rol_id'],
-        name: 'idx_usuario_rol_id',
+        fields: ["rol_id", "fecha_ultimo_cambio_rol"],
+        name: "idx_usuario_rol_cambio",
       },
     ],
   }

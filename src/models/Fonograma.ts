@@ -208,6 +208,10 @@ Fonograma.init(
         name: 'idx_fonograma_datos_artista',
       },
       {
+        fields: ["titulo", "artista"],
+        name: "idx_fonograma_titulo_artista",
+      },
+      {
         fields: ['sello_discografico'],
         name: 'idx_fonograma_datos_sello_discografico',
       },
@@ -215,6 +219,10 @@ Fonograma.init(
         fields: ['anio_lanzamiento'],
         name: 'idx_fonograma_datos_anio_lanzamiento',
       },
+      {
+        fields: ["archivo_audio_id"],
+        name: "idx_fonograma_archivo_audio_id",
+      }
     ],
   }
 );

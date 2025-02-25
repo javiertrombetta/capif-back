@@ -7,8 +7,7 @@ class FonogramaTerritorioMaestro extends Model {
   public id_territorio_maestro!: string;
   public fonograma_id!: string;
   public territorio_id!: string;
-  public is_activo!: boolean;
-  
+  public is_activo!: boolean;  
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -77,12 +76,21 @@ FonogramaTerritorioMaestro.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['fonograma_id'],
-        name: 'idx_territorio_maestro_fonograma_id',
-      },      
+        fields: ["fonograma_id"],
+        name: "idx_territorio_maestro_fonograma_id",
+      },
       {
-        fields: ['territorio_id'],
-        name: 'idx_territorio_maestro_territorio',
+        fields: ["territorio_id"],
+        name: "idx_territorio_maestro_territorio_id",
+      },
+      {
+        fields: ["fonograma_id", "territorio_id"],
+        name: "idx_territorio_maestro_fonograma_territorio",
+        unique: true,
+      },
+      {
+        fields: ["is_activo"],
+        name: "idx_territorio_maestro_is_activo",
       },
     ],
   }

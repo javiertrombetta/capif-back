@@ -190,17 +190,29 @@ Conflicto.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['productora_id'],
-        name: 'idx_conflicto_productora_id',
+        fields: ["productora_id"],
+        name: "idx_conflicto_productora_id",
       },
       {
-        fields: ['fonograma_id'],
-        name: 'idx_conflicto_fonograma_id',
+        fields: ["fonograma_id"],
+        name: "idx_conflicto_fonograma_id",
       },
       {
-        fields: ['estado_conflicto'],
-        name: 'idx_conflicto_estado',
-      },      
+        fields: ["estado_conflicto"],
+        name: "idx_conflicto_estado",
+      },
+      {
+        fields: ["fecha_inicio_conflicto", "estado_conflicto"],
+        name: "idx_conflicto_fecha_inicio_estado",
+      },
+      {
+        fields: ["fecha_fin_conflicto"],
+        name: "idx_conflicto_fecha_fin",
+      },
+      {
+        fields: ["createdAt"],
+        name: "idx_conflicto_created_at",
+      },
     ],
   }
 );

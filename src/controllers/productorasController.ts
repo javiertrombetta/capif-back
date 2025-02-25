@@ -456,18 +456,41 @@ export const getPostulacionById = async (req: Request, res: Response, next: Next
 };
 
 // Obtener todas las postulaciones y OPCIONAL entre fechas definidas
+const parseDate = (dateString: string): Date | null => {
+  // Si la fecha ya está en formato ISO, simplemente la convertimos a Date
+  if (!isNaN(Date.parse(dateString))) {
+    return new Date(dateString);
+  }
+
+  // Intentar parsear formato DD/MM/YYYY
+  const regex = /^\d{2}\/\d{2}\/\d{4}$/;
+  if (!regex.test(dateString)) {
+    return null; // No es un formato válido
+  }
+
+  const [day, month, year] = dateString.split("/").map(Number);
+
+  if (!day || !month || !year || day > 31 || month > 12) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day);
+};
+
 export const getAllPostulaciones = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { startDate, endDate, productoraName, page, limit } = req.query;
 
-    const start = startDate ? parseISO(startDate as string) : undefined;
-    const end = endDate ? parseISO(endDate as string) : undefined;
+    // Convertir fechas usando la función de parsing
+    const start = startDate && typeof startDate === "string" ? parseDate(startDate) : undefined;
+    const end = endDate && typeof endDate === "string" ? parseDate(endDate) : undefined;
 
-    if (startDate && !isValid(start)) {
+    // Validar que las fechas sean correctas
+    if (startDate && (!start || isNaN(start.getTime()))) {
       return res.status(400).json({ error: "La fecha de inicio (startDate) no es válida." });
     }
 
-    if (endDate && !isValid(end)) {
+    if (endDate && (!end || isNaN(end.getTime()))) {
       return res.status(400).json({ error: "La fecha de fin (endDate) no es válida." });
     }
 
@@ -482,8 +505,8 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
     );
 
     const response = await productoraService.getAllPostulaciones({
-      startDate: start?.toISOString(),
-      endDate: end?.toISOString(),
+      startDate: start ? start.toISOString() : undefined,
+      endDate: end ? end.toISOString() : undefined,
       productoraName: productoraName as string | undefined,
       page: page ? parseInt(page as string, 10) : 1,
       limit: limit ? parseInt(limit as string, 10) : 10,

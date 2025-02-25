@@ -133,7 +133,8 @@ CashflowTraspaso.init(
       { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_traspaso_maestro_id' },
       { fields: ['cuit_origen'], name: 'idx_cashflow_traspaso_cuit_origen' },
       { fields: ['cuit_destino'], name: 'idx_cashflow_traspaso_cuit_destino' },
-      { fields: ['isrc'], name: 'idx_cashflow_traspaso_isrc' },
+      { fields: ['fecha_traspaso'], name: 'idx_cashflow_traspaso_fecha' },
+      { fields: ['cuit_origen', 'cuit_destino'], name: 'idx_cashflow_traspaso_cuit_origen_destino' }
     ],
   }
 );

@@ -76,10 +76,20 @@ ProductoraISRC.init(
     indexes: [
       {
         fields: ['productora_id'],
+        name: 'idx_productora_isrc_productora_id',
+      },
+      {
+        fields: ['codigo_productora'],
+        name: 'idx_productora_isrc_codigo_productora',
       },
       {
         fields: ['codigo_productora', 'tipo'],
         unique: true,
+        name: 'idx_productora_isrc_codigo_tipo',
+      },
+      {
+        fields: ['createdAt'],
+        name: 'idx_productora_isrc_created_at',
       },
     ],
   }

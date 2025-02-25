@@ -103,6 +103,19 @@ ProductoraMensaje.init(
         fields: ['productora_id'],
         name: 'idx_mensaje_productora',
       },
+      {
+        fields: ['usuario_id', 'productora_id'],
+        name: 'idx_mensaje_usuario_productora',
+        unique: false,
+      },
+      {
+        fields: ['tipo_mensaje'],
+        name: 'idx_mensaje_tipo',
+      },
+      {
+        fields: ['createdAt'],
+        name: 'idx_mensaje_created_at',
+      },
     ],
   }
 );

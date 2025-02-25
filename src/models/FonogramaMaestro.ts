@@ -79,10 +79,17 @@ FonogramaMaestro.init(
       {
         fields: ['fonograma_id'],
         name: 'idx_maestro_fonograma_id',
+        using: 'BTREE',
       },
       {
         fields: ['operacion'],
         name: 'idx_maestro_operacion',
+        using: 'BTREE',
+      },
+      {
+        fields: ['fecha_operacion', 'fonograma_id'],
+        name: 'idx_fecha_operacion_fonograma_id',
+        using: 'BTREE',
       },
     ],
   }

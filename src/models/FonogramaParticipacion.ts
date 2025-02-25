@@ -79,7 +79,7 @@ FonogramaParticipacion.init(
     fecha_participacion_hasta: {
       type: DataTypes.DATE,
       allowNull: false,
-      defaultValue: new Date('2099-12-20T00:00:00Z'),
+      defaultValue: new Date('2099-12-31T00:00:00Z'),
       validate: {
         isDate: {
           args: true,
@@ -119,6 +119,19 @@ FonogramaParticipacion.init(
         fields: ['productora_id'],
         name: 'idx_participacion_productora_id',
       },      
+      {
+        fields: ['fonograma_id', 'productora_id'],
+        name: 'idx_participacion_fonograma_productora',
+        unique: true,
+      },
+      {
+        fields: ['fecha_participacion_inicio', 'fecha_participacion_hasta'],
+        name: 'idx_participacion_fechas',
+      },
+      {
+        fields: ['porcentaje_participacion'],
+        name: 'idx_participacion_porcentaje',
+      }
     ],
   }
 );

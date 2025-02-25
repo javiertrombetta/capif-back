@@ -119,6 +119,14 @@ FonogramaEnvio.init(
         fields: ['tipo_contenido'],
         name: 'idx_envio_tipo_contenido',
       },
+      {
+        fields: ['fecha_envio_ultimo'],
+        name: 'idx_envio_fecha_envio_ultimo',
+      },
+      {
+        fields: ['tipo_estado', 'fecha_envio_ultimo'],
+        name: 'idx_envio_tipo_estado_fecha',
+      },
     ],
   }
 );

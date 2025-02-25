@@ -77,8 +77,9 @@ CashflowRechazo.init(
     tableName: 'CashflowRechazo',
     timestamps: true,
     indexes: [
-      { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_rechazo_maestro_id' },
-      { fields: ['referencia'], name: 'idx_cashflow_rechazo_referencia', unique: true },
+      { fields: ["cashflow_maestro_id"], name: "idx_cashflow_rechazo_maestro_id" },
+      { fields: ["referencia"], name: "idx_cashflow_rechazo_referencia", unique: true },
+      { fields: ["fecha_rechazo"], name: "idx_cashflow_rechazo_fecha_rechazo" },
     ],
   }
 );

@@ -143,14 +143,13 @@ ConflictoParte.init(
     tableName: 'ConflictoParte',
     timestamps: true,
     indexes: [
-      {
-        fields: ['conflicto_id'],
-        name: 'idx_conflicto_participacion_conflicto_id',
-      },
-      {
-        fields: ['participacion_id'],
-        name: 'idx_conflicto_participacion_participacion_id',
-      },
+      { fields: ['conflicto_id'], name: 'idx_conflicto_participacion_conflicto_id' },
+      { fields: ['participacion_id'], name: 'idx_conflicto_participacion_participacion_id' },
+      { fields: ['conflicto_id', 'estado'], name: 'idx_conflicto_participacion_conflicto_estado' },
+      { fields: ['createdAt'], name: 'idx_conflicto_participacion_created_at' },
+      { fields: ['estado'], name: 'idx_conflicto_participacion_estado' },
+      { fields: ['fecha_respuesta_confirmacion'], name: 'idx_conflicto_participacion_fecha_confirmacion' },
+      { fields: ['fecha_respuesta_documentacion'], name: 'idx_conflicto_participacion_fecha_documentacion' },
     ],
   }
 );

@@ -59,10 +59,19 @@ FonogramaArchivo.init(
     modelName: 'FonogramaArchivo',
     tableName: 'FonogramaArchivo',
     timestamps: true,
-    indexes: [      
+    indexes: [
       {
         fields: ['fonograma_id'],
         name: 'idx_fonograma_archivo_fonograma_id',
+      },
+      {
+        fields: ['ruta_archivo_audio'],
+        name: 'idx_fonograma_archivo_ruta_audio',
+        using: 'BTREE',
+      },
+      {
+        fields: ['createdAt'],
+        name: 'idx_fonograma_archivo_created_at',
       },
     ],
   }

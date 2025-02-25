@@ -41,9 +41,17 @@ UsuarioRol.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['nombre_rol'],
-        name: 'idx_rol_nombre_rol',
+        fields: ["nombre_rol"],
+        name: "idx_rol_nombre_rol",
         unique: true,
+      },
+      {
+        fields: ["createdAt"],
+        name: "idx_usuario_rol_created_at",
+      },
+      {
+        fields: ["updatedAt"],
+        name: "idx_usuario_rol_updated_at",
       },
     ],
   }

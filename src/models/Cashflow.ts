@@ -60,10 +60,10 @@ Cashflow.init(
     tableName: 'Cashflow',
     timestamps: true,
     indexes: [
-      {
-        fields: ['productora_id'],
-        name: 'idx_cashflow_productora_id',
-      },      
+      { fields: ["id_cashflow"], name: "idx_cashflow_id", unique: true },
+      { fields: ["productora_id"], name: "idx_cashflow_productora_id" },
+      { fields: ["saldo_actual_productora"], name: "idx_cashflow_saldo" },
+      { fields: ["createdAt"], name: "idx_cashflow_created_at" },
     ],
   }
 );

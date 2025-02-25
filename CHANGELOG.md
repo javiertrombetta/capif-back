@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.27 - 25-02-2025
+## 🐛 Fixes
+
+- fix: change sesions model
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.24
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.24 - 25-02-2025
 ## 🐛 Fixes
 

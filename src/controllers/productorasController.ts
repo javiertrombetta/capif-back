@@ -16,7 +16,6 @@ import { getAuthenticatedUser } from '../services/authService';
 
 import * as MESSAGES from '../utils/messages';
 import * as Err from "../utils/customErrors";
-import { parseDate } from '../utils/dateFormat';
 
 // Obtener una productora por ID
 export const getProductoraById = async (req: Request, res: Response, next: NextFunction) => {
@@ -460,9 +459,9 @@ export const getAllPostulaciones = async (req: Request, res: Response, next: Nex
   try {
     const { startDate, endDate, productoraName, page, limit } = req.query;
 
-    // Convertir fechas usando la función de parsing
-    const start = startDate && typeof startDate === "string" ? parseDate(startDate) : undefined;
-    const end = endDate && typeof endDate === "string" ? parseDate(endDate) : undefined;
+    // Convertir fechas usando new Date() para formato ISO 8601 (YYYY-MM-DD)
+    const start = startDate && typeof startDate === "string" ? new Date(startDate) : undefined;
+    const end = endDate && typeof endDate === "string" ? new Date(endDate) : undefined;
 
     // Validar que las fechas sean correctas
     if (startDate && (!start || isNaN(start.getTime()))) {

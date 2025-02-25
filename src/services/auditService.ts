@@ -7,7 +7,6 @@ import { ENTIDADES_PERMITIDAS } from "../models/AuditoriaCambio";
 
 import * as MESSAGES from "../utils/messages";
 import * as Err from "../utils/customErrors";
-import { parseDate } from "../utils/dateFormat";
 
 /**
  * Crea un registro de auditoría genérico.
@@ -210,33 +209,38 @@ export const getAuditChanges = async (req: Request) => {
 
   const filters: any = {};
 
-  // Manejo de fechas en formato DD/MM/AAAA
+  // Manejo de fechas en formato ISO (YYYY-MM-DD)
   if (fechaDesde || fechaHasta) {
     try {
-      let startDate = fechaDesde ? parseDate(fechaDesde as string) : null;
-      let endDate = fechaHasta ? parseDate(fechaHasta as string) : null;
+      let startDate: Date | null = fechaDesde ? new Date(fechaDesde as string) : null;
+      let endDate: Date | null = fechaHasta ? new Date(fechaHasta as string) : new Date();
+
+      // Verificar si las fechas son válidas
+      if (startDate && isNaN(startDate.getTime())) {
+        throw new Err.BadRequestError(`Error en la fecha proporcionada: fechaDesde.`);
+      }
+
+      if (endDate && isNaN(endDate.getTime())) {
+        throw new Err.BadRequestError(`Error en la fecha proporcionada: fechaHasta.`);
+      }
 
       // Si `fechaDesde` no se proporciona, usar un valor mínimo (2000-01-01)
       if (!startDate) {
         startDate = new Date(2000, 0, 1);
       }
 
-      // Si `fechaHasta` no se proporciona:
+      // Si `fechaHasta` no se proporciona, ajustarlo al final del día actual
       if (!endDate) {
-        // Si `startDate` es en el futuro, `endDate` debe ser el final del mismo día de `startDate`
-        if (startDate > new Date()) {
-          endDate = new Date(startDate.getTime());
-        } else {
-          // Si `startDate` es en el pasado o presente, `endDate` es el final del día actual
-          endDate = new Date();
-        }
+        endDate = new Date();
         endDate.setHours(23, 59, 59, 999);
       }
 
+      // Verificar que `fechaDesde` no sea posterior a `fechaHasta`
       if (startDate > endDate) {
         throw new Err.BadRequestError(`El rango de fechas es inválido: fechaDesde (${fechaDesde}) es posterior a fechaHasta (${fechaHasta || "hoy"}).`);
       }
 
+      // Filtrar transacciones entre las fechas proporcionadas
       filters.createdAt = {
         ...(startDate && { [Op.gte]: startDate }),
         ...(endDate && { [Op.lte]: endDate }),
@@ -314,33 +318,38 @@ export const getRepertoireAuditChanges = async (req: Request) => {
 
   const filters: any = {};
 
-  // Manejo de rango de fechas en formato DD/MM/AAAA
+  // Manejo de rango de fechas en formato ISO (YYYY-MM-DD)
   if (fechaDesde || fechaHasta) {
     try {
-      let startDate = fechaDesde ? parseDate(fechaDesde as string) : null;
-      let endDate = fechaHasta ? parseDate(fechaHasta as string) : null;
+      let startDate: Date | null = fechaDesde ? new Date(fechaDesde as string) : null;
+      let endDate: Date | null = fechaHasta ? new Date(fechaHasta as string) : new Date();
+
+      // Verificar si las fechas son válidas
+      if (startDate && isNaN(startDate.getTime())) {
+        throw new Err.BadRequestError(`Error en la fecha proporcionada: fechaDesde.`);
+      }
+
+      if (endDate && isNaN(endDate.getTime())) {
+        throw new Err.BadRequestError(`Error en la fecha proporcionada: fechaHasta.`);
+      }
 
       // Si `fechaDesde` no se proporciona, usar un valor mínimo (2000-01-01)
       if (!startDate) {
         startDate = new Date(2000, 0, 1);
       }
 
-      // Si `fechaHasta` no se proporciona:
+      // Si `fechaHasta` no se proporciona, ajustarlo al final del día actual
       if (!endDate) {
-        // Si `startDate` es en el futuro, `endDate` debe ser el final del mismo día de `startDate`
-        if (startDate > new Date()) {
-          endDate = new Date(startDate.getTime());
-        } else {
-          // Si `startDate` es en el pasado o presente, `endDate` es el final del día actual
-          endDate = new Date();
-        }
+        endDate = new Date();
         endDate.setHours(23, 59, 59, 999);
       }
 
+      // Verificar que `fechaDesde` no sea posterior a `fechaHasta`
       if (startDate > endDate) {
         throw new Err.BadRequestError(`El rango de fechas es inválido: fechaDesde (${fechaDesde}) es posterior a fechaHasta (${fechaHasta || "hoy"}).`);
       }
 
+      // Filtrar transacciones entre las fechas proporcionadas
       filters.createdAt = {
         ...(startDate && { [Op.gte]: startDate }),
         ...(endDate && { [Op.lte]: endDate }),
@@ -451,38 +460,43 @@ export const getSessionAuditChanges = async (req: Request) => {
 
   const filters: any = {};
 
-  // Manejo de rango de fechas en formato DD/MM/AAAA
+  // Manejo de rango de fechas en formato ISO (YYYY-MM-DD)
   if (fechaDesde || fechaHasta) {
     try {
-      let startDate = fechaDesde ? parseDate(fechaDesde as string) : null;
-      let endDate = fechaHasta ? parseDate(fechaHasta as string) : null;
+      let startDate: Date | null = fechaDesde ? new Date(fechaDesde as string) : null;
+      let endDate: Date | null = fechaHasta ? new Date(fechaHasta as string) : new Date();
+
+      // Verificar si las fechas son válidas
+      if (startDate && isNaN(startDate.getTime())) {
+        throw new Err.BadRequestError(`Error en la fecha proporcionada: fechaDesde.`);
+      }
+
+      if (endDate && isNaN(endDate.getTime())) {
+        throw new Err.BadRequestError(`Error en la fecha proporcionada: fechaHasta.`);
+      }
 
       // Si `fechaDesde` no se proporciona, usar un valor mínimo (2000-01-01)
       if (!startDate) {
         startDate = new Date(2000, 0, 1);
       }
 
-      // Si `fechaHasta` no se proporciona:
+      // Si `fechaHasta` no se proporciona, ajustarlo al final del día actual
       if (!endDate) {
-        // Si `startDate` es en el futuro, `endDate` debe ser el final del mismo día de `startDate`
-        if (startDate > new Date()) {
-          endDate = new Date(startDate.getTime());
-        } else {
-          // Si `startDate` es en el pasado o presente, `endDate` es el final del día actual
-          endDate = new Date();
-        }
+        endDate = new Date();
         endDate.setHours(23, 59, 59, 999);
       }
 
-      if (startDate > endDate) {       
+      // Verificar que `fechaDesde` no sea posterior a `fechaHasta`
+      if (startDate > endDate) {
         throw new Err.BadRequestError(`El rango de fechas es inválido: fechaDesde (${fechaDesde}) es posterior a fechaHasta (${fechaHasta || "hoy"}).`);
       }
 
+      // Filtrar transacciones entre las fechas proporcionadas
       filters.fecha_inicio_sesion = {
         ...(startDate && { [Op.gte]: startDate }),
         ...(endDate && { [Op.lte]: endDate }),
       };
-    } catch (error) {     
+    } catch (error) {
       throw new Err.BadRequestError(`Error en las fechas proporcionadas. Verifica el formato o el rango.`);
     }
   }

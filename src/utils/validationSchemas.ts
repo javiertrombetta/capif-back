@@ -703,44 +703,16 @@ export const getPostulacionesByIdSchema = Joi.object({
   }),
 });
 
-// Función personalizada para validar fechas en formato DD/MM/YYYY o ISO 8601
-const customDateValidation = (value: string, helpers: Joi.CustomHelpers) => {
-  // Si es un string en formato ISO válido, lo aceptamos
-  if (!isNaN(Date.parse(value))) {
-    return value;
-  }
-
-  // Validar formato DD/MM/YYYY
-  const regex = /^\d{2}\/\d{2}\/\d{4}$/;
-  if (!regex.test(value)) {
-    return helpers.error("any.invalid", { message: "La fecha debe estar en formato ISO (YYYY-MM-DD) o en formato DD/MM/YYYY." });
-  }
-
-  const [day, month, year] = value.split("/").map(Number);
-  if (!day || !month || !year || day > 31 || month > 12) {
-    return helpers.error("any.invalid", { message: "La fecha en formato DD/MM/YYYY no es válida." });
-  }
-
-  return value;
-};
-
-// Esquema de validación con fecha personalizada
 export const getAllPostulacionesQuerySchema = Joi.object({
-  startDate: Joi.string()
-    .custom(customDateValidation)
-    .optional()
-    .messages({
-      "string.base": "La fecha de inicio debe ser válida.",
-      "any.invalid": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD) o DD/MM/YYYY.",
-    }),
+  startDate: Joi.date().iso().optional().messages({
+    "date.base": "La fecha de inicio debe ser válida.",
+    "date.format": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD).",
+  }),
 
-  endDate: Joi.string()
-    .custom(customDateValidation)
-    .optional()
-    .messages({
-      "string.base": "La fecha de fin debe ser válida.",
-      "any.invalid": "La fecha de fin debe estar en formato ISO (YYYY-MM-DD) o DD/MM/YYYY.",
-    }),
+  endDate: Joi.date().iso().optional().messages({
+    "date.base": "La fecha de fin debe ser válida.",
+    "date.format": "La fecha de fin debe estar en formato ISO (YYYY-MM-DD).",
+  }),
 
   productoraName: Joi.string().trim().optional().messages({
     "string.base": "El nombre de la productora debe ser un texto.",
@@ -760,12 +732,13 @@ export const getAllPostulacionesQuerySchema = Joi.object({
 export const createPostulacionesQuerySchema = Joi.object({
   startDate: Joi.date().iso().required().messages({
     "date.base": "La fecha de inicio debe ser válida.",
-    "date.format": "La fecha de inicio debe estar en formato ISO.",
+    "date.format": "La fecha de inicio debe estar en formato ISO (YYYY-MM-DD).",
     "any.required": "La fecha de inicio es obligatoria.",
   }),
+
   endDate: Joi.date().iso().required().messages({
     "date.base": "La fecha de fin debe ser válida.",
-    "date.format": "La fecha de fin debe estar en formato ISO.",
+    "date.format": "La fecha de fin debe estar en formato ISO (YYYY-MM-DD).",
     "any.required": "La fecha de fin es obligatoria.",
   }),
 });
@@ -2050,7 +2023,7 @@ export const deleteTerritorioSchema = Joi.object({
 export const listTransactionsSchema = Joi.object({
   cuit: Joi.string()
     .optional()
-    .pattern(/^[0-9]{11}$/)    
+    .pattern(/^[0-9]{11}$/)
     .messages({
       'string.length': 'El CUIT debe tener exactamente 11 caracteres.',
       'string.pattern.base': 'El CUIT debe contener solo números.',
@@ -2064,24 +2037,20 @@ export const listTransactionsSchema = Joi.object({
 
   tipo_transaccion: Joi.string()
     .optional()
-    .valid('LIQUIDACION', 'PAGO', 'RECHAZO', 'TRASPASO', 'ACTUALIZACION')    
+    .valid('LIQUIDACION', 'PAGO', 'RECHAZO', 'TRASPASO', 'ACTUALIZACION')
     .messages({
       'any.only': 'El tipo de transacción debe ser LIQUIDACION, PAGO, RECHAZO, TRASPASO o ACTUALIZACION.',
     }),
 
-  fecha_desde: Joi.string()
-    .optional()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)    
-    .messages({
-      'string.pattern.base': 'La fecha_desde debe tener el formato dd/MM/yyyy.',
-    }),
+  fecha_desde: Joi.date().iso().optional().messages({
+    'date.base': 'La fecha_desde debe ser una fecha válida.',
+    'date.format': 'La fecha_desde debe estar en formato ISO (YYYY-MM-DD).',
+  }),
 
-  fecha_hasta: Joi.string()
-    .optional()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)    
-    .messages({
-      'string.pattern.base': 'La fecha_hasta debe tener el formato dd/MM/yyyy.',
-    }),
+  fecha_hasta: Joi.date().iso().optional().messages({
+    'date.base': 'La fecha_hasta debe ser una fecha válida.',
+    'date.format': 'La fecha_hasta debe estar en formato ISO (YYYY-MM-DD).',
+  }),
 
   referencia: Joi.string()
     .optional()
@@ -2094,7 +2063,7 @@ export const listTransactionsSchema = Joi.object({
     .optional()
     .integer()
     .min(1)
-    .default(1)    
+    .default(1)
     .messages({
       'number.base': 'El número de página debe ser un número válido.',
       'number.integer': 'El número de página debe ser un número entero.',
@@ -2106,7 +2075,7 @@ export const listTransactionsSchema = Joi.object({
     .integer()
     .min(1)
     .max(100)
-    .default(50)    
+    .default(50)
     .messages({
       'number.base': 'El límite debe ser un número válido.',
       'number.integer': 'El límite debe ser un número entero.',
@@ -2165,14 +2134,14 @@ export const getCashflowsSchema = Joi.object({
 
 export const getAuditChangesQuerySchema = Joi.object({
   fechaDesde: Joi.string()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
       "string.pattern.base": "El campo 'fechaDesde' debe estar en formato DD/MM/AAAA.",
     }),
 
   fechaHasta: Joi.string()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
       "string.pattern.base": "El campo 'fechaHasta' debe estar en formato DD/MM/AAAA.",
@@ -2251,14 +2220,14 @@ export const getAuditChangesQuerySchema = Joi.object({
 
 export const getRepertoireChangesQuerySchema = Joi.object({
   fechaDesde: Joi.string()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
       "string.pattern.base": "El campo 'fechaDesde' debe estar en formato DD/MM/AAAA.",
     }),
 
   fechaHasta: Joi.string()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
       "string.pattern.base": "El campo 'fechaHasta' debe estar en formato DD/MM/AAAA.",
@@ -2320,14 +2289,14 @@ export const getRepertoireChangesQuerySchema = Joi.object({
 
 export const getSessionAuditChangesQuerySchema = Joi.object({
   fechaDesde: Joi.string()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
       "string.pattern.base": "El campo 'fechaDesde' debe estar en formato DD/MM/AAAA.",
     }),
 
   fechaHasta: Joi.string()
-    .pattern(/^\d{2}\/\d{2}\/\d{4}$/)
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
       "string.pattern.base": "El campo 'fechaHasta' debe estar en formato DD/MM/AAAA.",

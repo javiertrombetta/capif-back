@@ -974,7 +974,7 @@ export const generarReporteConflictos = async (filtros: {
         {
           model: Productora,
           as: "productoraDelConflicto",
-          attributes: ["id_productora", "nombre"],
+          attributes: ["id_productora", "nombre_productora"],
           where: productora_id ? { id_productora: productora_id } : undefined,
         },
       ],

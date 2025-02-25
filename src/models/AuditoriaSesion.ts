@@ -48,27 +48,17 @@ AuditoriaSesion.init(
       },
     },
     ip_origen: {
-      type: DataTypes.STRING(45),
+      type: DataTypes.STRING,
       allowNull: false,
       validate: {
         isIP: {
           msg: "La dirección IP debe ser válida.",
-        },
-        len: {
-          args: [0, 45],
-          msg: "La dirección IP no puede exceder los 45 caracteres.",
-        },
+        },       
       },
     },
     navegador: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        len: {
-          args: [0, 100],
-          msg: "El navegador no puede exceder los 100 caracteres.",
-        },
-      },
     },
     fecha_inicio_sesion: {
       type: DataTypes.DATE,

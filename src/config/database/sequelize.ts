@@ -47,8 +47,11 @@ const sequelize = new Sequelize(
     dialect: "postgres",
     logging: false,
     dialectOptions: {
+      timezone: process.env.TZ,
+      useUTC: false,
       ssl: env === "production.remote" ? { require: true, rejectUnauthorized: false } : false,
     },
+    timezone: process.env.TZ,
   }
 );
 

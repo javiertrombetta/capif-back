@@ -16,6 +16,7 @@ import { getAuthenticatedUser } from '../services/authService';
 
 import * as MESSAGES from '../utils/messages';
 import * as Err from "../utils/customErrors";
+import { parseDate } from '../utils/dateFormat';
 
 // Obtener una productora por ID
 export const getProductoraById = async (req: Request, res: Response, next: NextFunction) => {
@@ -453,28 +454,6 @@ export const getPostulacionById = async (req: Request, res: Response, next: Next
   } catch (err) {
     handleGeneralError(err, req, res, next, 'Error al obtener las postulaciones');
   }
-};
-
-// Obtener todas las postulaciones y OPCIONAL entre fechas definidas
-const parseDate = (dateString: string): Date | null => {
-  // Si la fecha ya está en formato ISO, simplemente la convertimos a Date
-  if (!isNaN(Date.parse(dateString))) {
-    return new Date(dateString);
-  }
-
-  // Intentar parsear formato DD/MM/YYYY
-  const regex = /^\d{2}\/\d{2}\/\d{4}$/;
-  if (!regex.test(dateString)) {
-    return null; // No es un formato válido
-  }
-
-  const [day, month, year] = dateString.split("/").map(Number);
-
-  if (!day || !month || !year || day > 31 || month > 12) {
-    return null;
-  }
-
-  return new Date(year, month - 1, day);
 };
 
 export const getAllPostulaciones = async (req: Request, res: Response, next: NextFunction) => {

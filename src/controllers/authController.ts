@@ -146,10 +146,10 @@ export const login = async (
 
     // Generar un token básico con `userId`
     const token = jwt.sign(
-      { id: targetUser.id_usuario },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRATION || "1h" }
-    );
+    { id: targetUser.id_usuario },
+    process.env.JWT_SECRET!,
+    { expiresIn: parseInt(process.env.JWT_EXPIRATION || '3600', 10) }
+  );
 
     res.cookie("auth_token", token, {
       httpOnly: true,
@@ -301,7 +301,7 @@ export const registerPrimaryProductor = async (
     );
 
     // Generar token de verificación
-    const tokenExpiration = process.env.EMAIL_TOKEN_EXPIRATION || "1d";
+    const tokenExpiration = parseInt(process.env.EMAIL_TOKEN_EXPIRATION || '3600', 10);
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
@@ -448,7 +448,7 @@ export const registerSecondaryProductor = async (
     );
 
     // Generar y asignar el token de verificación
-    const tokenExpiration = process.env.EMAIL_TOKEN_EXPIRATION || "1d";
+    const tokenExpiration = parseInt(process.env.EMAIL_TOKEN_EXPIRATION || '3600', 10);
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
@@ -656,7 +656,7 @@ export const requestPasswordReset = async (
     const { user: targetUser }: UsuarioResponse = await getTargetUser({ email }, req);
 
     // Configuración de expiración del token de restablecimiento
-    const tokenExpiration = process.env.RESET_TOKEN_EXPIRATION || "1h";
+    const tokenExpiration = parseInt(process.env.RESET_TOKEN_EXPIRATION || '3600', 10);
     if (!process.env.JWT_SECRET) {
       throw new Error("Falta JWT_SECRET en el archivo de configuración");
     }

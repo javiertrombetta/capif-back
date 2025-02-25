@@ -38,8 +38,10 @@ import { transactionMiddleware } from "./middlewares/transaction";
 
 import router from './routes';
 
+
 const app = express();
 const globalPrefix = process.env.GLOBAL_PREFIX || 'api/v1';
+process.env.TZ = process.env.TZ || 'America/Argentina/Buenos_Aires';
 
 // Validar `UPLOAD_DIR`
 if (!process.env.UPLOAD_DIR) {
@@ -85,13 +87,19 @@ app.use(
 
 // Logging y Rate Limiting
 const isProduction = process.env.NODE_ENV?.startsWith('production');
-const skipSuccessLogs = (req: Request, res: Response) => res.statusCode < 400;
+const skipAllLogs = (req: Request, res: Response) => true;
+// Middleware de logs HTTP
 app.use(
-  morgan(isProduction ? 'tiny' : 'combined', {
-    stream: { write: (message: string) => logger.info(message.trim()) },
-    skip: skipSuccessLogs,
-  })
+  morgan(
+    isProduction ? 'tiny' : 'combined', {
+      stream: {
+        write: (message: string) => logger.info(message.trim()),
+      },
+      skip: skipAllLogs,
+    }
+  )
 );
+
 // app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100, keyGenerator: (req) => req.ip || 'unknown' }));
 
 // Middleware de transacciones antes de la validación de rutas

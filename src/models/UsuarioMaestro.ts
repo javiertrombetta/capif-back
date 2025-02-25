@@ -70,12 +70,22 @@ UsuarioMaestro.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['usuario_id'],
-        name: 'idx_usuario_maestro_usuario_id',
+        fields: ["usuario_id"],
+        name: "idx_usuario_maestro_usuario_id",
+        unique: false,
       },
       {
-        fields: ['productora_id'],
-        name: 'idx_usuario_maestro_productora_id',
+        fields: ["productora_id"],
+        name: "idx_usuario_maestro_productora_id",
+      },
+      {
+        fields: ["usuario_id", "productora_id"],
+        name: "idx_usuario_maestro_usuario_productora",
+        unique: true,
+      },
+      {
+        fields: ["createdAt"],
+        name: "idx_usuario_maestro_created_at",
       },
     ],
   }

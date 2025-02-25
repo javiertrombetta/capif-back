@@ -83,7 +83,16 @@ UsuarioVistaMaestro.init(
       {
         fields: ['vista_id'],
         name: 'idx_vista_maestro_vista',
-      },  
+      },
+      {
+        fields: ['usuario_id', 'vista_id'],
+        name: 'idx_vista_maestro_usuario_vista',
+        unique: true,
+      },
+      {
+        fields: ['is_habilitado'],
+        name: 'idx_vista_maestro_is_habilitado',
+      },
     ],
   }
 );

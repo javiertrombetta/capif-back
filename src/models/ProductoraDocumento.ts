@@ -91,11 +91,19 @@ ProductoraDocumento.init(
     indexes: [
       {
         fields: ['productora_id'],
-        name: 'idx_documento_productora',
+        name: 'idx_productora_documento_productora_id',
       },
       {
         fields: ['tipo_documento_id'],
-        name: 'idx_documento_tipo_documento',
+        name: 'idx_productora_documento_tipo_documento_id',
+      },
+      {
+        fields: ['createdAt'],
+        name: 'idx_productora_documento_created_at',
+      },
+      {
+        fields: ['productora_id', 'tipo_documento_id'],
+        name: 'idx_productora_documento_compuesto',
       },
     ],
   }

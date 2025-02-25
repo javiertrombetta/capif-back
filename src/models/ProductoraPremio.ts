@@ -86,6 +86,14 @@ ProductoraPremio.init(
         name: 'idx_productora_premio_codigo_postulacion',
         unique: true,
       },
+      {
+        fields: ['fecha_asignacion'],
+        name: 'idx_productora_premio_fecha_asignacion',
+      },
+      {
+        fields: ['createdAt'],
+        name: 'idx_productora_premio_created_at',
+      },
     ],
   }
 );

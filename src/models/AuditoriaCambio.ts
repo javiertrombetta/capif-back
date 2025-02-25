@@ -136,14 +136,22 @@ AuditoriaCambio.init(
     timestamps: true,
     indexes: [
       {
-        fields: ["usuario_originario_id"],
-        name: "idx_auditoria_usuario_originario_id",
+        fields: ["usuario_originario_id", "createdAt"],
+        name: "idx_auditoria_usuario_originario_fecha",
       },
       {
-        fields: ["usuario_destino_id"],
-        name: "idx_auditoria_usuario_destino_id",
+        fields: ["usuario_destino_id", "createdAt"],
+        name: "idx_auditoria_usuario_destino_fecha",
       },
-    ],
+      {
+        fields: ["modelo", "tipo_auditoria"],
+        name: "idx_auditoria_modelo_tipo",
+      },
+      {
+        fields: ["createdAt"],
+        name: "idx_auditoria_fecha",
+      },
+    ]
   }
 );
 

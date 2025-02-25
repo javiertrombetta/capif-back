@@ -41,9 +41,17 @@ ProductoraDocumentoTipo.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['nombre_documento'],
-        name: 'idx_usuario_documento_tipo_nombre',
+        fields: ["id_documento_tipo"],
+        name: "idx_documento_tipo_id",
+      },
+      {
+        fields: ["nombre_documento"],
+        name: "idx_documento_tipo_nombre",
         unique: true,
+      },
+      {
+        fields: ["createdAt"],
+        name: "idx_documento_tipo_created_at",
       },
     ],
   }

@@ -58,13 +58,17 @@ FonogramaTerritorio.init(
     timestamps: true,
     indexes: [
       {
-        fields: ['nombre_pais'],
-        name: 'idx_territorio_nombre_pais',
+        fields: ["nombre_pais", "is_habilitado"],
+        name: "idx_territorio_nombre_pais_habilitado",
       },
       {
-        fields: ['codigo_iso'],
-        name: 'idx_territorio_codigo_iso',
+        fields: ["codigo_iso"],
+        name: "idx_territorio_codigo_iso",
         unique: true,
+      },
+      {
+        fields: ["is_habilitado"],
+        name: "idx_territorio_is_habilitado",
       },
     ],
   }

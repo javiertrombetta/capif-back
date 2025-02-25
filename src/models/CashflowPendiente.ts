@@ -50,7 +50,9 @@ CashflowPendiente.init(
     tableName: 'CashflowPendiente',
     timestamps: true,
     indexes: [
-      { fields: ['isrc'], name: 'idx_cashflow_pendiente_isrc', unique: true },
+      { fields: ['isrc'], name: 'idx_cashflow_pendiente_isrc' },
+      { fields: ['createdAt'], name: 'idx_cashflow_pendiente_created_at' },
+      { fields: ['isrc', 'monto'], name: 'idx_cashflow_pendiente_isrc_monto' },
     ],
   }
 );

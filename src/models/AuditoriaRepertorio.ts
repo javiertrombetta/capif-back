@@ -91,14 +91,10 @@ AuditoriaRepertorio.init(
     tableName: "AuditoriaRepertorio",
     timestamps: true,
     indexes: [
-      {
-        fields: ["usuario_registrante_id"],
-        name: "idx_auditoria_repertorio_usuario",
-      },
-      {
-        fields: ["fonograma_id"],
-        name: "idx_auditoria_repertorio_fonograma",
-      },
+      { fields: ["usuario_registrante_id"], name: "idx_auditoria_repertorio_usuario_id" },
+      { fields: ["fonograma_id"], name: "idx_auditoria_repertorio_fonograma_id" },
+      { fields: ["tipo_auditoria"], name: "idx_auditoria_repertorio_tipo_auditoria" },
+      { fields: ["createdAt"], name: "idx_auditoria_repertorio_created_at" },
     ],
   }
 );

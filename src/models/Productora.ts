@@ -260,39 +260,15 @@ Productora.init(
     tableName: 'Productora',
     timestamps: true,
     indexes: [
-      {
-        fields: ['nombre_productora'],
-        name: 'idx_productora_nombre_productora',
-      },
-      {
-        fields: ['tipo_persona'],
-        name: 'idx_productora_tipo_persona',
-      },
-      {
-        fields: ['cuit_cuil'],
-        name: 'idx_productora_datos_cuit_cuil',
-        unique: true,
-      },
-      {
-        fields: ['email'],
-        name: 'idx_productora_datos_email',
-        unique: true,
-      },
-      {
-        fields: ['alias_cbu'],
-        name: 'idx_productora_datos_alias_cbu',
-        unique: true,
-      },
-      {
-        fields: ['cbu'],
-        name: 'idx_productora_datos_cbu',
-        unique: true,
-      },
-      {
-        fields: ['nombre_productora', 'cuit_cuil'],
-        unique: true,
-        name: 'unique_productora_nombre_cuit',
-      },
+      { fields: ["nombre_productora"], name: "idx_productora_nombre" },
+      { fields: ["tipo_persona"], name: "idx_productora_tipo" },
+      { fields: ["cuit_cuil"], name: "idx_productora_cuit", unique: true },
+      { fields: ["email"], name: "idx_productora_email", unique: true },
+      { fields: ["alias_cbu"], name: "idx_productora_alias_cbu", unique: true },
+      { fields: ["cbu"], name: "idx_productora_cbu", unique: true },
+      { fields: ["cuit_representante"], name: "idx_productora_cuit_representante", unique: false },
+      { fields: ["nombre_productora", "cuit_cuil"], unique: true, name: "unique_productora_nombre_cuit" },
+      { fields: ["fecha_alta"], name: "idx_productora_fecha_alta" },
     ],
   }
 );

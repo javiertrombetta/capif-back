@@ -48,21 +48,25 @@ AuditoriaSesion.init(
       },
     },
     ip_origen: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(45),
       allowNull: false,
       validate: {
         isIP: {
           msg: "La dirección IP debe ser válida.",
         },
+        len: {
+          args: [0, 45],
+          msg: "La dirección IP no puede exceder los 45 caracteres.",
+        },
       },
     },
     navegador: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
       validate: {
         len: {
-          args: [0, 255],
-          msg: "El navegador no puede exceder los 50 caracteres.",
+          args: [0, 100],
+          msg: "El navegador no puede exceder los 100 caracteres.",
         },
       },
     },
@@ -94,10 +98,9 @@ AuditoriaSesion.init(
     tableName: "AuditoriaSesion",
     timestamps: true,
     indexes: [
-      {
-        fields: ["usuario_registrante_id"],
-        name: "idx_auditoria_sesion_usuario_registrante_id",
-      },
+      { fields: ["usuario_registrante_id"], name: "idx_auditoria_sesion_usuario_registrante_id" },
+      { fields: ["fecha_inicio_sesion"], name: "idx_auditoria_sesion_fecha_inicio" },
+      { fields: ["ip_origen"], name: "idx_auditoria_sesion_ip_origen" },
     ],
   }
 );

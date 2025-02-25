@@ -115,9 +115,22 @@ CashflowPago.init(
     tableName: 'CashflowPago',   
     timestamps: true,
     indexes: [
-      { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_pago_maestro_id' },
-      { fields: ['cuit'], name: 'idx_cashflow_pago_cuit' },
-      { fields: ['isrc'], name: 'idx_cashflow_pago_isrc' },
+      {
+        fields: ['cashflow_maestro_id'],
+        name: 'idx_cashflow_pago_maestro_id',
+      },
+      {
+        fields: ['fecha_pago'],
+        name: 'idx_cashflow_fecha_pago',
+      },
+      {
+        fields: ['cuit'],
+        name: 'idx_cashflow_pago_cuit',
+      },
+      {
+        fields: ['isrc'],
+        name: 'idx_cashflow_pago_isrc',
+      },
     ],
   }
 );

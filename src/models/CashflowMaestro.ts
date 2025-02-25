@@ -150,7 +150,7 @@ CashflowMaestro.init(
       validate: {
         isDate: {
           args: true,
-          msg: 'La fecha de traspaso debe ser una fecha válida.',
+          msg: 'La fecha de transacción debe ser una fecha válida.',
         },
       },
     },
@@ -162,9 +162,14 @@ CashflowMaestro.init(
     timestamps: true,
     indexes: [
       { fields: ['cashflow_id'], name: 'idx_cashflow_maestro_cashflow_id' },
+      { fields: ['liquidacion_id'], name: 'idx_cashflow_maestro_liquidacion_id' },
+      { fields: ['pago_id'], name: 'idx_cashflow_maestro_pago_id' },
+      { fields: ['rechazo_id'], name: 'idx_cashflow_maestro_rechazo_id' },
+      { fields: ['traspaso_id'], name: 'idx_cashflow_maestro_traspaso_id' },
       { fields: ['tipo_transaccion'], name: 'idx_cashflow_maestro_tipo_transaccion' },
       { fields: ['numero_lote'], name: 'idx_cashflow_maestro_numero_lote' },
       { fields: ['referencia'], name: 'idx_cashflow_maestro_referencia', unique: true },
+      { fields: ['fecha_transaccion'], name: 'idx_cashflow_maestro_fecha_transaccion' },
     ],
     // validate: {
     //   atLeastOneReference() {

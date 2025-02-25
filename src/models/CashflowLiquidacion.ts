@@ -156,9 +156,11 @@ CashflowLiquidacion.init(
     tableName: 'CashflowLiquidacion',
     timestamps: true,
     indexes: [
-      { fields: ['cashflow_maestro_id'], name: 'idx_cashflow_liquidacion_maestro_id' },      
-      { fields: ['cuit'], name: 'idx_cashflow_liquidacion_cuit' }, 
-      { fields: ['isrc'], name: 'idx_cashflow_liquidacion_isrc' },
+      { fields: ["cashflow_maestro_id"], name: "idx_cashflow_liquidacion_maestro_id" },
+      { fields: ["cuit"], name: "idx_cashflow_liquidacion_cuit" },
+      { fields: ["isrc"], name: "idx_cashflow_liquidacion_isrc" },
+      { fields: ["fecha_liquidacion"], name: "idx_cashflow_liquidacion_fecha_liquidacion" },
+      { fields: ["cuit", "fecha_liquidacion"], name: "idx_cashflow_liquidacion_cuit_fecha" },
     ],
   }
 );

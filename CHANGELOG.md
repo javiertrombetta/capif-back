@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.24 - 25-02-2025
+## 🐛 Fixes
+
+- fix: change indexes in models
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.21
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.21 - 25-02-2025
 ## 🐛 Fixes
 

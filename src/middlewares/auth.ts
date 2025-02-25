@@ -90,11 +90,6 @@ export const authenticate = async (
           .json({ error: "Cookie de sesión activa inválida. Formato incorrecto." });
       }
     }
-
-    logger.info(
-      `Autenticación exitosa. Usuario ID: ${req.userId}, Rol: ${req.role}`
-    );
-
     next();
   } catch (err) {
     logger.error("Error en el middleware de autenticación:", err);

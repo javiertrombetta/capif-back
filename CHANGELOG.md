@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.33 - 25-02-2025
+## 🐛 Fixes
+
+- fix: change dates format
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.30
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.30 - 25-02-2025
 ## 🐛 Fixes
 

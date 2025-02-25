@@ -23,6 +23,7 @@ module.exports = {
     port: 25060,
     dialect: 'postgres',
     dialectOptions: {
+      timezone: process.env.TZ,
       ssl: {
         require: true,
         rejectUnauthorized: false

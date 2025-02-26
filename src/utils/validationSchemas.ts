@@ -2147,10 +2147,10 @@ export const getAuditChangesQuerySchema = Joi.object({
     }),
 
   emailUsuario: Joi.string()
-    .email()
+    .trim()
     .optional()
     .messages({
-      "string.email": "El campo 'emailUsuario' debe ser un correo electrónico válido.",
+      "string.base": "El campo 'emailUsuario' debe ser un texto.",
     }),
 
   tablaDb: Joi.string()
@@ -2233,10 +2233,10 @@ export const getRepertoireChangesQuerySchema = Joi.object({
     }),
 
   emailUsuario: Joi.string()
-    .email()
+    .trim()
     .optional()
     .messages({
-      "string.email": "El campo 'emailUsuario' debe ser un correo electrónico válido.",
+      "string.base": "El campo 'emailUsuario' debe ser un texto.",
     }),
 
   isrc: Joi.string()
@@ -2302,10 +2302,10 @@ export const getSessionAuditChangesQuerySchema = Joi.object({
     }),
 
   email: Joi.string()
-    .email()
+    .trim()
     .optional()
     .messages({
-      "string.email": "El campo 'email' debe ser un correo electrónico válido.",
+      "string.base": "El campo 'email' debe ser un texto.",
     }),
 
   nombre: Joi.string()

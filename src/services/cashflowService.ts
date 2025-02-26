@@ -787,7 +787,7 @@ export const getCashflowsService = async (req: any): Promise<{ status: number; d
 
     // Si el usuario es admin, puede filtrar por CUIT o productora_id
     if (cuit) {
-        const productora = await Productora.findOne({ where: { cuit } });
+        const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
         if (!productora) {
             throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
         }

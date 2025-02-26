@@ -226,7 +226,6 @@ type VistaData = {
     { nombreVista: "Restablecer Password Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Editar Vistas Usuario", vistaSuperior: "Usuarios" },
 
-
     // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Pagos", vistaSuperior: "Cuentas Corrientes" },
@@ -250,7 +249,6 @@ type VistaData = {
     { nombreVista: "Territorialidad", vistaSuperior: "Repertorio" },
     { nombreVista: "Ver Titularidad", vistaSuperior: "Repertorio" },
 
-
     // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
@@ -266,7 +264,6 @@ type VistaData = {
     { nombreVista: "Bloquear Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Restablecer Password Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Editar Vistas Usuario", vistaSuperior: "Usuarios" },
-
 
     // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },

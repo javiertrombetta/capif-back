@@ -145,17 +145,26 @@ export const login = async (
     });
 
     // Generar un token básico con `userId`
+
+    const expiresIn = process.env.JWT_EXPIRATION && !isNaN(Number(process.env.JWT_EXPIRATION))
+      ? Number(process.env.JWT_EXPIRATION)
+      : 7200;
+
     const token = jwt.sign(
-    { id: targetUser.id_usuario },
-    process.env.JWT_SECRET!,
-    { expiresIn: parseInt(process.env.JWT_EXPIRATION || '3600', 10) }
-  );
+      { id: targetUser.id_usuario },
+      process.env.JWT_SECRET!,
+      { expiresIn }
+    );
+
+    const maxAge = process.env.COOKIE_MAX_AGE && !isNaN(Number(process.env.COOKIE_MAX_AGE))
+      ? Number(process.env.COOKIE_MAX_AGE)
+      : 7200000;
 
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      maxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000", 10),
+      maxAge
     });
 
     // Registro de auditoría para acceso exitoso
@@ -301,7 +310,6 @@ export const registerPrimaryProductor = async (
     );
 
     // Generar token de verificación
-    const tokenExpiration = parseInt(process.env.EMAIL_TOKEN_EXPIRATION || '3600', 10);
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
@@ -309,10 +317,14 @@ export const registerPrimaryProductor = async (
       throw new Error("Configuración del sistema incompleta: JWT_SECRET faltante.");
     }
 
+    const expiresIn = process.env.EMAIL_TOKEN_EXPIRATION && !isNaN(Number(process.env.EMAIL_TOKEN_EXPIRATION))
+      ? Number(process.env.EMAIL_TOKEN_EXPIRATION)
+      : 3600;
+
     const emailToken = jwt.sign(
       { id_usuario: newUser.id_usuario },
       secret,
-      { expiresIn: tokenExpiration }
+      { expiresIn }
     );
 
     // Decodificar y verificar el token
@@ -447,8 +459,7 @@ export const registerSecondaryProductor = async (
       `${req.method} ${req.originalUrl} - Relaciones de vistas creadas para el Productor Secundario: ${email}`
     );
 
-    // Generar y asignar el token de verificación
-    const tokenExpiration = parseInt(process.env.EMAIL_TOKEN_EXPIRATION || '3600', 10);
+    // Generar y asignar el token de verificación    
     const secret = process.env.JWT_SECRET;
 
     if (!secret) {
@@ -456,10 +467,14 @@ export const registerSecondaryProductor = async (
       throw new Error("Configuración del sistema incompleta: JWT_SECRET faltante.");
     }
 
+   const expiresIn = process.env.EMAIL_TOKEN_EXPIRATION && !isNaN(Number(process.env.EMAIL_TOKEN_EXPIRATION))
+      ? Number(process.env.EMAIL_TOKEN_EXPIRATION)
+      : 3600;
+
     const emailToken = jwt.sign(
       { id_usuario: newUser.id_usuario },
       secret,
-      { expiresIn: tokenExpiration }
+      { expiresIn }
     );
 
     // Decodificar y verificar el token
@@ -573,6 +588,10 @@ export const selectAuthProductora = async (
     }
 
     // Crear cookie `active_sesion` con los datos de la productora seleccionada
+    const maxAge = process.env.COOKIE_MAX_AGE && !isNaN(Number(process.env.COOKIE_MAX_AGE))
+      ? Number(process.env.COOKIE_MAX_AGE)
+      : 7200000;
+
     res.cookie(
       "active_sesion",
       JSON.stringify({
@@ -582,7 +601,7 @@ export const selectAuthProductora = async (
         httpOnly: true,
         secure: true,
         sameSite: "none",
-        maxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000", 10),
+        maxAge
       }
     );
 
@@ -656,7 +675,10 @@ export const requestPasswordReset = async (
     const { user: targetUser }: UsuarioResponse = await getTargetUser({ email }, req);
 
     // Configuración de expiración del token de restablecimiento
-    const tokenExpiration = parseInt(process.env.RESET_TOKEN_EXPIRATION || '3600', 10);
+    const expiresIn = process.env.RESET_TOKEN_EXPIRATION && !isNaN(Number(process.env.RESET_TOKEN_EXPIRATION))
+      ? Number(process.env.RESET_TOKEN_EXPIRATION)
+      : 3600;
+
     if (!process.env.JWT_SECRET) {
       throw new Error("Falta JWT_SECRET en el archivo de configuración");
     }
@@ -665,10 +687,9 @@ export const requestPasswordReset = async (
     const resetToken = jwt.sign(
       { id_usuario: targetUser.id_usuario },
       process.env.JWT_SECRET,
-      {
-        expiresIn: tokenExpiration,
-      }
+      { expiresIn }
     );
+    
     targetUser.reset_password_token = resetToken;
 
     // Calcula la fecha de expiración del token de restablecimiento

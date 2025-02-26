@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.51 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change changeUserPassword
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.48
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.48 - 26-02-2025
 ## 🐛 Fixes
 

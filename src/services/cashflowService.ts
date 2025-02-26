@@ -769,18 +769,18 @@ export const getCashflowsService = async (req: any): Promise<{ status: number; d
             throw new Err.ForbiddenError(MESSAGES.ERROR.VALIDATION.PRODUCTORA_NOT_ALLOWED);
         }
 
-        const cashflow = await Cashflow.findOne({ where: { productora_id: req.productoraId } });
-        if (!cashflow) {
-            throw new Err.NotFoundError(MESSAGES.ERROR.CASHFLOW.NOT_FOUND);
-        }
+        const cashflow = await Cashflow.findOne({
+            where: { productora_id: req.productoraId },
+            include: [{ model: Productora, as: 'productoraDeCC' }]
+        });
 
         return {
             status: 200,
             data: {
-                total: 1,
+                total: cashflow ? 1 : 0,
                 page: 1,
                 limit: 1,
-                cashflows: [cashflow]
+                cashflows: cashflow ? [cashflow] : []
             }
         };
     }
@@ -812,7 +812,7 @@ export const getCashflowsService = async (req: any): Promise<{ status: number; d
             total: count,
             page: parseInt(page as string),
             limit: parseInt(limit as string),
-            cashflows
+            cashflows: cashflows.length > 0 ? cashflows : []
         }
     };
 };

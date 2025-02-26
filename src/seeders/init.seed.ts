@@ -278,7 +278,6 @@ type VistaData = {
 
 
     // { nombreVista: "Productoras" },
-    { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
 
     // { nombreVista: "Usuarios" },
@@ -299,7 +298,6 @@ type VistaData = {
 
 
     // { nombreVista: "Productoras" },
-    { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
 
     // { nombreVista: "Usuarios" },

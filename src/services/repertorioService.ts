@@ -246,9 +246,17 @@ export const cargarRepertoriosMasivo = async (req: any) => {
         const stream = Readable.from(req.file!.buffer);
         stream
             .pipe(csv())
-            .on('data', (data) => resultados.push(data))
-            .on('end', resolve)
-            .on('error', reject);
+            .on("data", (data) => {
+                // Convertir las claves a mayúsculas
+                const row = Object.keys(data).reduce((acc, key) => {
+                    acc[key.toUpperCase()] = data[key];
+                    return acc;
+                }, {} as Record<string, string>);
+
+                resultados.push(row);
+            })
+            .on("end", resolve)
+            .on("error", reject);
     });
 
     // Procesar cada registro del CSV
@@ -256,47 +264,47 @@ export const cargarRepertoriosMasivo = async (req: any) => {
         resultados.map(async (row, index) => {
             try {
                     const {
-                        cuit,
-                        isrc,
-                        artista,
-                        titulo,
-                        album,
-                        duracion,
-                        anio_publicacion,
-                        sello_discografico,
-                        titular_desde,
-                        titular_hasta,
-                        porcentaje_titularidad
+                        CUIT,
+                        ISRC,
+                        ARTISTA,
+                        TITULO,
+                        ALBUM,
+                        DURACION,
+                        ANIO_PUBLICACION,
+                        SELLO_DISCOGRAFICO,
+                        TITULAR_DESDE,
+                        TITULAR_HASTA,
+                        PORCENTAJE_TITULARIDAD
                     } = row;
 
-                    // Verificar la productora según el cuit
-                    const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
+                    // Verificar la productora según el CUIT
+                    const productora = await Productora.findOne({ where: { cuit_cuil: CUIT } });
                     if (!productora) {
-                        errores.push(`No se encontró productora con CUIT '${cuit}'`);
+                        errores.push(`No se encontró productora con CUIT '${CUIT}'`);
                         return;
                     }
 
                     // Definir el sello discográfico a insertar
-                    const selloFinal = sello_discografico || productora.nombre_productora;            
+                    const selloFinal = SELLO_DISCOGRAFICO || productora.nombre_productora;            
                         
                     // Fecha para dominio público
                     const currentYear = new Date().getFullYear();   
 
                     // Verificar si el fonograma ya existe
-                    let fonograma = await Fonograma.findOne({ where: { isrc } });
+                    let fonograma = await Fonograma.findOne({ where: { isrc: ISRC } });
 
                     // Crear el fonograma
                     if (!fonograma) {
                         fonograma = await Fonograma.create({
                             productora_id: productora.id_productora,
-                            isrc,
-                            titulo,
-                            artista,
-                            album,
-                            duracion,
-                            anio_lanzamiento: anio_publicacion,
+                            isrc: ISRC,
+                            titulo: TITULO,
+                            artista: ARTISTA,
+                            album: ALBUM,
+                            duracion: DURACION,
+                            anio_lanzamiento: ANIO_PUBLICACION,
                             sello_discografico: selloFinal,
-                            is_dominio_publico: currentYear - anio_publicacion > 70,
+                            is_dominio_publico: currentYear - ANIO_PUBLICACION > 70,
                             estado_fonograma: "ACTIVO",
                             fecha_ultimo_fonograma: new Date(),
                         });
@@ -305,14 +313,14 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                             usuario_originario_id: authUser.id_usuario,
                             modelo: "Fonograma",
                             tipo_auditoria: "ALTA",
-                            detalle: `Se creó el fonograma '${titulo}' con ISRC '${isrc}'`,
+                            detalle: `Se creó el fonograma '${TITULO}' con ISRC '${ISRC}'`,
                         });
 
                         await registrarRepertorio({
                             usuario_registrante_id: authUser.id_usuario,
                             fonograma_id: fonograma.id_fonograma,
                             tipo_auditoria: "ALTA",
-                            detalle: `Se creó el fonograma '${titulo}' con ISRC '${isrc}'`,
+                            detalle: `Se creó el fonograma '${TITULO}' con ISRC '${ISRC}'`,
                         });
 
                         // Actualizar la fecha_ultimo_fonograma en la Productora
@@ -330,8 +338,8 @@ export const cargarRepertoriosMasivo = async (req: any) => {
 
                         await FonogramaEnvio.create({
                             fonograma_id: fonograma.id_fonograma,
-                            tipo_estado: 'PENDIENTE DE ENVIO',
-                            tipo_contenido: 'DATOS',
+                            tipo_estado: "PENDIENTE DE ENVIO",
+                            tipo_contenido: "DATOS",
                             fecha_envio_inicial: null,
                             fecha_envio_ultimo: null,
                         });
@@ -345,21 +353,21 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                         });
 
                     } else {
-                        isrcExistentes.push(isrc);
+                        isrcExistentes.push(ISRC);
                     }
                         
                     // Registrar participación
                     const resultadoParticipacion = await addParticipacionToFonograma(fonograma.id_fonograma, {
-                    body: {
-                        participaciones: [{
-                            cuit,
-                            porcentaje_participacion: porcentaje_titularidad,
-                            fecha_inicio: titular_desde,
-                            fecha_hasta: titular_hasta,
-                        }]
-                    },
-                    userId: authUser.id_usuario,
-                });
+                        body: {
+                            participaciones: [{
+                                cuit: CUIT,
+                                porcentaje_participacion: PORCENTAJE_TITULARIDAD,
+                                fecha_inicio: TITULAR_DESDE,
+                                fecha_hasta: TITULAR_HASTA,
+                            }]
+                        },
+                        userId: authUser.id_usuario,
+                    });
 
                     if (resultadoParticipacion.message.includes("se supera el 100%")) {
                         conflictos.push(resultadoParticipacion.message);
@@ -380,10 +388,10 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                             usuario_destino_id: null,
                             modelo: "FonogramaTerritorioMaestro",
                             tipo_auditoria: "ALTA",
-                            detalle: `Se registró el territorio '${territorio.codigo_iso}' para el fonograma con ISRC '${isrc}'`,
+                            detalle: `Se registró el territorio '${territorio.codigo_iso}' para el fonograma con ISRC '${ISRC}'`,
                         });
                     }
-                    registrosCreados.push({ titulo, isrc });
+                    registrosCreados.push({ TITULO, ISRC });
 
             } catch (err: any) {
                 errores.push(`Error en fila ${index + 1}: ${err.message}`);

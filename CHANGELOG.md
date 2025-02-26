@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.45 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change get repertoires in bulk
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.42
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.42 - 26-02-2025
 ## 🐛 Fixes
 

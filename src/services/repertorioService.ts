@@ -458,15 +458,19 @@ export const listFonogramas = async (req: any) => {
     whereClause.productora_id = req.productoraId;
   }
 
+  // Aplicar filtros de búsqueda
   if (query.isrc) whereClause.isrc = { [Op.iLike]: `%${query.isrc}%` };
   if (query.titulo) whereClause.titulo = { [Op.iLike]: `%${query.titulo}%` };
   if (query.artista) whereClause.artista = { [Op.iLike]: `%${query.artista}%` };
   if (query.album) whereClause.album = { [Op.iLike]: `%${query.album}%` };
   if (query.anio_lanzamiento) whereClause.anio_lanzamiento = query.anio_lanzamiento;
   if (query.sello_discografico) whereClause.sello_discografico = { [Op.iLike]: `%${query.sello_discografico}%` };
+  if (query.nombre_productora) {
+    whereClause["$productoraDelFonograma.nombre_productora$"] = { [Op.iLike]: `%${query.nombre_productora}%` };
+  }
   if (query.estado_fonograma && ["ACTIVO", "INACTIVO"].includes(query.estado_fonograma.toUpperCase())) {
     whereClause.estado_fonograma = query.estado_fonograma.toUpperCase();
-  }
+  }  
 
   // Paginación
   const page = query.page ? parseInt(query.page as string, 10) : 1;
@@ -474,13 +478,31 @@ export const listFonogramas = async (req: any) => {
   const offset = (page - 1) * limit;
 
   // Obtener el total de registros sin paginación
-  const total = await Fonograma.count({ where: whereClause });
+  const total = await Fonograma.count({
+    where: whereClause,
+    include: [
+      {
+        model: Productora,
+        as: "productoraDelFonograma",
+        required: true,
+        attributes: [],
+      },
+    ],
+  });
 
   // Obtener datos paginados con sus relaciones
   const fonogramas = await Fonograma.findAll({
     where: whereClause,
     attributes: fonogramaAttributes,
-    include: fonogramaIncludeModels,
+    include: [
+      ...fonogramaIncludeModels,
+      {
+        model: Productora,
+        as: "productoraDelFonograma",
+        required: true,
+        attributes: ["nombre_productora"],
+      },
+    ],
     order: [["titulo", "ASC"]],
     limit,
     offset,

@@ -213,6 +213,7 @@ type VistaData = {
     // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
+    { nombreVista: "Filtrar Premios Gardel", vistaSuperior: "Productoras" },
     { nombreVista: "Crear Postulaciones", vistaSuperior: "Productoras" },
     { nombreVista: "Purgar Postulaciones", vistaSuperior: "Productoras" },
 
@@ -253,6 +254,7 @@ type VistaData = {
     // { nombreVista: "Productoras" },
     { nombreVista: "Buscar Productora", vistaSuperior: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
+    { nombreVista: "Filtrar Premios Gardel", vistaSuperior: "Productoras" },
     { nombreVista: "Crear Postulaciones", vistaSuperior: "Productoras" },
     { nombreVista: "Purgar Postulaciones", vistaSuperior: "Productoras" },
 

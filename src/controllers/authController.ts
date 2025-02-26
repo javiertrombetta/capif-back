@@ -460,46 +460,58 @@ export const registerSecondaryProductor = async (
     );
 
     // Generar y asignar el token de verificación    
-    const secret = process.env.JWT_SECRET;
+    //   const secret = process.env.JWT_SECRET;
 
-    if (!secret) {
-      logger.error("JWT_SECRET no está configurado en las variables de entorno.");
-      throw new Error("Configuración del sistema incompleta: JWT_SECRET faltante.");
-    }
+    //   if (!secret) {
+    //     logger.error("JWT_SECRET no está configurado en las variables de entorno.");
+    //     throw new Error("Configuración del sistema incompleta: JWT_SECRET faltante.");
+    //   }
 
-   const expiresIn = process.env.EMAIL_TOKEN_EXPIRATION && !isNaN(Number(process.env.EMAIL_TOKEN_EXPIRATION))
-      ? Number(process.env.EMAIL_TOKEN_EXPIRATION)
-      : 3600;
+    //  const expiresIn = process.env.EMAIL_TOKEN_EXPIRATION && !isNaN(Number(process.env.EMAIL_TOKEN_EXPIRATION))
+    //     ? Number(process.env.EMAIL_TOKEN_EXPIRATION)
+    //     : 3600;
 
-    const emailToken = jwt.sign(
-      { id_usuario: newUser.id_usuario },
-      secret,
-      { expiresIn }
-    );
+    //   const emailToken = jwt.sign(
+    //     { id_usuario: newUser.id_usuario },
+    //     secret,
+    //     { expiresIn }
+    //   );
 
     // Decodificar y verificar el token
-    const decoded = jwt.decode(emailToken);
-    if (decoded && typeof decoded !== "string" && decoded.exp) {
-      newUser.email_verification_token = emailToken;
-      newUser.email_verification_token_expires = new Date(decoded.exp * 1000);
-    } else {
-      logger.error(`${req.method} ${req.originalUrl} - Error al decodificar el token de email para ${newUser.email}`);
-      throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
-    }
+    // const decoded = jwt.decode(emailToken);
+    // if (decoded && typeof decoded !== "string" && decoded.exp) {
+    //   newUser.email_verification_token = emailToken;
+    //   newUser.email_verification_token_expires = new Date(decoded.exp * 1000);
+    // } else {
+    //   logger.error(`${req.method} ${req.originalUrl} - Error al decodificar el token de email para ${newUser.email}`);
+    //   throw new Err.BadRequestError(MESSAGES.ERROR.JWT.INVALID);
+    // }
 
-    await newUser.save();  
+    // await newUser.save();  
 
-    // Enviar correo de verificación con clave temporal
-    const validationLink = `${emailToken}`;
-    const emailBody = MESSAGES.EMAIL_BODY.VALIDATE_ACCOUNT_WITH_TEMP_PASSWORD(
-      validationLink,
-      temporaryPassword
-    );
+    // // Enviar correo de verificación con clave temporal
+    // const validationLink = `${emailToken}`;
+    // const emailBody = MESSAGES.EMAIL_BODY.VALIDATE_ACCOUNT_WITH_TEMP_PASSWORD(
+    //   validationLink,
+    //   temporaryPassword
+    // );    
 
+    // await sendEmailWithErrorHandling(
+    //   {
+    //     to: newUser.email,
+    //     subject: "Confirmá tu cuenta secundaria para ingresar al sistema",
+    //     html: emailBody,
+    //     successLog: `Correo enviado a ${newUser.email} con la clave temporal.`,
+    //     errorLog: `Error al enviar el correo al Productor Secundario: ${newUser.email}.`,
+    //   }, req, res, next);
+
+      // Enviar correo con clave temporal
+    const emailBody = MESSAGES.EMAIL_BODY.TEMP_PASSWORD(temporaryPassword);
+    
     await sendEmailWithErrorHandling(
       {
         to: newUser.email,
-        subject: "Confirmá tu cuenta secundaria para ingresar al sistema",
+        subject: "Registro en el sistema GIT",
         html: emailBody,
         successLog: `Correo enviado a ${newUser.email} con la clave temporal.`,
         errorLog: `Error al enviar el correo al Productor Secundario: ${newUser.email}.`,

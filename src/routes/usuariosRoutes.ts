@@ -72,7 +72,7 @@ router.put(
 router.put(
   "/:usuarioId/views",
   authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal"]),
   celebrate({
     [Segments.PARAMS]: updateUserViewsParamsSchema,
     [Segments.BODY]: updateUserViewsBodySchema,
@@ -102,7 +102,7 @@ router.put(
 router.put(
   "/:usuarioId/password",
   authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario", "productor"]),
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal"]),
   celebrate({
     [Segments.PARAMS]: changePasswordParamsSchema,
     [Segments.BODY]: changePasswordBodySchema,

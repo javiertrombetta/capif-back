@@ -321,26 +321,47 @@ export const ERROR = {
   },
 };
 
+
+const formatExpirationTime = (seconds: number): string => {
+  if (seconds % 3600 === 0) {
+    return `${seconds / 3600} hora${seconds / 3600 > 1 ? 's' : ''}`;
+  } else {
+    return `${seconds / 60} minutos`;
+  }
+};
+
+// RESET_TOKEN_EXPIRATION
+const resetTokenExpirationSeconds = parseInt(process.env.RESET_TOKEN_EXPIRATION || '3600', 10);
+const formattedExpiration = formatExpirationTime(resetTokenExpirationSeconds);
+
+// EMAIL_TOKEN_EXPIRATION
+const emailTokenExpirationSeconds = parseInt(process.env.EMAIL_TOKEN_EXPIRATION || '3600', 10);
+const formattedEmailExpiration = formatExpirationTime(emailTokenExpirationSeconds);
+
+// FRONTEND_URL
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost";
 const baseUrl = new URL(frontendUrl).origin;
 
 export const EMAIL_BODY = {
+  // requestPasswordReset
   PASSWORD_RECOVERY: (resetLink: string) => `
     <h1>Recuperación de contraseña</h1>
     <p>Hacé clic en el siguiente enlace para restablecer tu contraseña:</p>
     <a href="${baseUrl}/password-recovery/${resetLink}">${baseUrl}/password-recovery/${resetLink}</a>
-    <p>Este enlace expira en 1 hora.</p>
+    <p>Este enlace expira en ${formattedExpiration}.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
   `,
+  // registerPrimaryProductor
   VALIDATE_ACCOUNT: (validationLink: string) => `
     <h1>Confirmá tu cuenta</h1>
     <p>Hacé clic en el siguiente enlace para validar tu correo electrónico:</p>
     <a href="${baseUrl}/verify-account/${validationLink}">${baseUrl}/verify-account/${validationLink}</a>    
-    <p>Este enlace expira en 24 horas.</p>
+    <p>Este enlace expira en ${formattedEmailExpiration}.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
   `,
+  // cambiarEstadoEnvioFonograma
   REJECTION_NOTIFICATION: (nombre: string, comentario: string) => `
     <p>Hola ${nombre},</p>
     <p>Lamentamos informarte que el registro de nueva productora fue rechazado por el siguiente motivo:</p>
@@ -349,25 +370,27 @@ export const EMAIL_BODY = {
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
   `,
+  // createSecondaryAdminUser
   TEMP_PASSWORD: (tempPassword: string) => `
     <h1>Registro en el sistema GIT</h1>
-    <p>Ya podés acceder al sistema GIT con la siguiente contraseña temporal:</p>
+    <p>Tu cuenta fue creada con éxito. Ya podés acceder al sistema GIT con la siguiente contraseña:</p>
     <p><strong>${tempPassword}</strong></p>
-    <p>Por motivos de seguridad, se te pedirá que cambies esta contraseña al acceder al sistema.</p>
+    <p>Para mayor seguridad, te recomendamos cambiar la contraseña por una propia.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
   `,
-  VALIDATE_ACCOUNT_WITH_TEMP_PASSWORD: (validationLink: string, tempPassword: string) => `
-    <h1>Registro en el sistema GIT</h1>
-    <p>Tu cuenta fue creada con éxito. Para activarla tenés que hacer clic en el siguiente enlace:</p>
-    <a href="${baseUrl}/verify-account/${validationLink}">${baseUrl}/verify-account/${validationLink}</a>    
-    <p>Este enlace expira en 24 horas.</p>
-    <p>Usá la siguiente contraseña temporal para ingresar por primera vez:</p>
-    <p><strong>${tempPassword}</strong></p>
-    <p>Por motivos de seguridad, el sistema te va a pedir que cambies esta contraseña luego de acceder al sistema.</p>
-    <p>Atte.,</p>
-    <p><b>CAPIF</b></p>
-  `,
+  // registerSecondaryProductor
+  // VALIDATE_ACCOUNT_WITH_TEMP_PASSWORD: (validationLink: string, tempPassword: string) => `
+  //   <h1>Registro en el sistema GIT</h1>
+  //   <p>Tu cuenta fue creada con éxito. Para activarla tenés que hacer clic en el siguiente enlace:</p>
+  //   <a href="${baseUrl}/verify-account/${validationLink}">${baseUrl}/verify-account/${validationLink}</a>    
+  //   <p>Este enlace expira en ${formattedEmailExpiration}.</p>
+  //   <p>Ya podés acceder al sistema GIT con la siguiente contraseña:</p>
+  //   <p><strong>${tempPassword}</strong></p>
+  //   <p>Para mayor seguridad, te recomendamos cambiar la contraseña por una propia.</p>
+  //   <p>Atte.,</p>
+  //   <p><b>CAPIF</b></p>
+  // `,
   PRODUCTOR_PRINCIPAL_NOTIFICATION: (
     nombrePersona: string,
     nombreProductora: string,
@@ -386,7 +409,7 @@ export const EMAIL_BODY = {
       <li><strong>CBU:</strong> ${cbuProductora}</li>
       <li><strong>Alias CBU:</strong> ${aliasCbuProductora}</li>
     </ul>
-    <p>IMPORTANTE: Guardá los siguientes Códigos de Entidad Registrante para armar los ISRC:</p>
+    <p>Guardá los siguientes Códigos de Entidad Registrante para armar los ISRC:</p>
     <ul>
       ${isrcs
         .map(
@@ -425,7 +448,7 @@ export const EMAIL_BODY = {
     <p>Se ha registrado un pago de <strong>${monto}</strong> para su productora.</p>
     <p><strong>Referencia:</strong> ${referencia || 'N/A'}</p>
     <p><strong>Fecha:</strong> ${fecha}</p>
-    <p>Saludos cordiales,</p>
+    <p>Atte.,</p>
     <p><b>CAPIF</b></p>
   `,
   RECHAZO_PAGO: (nombreProductora: string, monto: number, referencia: string | null, fecha: string) => `
@@ -433,7 +456,7 @@ export const EMAIL_BODY = {
     <p>Se ha registrado un <strong>rechazo de pago</strong> de <strong>${monto}</strong> para su productora.</p>
     <p><strong>Referencia:</strong> ${referencia || 'N/A'}</p>
     <p><strong>Fecha:</strong> ${fecha}</p>
-    <p>Saludos cordiales,</p>
+    <p>Atte.,</p>
     <p><b>CAPIF</b></p>
   `,
 };

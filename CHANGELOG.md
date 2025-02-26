@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.39 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change jwt for expire time
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.36
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.36 - 25-02-2025
 ## 🚀 Features
 

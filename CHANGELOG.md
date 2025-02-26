@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.70 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change all audit services for email iLike
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.67
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.67 - 26-02-2025
 ## 🐛 Fixes
 

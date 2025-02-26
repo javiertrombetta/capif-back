@@ -113,7 +113,7 @@ router.put(
 router.put(
   "/:usuarioId",
   authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal", "productor_secundario"]),
   celebrate({
     [Segments.PARAMS]: updateUserParamsSchema,
     [Segments.BODY]: updateUserBodySchema,

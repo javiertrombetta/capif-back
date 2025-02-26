@@ -776,7 +776,12 @@ export const getCashflowsService = async (req: any): Promise<{ status: number; d
 
         return {
             status: 200,
-            data: cashflow
+            data: {
+                total: 1,
+                page: 1,
+                limit: 1,
+                cashflows: [cashflow]
+            }
         };
     }
 

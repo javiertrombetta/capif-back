@@ -276,7 +276,6 @@ type VistaData = {
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
     { nombreVista: "Ver Titularidad", vistaSuperior: "Repertorio" },
 
-
     // { nombreVista: "Productoras" },
     { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
 
@@ -296,12 +295,8 @@ type VistaData = {
     { nombreVista: "Conflictos", vistaSuperior: "Repertorio" },
     { nombreVista: "Ver Titularidad", vistaSuperior: "Repertorio" },
 
-
     // { nombreVista: "Productoras" },
-    { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },
-
-    // { nombreVista: "Usuarios" },
-    { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
+    { nombreVista: "Premios Gardel", vistaSuperior: "Productoras" },    
 
     // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },

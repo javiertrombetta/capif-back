@@ -1,4 +1,48 @@
 # Changelog
+## v0.5.51 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change changeUserPassword
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.48
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.5.48 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change listFonogramas
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.45
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.5.45 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change get repertoires in bulk
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.42
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.5.42 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change in getCashflows
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.39
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.39 - 26-02-2025
 ## 🐛 Fixes
 

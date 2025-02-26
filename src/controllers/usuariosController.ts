@@ -322,18 +322,47 @@ export const updateUserViews = async (
     const { usuarioId } = req.params;
     const { roleName } = req.body;
 
-    // Buscar usuario autenticado
-    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
-    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);
+    // Obtener usuario autenticado y su productora
+    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);
 
-    if (!targetUser.rol) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario sin rol asignado`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED)
-      );
+    if (!authUser.rol || !targetUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado`);
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED));
     }
 
+    // Si el usuario autenticado es productor_principal
+    if (authUser.rol.nombre_rol === "productor_principal") {
+      // Validar que el targetUser es un productor_secundario
+      if (targetUser.rol.nombre_rol !== "productor_secundario") {
+        return next(new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED));
+      }
+
+      // Validar que el usuario autenticado pertenece a una productora
+      if (!req.productoraId) {
+        return next(new Err.ForbiddenError(MESSAGES.ERROR.VALIDATION.PRODUCTORA_ID_REQUIRED));
+      }
+
+      // Validar que el authUser pertenece a la productora
+      const authPerteneceMismaProductora = authMaestros.some(
+        (maestro) => maestro.productora_id === req.productoraId
+      );
+
+      if (!authPerteneceMismaProductora) {
+        return next(new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED));
+      }
+
+      // Validar que el targetUser también pertenece a la misma productora
+      const targetPerteneceMismaProductora = targetMaestros.some(
+        (maestro) => maestro.productora_id === req.productoraId
+      );
+
+      if (!targetPerteneceMismaProductora) {
+        return next(new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED));
+      }
+    }
+
+    // Permitir cambio de vistas
     await assignVistasToUser(targetUser.id_usuario, undefined, roleName);
 
     logger.info(
@@ -345,7 +374,7 @@ export const updateUserViews = async (
       usuario_destino_id: targetUser.id_usuario,
       modelo: "Usuario",
       tipo_auditoria: "CAMBIO",
-      detalle: `Actualizadas las vistas al rol ${targetUser.rol.nombre_rol} del usuario ID: ${targetUser.id_usuario}`,
+      detalle: `Actualizadas las vistas al rol ${roleName} del usuario ID: ${targetUser.id_usuario}`,
     });
 
     res.status(200).json({ message: "Vistas actualizadas exitosamente" });
@@ -436,37 +465,42 @@ export const changeUserPassword = async (
     }
 
     // Obtener información del usuario autenticado
-    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
+    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);
 
-    if (!authUser.rol) {
-      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado.`);
+    if (!authUser.rol || !targetUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado`);
       return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED));
-    }
+    }    
 
-    // Determinar si el cambio es para el propio usuario o para otro
-    const isSelfUpdate = !usuarioId || authUser.id_usuario === usuarioId;
+    // Determinar si el cambio es para el propio usuario
+    const isSelfUpdate = authUser.id_usuario === usuarioId;
 
     if (!isSelfUpdate) {
-      // Validar que el usuario tenga permisos para cambiar la clave de otros
-      if (!["admin_principal", "admin_secundario"].includes(authUser.rol.nombre_rol)) {
-        logger.warn(
-          `${req.method} ${req.originalUrl} - Usuario con rol no autorizado para cambiar la clave de otro usuario: ${authUser.rol.nombre_rol}.`
+      // Validaciones adicionales si es un `productor_principal`
+      if (authUser.rol.nombre_rol === "productor_principal") {
+        // Solo puede cambiar la clave de un `productor_secundario`
+        if (targetUser.rol.nombre_rol !== "productor_secundario") {
+          return next(new Err.ForbiddenError("Solo puede cambiar la clave de un productor_secundario."));
+        }
+
+        // Validar que ambos pertenecen a la misma productora
+        if (!req.productoraId) {
+          return next(new Err.ForbiddenError("No tiene permiso para cambiar la clave de este usuario."));
+        }
+
+        const authPerteneceMismaProductora = authMaestros.some(
+          (maestro) => maestro.productora_id === req.productoraId
         );
-        return next(new Err.ForbiddenError(MESSAGES.ERROR.USER.NOT_AUTHORIZED_TO_CHANGE_PASSWORD));
+
+        const targetPerteneceMismaProductora = targetMaestros.some(
+          (maestro) => maestro.productora_id === req.productoraId
+        );
+
+        if (!authPerteneceMismaProductora || !targetPerteneceMismaProductora) {
+          return next(new Err.ForbiddenError("El usuario seleccionado no pertenece a su productora."));
+        }
       }
-    }
-
-    // Determinar el usuario objetivo
-    const targetUserId = isSelfUpdate ? authUser.id_usuario : usuarioId;
-
-    // Buscar al usuario objetivo
-    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: targetUserId }, req);
-
-    if (!targetUser) {
-      logger.warn(
-        `${req.method} ${req.originalUrl} - Usuario objetivo no encontrado: ${targetUserId}`
-      );
-      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND));
     }
 
     // Cifrar la nueva contraseña
@@ -488,7 +522,7 @@ export const changeUserPassword = async (
     });
 
     logger.info(
-      `${req.method} ${req.originalUrl} - Clave actualizada correctamente para el usuario con ID ${targetUserId}.`
+      `${req.method} ${req.originalUrl} - Clave actualizada correctamente para el usuario con ID ${usuarioId}.`
     );
 
     res.status(200).json({ message: MESSAGES.SUCCESS.AUTH.PASSWORD_RESET });

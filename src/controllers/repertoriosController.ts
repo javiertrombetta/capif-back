@@ -103,8 +103,11 @@ export const listFonogramas = async (req: AuthenticatedRequest, res: Response, n
 
 export const addArchivoToFonograma = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    logger.info(`${req.method} ${req.originalUrl} - Agregando archivo al fonograma con ID: ${req.params.id}`);
+    if (!req.file) {
+      return res.status(400).json({ error: "No se subió ningún archivo o el formato no es permitido. Solo se permiten archivos .mp3" });
+    }
 
+    logger.info(`${req.method} ${req.originalUrl} - Agregando archivo al fonograma con ID: ${req.params.id}`);
     const response = await repertorioService.addArchivoToFonograma(req.params.id, req);
 
     return res.status(200).json(response);

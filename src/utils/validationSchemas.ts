@@ -1745,20 +1745,15 @@ export const obtenerConflictosQuerySchema = Joi.object({
     }),
 
   estado: Joi.string()
-    .valid(
-      "PENDIENTE CAPIF",
-      "PRIMERA INSTANCIA",
-      "PRIMERA PRORROGA",
-      "SEGUNDA INSTANCIA",
-      "SEGUNDA PRORROGA",
-      "VENCIDO",
-      "CERRADO",
-      "en curso"
+    .valid(      
+      "en curso",
+      "cerrado",
+      "vencido"
     )
     .optional()
     .messages({
       "any.only":
-        "El estado debe ser uno de los siguientes: PENDIENTE CAPIF, PRIMERA INSTANCIA, PRIMERA PRORROGA, SEGUNDA INSTANCIA, SEGUNDA PRORROGA, VENCIDO, CERRADO o 'en curso'.",
+        "El estado debe ser uno de los siguientes: 'en curso', 'cerrado', 'vencido'.",
     }),
 
   isrc: Joi.string()

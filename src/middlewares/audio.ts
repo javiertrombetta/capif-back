@@ -41,7 +41,7 @@ const audioStorage = multer.diskStorage({
 const audioFileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const ext = path.extname(file.originalname).toLowerCase();
   if (!allowedAudioTypes.includes(ext)) {
-    return cb(new Error(`Tipo de archivo no permitido: ${ext}`));
+    return cb(new Error(`Tipo de archivo no permitido: ${ext}. Solo se permiten archivos .mp3`));
   }
   cb(null, true);
 };

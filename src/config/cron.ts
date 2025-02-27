@@ -27,13 +27,25 @@ import UsuarioMaestro from '../models/UsuarioMaestro';
 import UsuarioRol from '../models/UsuarioRol';
 import UsuarioVistaMaestro from '../models/UsuarioVistaMaestro';
 
-import { actualizarDominioPublicoGlobal } from '../utils/checkModels';
+import { actualizarDominioPublicoGlobal, cerrarSesionesInactivas } from '../utils/checkModels';
 import { registrarAuditoria } from '../services/auditService';
 
 
 
 // Almacena todas las tareas cron y su estado
 const tasks: { name: string; task: ScheduledTask; active: boolean }[] = [];
+
+// TAREA: Cierre de sesiones inactivas
+const sessionCleanupTask = cron.schedule('*/5 * * * *', async () => {
+    try {
+        await cerrarSesionesInactivas();
+    } catch (error) {
+        console.error('Error al cerrar sesiones inactivas:', error);
+    }
+});
+
+// Agregar la tarea sessionCleanupTask al arreglo con su estado
+tasks.push({ name: 'sessionCleanupTask', task: sessionCleanupTask, active: true });
 
 // TAREA: Actualización de dominio público
 const domainUpdateTask = cron.schedule('0 0 * * *', async () => {
@@ -51,7 +63,7 @@ const domainUpdateTask = cron.schedule('0 0 * * *', async () => {
   }
 });
 
-// Agregar la tarea al arreglo con su estado
+// Agregar la tarea domainUpdateTask al arreglo con su estado
 tasks.push({ name: 'domainUpdateTask', task: domainUpdateTask, active: true });
 
 // TAREA: Actualización de conflictos a VENCIDO si se excedió la fecha_vencimiento
@@ -100,7 +112,7 @@ const updateExpiredConflictsTask = cron.schedule('0 0 * * *', async () => {
   }
 });
 
-// Agregar la tarea al arreglo con su estado
+// Agregar la tarea updateExpiredConflictsTask al arreglo con su estado
 tasks.push({ name: 'updateExpiredConflictsTask', task: updateExpiredConflictsTask, active: true });
 
 // TAREA: Eliminación de usuarios deshabilitados después de X días
@@ -336,7 +348,7 @@ async function eliminarReferenciasProductora(productoraId: string) {
   }
 }
 
-// Agregar la tarea al arreglo con su estado
+// Agregar la tarea userCleanupTask al arreglo con su estado
 tasks.push({ name: 'userCleanupTask', task: userCleanupTask, active: true });
 
 // Función para iniciar todas las tareas cron

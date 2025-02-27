@@ -1,4 +1,45 @@
 # Changelog
+## v0.5.70 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change all audit services for email iLike
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.67
+- chore(docs): update CHANGELOG.MD
+
+
+## v0.5.67 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change updateUser and getCashflows
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.63
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
+## v0.5.63 - 26-02-2025
+## 🐛 Fixes
+
+- fix: change in cargarRepertoriosMasivo
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.59
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.5.59 - 26-02-2025
 ## 🐛 Fixes
 

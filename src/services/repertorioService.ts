@@ -266,8 +266,8 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                     const {
                         CUIT,
                         ISRC,
-                        ARTISTA,
                         TITULO,
+                        ARTISTA,
                         ALBUM,
                         DURACION,
                         ANIO_PUBLICACION,

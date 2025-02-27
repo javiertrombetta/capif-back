@@ -253,7 +253,7 @@ export const getAuditChanges = async (req: Request) => {
   // Filtrado por usuario
   if (emailUsuario) {
     const usuario = await Usuario.findOne({
-      where: { email: emailUsuario as string },
+      where: { email: { [Op.iLike]: `%${emailUsuario}%` } },
     });
 
     if (!usuario) {
@@ -362,14 +362,14 @@ export const getRepertoireAuditChanges = async (req: Request) => {
   // Filtrado por usuario
   if (emailUsuario) {
     const usuario = await Usuario.findOne({
-      where: { email: emailUsuario as string },
+      where: { email: { [Op.iLike]: `%${emailUsuario}%` } },
     });
 
     if (!usuario) {
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
-    filters.usuario_registrante_id = usuario.id_usuario;
+    filters.usuario_originario_id = usuario.id_usuario;
   }
 
   // Filtrado por ISRC
@@ -504,14 +504,14 @@ export const getSessionAuditChanges = async (req: Request) => {
   // Filtrado por email
   if (email) {
     const usuario = await Usuario.findOne({
-      where: { email: email as string },
+      where: { email: { [Op.iLike]: `%${email}%` } },
     });
 
     if (!usuario) {
       throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
     }
 
-    filters.usuario_registrante_id = usuario.id_usuario;
+    filters.usuario_originario_id = usuario.id_usuario;
   }
 
   // Búsqueda insensible a mayúsculas y minúsculas en nombre y apellido

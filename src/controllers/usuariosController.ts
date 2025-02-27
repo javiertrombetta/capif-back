@@ -214,14 +214,62 @@ export const updateUser = async (
     const { usuarioId } = req.params;
     const { datosUsuario } = req.body;
 
-    // Paso 1: Buscar el usuario autenticado y el usuario objetivo
-    const { user: authUser }: UsuarioResponse = await getAuthenticatedUser(req);
-    const { user: targetUser }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);    
+    // Obtener información del usuario autenticado y del usuario objetivo
+    const { user: authUser, maestros: authMaestros }: UsuarioResponse = await getAuthenticatedUser(req);
+    const { user: targetUser, maestros: targetMaestros }: UsuarioResponse = await getTargetUser({ userId: usuarioId }, req);    
 
-    // Paso 2: Actualizar los datos del usuario mediante el servicio
+    if (!authUser.rol || !targetUser.rol) {
+      logger.warn(`${req.method} ${req.originalUrl} - Usuario sin rol asignado`);
+      return next(new Err.NotFoundError(MESSAGES.ERROR.USER.ROLE_NOT_ASSIGNED));
+    }
+
+    // Determinar si el usuario está actualizando sus propios datos
+    const isSelfUpdate = authUser.id_usuario === usuarioId;
+
+    if (!isSelfUpdate) {
+      // Un admin_principal puede modificar los datos de cualquier usuario
+      if (authUser.rol.nombre_rol === "admin_principal") {
+        // No hay restricciones adicionales para admin_principal
+      }
+      // Un admin_secundario puede modificar los datos de productor_principal o productor_secundario
+      else if (authUser.rol.nombre_rol === "admin_secundario") {
+        if (targetUser.rol.nombre_rol === "admin_principal") {
+          return next(new Err.ForbiddenError("No puede modificar los datos de un admin_principal."));
+        }
+      }
+      // Un productor_principal solo puede modificar los datos de un productor_secundario de su misma productora
+      else if (authUser.rol.nombre_rol === "productor_principal") {
+        if (targetUser.rol.nombre_rol !== "productor_secundario") {
+          return next(new Err.ForbiddenError("Solo puede modificar los datos de un productor_secundario."));
+        }
+
+        // Validar que ambos pertenezcan a la misma productora
+        if (!req.productoraId) {
+          return next(new Err.ForbiddenError("No tiene permiso para modificar datos de este usuario."));
+        }
+
+        const authPerteneceMismaProductora = authMaestros.some(
+          (maestro) => maestro.productora_id === req.productoraId
+        );
+
+        const targetPerteneceMismaProductora = targetMaestros.some(
+          (maestro) => maestro.productora_id === req.productoraId
+        );
+
+        if (!authPerteneceMismaProductora || !targetPerteneceMismaProductora) {
+          return next(new Err.ForbiddenError("El usuario seleccionado no pertenece a su productora."));
+        }
+      }
+      // Un productor_secundario no puede modificar datos de otro usuario
+      else if (authUser.rol.nombre_rol === "productor_secundario") {
+        return next(new Err.ForbiddenError("No tiene permiso para modificar datos de otro usuario."));
+      }
+    }
+
+    // Actualizar los datos del usuario
     await updateUserData(targetUser, datosUsuario);
 
-    // Paso 3: Registrar auditoría
+    // Registrar auditoría
     await registrarAuditoria({
       usuario_originario_id: authUser.id_usuario,
       usuario_destino_id: targetUser.id_usuario,

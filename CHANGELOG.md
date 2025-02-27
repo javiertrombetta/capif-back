@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.80 - 27-02-2025
+## 🐛 Fixes
+
+- fix: changes in getAuditChanges
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.77
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.77 - 27-02-2025
 ## 🐛 Fixes
 

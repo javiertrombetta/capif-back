@@ -1,5 +1,7 @@
 import { Op } from "sequelize";
-import { AuditoriaCambio, Fonograma, AuditoriaSesion } from "../models";
+import AuditoriaCambio from "../models/AuditoriaCambio";
+import Fonograma from "../models/Fonograma";
+import AuditoriaSesion from "../models/AuditoriaSesion";
 
 export function validateCUIT(cuit: string): string | true {
   if (cuit.length !== 11) {

@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.96 - 27-02-2025
+## 🐛 Fixes
+
+- fix: changes in getCashflowService and listTransactionsService
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.93
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.93 - 27-02-2025
 ## 🐛 Fixes
 

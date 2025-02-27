@@ -457,6 +457,7 @@ export const getSessionAuditChanges = async (req: Request) => {
   const { nombre, apellido, email, fechaDesde, fechaHasta, page, limit } = req.query;
 
   const filters: any = {};
+  const usuarioFilters: any = {};
 
   // Manejo de rango de fechas en formato ISO (YYYY-MM-DD)
   if (fechaDesde || fechaHasta) {
@@ -499,21 +500,12 @@ export const getSessionAuditChanges = async (req: Request) => {
     }
   }
 
-  // Filtrado por email
+  // Filtrado por email sin lanzar error si no hay coincidencias
   if (email) {
-    const usuario = await Usuario.findOne({
-      where: { email: { [Op.iLike]: `%${email}%` } },
-    });
-
-    if (!usuario) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    filters.usuario_originario_id = usuario.id_usuario;
+    usuarioFilters.email = { [Op.iLike]: `%${email}%` };
   }
 
   // Búsqueda insensible a mayúsculas y minúsculas en nombre y apellido
-  const usuarioFilters: any = {};
   if (nombre) {
     usuarioFilters.nombre = { [Op.iLike]: `%${nombre}%` };
   }
@@ -533,7 +525,7 @@ export const getSessionAuditChanges = async (req: Request) => {
       {
         model: Usuario,
         as: "registranteDeSesion",
-        where: usuarioFilters,
+        where: Object.keys(usuarioFilters).length > 0 ? usuarioFilters : undefined,
       },
     ],
   });
@@ -546,7 +538,7 @@ export const getSessionAuditChanges = async (req: Request) => {
         model: Usuario,
         as: "registranteDeSesion",
         attributes: ["id_usuario", "email", "nombre", "apellido"],
-        where: usuarioFilters,
+        where: Object.keys(usuarioFilters).length > 0 ? usuarioFilters : undefined,
       },
     ],
     order: [["fecha_inicio_sesion", "DESC"]],

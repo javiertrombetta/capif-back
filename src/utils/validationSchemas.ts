@@ -2235,14 +2235,15 @@ export const getRepertoireChangesQuerySchema = Joi.object({
     }),
 
   isrc: Joi.string()
-    .length(12)
+    .pattern(/^[A-Z0-9]{2}[0-9A-Z]{3}[0-9]{2}[0-9]{5}$/)
     .optional()
     .messages({
-      "string.length": "El campo 'isrc' debe tener exactamente 12 caracteres.",
+      "string.pattern.base": "El campo 'isrc' debe seguir el formato correcto (Ej: ARABC2500001).",
     }),
 
   productora: Joi.string()
     .max(255)
+    .trim()
     .optional()
     .messages({
       "string.max": "El campo 'productora' no puede superar los 255 caracteres.",
@@ -2257,6 +2258,7 @@ export const getRepertoireChangesQuerySchema = Joi.object({
 
   detalle: Joi.string()
     .max(255)
+    .trim()
     .optional()
     .messages({
       "string.max": "El campo 'detalle' no puede superar los 255 caracteres.",
@@ -2304,6 +2306,7 @@ export const getSessionAuditChangesQuerySchema = Joi.object({
     }),
 
   nombre: Joi.string()
+    .trim()
     .max(100)
     .optional()
     .messages({
@@ -2311,6 +2314,7 @@ export const getSessionAuditChangesQuerySchema = Joi.object({
     }),
 
   apellido: Joi.string()
+    .trim()
     .max(100)
     .optional()
     .messages({

@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.99 - 27-02-2025
+## 🚀 Features
+
+- feat: add readme
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.96
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.96 - 27-02-2025
 ## 🐛 Fixes
 

@@ -228,11 +228,9 @@ type VistaData = {
 
 
     // { nombreVista: "Cuentas Corrientes" },
-    { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
-    { nombreVista: "Pagos", vistaSuperior: "Cuentas Corrientes" },
-    { nombreVista: "Traspasos", vistaSuperior: "Cuentas Corrientes" },
-    { nombreVista: "Rechazos", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Procesar Archivos", vistaSuperior: "Cuentas Corrientes" },
 
     // { nombreVista: "Auditoría" },
     { nombreVista: "Historial de Cambios", vistaSuperior: "Auditoría" },
@@ -269,11 +267,10 @@ type VistaData = {
 
 
     // { nombreVista: "Cuentas Corrientes" },
-    { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
-    { nombreVista: "Pagos", vistaSuperior: "Cuentas Corrientes" },
-    { nombreVista: "Traspasos", vistaSuperior: "Cuentas Corrientes" },
-    { nombreVista: "Rechazos", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Procesar Archivos", vistaSuperior: "Cuentas Corrientes" },
+
 
     // { nombreVista: "Auditoría" },
     { nombreVista: "Historial de Cambios", vistaSuperior: "Auditoría" },

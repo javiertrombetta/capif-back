@@ -1,4 +1,5 @@
-import { AuditoriaCambio, Fonograma } from "../models";
+import { Op } from "sequelize";
+import { AuditoriaCambio, Fonograma, AuditoriaSesion } from "../models";
 
 export function validateCUIT(cuit: string): string | true {
   if (cuit.length !== 11) {
@@ -117,3 +118,29 @@ export async function actualizarDominioPublicoGlobal(
     });
   }
 }
+
+const EXPIRATION_TIME = parseInt(process.env.SESSION_EXPIRATION_TIME || "1800000", 10);
+
+export const cerrarSesionesInactivas = async () => {
+    const ahora = new Date();
+
+    try {
+        const sesionesInactivas = await AuditoriaSesion.findAll({
+            where: {
+                fecha_fin_sesion: null,
+                fecha_inicio_sesion: { [Op.lte]: new Date(ahora.getTime() - EXPIRATION_TIME) }
+            }
+        });
+
+        if (sesionesInactivas.length === 0) {
+            return;
+        }
+
+        for (const sesion of sesionesInactivas) {
+            sesion.fecha_fin_sesion = ahora;
+            await sesion.save();
+        }
+    } catch (error) {
+        console.error("Error al cerrar sesiones inactivas:", error);
+    }
+};

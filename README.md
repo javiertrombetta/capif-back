@@ -1,105 +1,149 @@
-# CAPIF GIT Backend
+# CAPIF APIRest
 
+CAPIF APIRest es el backend del sistema de gestión de trámites de CAPIF, desarrollado en Node.js con Express y utilizando TypeScript. Soporta ejecución en entornos de desarrollo (development) y producción local (production.local) utilizando Docker y PostgreSQL.
 
-## Desarrollo (Mayor control de ejecución)
-- Motor de Postres: Docker
-- Base de datos: proyecto local (aparece una carpeta /postgres que es el volume)
-- Aplicación: proyecto local
-- Logs: proyecto local
+## Requisitos previos
 
-### /.env.dev.local
-Variables de entorno para desarrollo
+Antes de ejecutar el proyecto, hay que tener instalado:
+
+- Node.js (versión recomendada: v18+)
+- Docker y Docker Compose
+- PostgreSQL (si se ejecuta sin Docker)
+- Git (para clonar el repositorio)
+
+## Instalación
+
+1) Clonar el repositorio y accede a la carpeta del proyecto:
+
+```sh
+git clone https://github.com/javiertrombetta/capif-back.git
+cd capif-back
+```
+2) Instalar las dependencias del proyecto:
+
+```sh
+npm install
+```
+
+## Configuración de Entorno
+
+El sistema usa variables de entorno para configurar la base de datos y otros servicios. Existen dos archivos .env para cada entorno:
+
+- Entorno de desarrollo: .env.dev.local
+- Entorno de producción local: .env.prod.local
+
+IMPORTANTE: Los archivos .env tienen que estar en la raiz del proyecto.
 
 ```env
-# PostgreSQL
-DB_USER=postgres
-DB_PASSWORD=DevPass123!
-DB_NAME=CAPIF_DB
-DB_HOST=localhost
-DB_PORT=5432
+# ==========================
+# PostgreSQL Configuration
+# ==========================
+DB_USER=                      # Nombre de usuario de la base de datos PostgreSQL
+DB_PASSWORD=                  # Contraseña del usuario de la base de datos
+DB_NAME=                      # Nombre de la base de datos utilizada por la aplicación
+DB_HOST=                      # Host donde se encuentra la base de datos (ejemplo: localhost o una IP remota)
+DB_PORT=                      # Puerto donde escucha PostgreSQL (por defecto 5432)
+DB_SSL=                       # Si la conexión a la base de datos debe ser segura (true para producción, false para local)
 
-# Aplicación
-NODE_ENV=development
-JWT_SECRET=SistemaDeGestionDeTramites!
-PORT=3000
+# ==========================
+# Application Configuration
+# ==========================
+NODE_ENV=development             # Define el entorno de ejecución (development, production.local)
+GLOBAL_PREFIX=api/v1             # Prefijo global para las rutas de la API
+JWT_SECRET=                      # Clave secreta para la firma de tokens JWT (debe ser segura)
+JWT_EXPIRATION=7200              # Tiempo de expiración del token JWT en segundos (ejemplo: 3600, 7200)
+COOKIE_MAX_AGE=7200000           # Tiempo máximo de vida de la cookie de sesión (en milisegundos)
+SESSION_EXPIRATION_TIME=1800000  # Tiempo de expiración de sesiones de usuario (en milisegundos)
+PORT=                            # Puerto en el que se ejecutará la API
+EMAIL_TOKEN_EXPIRATION=7200      # Expiración del token de verificación de email en segundos (ejemplo: 3600, 7200)
+RESET_TOKEN_EXPIRATION=7200      # Expiración del token para restablecimiento de contraseña en segudos (ejemplo: 3600, 7200)
+MAX_LOGIN_ATTEMPTS=5             # Número máximo de intentos de inicio de sesión antes de bloquear la cuenta
+UPLOAD_DIR=./uploads             # Directorio donde se almacenarán archivos subidos
+USER_DEPURAR_DAYS=30             # Días antes de marcar usuarios inactivos como en proceso de depuración
+USER_DESHABILITAR_DAYS=30        # Días antes de deshabilitar usuarios inactivos
+USER_CLEANUP_DAYS=30             # Días antes de eliminar definitivamente un usuario deshabilitado
+CAPIF_EMAIL_RECEIVER=            # Correo electrónico que recibe notificaciones administrativas
+ADMIN_PRINCIPAL_EMAIL=           # Correo electrónico del administrador principal
+ADMIN_PRINCIPAL_PASSWORD=        # Contraseña del administrador principal
 
-# Redis
-REDIS_HOST=redis
-REDIS_PORT=6379
+# ==========================
+# Timezone Configuration
+# ==========================
+TZ=America/Argentina/Buenos_Aires  # Zona horaria en la que opera la aplicación
 
-# Timezone
-TZ=America/Argentina/Buenos_Aires
+# ==========================
+# Frontend URL
+# ==========================
+FRONTEND_URL=                   # URL del frontend al que se conecta la API (ejemplo: http://localhost)
 
-# Transport
-FRONTEND_URL=http://dominio.com
-SMTP_USER=mail@gmail.com
-SMTP_PASS=APIKEY
+# ==========================
+# Email (SMTP) Configuration
+# ==========================
+SMTP_HOST=                       # Host del servidor de correo saliente (Ejemplo: smtp.gmail.com)
+SMTP_PORT=                       # Puerto de conexión SMTP (587 para TLS, 465 para SSL)
+SMTP_SECURE=                     # Si se debe usar conexión segura (true para SSL, false para TLS)
+SMTP_USER=                       # Usuario del servicio de correo (Ejemplo: correo@gmail.com)
+SMTP_PASS=                       # Contraseña del servicio de correo o clave de aplicación
+EMAIL_FROM=                      # Nombre y correo del remitente (Ejemplo: CAPIF <noreply@capif.com>)
+
+# ==========================
+# FTP Configuration
+# ==========================
+FTP_HOST=                        # Dirección del servidor FTP
+FTP_USER=                        # Usuario de acceso FTP
+FTP_PASSWORD=                    # Contraseña del usuario FTP
+FTP_PORT=                        # Puerto del servidor FTP (21 por defecto)
+
+# ==========================
+# reCAPTCHA v3 Configuration
+# ==========================
+RECAPTCHA_SECRET_KEY=            # Clave secreta de Google reCAPTCHA v3 para validación de usuarios
 ```
-### 1) Ejecución de motor de base de datos en Docker y creación de volume local
 
-```bash
-docker compose --env-file .env.dev.local -f compose.dev.local.yml up --build -d
+
+## Uso con Docker 
+### Ejecutar en Desarrollo (development)
+Para levantar el entorno de desarrollo con Docker Compose, ejecutar:
+
+```sh
+npm run init
 ```
 
-### 2) Ejecución de aplicación local
+Luego, para iniciar el proyecto:
 
-```bash
+```sh
 npm run dev
 ```
 
-### Eliminar todo lo asociado al compose (menos el volumen)
+### Ejecutar en Producción (production.local)
+Para levantar el entorno de producción con Docker Compose, ejecuntar:
+
+```sh
+npm run prod
+```
+
+Para inicializar la base de datos, ingresar a la consola del contenedor Docker de la aplicación y ejecutar:
+
+```sh
+npm run postgres:init
+```
+
+## API Documentada con Swagger (en entorno de desarrollo)
+
+El backend incluye documentación interactiva con Swagger.
+
+Para acceder a la documentación, inicia el servidor y abre en tu navegador:
 
 ```bash
-docker compose --env-file .env.dev.local -f compose.dev.local.yml down
+http://localhost:3000/docs
 ```
 
+## Contribuciones
 
-## Producción - Total (Probar el resultado final)
-- Motor de Postres: Docker
-- Base de datos: volume en Docker
-- Aplicación: Docker
-- Logs: Docker
+Si deseas contribuir a este proyecto, por favor:
 
-### /.env.prod.local
-Variables de entorno para desarrollo
-
-```env
-# PostgreSQL
-DB_USER=postgres
-DB_PASSWORD=DevPass123!
-DB_NAME=CAPIF_DB
-DB_HOST=postgres
-DB_PORT=5432
-
-# Aplicación
-NODE_ENV=production.local
-JWT_SECRET=SistemaDeGestionDeTramites!
-PORT=3000
-RESET_TOKEN_EXPIRATION=1h
-MAX_LOGIN_ATTEMPTS=5
-
-# Redis
-REDIS_HOST=redis
-REDIS_PORT=6379
-
-# Timezone
-TZ=America/Argentina/Buenos_Aires
-
-# Transport
-FRONTEND_URL=http://dominio.com
-SMTP_SERVICE=gmail
-SMTP_FROM=Name <mail@gmail.com>
-SMTP_USER=mail@gmail.com
-SMTP_PASS=APIKEY
-```
-### Ejecución de de entorno total de producción
-
-```bash
-docker compose --env-file .env.prod.local -f compose.prod.local.yml up --build -d
-```
-
-### Eliminar todo lo asociado al compose (menos el volumen)
-
-```bash
-docker compose --env-file .env.prod.local -f compose.prod.local.yml down
-```
+1) Crear un fork del repositorio.
+2) Crear una nueva rama (git checkout -b feature/nueva-funcionalidad).
+3) Realizar los cambios y hacer un commit (git commit -m "Agrega nueva funcionalidad").
+4) Subir los cambios (git push origin feature/nueva-funcionalidad).
+5) Abrir un Pull Request en GitHub.

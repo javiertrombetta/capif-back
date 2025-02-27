@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.83 - 27-02-2025
+## 🐛 Fixes
+
+- fix: change in getRepertoireAuditChanges
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.80
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.80 - 27-02-2025
 ## 🐛 Fixes
 

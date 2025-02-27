@@ -250,28 +250,13 @@ export const getAuditChanges = async (req: Request) => {
     }
   }
 
-  // Filtrado por usuario
-  // if (emailUsuario) {
-  //   const usuario = await Usuario.findOne({
-  //     where: { email: { [Op.iLike]: `%${emailUsuario}%` } },
-  //   });
-
-  //   if (!usuario) {
-  //     throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-  //   }
-
-  //   filters.usuario_originario_id = usuario.id_usuario;
-  // }
-
   // Filtrado por email del usuario en ambas relaciones (registrante y auditado)
-  const usuarioFilter = emailUsuario
-    ? {
-        [Op.or]: [
-          { "$registranteDeAuditoria.email$": { [Op.iLike]: `%${emailUsuario}%` } },
-          { "$usuarioAuditado.email$": { [Op.iLike]: `%${emailUsuario}%` } },
-        ],
-      }
-    : {};
+  if (emailUsuario) {
+    filters[Op.or] = [
+      { "$registranteDeAuditoria.email$": { [Op.iLike]: `%${emailUsuario}%` } },
+      { "$usuarioAuditado.email$": { [Op.iLike]: `%${emailUsuario}%` } },
+    ];
+  }
 
   // Filtrado por tabla de base de datos
   if (tablaDb && ENTIDADES_PERMITIDAS.includes(tablaDb as string)) {
@@ -291,10 +276,8 @@ export const getAuditChanges = async (req: Request) => {
   const offset = (pageNumber - 1) * limitNumber;
 
   // Contar el total de registros sin paginación
-  // const total = await AuditoriaCambio.count({ where: filters });
-
   const total = await AuditoriaCambio.count({
-    where: { ...filters, ...usuarioFilter },
+    where: filters,
     include: [
       { model: Usuario, as: "registranteDeAuditoria", attributes: [] },
       { model: Usuario, as: "usuarioAuditado", attributes: [] },

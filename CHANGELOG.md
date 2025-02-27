@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.86 - 27-02-2025
+## 🐛 Fixes
+
+- fix: changes in validationSchemas of audit
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.83
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.83 - 27-02-2025
 ## 🐛 Fixes
 

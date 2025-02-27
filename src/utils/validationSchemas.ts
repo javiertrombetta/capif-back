@@ -2131,14 +2131,14 @@ export const getAuditChangesQuerySchema = Joi.object({
     .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
-      "string.pattern.base": "El campo 'fechaDesde' debe estar en formato DD/MM/AAAA.",
+      "string.pattern.base": "El campo 'fechaDesde' debe estar en formato AAAA/MM/DD.",
     }),
 
   fechaHasta: Joi.string()
     .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
-      "string.pattern.base": "El campo 'fechaHasta' debe estar en formato DD/MM/AAAA.",
+      "string.pattern.base": "El campo 'fechaHasta' debe estar en formato AAAA/MM/DD.",
     }),
 
   emailUsuario: Joi.string()
@@ -2217,14 +2217,14 @@ export const getRepertoireChangesQuerySchema = Joi.object({
     .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
-      "string.pattern.base": "El campo 'fechaDesde' debe estar en formato DD/MM/AAAA.",
+      "string.pattern.base": "El campo 'fechaDesde' debe estar en formato AAAA/MM/DD.",
     }),
 
   fechaHasta: Joi.string()
     .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
-      "string.pattern.base": "El campo 'fechaHasta' debe estar en formato DD/MM/AAAA.",
+      "string.pattern.base": "El campo 'fechaHasta' debe estar en formato AAAA/MM/DD.",
     }),
 
   emailUsuario: Joi.string()
@@ -2286,14 +2286,14 @@ export const getSessionAuditChangesQuerySchema = Joi.object({
     .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
-      "string.pattern.base": "El campo 'fechaDesde' debe estar en formato DD/MM/AAAA.",
+      "string.pattern.base": "El campo 'fechaDesde' debe estar en formato AAAA/MM/DD.",
     }),
 
   fechaHasta: Joi.string()
     .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .messages({
-      "string.pattern.base": "El campo 'fechaHasta' debe estar en formato DD/MM/AAAA.",
+      "string.pattern.base": "El campo 'fechaHasta' debe estar en formato AAAA/MM/DD.",
     }),
 
   email: Joi.string()

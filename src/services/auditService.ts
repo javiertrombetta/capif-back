@@ -360,43 +360,23 @@ export const getRepertoireAuditChanges = async (req: Request) => {
     }
   }
 
-  // Filtrado por usuario
+  // Filtrado por email del usuario en ambas relaciones (registrante)
   if (emailUsuario) {
-    const usuario = await Usuario.findOne({
-      where: { email: { [Op.iLike]: `%${emailUsuario}%` } },
-    });
-
-    if (!usuario) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.USER.NOT_FOUND);
-    }
-
-    filters.usuario_originario_id = usuario.id_usuario;
+    filters[Op.or] = [
+      { "$registranteDeRepertorio.email$": { [Op.iLike]: `%${emailUsuario}%` } },
+    ];
   }
 
-  // Filtrado por ISRC
+  // Filtrado por ISRC (ILIKE)
   if (isrc) {
-    const fonograma = await Fonograma.findOne({
-      where: { isrc: isrc as string },
-    });
-
-    if (!fonograma) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.FONOGRAMA.NOT_FOUND);
-    }
-
-    filters.fonograma_id = fonograma.id_fonograma;
+    filters["$fonogramaAuditado.isrc$"] = { [Op.iLike]: `%${isrc}%` };
   }
 
-  // Filtrado por Productora
+  // Filtrado por Productora (ILIKE)
   if (productora) {
-    const productoraData = await Productora.findOne({
-      where: { nombre_productora: productora as string },
-    });
-
-    if (!productoraData) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
-    }
-
-    filters["$fonogramaAuditado.productora_id$"] = productoraData.id_productora;
+    filters["$fonogramaAuditado.productoraDelFonograma.nombre_productora$"] = {
+      [Op.iLike]: `%${productora}%`,
+    };
   }
 
   // Filtrado por tipo de cambio
@@ -417,7 +397,24 @@ export const getRepertoireAuditChanges = async (req: Request) => {
   const offset = (pageNumber - 1) * limitNumber;
 
   // Contar el total de registros sin paginación
-  const total = await AuditoriaRepertorio.count({ where: filters });
+  const total = await AuditoriaRepertorio.count({
+    where: filters,
+    include: [
+      { model: Usuario, as: "registranteDeRepertorio", attributes: [] },
+      {
+        model: Fonograma,
+        as: "fonogramaAuditado",
+        attributes: [],
+        include: [
+          {
+            model: Productora,
+            as: "productoraDelFonograma",
+            attributes: [],
+          },
+        ],
+      },
+    ],
+  });
 
   // Consulta con paginación
   const repertorioCambios = await AuditoriaRepertorio.findAll({

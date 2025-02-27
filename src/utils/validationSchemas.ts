@@ -2017,10 +2017,9 @@ export const deleteTerritorioSchema = Joi.object({
 export const listTransactionsSchema = Joi.object({
   cuit: Joi.string()
     .optional()
-    .pattern(/^[0-9]{11}$/)
+    .pattern(/^\d+$/)
     .messages({
-      'string.length': 'El CUIT debe tener exactamente 11 caracteres.',
-      'string.pattern.base': 'El CUIT debe contener solo números.',
+      "string.pattern.base": "El CUIT debe contener solo números.",
     }),
 
   productora_id: uuidSchema
@@ -2049,8 +2048,9 @@ export const listTransactionsSchema = Joi.object({
   referencia: Joi.string()
     .optional()
     .max(255)
+    .allow("")
     .messages({
-      'string.max': 'La referencia no debe exceder los 255 caracteres.',
+      "string.max": "La referencia no debe exceder los 255 caracteres.",
     }),
 
   page: Joi.number()
@@ -2081,9 +2081,9 @@ export const listTransactionsSchema = Joi.object({
 export const getCashflowsSchema = Joi.object({
   cuit: Joi.string()
     .optional()
-    .pattern(/^[0-9]{11}$/)
+    .pattern(/^\d+$/)
     .messages({
-      'string.pattern.base': 'El CUIT debe tener exactamente 11 caracteres numéricos.',
+      "string.pattern.base": "El CUIT debe contener solo números.",
     }),
 
   productora_id: uuidSchema

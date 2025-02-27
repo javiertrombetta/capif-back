@@ -660,47 +660,43 @@ export const listTransactionsService = async (req: any) => {
   }
   
   let whereCondition: any = {};
-  
+
+  // Filtrado por cuit en todas las posibles ubicaciones dentro de la transacción
   if (cuit) {
-    const productora = await Productora.findOne({ where: { cuit } });
-    if (!productora) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
-    }
-    const cashflow = await Cashflow.findOne({ where: { productora_id: productora.id_productora } });
-    if (!cashflow) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.CASHFLOW.NOT_FOUND);
-    }
-    whereCondition.cashflow_id = cashflow.id_cashflow;
+    whereCondition[Op.or] = [
+      { "$pago.cuit$": cuit },
+      { "$liquidacion.cuit$": cuit },
+      { "$traspaso.cuit_origen$": cuit },
+      { "$traspaso.cuit_destino$": cuit }
+    ];
   }
 
+  // Filtrado por productora_id sin error si no encuentra coincidencias
   if (productora_id) {
-    const cashflow = await Cashflow.findOne({ where: { productora_id } });
-    if (!cashflow) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.CASHFLOW.NOT_FOUND);
-    }
-    whereCondition.cashflow_id = cashflow.id_cashflow;
+    whereCondition["$cashflow.productora_id$"] = productora_id;
   }
 
+  // Filtrado por tipo de transacción
   if (tipo_transaccion) {
     whereCondition.tipo_transaccion = tipo_transaccion;
   }
 
-  if (fecha_desde && fecha_hasta) {
-    const fechaInicio = fecha_desde ? new Date(fecha_desde as string) : null;
-    const fechaFin = fecha_hasta ? new Date(fecha_hasta as string) : null;
-    
-    // Validar si las fechas son correctas
+  // Filtrado por rango de fechas
+  if (fecha_desde || fecha_hasta) {
+    let fechaInicio: Date | null = fecha_desde ? new Date(fecha_desde as string) : null;
+    let fechaFin: Date | null = fecha_hasta ? new Date(fecha_hasta as string) : new Date();
+
     if (fechaInicio && isNaN(fechaInicio.getTime())) {
       throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_INVALID_FORMAT);
     }
-    
     if (fechaFin && isNaN(fechaFin.getTime())) {
       throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.DATE_INVALID_FORMAT);
     }
-    
+
     whereCondition.fecha_transaccion = { [Op.between]: [fechaInicio, fechaFin] };
   }
-  
+
+  // Verificación de acceso para productores
   const rolesProductores = ["productor_principal", "productor_secundario"];
   if (rolesProductores.includes(authUser.rol.nombre_rol)) {
     if (!req.productoraId) {
@@ -712,23 +708,27 @@ export const listTransactionsService = async (req: any) => {
       throw new Err.ForbiddenError(MESSAGES.ERROR.VALIDATION.PRODUCTORA_NOT_ALLOWED);
     }
 
-    const cashflow = await Cashflow.findOne({ where: { productora_id: req.productoraId } });
-    if (!cashflow) {
-      throw new Err.NotFoundError(MESSAGES.ERROR.CASHFLOW.NOT_FOUND);
+    const cashflows = await Cashflow.findAll({
+      where: { productora_id: req.productoraId },
+      attributes: ["id_cashflow"]
+    });
+
+    if (cashflows.length > 0) {
+      whereCondition.cashflow_id = { [Op.in]: cashflows.map(c => c.id_cashflow) };
     }
-    whereCondition.cashflow_id = cashflow.id_cashflow;
   }
 
+  // Consulta de transacciones con los filtros aplicados
   const { count, rows: transactions } = await CashflowMaestro.findAndCountAll({
     where: whereCondition,
     include: [
-      { model: Cashflow, as: 'cashflow' },
-      { model: CashflowLiquidacion, as: 'liquidacion' },
-      { model: CashflowPago, as: 'pago' },
-      { model: CashflowRechazo, as: 'rechazo' },
-      { model: CashflowTraspaso, as: 'traspaso' }
+      { model: Cashflow, as: "cashflow", attributes: ["id_cashflow", "productora_id"] },
+      { model: CashflowLiquidacion, as: "liquidacion", attributes: ["cuit"] },
+      { model: CashflowPago, as: "pago", attributes: ["cuit"] },
+      { model: CashflowRechazo, as: "rechazo" },
+      { model: CashflowTraspaso, as: "traspaso", attributes: ["cuit_origen", "cuit_destino"] }
     ],
-    order: [['fecha_transaccion', 'DESC']],
+    order: [["fecha_transaccion", "DESC"]],
     limit: parseInt(limit as string),
     offset: offset
   });
@@ -739,7 +739,7 @@ export const listTransactionsService = async (req: any) => {
       total: count,
       page: parseInt(page as string),
       limit: parseInt(limit as string),
-      transactions
+      transactions: transactions.length > 0 ? transactions : []
     }
   };
 };
@@ -787,11 +787,24 @@ export const getCashflowsService = async (req: any): Promise<{ status: number; d
 
     // Si el usuario es admin, puede filtrar por CUIT o productora_id
     if (cuit) {
-        const productora = await Productora.findOne({ where: { cuit_cuil: cuit } });
-        if (!productora) {
-            throw new Err.NotFoundError(MESSAGES.ERROR.PRODUCTORA.NOT_FOUND);
+        const productoras = await Productora.findAll({
+            where: { cuit_cuil: { [Op.iLike]: `%${cuit.trim()}%` } },
+            attributes: ['id_productora']
+        });
+
+        if (productoras.length > 0) {
+            whereCondition.productora_id = { [Op.in]: productoras.map(p => p.id_productora) };
+        } else {
+            return {
+                status: 200,
+                data: {
+                    total: 0,
+                    page: parseInt(page as string),
+                    limit: parseInt(limit as string),
+                    cashflows: []
+                }
+            };
         }
-        whereCondition.productora_id = productora.id_productora;
     }
 
     if (productora_id) {

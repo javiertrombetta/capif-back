@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.77 - 27-02-2025
+## 🐛 Fixes
+
+- fix: changes in addArchivoToFonograma, audio middleware, gitAuditChanges and validationSchemas
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.74
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.74 - 27-02-2025
 ## 🐛 Fixes
 

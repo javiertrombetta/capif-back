@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.142 - 28-02-2025
+## 🐛 Fixes
+
+- fix: agrego vista buscar CCs
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.139
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.139 - 28-02-2025
 ## 🐛 Fixes
 

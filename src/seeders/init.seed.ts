@@ -223,7 +223,6 @@ type VistaData = {
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Ver Aplicación Usuario", vistaSuperior: "Usuarios" },
-    { nombreVista: "Desvincular Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Editar Datos Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Bloquear Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Restablecer Password Usuario", vistaSuperior: "Usuarios" },
@@ -231,6 +230,7 @@ type VistaData = {
 
     // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Buscar Cuentas Corrientes", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Procesar Archivos", vistaSuperior: "Cuentas Corrientes" },
 
@@ -263,7 +263,6 @@ type VistaData = {
     { nombreVista: "Alta Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Buscar Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Ver Aplicación Usuario", vistaSuperior: "Usuarios" },
-    { nombreVista: "Desvincular Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Editar Datos Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Bloquear Usuario", vistaSuperior: "Usuarios" },
     { nombreVista: "Restablecer Password Usuario", vistaSuperior: "Usuarios" },
@@ -271,6 +270,7 @@ type VistaData = {
 
     // { nombreVista: "Cuentas Corrientes" },
     { nombreVista: "Estado de Cuenta", vistaSuperior: "Cuentas Corrientes" },
+    { nombreVista: "Buscar Cuentas Corrientes", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Liquidaciones", vistaSuperior: "Cuentas Corrientes" },
     { nombreVista: "Procesar Archivos", vistaSuperior: "Cuentas Corrientes" },
 

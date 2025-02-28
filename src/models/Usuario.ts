@@ -153,13 +153,7 @@ Usuario.init(
     },
     telefono: {
       type: DataTypes.STRING(20),
-      allowNull: true,
-      validate: {
-        len: {
-          args: [7, 20],
-          msg: "El teléfono debe tener entre 7 y 20 caracteres.",
-        },
-      },
+      allowNull: true,      
     },
     email_verification_token: {
       type: DataTypes.STRING(255),

@@ -369,11 +369,15 @@ export const EMAIL_BODY = {
     <p>Por favor, ingresá nuevamente al sistema GIT para corregir los datos.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
+    <p>---</p>
+    <p><a href="${baseUrl}">${baseUrl}</a></p>
   `,
   // createSecondaryAdminUser
   TEMP_PASSWORD: (tempPassword: string) => `
     <h1>Registro en el sistema GIT</h1>
-    <p>Tu cuenta fue creada con éxito. Ya podés acceder al sistema GIT con la siguiente contraseña:</p>
+    <p>Tu cuenta fue creada con éxito. Ya podés acceder al sistema GIT en el siguiente enlace:</p>
+    <p><a href="${baseUrl}">${baseUrl}</a></p>
+    <p>Tu contraseña temporal es:</p>
     <p><strong>${tempPassword}</strong></p>
     <p>Para mayor seguridad, te recomendamos cambiar la contraseña por una propia.</p>
     <p>Atte.,</p>
@@ -420,6 +424,8 @@ export const EMAIL_BODY = {
     </ul>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
+    <p>---</p>
+    <p><a href="${baseUrl}">${baseUrl}</a></p>
   `,
   APPLICATION_SUBMITTED: (nombre: string) => `
     <p>Hola ${nombre},</p>
@@ -427,6 +433,8 @@ export const EMAIL_BODY = {
     <p>Nos pondremos en contacto con vos una vez que se complete la revisión.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
+    <p>---</p>
+    <p><a href="${baseUrl}">${baseUrl}</a></p>
   `,
   SENDFILE_REJECTION_NOTIFICATION: (nombre: string, comentario: string) => `
     <p>Hola ${nombre},</p>
@@ -435,6 +443,8 @@ export const EMAIL_BODY = {
     <p>Por favor, contacte con CAPIF para obtener más información.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
+    <p>---</p>
+    <p><a href="${baseUrl}">${baseUrl}</a></p>
   `,
   SEND_DOCUMENTS_NOTIFICATION: (nombre_participante: string, conflicto_id: string) => `
     <p>Hola,</p>
@@ -442,6 +452,8 @@ export const EMAIL_BODY = {
     <p>Por favor, revise los archivos adjuntos.</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
+    <p>---</p>
+    <p><a href="${baseUrl}">${baseUrl}</a></p>
   `,
   PAGO_PROCESADO: (nombreProductora: string, monto: number, referencia: string | null, fecha: string) => `
     <p>Estimado/a ${nombreProductora},</p>
@@ -450,6 +462,8 @@ export const EMAIL_BODY = {
     <p><strong>Fecha:</strong> ${fecha}</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
+    <p>---</p>
+    <p><a href="${baseUrl}">${baseUrl}</a></p>
   `,
   RECHAZO_PAGO: (nombreProductora: string, monto: number, referencia: string | null, fecha: string) => `
     <p>Estimado/a ${nombreProductora},</p>
@@ -458,6 +472,8 @@ export const EMAIL_BODY = {
     <p><strong>Fecha:</strong> ${fecha}</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
+    <p>---</p>
+    <p><a href="${baseUrl}">${baseUrl}</a></p>
   `,
 };
 

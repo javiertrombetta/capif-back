@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.139 - 28-02-2025
+## 🐛 Fixes
+
+- fix: change Productora model, messages and approveApplication
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.136
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.136 - 28-02-2025
 ## 🐛 Fixes
 

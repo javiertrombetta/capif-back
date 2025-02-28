@@ -399,9 +399,9 @@ export const EMAIL_BODY = {
     nombrePersona: string,
     nombreProductora: string,
     cuitProductora: string,
-    cbuProductora: string,
-    aliasCbuProductora: string,
-    isrcs: { tipo: string; codigo_productora: string }[]
+    cbuProductora: string,    
+    isrcs: { tipo: string; codigo_productora: string }[],
+    aliasCbuProductora?: string,
   ) => `
     <h1>Registro en el sistema GIT</h1>
     <p>Hola ${nombrePersona},</p>
@@ -411,7 +411,7 @@ export const EMAIL_BODY = {
       <li><strong>Nombre de la productora:</strong> ${nombreProductora}</li>
       <li><strong>CUIT:</strong> ${cuitProductora}</li>
       <li><strong>CBU:</strong> ${cbuProductora}</li>
-      <li><strong>Alias CBU:</strong> ${aliasCbuProductora}</li>
+      ${aliasCbuProductora !== undefined ? `<li><strong>Alias CBU:</strong> ${aliasCbuProductora}</li>` : ""}
     </ul>
     <p>Guardá los siguientes Códigos de Entidad Registrante para armar los ISRC:</p>
     <ul>

@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.102 - 28-02-2025
+## 🐛 Fixes
+
+- fix: change Productora y Usuario models
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.99
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.99 - 27-02-2025
 ## 🚀 Features
 

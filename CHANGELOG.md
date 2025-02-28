@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.125 - 28-02-2025
+## 🐛 Fixes
+
+- fix: change route getRegistrosPendientes
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.122
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.122 - 28-02-2025
 ## 🐛 Fixes
 

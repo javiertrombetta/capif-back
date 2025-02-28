@@ -1,4 +1,19 @@
 # Changelog
+## v0.5.109 - 28-02-2025
+## 🐛 Fixes
+
+- fix: change in sendApplicationSchema
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.105
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.5.105 - 28-02-2025
 ## 🐛 Fixes
 

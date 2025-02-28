@@ -1,4 +1,30 @@
 # Changelog
+## v0.5.132 - 28-02-2025
+## 🐛 Fixes
+
+- fix: change Productora model
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.128
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
+## v0.5.128 - 28-02-2025
+## 🐛 Fixes
+
+- fix: change updateProductora route
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.125
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.125 - 28-02-2025
 ## 🐛 Fixes
 

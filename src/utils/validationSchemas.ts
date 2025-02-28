@@ -104,12 +104,10 @@ export const productoraBaseSchema = Joi.object({
     }),
   cbu: Joi.string()
     .length(22)
-    .required()
+    .optional()
     .messages({
       "string.base": "El CBU debe ser un texto.",
-      "string.empty": "El CBU no puede estar vacío.",
       "string.length": "El CBU debe tener exactamente 22 caracteres.",
-      "any.required": "El CBU es obligatorio.",
     }),
   denominacion_sello: Joi.string().optional().allow(null, '').messages({
     "string.base": "La denominación del sello debe ser un texto.",

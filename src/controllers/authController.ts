@@ -1163,9 +1163,9 @@ export const approveApplication = async (
           targetUser.nombre!,
           productora.nombre_productora,
           productora.cuit_cuil,
-          productora.cbu,
-          productora.alias_cbu,
-          validIsrcs
+          productora.cbu,          
+          validIsrcs,
+          typeof productora.alias_cbu === "string" ? productora.alias_cbu : undefined,          
         ),
         successLog: `Usuario autorizado y correo de notificación enviado a ${targetUser.email}.`,
         errorLog: `Error al enviar el correo de aprobación de aplicación a ${targetUser.email}.`,

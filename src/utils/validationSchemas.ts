@@ -53,9 +53,8 @@ export const productoraBaseSchema = Joi.object({
     "string.empty": "La calle no puede estar vacía.",
     "any.required": "La calle es obligatoria.",
   }),
-  numero: Joi.string().required().messages({
+  numero: Joi.string().optional().allow(null, '').messages({
     "string.base": "El número debe ser un texto.",
-    "string.empty": "El número no puede estar vacío.",
     "any.required": "El número es obligatorio.",
   }),
   ciudad: Joi.string().required().messages({
@@ -112,10 +111,10 @@ export const productoraBaseSchema = Joi.object({
       "string.length": "El CBU debe tener exactamente 22 caracteres.",
       "any.required": "El CBU es obligatorio.",
     }),
-  denominacion_sello: Joi.string().optional().messages({
+  denominacion_sello: Joi.string().optional().allow(null, '').messages({
     "string.base": "La denominación del sello debe ser un texto.",
   }),
-  datos_adicionales: Joi.string().optional().messages({
+  datos_adicionales: Joi.string().optional().allow(null, '').messages({
     "string.base": "Los datos adicionales deben ser un texto.",
   }),
 });

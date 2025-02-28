@@ -472,7 +472,7 @@ export const EMAIL_BODY = {
     <p><strong>Fecha:</strong> ${fecha}</p>
     <p>Atte.,</p>
     <p><b>CAPIF</b></p>
-    <p>---</p>
+    <p>---</p>1
     <p><a href="${baseUrl}">${baseUrl}</a></p>
   `,
 };

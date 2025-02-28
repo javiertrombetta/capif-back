@@ -490,6 +490,16 @@ export const listFonogramas = async (req: any) => {
     ],
   });
 
+  if (total === 0) {
+  return {
+    message: "No se encontraron fonogramas con los filtros aplicados.",
+    total: 0,
+    page,
+    limit,
+    data: [],
+  };
+}
+
   // Obtener datos paginados con sus relaciones
   const fonogramas = await Fonograma.findAll({
     where: whereClause,

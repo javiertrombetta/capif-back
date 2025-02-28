@@ -19,7 +19,7 @@ class Productora extends Model {
   public telefono!: string;
   public nacionalidad!: string;
   public alias_cbu!: string;
-  public cbu!: string;
+  public cbu?: string | null;
   public cantidad_fonogramas!: number;
   public denominacion_sello?: string | null;
   public datos_adicionales?: string | null;  
@@ -155,7 +155,7 @@ Productora.init(
     },
     cbu: {
       type: DataTypes.STRING(22),
-      allowNull: false,
+      allowNull: true,
       unique: true,
       validate: {
         isNumeric: {

@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.112 - 28-02-2025
+## 🐛 Fixes
+
+- fix: change Usuario model
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.109
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.109 - 28-02-2025
 ## 🐛 Fixes
 

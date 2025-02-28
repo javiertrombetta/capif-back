@@ -24,7 +24,7 @@ class Usuario extends Model {
   public is_bloqueado!: boolean;
   public intentos_fallidos!: number;
   public fecha_ultimo_cambio_registro!: Date;
-  public telefono!: string | null;
+  public telefono?: string | null;
   public email_verification_token!: string | null;
   public email_verification_token_expires!: Date | null;
   public reset_password_token!: string | null;

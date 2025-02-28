@@ -375,10 +375,13 @@ export const sendApplicationSchema = Joi.object({
     'string.max': 'El campo apellido no debe exceder los 255 caracteres.',
   }),
 
-  telefono: Joi.string().pattern(/^[0-9]+$/).required().messages({
-    'any.required': 'El campo telefono es obligatorio.',
-    'string.pattern.base': 'El campo telefono debe contener solo números.',
-  }),
+  telefono: Joi.string()
+    .allow(null, '')
+    .optional()
+    .pattern(/^[0-9]+$/)
+    .messages({
+      'string.pattern.base': 'El campo telefono debe contener solo números.',
+    }),
 });
 
 // Schema for updating a user's details

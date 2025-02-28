@@ -13,13 +13,7 @@ Antes de ejecutar el proyecto, hay que tener instalado:
 
 ## Instalación
 
-1) Clonar el repositorio y accede a la carpeta del proyecto:
-
-```sh
-git clone https://github.com/javiertrombetta/capif-back.git
-cd capif-back
-```
-2) Instalar las dependencias del proyecto:
+Instalar las dependencias del proyecto:
 
 ```sh
 npm install

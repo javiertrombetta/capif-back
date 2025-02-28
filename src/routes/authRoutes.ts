@@ -106,7 +106,7 @@ router.post(
 router.get(
   "/pending",
   authenticate,
-  authorizeRoles(["admin_principal", "admin_secundario"]),
+  authorizeRoles(["admin_principal", "admin_secundario", "productor_principal"]),
   celebrate({ [Segments.QUERY]: getRegistrosPendientesSchema }),
   getRegistrosPendientes
 );

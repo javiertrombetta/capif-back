@@ -137,13 +137,3 @@ Para acceder a la documentación, inicia el servidor y abre en tu navegador:
 ```bash
 http://localhost:3000/docs
 ```
-
-## Contribuciones
-
-Si deseas contribuir a este proyecto, por favor:
-
-1) Crear un fork del repositorio.
-2) Crear una nueva rama (git checkout -b feature/nueva-funcionalidad).
-3) Realizar los cambios y hacer un commit (git commit -m "Agrega nueva funcionalidad").
-4) Subir los cambios (git push origin feature/nueva-funcionalidad).
-5) Abrir un Pull Request en GitHub.

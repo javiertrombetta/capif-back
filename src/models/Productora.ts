@@ -11,7 +11,7 @@ class Productora extends Model {
   public cuit_cuil!: string;
   public email!: string;
   public calle!: string;
-  public numero!: string;
+  public numero?: string | null;
   public ciudad!: string;
   public localidad!: string;
   public provincia!: string;
@@ -21,8 +21,8 @@ class Productora extends Model {
   public alias_cbu!: string;
   public cbu!: string;
   public cantidad_fonogramas!: number;
-  public denominacion_sello!: string | null;
-  public datos_adicionales!: string | null;  
+  public denominacion_sello?: string | null;
+  public datos_adicionales?: string | null;  
   public fecha_alta!: Date | null;
   public fecha_ultimo_fonograma!: Date | null;  
 
@@ -105,8 +105,8 @@ Productora.init(
       allowNull: false,
     },
     numero: {
-      type: DataTypes.STRING(10),
-      allowNull: false,
+      type: DataTypes.STRING(20),
+      allowNull: true,
     },
     ciudad: {
       type: DataTypes.STRING(100),

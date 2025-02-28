@@ -139,14 +139,6 @@ Fonograma.init(
         isInt: {
           msg: 'El año de lanzamiento debe ser un número entero.',
         },
-        min: {
-          args: [1900],
-          msg: 'El año de lanzamiento no puede ser anterior a 1900.',
-        },
-        max: {
-          args: [new Date().getFullYear()],
-          msg: 'El año de lanzamiento no puede ser mayor al año actual.',
-        },
       },
     },
     is_dominio_publico: {

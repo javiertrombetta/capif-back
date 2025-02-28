@@ -1,4 +1,19 @@
 # Changelog
+## v0.5.116 - 28-02-2025
+## 🐛 Fixes
+
+- fix: change messages for emails
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.112
+- chore(docs): update CHANGELOG.MD
+
+## 📝 Merge Commits
+
+- Merge branch develop of https://github.com/javiertrombetta/capif-back into develop
+
+
 ## v0.5.112 - 28-02-2025
 ## 🐛 Fixes
 

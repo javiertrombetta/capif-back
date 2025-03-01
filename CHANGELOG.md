@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.145 - 01-03-2025
+## 🐛 Fixes
+
+- fix: changes in getAllPostulaciones, obtenerConflictos, bulk repertoires and territories report
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.142
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.142 - 28-02-2025
 ## 🐛 Fixes
 

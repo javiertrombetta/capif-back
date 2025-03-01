@@ -1,5 +1,21 @@
 services:
-  app:
+  frontend:
+      image: javiertrombetta/capif-front:latest
+      container_name: capif-front
+      restart: unless-stopped
+      ports:
+        - "${NEXT_PUBLIC_PORT}:${NEXT_PUBLIC_PORT}"
+      environment:
+        - NODE_ENV=production
+        - NEXT_PUBLIC_PORT=${NEXT_PUBLIC_PORT}
+      env_file:
+      - .env.prod.local
+      depends_on:
+        - backend
+      networks:
+        - capif-net
+
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
@@ -18,18 +34,23 @@ services:
       DB_NAME: ${DB_NAME}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
+      DB_SSL: ${DB_SSL}
 
       # Configuración de la Aplicación
       NODE_ENV: production.local
-      PORT: ${PORT}
       GLOBAL_PREFIX: ${GLOBAL_PREFIX}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
       COOKIE_MAX_AGE: ${COOKIE_MAX_AGE}
+      SESSION_EXPIRATION_TIME: ${SESSION_EXPIRATION_TIME}
+      PORT: ${PORT}
       EMAIL_TOKEN_EXPIRATION: ${EMAIL_TOKEN_EXPIRATION}
       RESET_TOKEN_EXPIRATION: ${RESET_TOKEN_EXPIRATION}
       MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS}
       UPLOAD_DIR: ${UPLOAD_DIR}
+      USER_DEPURAR_DAYS: ${USER_DEPURAR_DAYS}
+      USER_DESHABILITAR_DAYS: ${USER_DESHABILITAR_DAYS}
+      USER_CLEANUP_DAYS: ${USER_CLEANUP_DAYS}
       CAPIF_EMAIL_RECEIVER: ${CAPIF_EMAIL_RECEIVER}
       ADMIN_PRINCIPAL_EMAIL: ${ADMIN_PRINCIPAL_EMAIL}
       ADMIN_PRINCIPAL_PASSWORD: ${ADMIN_PRINCIPAL_PASSWORD}
@@ -53,6 +74,9 @@ services:
       FTP_USER: ${FTP_USER}
       FTP_PASSWORD: ${FTP_PASSWORD}
       FTP_PORT: ${FTP_PORT}
+
+      # reCAPTCHA
+      RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY}
 
     networks:
       - capif-net

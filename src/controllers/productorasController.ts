@@ -457,34 +457,46 @@ export const getPostulacionById = async (req: Request, res: Response, next: Next
 
 export const getAllPostulaciones = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log("Query params recibidos:", req.query);
+
     const { startDate, endDate, productoraName, page, limit } = req.query;
 
-    // Convertir fechas usando new Date() para formato ISO 8601 (YYYY-MM-DD)
-    const start = startDate && typeof startDate === "string" ? new Date(startDate) : undefined;
-    const end = endDate && typeof endDate === "string" ? new Date(endDate) : undefined;
+    // Si los parámetros son instancias de Date, los usamos directamente
+    const start = startDate instanceof Date ? startDate 
+                  : typeof startDate === "string" && startDate.trim() !== "" ? parseISO(startDate) 
+                  : undefined;
 
-    // Validar que las fechas sean correctas
-    if (startDate && (!start || isNaN(start.getTime()))) {
-      return res.status(400).json({ error: "La fecha de inicio (startDate) no es válida." });
+    const end = endDate instanceof Date ? endDate 
+                : typeof endDate === "string" && endDate.trim() !== "" ? parseISO(endDate) 
+                : undefined;
+
+    console.log("startDate QUERY:", start);
+    console.log("endDate QUERY:", end);
+
+    // Validar fechas y asegurarnos de que sean correctas antes de usar .toISOString()
+    const fstart = start && isValid(start) ? start.toISOString() : undefined;
+    const fend = end && isValid(end) ? end.toISOString() : undefined;
+
+    if (startDate && !fstart) {
+      console.warn("startDate no es una fecha válida, será ignorado.");
     }
-
-    if (endDate && (!end || isNaN(end.getTime()))) {
-      return res.status(400).json({ error: "La fecha de fin (endDate) no es válida." });
+    if (endDate && !fend) {
+      console.warn("endDate no es una fecha válida, será ignorado.");
     }
 
     logger.info(
       `${req.method} ${req.originalUrl} - Obteniendo todas las postulaciones ${
-        start || end || productoraName
-          ? `con filtros ${start ? `desde ${start.toISOString()}` : ""} ${
-              end ? `hasta ${end.toISOString()}` : ""
+        fstart || fend || productoraName
+          ? `con filtros ${fstart ? `desde ${fstart}` : ""} ${
+              fend ? `hasta ${fend}` : ""
             } ${productoraName ? `por nombre de productora: ${productoraName}` : ""}`
           : "sin filtros"
       }.`
     );
 
     const response = await productoraService.getAllPostulaciones({
-      startDate: start ? start.toISOString() : undefined,
-      endDate: end ? end.toISOString() : undefined,
+      startDate: fstart,
+      endDate: fend,
       productoraName: productoraName as string | undefined,
       page: page ? parseInt(page as string, 10) : 1,
       limit: limit ? parseInt(limit as string, 10) : 10,

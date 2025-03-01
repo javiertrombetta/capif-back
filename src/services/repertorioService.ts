@@ -228,6 +228,14 @@ export const createFonograma = async (req: any) => {
     };
 };
 
+const parseFecha = (fecha: string) => {
+    if (!fecha) return null; // Maneja valores vacíos
+    const partes = fecha.split("/");
+    if (partes.length !== 3) return null; // Maneja formatos incorrectos
+    const [dia, mes, anio] = partes.map(n => n.padStart(2, "0")); // Asegura formato correcto
+    return `${anio}-${mes}-${dia}`; // Retorna en formato YYYY-MM-DD
+};
+
 export const cargarRepertoriosMasivo = async (req: any) => {
     
     if (!req.file || !req.file.buffer) throw new Err.BadRequestError(MESSAGES.ERROR.VALIDATION.NO_CSV_FOUND);
@@ -249,7 +257,7 @@ export const cargarRepertoriosMasivo = async (req: any) => {
             .on("data", (data) => {
                 // Convertir las claves a mayúsculas
                 const row = Object.keys(data).reduce((acc, key) => {
-                    acc[key.toUpperCase()] = data[key];
+                    acc[key.trim().toUpperCase()] = data[key].trim();
                     return acc;
                 }, {} as Record<string, string>);
 
@@ -259,24 +267,45 @@ export const cargarRepertoriosMasivo = async (req: any) => {
             .on("error", reject);
     });
 
+    console.log("Datos procesados del CSV:", resultados);
+
+    // Obtener todos los territorios habilitados en un Map para búsqueda rápida
+    const territoriosDisponibles = await FonogramaTerritorio.findAll({ 
+        attributes: ["codigo_iso", "id_territorio"],
+        where: { is_habilitado: true }
+    });
+
+    const territoriosMapa = new Map(
+        territoriosDisponibles.map(t => [t.codigo_iso, t.id_territorio])
+    );
+
     // Procesar cada registro del CSV
     await Promise.all(
         resultados.map(async (row, index) => {
             try {
-                    const {
-                        CUIT,
-                        ISRC,
-                        TITULO,
-                        ARTISTA,
-                        ALBUM,
-                        DURACION,
-                        ANIO_PUBLICACION,
-                        SELLO_DISCOGRAFICO,
-                        TITULAR_DESDE,
-                        TITULAR_HASTA,
-                        PORCENTAJE_TITULARIDAD
-                    } = row;
+                console.log("Fila procesada:", row);
 
+                    // Extraer datos asegurando mayúsculas
+                    const CUIT = row["CUIT"] || "";
+                    const ISRC = row["ISRC"] || "";
+                    const ARTISTA = row["ARTISTA"] || "";
+                    const TEMA = row["TEMA"] || "";
+                    const ALBUM = row["ALBUM"] || "";
+                    const DURACION = row["DURACION"] || "";
+                    const ANIO_PUBLICACION = row["ANIO_PUBLICACION"] || "";
+                    const SELLO_DISCOGRAFICO = row["SELLO_DISCOGRAFICO"] || "";
+                    const TITULAR_DESDE = parseFecha(row["TITULAR_DESDE"]);
+                    const TITULAR_HASTA = parseFecha(row["TITULAR_HASTA"]);
+                    const PORCENTAJE_TITULARIDAD = row["PORCENTAJE_TITULARIDAD"] || "";
+                    const TERRITORIALIDAD = row["TERRITORIALIDAD"] || "";
+
+                    if (!CUIT || !ISRC) {
+                        errores.push(`Error en fila ${index + 1}: CUIT o ISRC vacío.`);
+                        return;
+                    }
+
+                    console.log(`Procesando fila ${index + 1}, CUIT:`, CUIT);
+                    
                     // Verificar la productora según el CUIT
                     const productora = await Productora.findOne({ where: { cuit_cuil: CUIT } });
                     if (!productora) {
@@ -298,13 +327,13 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                         fonograma = await Fonograma.create({
                             productora_id: productora.id_productora,
                             isrc: ISRC,
-                            titulo: TITULO,
+                            titulo: TEMA,
                             artista: ARTISTA,
                             album: ALBUM,
                             duracion: DURACION,
                             anio_lanzamiento: ANIO_PUBLICACION,
                             sello_discografico: selloFinal,
-                            is_dominio_publico: currentYear - ANIO_PUBLICACION > 70,
+                            is_dominio_publico: currentYear - Number(ANIO_PUBLICACION) > 70,
                             estado_fonograma: "ACTIVO",
                             fecha_ultimo_fonograma: new Date(),
                         });
@@ -313,14 +342,14 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                             usuario_originario_id: authUser.id_usuario,
                             modelo: "Fonograma",
                             tipo_auditoria: "ALTA",
-                            detalle: `Se creó el fonograma '${TITULO}' con ISRC '${ISRC}'`,
+                            detalle: `Se creó el fonograma '${TEMA}' con ISRC '${ISRC}'`,
                         });
 
                         await registrarRepertorio({
                             usuario_registrante_id: authUser.id_usuario,
                             fonograma_id: fonograma.id_fonograma,
                             tipo_auditoria: "ALTA",
-                            detalle: `Se creó el fonograma '${TITULO}' con ISRC '${ISRC}'`,
+                            detalle: `Se creó el fonograma '${TEMA}' con ISRC '${ISRC}'`,
                         });
 
                         // Actualizar la fecha_ultimo_fonograma en la Productora
@@ -374,24 +403,29 @@ export const cargarRepertoriosMasivo = async (req: any) => {
                     }
                     
                     // Registrar territorios
-                    const territoriosHabilitados = await FonogramaTerritorio.findAll({ where: { is_habilitado: true } });
+                    if (TERRITORIALIDAD) {
+                        const codigosISO = TERRITORIALIDAD.split(";").map((c: string) => c.trim());
+                        const territoriosValidos = codigosISO
+                            .map((codigo: string) => territoriosMapa.get(codigo))
+                            .filter(Boolean);
 
-                    for (const territorio of territoriosHabilitados) {
-                        await FonogramaTerritorioMaestro.create({
-                            fonograma_id: fonograma.id_fonograma,
-                            territorio_id: territorio.id_territorio,
-                            is_activo: true,
-                        });
+                        for (const territorio_id of territoriosValidos) {
+                            await FonogramaTerritorioMaestro.create({
+                                fonograma_id: fonograma.id_fonograma,
+                                territorio_id,
+                                is_activo: true,
+                            });
 
-                        await registrarAuditoria({
-                            usuario_originario_id: authUser.id_usuario,
-                            usuario_destino_id: null,
-                            modelo: "FonogramaTerritorioMaestro",
-                            tipo_auditoria: "ALTA",
-                            detalle: `Se registró el territorio '${territorio.codigo_iso}' para el fonograma con ISRC '${ISRC}'`,
-                        });
+                            await registrarAuditoria({
+                                usuario_originario_id: authUser.id_usuario,
+                                usuario_destino_id: null,
+                                modelo: "FonogramaTerritorioMaestro",
+                                tipo_auditoria: "ALTA",
+                                detalle: `Se registró el territorio con ID '${territorio_id}' para el fonograma con ISRC '${ISRC}'`,
+                            });
+                        }
                     }
-                    registrosCreados.push({ TITULO, ISRC });
+                    registrosCreados.push({ TEMA, ISRC });
 
             } catch (err: any) {
                 errores.push(`Error en fila ${index + 1}: ${err.message}`);

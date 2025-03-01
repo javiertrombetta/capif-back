@@ -525,30 +525,32 @@ export const getAllPostulaciones = async (filters: {
   const where: any = {};
   const include: any[] = [];
 
+  console.log("Filtros recibidos en getAllPostulaciones:", filters);
+
   // Filtro por fechas
   if (filters.startDate || filters.endDate) {
-    const fechaAsignacion: any = {};
+    where.fecha_asignacion = {};
 
     if (filters.startDate) {
       const startDate = new Date(filters.startDate);
-      if (isNaN(startDate.getTime())) {
-        throw new Error("La fecha de inicio (startDate) no es válida.");
+      if (!isNaN(startDate.getTime())) {
+        where.fecha_asignacion[Op.gte] = startDate;
+      } else {
+        console.warn("startDate no es válido, se ignora.");
       }
-      fechaAsignacion[Op.gte] = startDate;
     }
 
     if (filters.endDate) {
       const endDate = new Date(filters.endDate);
-      if (isNaN(endDate.getTime())) {
-        throw new Error("La fecha de fin (endDate) no es válida.");
+      if (!isNaN(endDate.getTime())) {
+        where.fecha_asignacion[Op.lte] = endDate;
+      } else {
+        console.warn("endDate no es válido, se ignora.");
       }
-      fechaAsignacion[Op.lte] = endDate;
-    }
-
-    if (Object.keys(fechaAsignacion).length > 0) {
-      where.fecha_asignacion = fechaAsignacion;
     }
   }
+
+  console.log("Condición WHERE final:", JSON.stringify(where, null, 2));
 
   // Filtro por nombre de productora
   if (filters.productoraName) {

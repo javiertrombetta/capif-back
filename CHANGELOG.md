@@ -1,4 +1,16 @@
 # Changelog
+## v0.5.149 - 01-03-2025
+## 🐛 Fixes
+
+- fix: change compose for production
+- fix: change compose for production
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.145
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.145 - 01-03-2025
 ## 🐛 Fixes
 

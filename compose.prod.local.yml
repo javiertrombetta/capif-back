@@ -16,9 +16,9 @@ services:
         - capif-net
 
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     image: javiertrombetta/capif-back:latest
     container_name: capif-back
     restart: always

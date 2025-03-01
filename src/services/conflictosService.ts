@@ -212,13 +212,13 @@ export const obtenerConflictos = async (req: AuthenticatedRequest) => {
     where.productora_id = req.productoraId;
   } else if (productora_id) {
     where.productora_id = productora_id;
-  }
+  } 
 
   if (typeof fecha_desde === "string" && fecha_desde) {
-    where.fecha_periodo_desde = { [Op.gte]: new Date(fecha_desde) };
+  where.fecha_inicio_conflicto = { [Op.gte]: new Date(fecha_desde) };
   }
   if (typeof fecha_hasta === "string" && fecha_hasta) {
-    where.fecha_periodo_hasta = { [Op.lte]: new Date(fecha_hasta) };
+    where.fecha_inicio_conflicto = { ...where.fecha_inicio_conflicto, [Op.lte]: new Date(fecha_hasta) };
   }
 
   if (typeof estado === "string" && estado) {

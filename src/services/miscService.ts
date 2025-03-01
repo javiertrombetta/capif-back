@@ -106,11 +106,39 @@ export const generateTerritorialityReportService = async (filters: any): Promise
     throw new Err.NotFoundError("No hay participaciones asociadas a los fonogramas seleccionados.");
   }
 
+  // Obtener los territorios habilitados para los fonogramas
+  const territorios = await FonogramaTerritorioMaestro.findAll({
+    where: { fonograma_id: { [Op.in]: fonogramaIds } },
+    include: [
+      {
+        model: FonogramaTerritorio,
+        as: "territorioDelVinculo",
+        attributes: ["codigo_iso"],
+      },
+    ],
+    attributes: ["fonograma_id"],
+  });
+
+  // Crear un mapa de fonograma_id -> territorios habilitados
+  const territoriosMapa = new Map<string, string[]>();
+
+  territorios.forEach((t) => {
+    const id = t.fonograma_id;
+    const codigoISO = t.territorioDelVinculo?.codigo_iso || "N/A";
+    if (!territoriosMapa.has(id)) {
+      territoriosMapa.set(id, []);
+    }
+    territoriosMapa.get(id)?.push(codigoISO);
+  });
+
   // Cruzar fonogramas con participaciones
   const reportData = participaciones.map((participacion) => {
-    const fonograma = fonogramas.find((f) => f.id_fonograma === participacion.fonograma_id);
-   
+    const fonograma = fonogramas.find((f) => f.id_fonograma === participacion.fonograma_id);   
     const ultimaModificacion = (fonograma as unknown as { maestrosDelFonograma?: { operacion: keyof typeof MODIFICACION_MAP; fecha_operacion: Date }[] })?.maestrosDelFonograma?.[0];
+
+    // Obtener territorios habilitados del fonograma
+    const territoriosHabilitados = territoriosMapa.get(fonograma?.id_fonograma || "") || [];
+    const territoriosStr = territoriosHabilitados.length > 0 ? territoriosHabilitados.join(";") : "Sin territorio";
 
     return {
       "Nombre del Tema": fonograma?.titulo || "Desconocido",
@@ -124,6 +152,7 @@ export const generateTerritorialityReportService = async (filters: any): Promise
       "Porcentaje de Titularidad": participacion.porcentaje_participacion,
       "Tipo de Modificación": MODIFICACION_MAP[ultimaModificacion?.operacion as keyof typeof MODIFICACION_MAP] || "DATOS DEL FONOGRAMA",
       "Fecha de última modificación": ultimaModificacion?.fecha_operacion || "Desconocido",
+      "Territorios Habilitados": territoriosStr,
     };
   });
 

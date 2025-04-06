@@ -17,7 +17,7 @@
     "prod.local:up": "docker compose --env-file .env.prod.local -f compose.prod.local.yml up --build -d",
     "prod.local:down": "docker compose --env-file .env.prod.local -f compose.prod.local.yml down -v && docker rmi javiertrombetta/capif-back:latest",
     "prod.local:restart": "npm run prod.local:down && npm run prod.local:up",
-    "init": "npm run dev.local:down && npm run clean:dist && npm run clean:uploads && npm run dev.local:up && npm run build && cross-env NODE_ENV=development npm run postgres:all",
+    "init": "npm run dev.local:down && npm run clean:dist && npm run clean:uploads && npm run dev.local:up && npm run build && cross-env NODE_ENV=development npm run postgres:init",
     "prod": "docker ps | grep capif-back || npm run prod.local:up",
     "dev": "cross-env NODE_ENV=development nodemon --watch src --exec ts-node src/app.ts",
     "debug": "cross-env NODE_ENV=development nodemon --watch src --exec node --inspect -r ts-node/register src/app.ts",

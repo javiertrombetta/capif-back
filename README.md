@@ -92,6 +92,13 @@ FTP_PORT=                        # Puerto del servidor FTP (21 por defecto)
 # reCAPTCHA v3 Configuration
 # ==========================
 RECAPTCHA_SECRET_KEY=            # Clave secreta de Google reCAPTCHA v3 para validación de usuarios
+
+# ==========================
+# Frontend Configuration
+# ==========================
+NEXT_PUBLIC_API_URL=             # URL de la API del backend
+NEXT_PUBLIC_PORT=                # Puerto del Frontend
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=  # Clave pública de Google reCAPTCHA v3 para validación de usuarios
 ```
 
 

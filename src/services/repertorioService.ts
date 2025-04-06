@@ -605,19 +605,33 @@ export const updateFonograma = async (id: string, req: any) => {
 
     // Registrar cambios en Auditoría de Fonogramas
     if (cambiosRealizados.length > 0) {
+
+        // Construir detalle para auditoría
+        let detalleAuditoria = `Se modificaron los datos del fonograma ID: '${fonograma.id_fonograma}'. Cambios: ${cambiosRealizados.join(", ")}`;
+        let detalleRepertorio = `Se modificaron los datos del fonograma con ISRC '${fonograma.isrc}'. Cambios: ${cambiosRealizados.join(", ")}`;
+        
+        // Recortar si se exceden los 255 caracteres
+        if (detalleAuditoria.length > 255) {
+            detalleAuditoria = detalleAuditoria.slice(0, 252) + "...";
+        }
+        if (detalleRepertorio.length > 255) {
+            detalleRepertorio = detalleRepertorio.slice(0, 252) + "...";
+        }
+
+        // Registrar Auditoría
         await registrarAuditoria({
             usuario_originario_id: authUser.id_usuario,
             usuario_destino_id: null,
             modelo: "Fonograma",
             tipo_auditoria: "CAMBIO",
-            detalle: `Se modificaron los datos del fonograma ID: '${fonograma.id_fonograma}'. Cambios: ${cambiosRealizados.join(", ")}.`,
+            detalle: detalleAuditoria,
         });
 
         await registrarRepertorio({
             usuario_registrante_id: authUser.id_usuario,
             fonograma_id: fonograma.id_fonograma,
             tipo_auditoria: "CAMBIO",
-            detalle: `Se modificaron los datos del fonograma con ISRC '${fonograma.isrc}'. Cambios: ${cambiosRealizados.join(", ")}.`,
+            detalle: detalleRepertorio,
         });
     }
 
@@ -1245,58 +1259,102 @@ export const getEnviosByFonograma = async (fonogramaId: string) => {
 };
 
 export const getAllEnvios = async (filters: any) => {
-    const { nombre_tema, estado_envio, fecha_desde, fecha_hasta, page = 1, limit = 50 } = filters;
+  const {
+    nombre_tema,
+    estado_envio,
+    fecha_desde,
+    fecha_hasta,
+    page = 1,
+    limit = 50,
+  } = filters;
 
-    const whereCondition: any = {};
-    
-    if (estado_envio) {
-        whereCondition.tipo_estado = estado_envio;
-    }
+  const whereCondition: any = {};
 
-    if (fecha_desde) {
-        whereCondition.fecha_envio_inicial = { [Op.gte]: new Date(fecha_desde) };
-    }
-    if (fecha_hasta) {
-        whereCondition.fecha_envio_ultimo = { [Op.lte]: new Date(fecha_hasta) };
-    }
+  if (estado_envio) {
+    whereCondition.tipo_estado = estado_envio;
+  }
 
-    const offset = (Number(page) - 1) * Number(limit);
-
-    const { rows: envios, count: total } = await FonogramaEnvio.findAndCountAll({
-        where: whereCondition,
-        attributes: [
-            "id_envio_vericast",
-            "tipo_estado",
-            "fecha_envio_inicial",
-            "fecha_envio_ultimo",
-            "createdAt",
-            "updatedAt",
-        ],
-        include: [
-            {
-                model: Fonograma,
-                as: "fonogramaDelEnvio",
-                attributes: ["id_fonograma","isrc","titulo", "artista", "album", "duracion", "sello_discografico", "anio_lanzamiento"],
-                where: nombre_tema ? { titulo: { [Op.iLike]: `%${nombre_tema}%` } } : undefined,
-            },
-        ],
-        order: [["fecha_envio_ultimo", "DESC"]],
-        limit: Number(limit),
-        offset,
-    });
-
-    if (!envios.length) {    
-        return { message: "No se encontraron envíos con los criterios dados.", data: [], total, totalPages: 0 };
-    }
-
-    return {
-        message: "Envíos obtenidos exitosamente.",
-        data: envios,
-        total,
-        totalPages: Math.ceil(total / Number(limit)),
-        currentPage: Number(page),
-        limit: Number(limit),
+  if (fecha_desde) {
+    whereCondition.fecha_envio_ultimo = {
+      ...(whereCondition.fecha_envio_ultimo || {}),
+      [Op.gte]: new Date(fecha_desde),
     };
+  }
+
+  if (fecha_hasta) {
+    whereCondition.fecha_envio_ultimo = {
+      ...(whereCondition.fecha_envio_ultimo || {}),
+      [Op.lte]: new Date(fecha_hasta),
+      ...(whereCondition.fecha_envio_ultimo || {}),
+    };
+  }
+
+  const allEnvios = await FonogramaEnvio.findAll({
+    where: whereCondition,
+    attributes: [
+      "id_envio_vericast",
+      "fonograma_id",
+      "tipo_estado",
+      "fecha_envio_inicial",
+      "fecha_envio_ultimo",
+      "createdAt",
+      "updatedAt",
+      
+    ],
+    include: [
+      {
+        model: Fonograma,
+        as: "fonogramaDelEnvio",
+        attributes: [
+          "id_fonograma",
+          "isrc",
+          "titulo",
+          "artista",
+          "album",
+          "duracion",
+          "sello_discografico",
+          "anio_lanzamiento",
+        ],
+        where: nombre_tema
+          ? { titulo: { [Op.iLike]: `%${nombre_tema}%` } }
+          : undefined,
+      },
+    ],
+    order: [["fecha_envio_ultimo", "DESC"]],
+  });
+
+  // Agrupar por id_fonograma y obtener solo el último por cada uno
+  const latestByFonograma = new Map();
+
+  for (const envio of allEnvios) {
+    const id = envio.fonograma_id;
+    const current = latestByFonograma.get(id);
+
+    if (
+        !current ||
+        (
+            envio.fecha_envio_ultimo &&
+            (!current.fecha_envio_ultimo || envio.fecha_envio_ultimo > current.fecha_envio_ultimo)
+        )
+        ) 
+        {
+        latestByFonograma.set(id, envio);
+        }
+  }
+
+  const finalEnvios = Array.from(latestByFonograma.values());
+
+  const total = finalEnvios.length;
+  const paginated = finalEnvios.slice((page - 1) * limit, page * limit);
+
+  return {
+    message: "Envíos obtenidos exitosamente.",
+    data: paginated,
+    total,
+    totalPages: Math.ceil(total / Number(limit)),
+    currentPage: Number(page),
+    limit: Number(limit),
+  };
 };
 
 export const addParticipacionToFonograma = async (fonogramaId: string, req: any) => {

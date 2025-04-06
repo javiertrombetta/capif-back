@@ -80,7 +80,7 @@ AuditoriaRepertorio.init(
       validate: {
         len: {
           args: [0, 255],
-          msg: "El detalle libre no puede exceder los 30 caracteres.",
+          msg: "El detalle libre no puede exceder los 255 caracteres.",
         },
       },
     },

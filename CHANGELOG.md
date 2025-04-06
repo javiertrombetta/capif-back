@@ -1,4 +1,15 @@
 # Changelog
+## v0.5.152 - 06-04-2025
+## 🐛 Fixes
+
+- fix: change AuditoriaCambios, AuditoriaRepertorio, repertorioService
+
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.149
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.149 - 01-03-2025
 ## 🐛 Fixes
 

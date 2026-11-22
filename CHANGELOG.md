@@ -1,4 +1,11 @@
 # Changelog
+## v0.5.154 - 22-11-2026
+## 🛠️ Maintenance
+
+- chore(release): bump version to v0.5.152
+- chore(docs): update CHANGELOG.MD
+
+
 ## v0.5.152 - 06-04-2025
 ## 🐛 Fixes
 
